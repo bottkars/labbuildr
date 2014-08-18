@@ -231,3 +231,7 @@ pip-log.txt
 /domain.txt
 /default.xml
 /labbuildr.version
+Gateway.txt
+sources.vhd
+version.labbuildr
+defaults.xml
