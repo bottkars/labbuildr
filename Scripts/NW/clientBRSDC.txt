@@ -1,0 +1,12 @@
+﻿create type: NSR client;
+name:BRSDC;
+server:nwserver.brslab.local;
+archive services: Disabled;
+schedule: Default;
+browse policy: Month;
+Client Direct:disabled;
+Pool:Default;
+Retention Policy:Year;
+Group:Default;
+Storage Nodes:nsrserverhost;
+

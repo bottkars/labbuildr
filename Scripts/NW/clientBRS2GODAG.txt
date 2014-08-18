@@ -1,0 +1,25 @@
+﻿create type: NSR client;
+name:BRS2GODAG.brslab.local;
+server:nwserver.brslab.local;
+archive services: Disabled;
+schedule: Default;
+browse policy: Month;
+Pool:Default;
+Retention Policy:Year;
+Storage Nodes:nsrserverhost;
+remote access:system@E2013N1.brslab.local, system@E2013N2.brslab.local;
+application information: NSR_SNAP_TYPE=vss, 
+                              CIRCULAR_PROMOTION_POLICY=Promote, 
+                              NSR_FEDERATED_BACKUP=yes, 
+                              "NSR_FEDERATED_PSOL=E2013N1,E2013N2", 
+                              NSR_EXCH_INCL_SA=TRUE, "NSR_ALT_PATH=c:\\mnt", 
+                              NSR_EXCH2010_DAG=BRS2GODAG.brslab.local, 
+                              NSR_EXCH2010_BACKUP=preferred, 
+                              NSR_EXCH_CHECK=no;
+              backup command: nsrsnap_vss_save;
+                 backup type: Microsoft Exchange Server;
+               Client direct: Enabled;
+                       group: Exchange_DAG;
+                    save set: "APPLICATIONS:\\Microsoft Exchange 2013";
+                save set MBT: "APPLICATIONS:\\Microsoft Exchange 2013";
+

@@ -1,0 +1,8 @@
+changes:
+see blog
+########################################################################
+During the update you may be asked for a recures delet of ./labbuildr
+Tis is fine because i cannit restart the update itself !
+Same is for reload of modules which may throw an error but will be automatically 
+be reloded after the update
+########################################################################
