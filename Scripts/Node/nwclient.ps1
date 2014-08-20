@@ -7,8 +7,10 @@
    https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released
 #>
 #requires -version 3
+[CmdletBinding()]
 param(
-$NW_ver
+[ValidateSet('nw8116','nw8115','nw8114', 'nw8113', 'nw811', 'nw81', 'nw8102', 'nw8102', 'nw8104', 'nw8105', 'nw8112', 'nw82', 'nwunknown')]$nw_ver = "nw82"
+
 )
 $ScriptName = $MyInvocation.MyCommand.Name
 $Host.UI.RawUI.WindowTitle = "$ScriptName"
