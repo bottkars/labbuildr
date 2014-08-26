@@ -8,7 +8,7 @@
 #>
 #requires -version 3
 param(
-$nmm_ver
+[ValidateSet('nmm300', 'nmm301', 'nmm2012', 'nmm3012', 'nmm82')]$nmm_ver
 )
 $ScriptName = $MyInvocation.MyCommand.Name
 $Host.UI.RawUI.WindowTitle = "$ScriptName"
@@ -16,6 +16,6 @@ $Builddir = $PSScriptRoot
 $Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
 New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
 ############
-New-Item -ItemType file  "$Builddir\$ScriptName.log"
+
 start-process -filepath "\\vmware-host\Shared Folders\Sources\$nmm_ver\win_x64\networkr\setup.exe" -ArgumentList '/s /v" /qn /l*v c:\scripts\nmm.log'  -Wait
 start-process -filepath "\\vmware-host\Shared Folders\Sources\$nmm_ver\win_x64\networkr\setup.exe" -ArgumentList '/s /v" /qn /l*v c:\scripts\nmmglr.log NW_INSTALLLEVEL=200 REBOOTMACHINE=0 NW_GLR_FEATURE=1 WRITECACHEDIR="C:\Program Files\EMC NetWorker\nsr\tmp\nwfs" MOUNTPOINTDIR="C:\Program Files\EMC NetWorker\nsr\tmp\nwfs\NetWorker Virtual File System" HYPERVMOUNTPOINTDIR="C:\Program Files\EMC NetWorker\nsr\tmp" SETUPTYPE=Install"' -Wait

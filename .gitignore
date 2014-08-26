@@ -225,6 +225,8 @@ pip-log.txt
 /log4net
 /ONEFS*
 *.vmdk
+*.vmx
+*.vmxf
 /*MASTER*
 /ip.txt
 /dns.txt

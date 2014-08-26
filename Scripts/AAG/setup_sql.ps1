@@ -25,7 +25,7 @@ foreach ($file in $Files) {
 $content = Get-Content -path $File.fullname
 $content | foreach {$_ -replace "brslab", "$Domain"} | Set-Content $file.FullName
 }
-."\\vmware-host\Shared Folders\Sources\$SQLVER\Setup.exe" /q /ACTION=Install /FEATURES=SQL,SSMS /INSTANCENAME=MSSQL$env:Computername /SQLSVCACCOUNT="$Domain\svc_sql" /SQLSVCPASSWORD="Password123!" /SQLSYSADMINACCOUNTS="$Domain\svc_sqladm" "$Domain\Administrator" "$Domain\svc_sql" /AGTSVCACCOUNT="NT AUTHORITY\Network Service" /IACCEPTSQLSERVERLICENSETERMS
+."\\vmware-host\Shared Folders\Sources\$SQLVER\Setup.exe" /q /ACTION=Install /FEATURES=SQL,SSMS /INSTANCENAME=MSSQL$env:Computername /SQLSVCACCOUNT="$Domain\svc_sqladm" /SQLSVCPASSWORD="Password123!" /SQLSYSADMINACCOUNTS="$Domain\svc_sqladm" "$Domain\Administrator" "$Domain\sql_admins" /AGTSVCACCOUNT="NT AUTHORITY\Network Service" /IACCEPTSQLSERVERLICENSETERMS
 # Start-Process C:\scripts\Autologon.exe -ArgumentList "SVC_SQLADM $Domain Password123! /accepteula"
 New-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce -Name "SQLPASS" -Value "$PSHOME\powershell.exe -Command `"New-Item -ItemType File -Path c:\scripts\sql.pass`""
 Restart-Computer

@@ -23,7 +23,8 @@ $Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
 New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
 ############
 
-
+$Domain = $env:USERDOMAIN
+Grant-ClusterAccess -User "SVC_SQLADM@$Domain" -Full
 $NodeLIST = @()
 $AAGnodes = Get-ADComputer -Filter * | where name -match $Nodeprefix
 foreach ($AAGnode in $AAGnodes){
