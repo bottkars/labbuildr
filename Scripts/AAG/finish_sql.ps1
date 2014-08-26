@@ -16,6 +16,4 @@ New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
 $Domain = $env:USERDOMAIN
 Start-Process C:\scripts\Autologon.exe -ArgumentList "SVC_SQLADM $Domain Password123! /accepteula"
 ##### Disable LUA Approval for NMM
-New-ItemProperty -Path HKLM:Software\Microsoft\Windows\CurrentVersion\policies\system -Name EnableLUA -PropertyType DWord -Value 0 -Force
-New-ItemProperty -Path HKLM:Software\Microsoft\Windows\CurrentVersion\policies\system -Name ConsentPromptBehaviorAdmin -PropertyType DWord -Value 0 -Force
 Restart-Computer

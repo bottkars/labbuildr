@@ -1,3 +1,4 @@
 .\labbuildr\
 .\scripts\exchange\exchange_done.ps1
 .\write-ascii
+.\scripts\aag\regextest2.ps1
