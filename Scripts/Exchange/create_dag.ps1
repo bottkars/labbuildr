@@ -7,7 +7,11 @@
    https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released
 #>
 #requires -version 3
-param ($DAGIP = ([System.Net.IPAddress])::None)
+[CmdletBinding()]
+param (
+$DAGIP = ([System.Net.IPAddress])::None,
+[ValidateSet('IPv4','IPv6','IPv4IPv6')][string]$AddressFamily = 'IPv4'
+)
 
 $ScriptName = $MyInvocation.MyCommand.Name
 $Host.UI.RawUI.WindowTitle = "$ScriptName"
@@ -15,7 +19,14 @@ $Builddir = $PSScriptRoot
 $Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
 New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
 ############
-$Domain = $env:USERDOMAIN
+Write-Verbose $AddressFamily
+Write-Verbose $DAGIP
+Write-Verbose "Please check dagparm"
+Write-Output $PSCmdlet.MyInvocation.BoundParameters
+if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+    {
+    Pause
+    }$Domain = $env:USERDOMAIN
 $Dagname = $Domain+"DAG"
 $WitnessDirectory = "C:\FSW_"+$Dagname
 $DBNAME = $Dagname+"_DB1"
@@ -32,6 +43,7 @@ $ADTrustedEXGroup = Get-ADGroup -Filter * | where name -eq "Exchange Trusted Sub
 Add-ADGroupMember -Identity $ADAdminGroup -Members $ADTrustedEXGroup  -Credential $Credential
 
 Write-Host "Creating the DAG" -foregroundColor Yellow
+
 New-DatabaseAvailabilityGroup -name $DAGName -WitnessServer $WitnessServer -WitnessDirectory $WitnessDirectory -DatabaseAvailabilityGroupIPAddress $DAGIP
 
 Write-Host "Adding DAG Member" $Server -ForeGroundColor Yellow
@@ -72,3 +84,7 @@ foreach($Server in $MailboxServers){
 
 
 Remove-PSSession $Session
+if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+    {
+    Pause
+    }

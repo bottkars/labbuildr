@@ -7,15 +7,22 @@
    https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released
 #>
 #requires -version 3
-
+[CmdletBinding()]
 Param
 (
     [string] $Nodeprefix = "AAGNODE",
     [string] $AgName = "labbuildrAvailabilityGroup",
     [string] $DatabaseList = "AdventureWorks2012",
     [string] $BackupShare = "\\vmware-host\Shared Folders\Sources\AWORKS",
-    $IPAddress = "192.168.2.169"
+    $IPv4Subnet = "192.168.2",
+    $IPv6Prefix = "",
+    [Validateset('IPv4','IPv6','IPv4IPv6')]$AddressFamily
 )
+
+$IPv6subnet = "$IPv6Prefix$IPv4Subnet"
+$IPv6Address = "$IPv6Prefix$nodeIP"
+Write-Verbose $IPv6Address
+Write-Verbose $IPv6subnet
 $ScriptName = $MyInvocation.MyCommand.Name
 $Host.UI.RawUI.WindowTitle = "$ScriptName"
 $Builddir = $PSScriptRoot
@@ -129,20 +136,43 @@ foreach ($secondary in $secondaries)
     Add-SqlAvailabilityDatabase -InputObject $ag -Database $DatabaseList 
 
 }
-
+#ADD LISTENER ‘MyAg2ListenerIvP6’ ( WITH IP ( ('2001:db88:f0:f00f::cf3c'),('2001:4898:e0:f213::4ce2') ) , PORT = 60173 ); 
 ## Creating the Listener
+
+
+switch ($AddressFamily)
+	{
+	"IPv4"
+        {
+        $ListenerIP = "((N'$IPv4Subnet.169', N'255.255.255.0'))"
+        }
+    "IPv6"
+        {
+        $ListenerIP = "((N'$IPv6Prefix$IPv4Subnet.169'))"
+        }
+	"IPv4IPv6"
+        {
+        $ListenerIP = "((N'$IPv4Subnet.169', N'255.255.255.0'),(N'$IPv6Prefix$IPv4Subnet.169'))"
+        }
+    }
+                
 $BCMD = "
 USE [master]
 GO
 ALTER AVAILABILITY GROUP [$AgName]
 ADD LISTENER N'NWAAG' (
-WITH IP
-((N'$IPAddress', N'255.255.255.0')
-)
-, PORT=55555)"
+WITH IP $ListenerIP, PORT=55555)"
 
+if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+    {
+    Write-Output $BCMD
+    }
 Invoke-Sqlcmd -Query $BCMD -ServerInstance $primary.Name
 
+if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+    {
+    Pause
+    }
 
 $NWNAMEres = Get-ClusterResource | where Resourcetype -eq "Network Name"
 foreach ($res in $NWNAMEres){

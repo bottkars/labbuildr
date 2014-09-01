@@ -7,8 +7,11 @@
    https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released
 #>
 #requires -version 3
+[CmdletBinding()]
 param(
-$Subnet = "192.168.2"
+$Subnet = "192.168.2",
+[ValidateSet('IPv4','IPv6','IPv4IPv6')][string]$AddressFamily = 'IPv4',
+$IPV6Prefix
 )
 Write-Output "Setting user credentials to perform installation and configuration"
 $ScriptName = $MyInvocation.MyCommand.Name
@@ -125,12 +128,24 @@ Send-MailMessage -From $SenderSMTP -Subject "Welcome To Public Folders" -To $Fol
 
 
 Write-Host -ForegroundColor Yellow "Setting Up C-record for mailhost"
-
-$MyIP = ((Get-NetIPAddress -AddressFamily IPv4 -SkipAsSource $false | where IPaddress -match $Subnet).IpAddress)
-# New-ReceiveConnector -Name SMTP -Usage Custom -Bindings $MyIP":25" -RemoteIPRanges "$Subnet.1-$Subnet.99","$Subnet.120-$Subnet.255"
-# Get-ReceiveConnector “SMTP” | Add-ADPermission -User “NT AUTHORITY\ANONYMOUS LOGON” -ExtendedRights “Ms-Exch-SMTP-Accept-Any-Recipient”
-Get-ReceiveConnector "Default Frontend*" | Add-ADPermission -User “NT AUTHORITY\ANONYMOUS LOGON” -ExtendedRights “Ms-Exch-SMTP-Accept-Any-Recipient”
-$dnsserver = (Get-DnsClientServerAddress -AddressFamily IPv4  | where ServerAddresses -match $Subnet).ServerAddresses[0]
+If ($AddressFamily -match 'IPv4')
+{
+$dnsserver = (Get-DnsClientServerAddress -AddressFamily  IPv4 | where ServerAddresses -match $Subnet).ServerAddresses[0]
 $zone = get-dnsserverzone (Get-ADDomain).dnsroot -ComputerName $dnsserver
 Add-DnsServerResourceRecordCName -HostNameAlias "$env:COMPUTERNAME.$ADDomain" -Name mailhost -ZoneName $zone.ZoneName -ComputerName $dnsserver
+
+}
+If ($AddressFamily -match 'IPv6')
+{ 
+
+$dnsserver = (Get-DnsClientServerAddress -AddressFamily  IPv6 | where ServerAddresses -match $IPv6Prefix).ServerAddresses[0]
+$zone = get-dnsserverzone (Get-ADDomain).dnsroot -ComputerName $dnsserver
+Add-DnsServerResourceRecordCName -HostNameAlias "$env:COMPUTERNAME.$ADDomain" -Name mailhost -ZoneName $zone.ZoneName -ComputerName $dnsserver
+
+}
+
+if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+    {
+    Pause
+    }
 # Remove-PSSession $Session

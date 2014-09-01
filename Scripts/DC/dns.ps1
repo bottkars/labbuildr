@@ -7,19 +7,48 @@
    https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released
 #>
 #requires -version 3
+[CmdletBinding()]
 param(
-$subnet = "192.168.2"
+$IPV6Prefix = 'fd2d:3c46:82b2::',
+$IPv4Subnet = "192.168.2",
+[Validateset('IPv4','IPv6','IPv4IPv6')]$AddressFamily, 
+[ValidateSet('24')]$IPv4PrefixLength = '24',
+[ValidateSet('8','24','32','48','64')]$IPv6PrefixLength = '8',
+[switch]$Gateway
 )
 $ScriptName = $MyInvocation.MyCommand.Name
 $Host.UI.RawUI.WindowTitle = "$ScriptName"
 $Builddir = $PSScriptRoot
 $Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
-New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
+$Logfile  = New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
+$PSCmdlet.MyInvocation.BoundParameter | Set-Content  "$Builddir\$ScriptName$Logtime.log"
+Set-Content -Path $Logfile $PSCmdlet.MyInvocation.BoundParameters
+if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+    {
+    Write-Output $PSCmdlet.MyInvocation.BoundParameters
+    }
+
+
 Write-Host -ForegroundColor Yellow "Generating Reverse Lookup Zone"
-$MyIP = (Get-NetIPAddress -AddressFamily IPv4 | where IPaddress -match $Subnet).IPAddress
-$MyIPObject = [System.Version][String]([System.Net.IPAddress]$MyIP)
-$reverse = $MyIPObject.Build.ToString()+"."+$MyIPObject.Minor+"."+$MyIPObject.Major
-Add-DnsServerPrimaryZone "$reverse.in-addr.arpa" -ZoneFile "$reverse.in-addr.arpa.dns" -DynamicUpdate NonsecureAndSecure
+if ( $AddressFamily -match 'IPv4')
+    {
+    $reverse = $IPv4subnet+'.0/'+$IPv4PrefixLength
+    Add-DnsServerPrimaryZone -NetworkID $reverse -ReplicationScope "Forest" -DynamicUpdate NonsecureAndSecure
+    }
+if ( $AddressFamily -match 'IPv6')
+    {
+    $reverse = $IPV6Prefix+'/'+$IPv6PrefixLength
+    Add-DnsServerPrimaryZone -NetworkID $reverse -ReplicationScope "Forest" -DynamicUpdate NonsecureAndSecure
+    }
+    Write-Verbose $IPv6PrefixLength
+    Write-Verbose $reverse
+    Write-Verbose $IPV6Prefix
+
+# Add-DnsServerPrimaryZone "$reverse.in-addr.arpa" -ZoneFile "$reverse.in-addr.arpa.dns" -DynamicUpdate NonsecureAndSecure
 $zone = Get-DnsServerzone $env:USERDNSDOMAIN
 # Add-DnsServerResourceRecordA -Name smartconnect -ZoneName $zone.ZoneName -CreatePtr -IPv4Address "$subnet.40"
-Add-DnsServerZoneDelegation -Name $zone.ZoneName -ChildZoneName OneFS -NameServer "smartconnect.$env:USERDNSDOMAIN" -IPAddress "$subnet.40"
+Add-DnsServerZoneDelegation -Name $zone.ZoneName -ChildZoneName OneFS -NameServer "smartconnect.$env:USERDNSDOMAIN" -IPAddress "$IPv4Subnet.40"
+if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+    {
+    Pause
+    }

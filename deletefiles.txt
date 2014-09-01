@@ -2,3 +2,7 @@
 .\scripts\exchange\exchange_done.ps1
 .\write-ascii
 .\scripts\aag\regextest2.ps1
+.\scripts\dc\add_serviceuser.ps107-04-2014_04-55-00.log
+.\scripts\dc\powerconf.ps107-04-2014_04-55-03.log
+.\scripts\dc\createdc.ps1
+.\labbuildripv6.ps1
