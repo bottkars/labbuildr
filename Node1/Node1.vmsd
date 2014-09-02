@@ -1,0 +1,5 @@
+.encoding = "windows-1252"
+numCloneOf = "1"
+numSentinels = "1"
+cloneOf0 = "E:\LABBUILDR\2012R2UEFIMASTER\Server2012R2UEFi.vmx"
+sentinel0 = "Server2012R2UEFi-cl1.vmdk"
