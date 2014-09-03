@@ -16,13 +16,17 @@ $IPv4Subnet = "192.168.2",
 $IPv6Prefix = "",
 [ValidateSet('8','24','32','48','64')]$IPv6PrefixLength = '8',
 [Validateset('IPv4','IPv6','IPv4IPv6')]$AddressFamily,
+$AddonFeatures,
 [switch]$Gateway
 )
+$Addonfeatures = $Addonfeatures.Replace(" ","")
+$Features = $AddonFeatures.split(",")
 $IPv6subnet = "$IPv6Prefix$IPv4Subnet"
 $IPv6Address = "$IPv6Prefix$nodeIP"
 Write-Verbose $IPv6PrefixLength
 Write-Verbose $IPv6Address
 Write-Verbose $IPv6subnet
+Write-Verbose $AddonFeatures
 
 # Write-Verbose $AddressFamily
 $ScriptName = $MyInvocation.MyCommand.Name
@@ -104,8 +108,10 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     Pause
     }
 Write-Host "Running Feature Installer"
-$job = Start-Job -ScriptBlock {Install-WindowsFeature RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features}#job
-Wait-Job $job
+
+add-WindowsFeature $Features -verbose
+
+
 Rename-Computer -NewName $nodename
 New-Item -ItemType File -Path c:\scripts\2.pass
 
