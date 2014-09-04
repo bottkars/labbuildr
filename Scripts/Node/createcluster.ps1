@@ -41,8 +41,8 @@ foreach ($Clusternode in $Clusternodes){
 $NodeLIST += $Clusternode.Name
 write-Host " Enabling Cluster feature on Node $($Clusternode.Name)"
 Add-WindowsFeature -Name failover-Clustering -IncludeManagementTools -ComputerName $Clusternode.Name
-write-Host " Enabling MPIO on Node $($Clusternode.Name)"
-Add-WindowsFeature -Name Multipath-IO -IncludeManagementTools -ComputerName $Clusternode.Name
+# write-Host " Enabling MPIO on Node $($Clusternode.Name)"
+# Add-WindowsFeature -Name Multipath-IO -IncludeManagementTools -ComputerName $Clusternode.Name
 }
 
 switch ($AddressFamily)
