@@ -113,7 +113,7 @@ foreach ($Feature in $Features)
     { 
         if (Get-WindowsFeature $Feature)
         {
-            add-WindowsFeature $Feature -verbose
+            add-WindowsFeature $Feature 
         }
         else 
         {
