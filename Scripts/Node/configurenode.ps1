@@ -109,10 +109,24 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     }
 Write-Host "Running Feature Installer"
 
-add-WindowsFeature $Features -verbose
+foreach ($Feature in $Features)
+    { 
+        if (Get-WindowsFeature $Feature)
+        {
+            add-WindowsFeature $Feature -verbose
+        }
+        else 
+        {
+            Write-Verbose "feature $Feature not found in osvesion"
+        }
+    }
 
 
+
+if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+    {
+    Pause
+    }
 Rename-Computer -NewName $nodename
 New-Item -ItemType File -Path c:\scripts\2.pass
-
 restart-computer

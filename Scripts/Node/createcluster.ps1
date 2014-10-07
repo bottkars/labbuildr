@@ -39,8 +39,8 @@ $Nodeprefix = $Nodeprefix.TrimEnd("NODE")
 $Clustername = $Nodeprefix+"Cluster"
 foreach ($Clusternode in $Clusternodes){
 $NodeLIST += $Clusternode.Name
-write-Host " Enabling Cluster feature on Node $($Clusternode.Name)"
-Add-WindowsFeature -Name failover-Clustering -IncludeManagementTools -ComputerName $Clusternode.Name
+# write-Host " Enabling Cluster feature on Node $($Clusternode.Name)"
+# Add-WindowsFeature -Name failover-Clustering -IncludeManagementTools -ComputerName $Clusternode.Name
 }
 
 switch ($AddressFamily)
