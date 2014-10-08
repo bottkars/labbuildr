@@ -32,6 +32,7 @@ Write-Verbose $AddressFamily
 
 
 $Domain = $env:USERDOMAIN
+$DomainController = (Get-ADDomainController).name
 $NodeLIST = @()
 $Clusternodes = Get-ADComputer -Filter * | where name -like "$Nodeprefix*"
 $Nodeprefix = $Nodeprefix.ToUpper()
@@ -78,6 +79,15 @@ switch ($AddressFamily)
     
 
     }
+#### generating fsw #####
+Invoke-Command -ComputerName $DomainController -ScriptBlock {
+param( $Nodeprefix, $Nodes )
+New-Item -ItemType Directory -Path "C:\FSW_$Nodeprefix"
+New-SmbShare -Name "FSW_$Nodeprefix" -FullAccess everyone -Path "C:\FSW_$Nodeprefix"
+} -ArgumentList $Nodeprefix, $Nodes
+
+##### set fsw quorum #####
+Set-ClusterQuorum -FileShareWitness "\\$DomainController\FSW_$Nodeprefix"
 
 
 Write-Host "Setting Cluster Access"

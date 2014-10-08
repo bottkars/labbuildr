@@ -19,3 +19,7 @@ New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
 ###########
 Add-ClusterScaleOutFileServerRole -Name $SOFSNAME
 
+if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+    {
+    Pause
+    }
