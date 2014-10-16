@@ -61,6 +61,6 @@ foreach ($Node in 1..$Nodes)
 
 
 
-# $vmx | Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3
+
 
 
