@@ -46,8 +46,8 @@ if ( $AddressFamily -match 'IPv6')
 
 # Add-DnsServerPrimaryZone "$reverse.in-addr.arpa" -ZoneFile "$reverse.in-addr.arpa.dns" -DynamicUpdate NonsecureAndSecure
 $zone = Get-DnsServerzone $env:USERDNSDOMAIN
-# Add-DnsServerResourceRecordA -Name smartconnect -ZoneName $zone.ZoneName -CreatePtr -IPv4Address "$subnet.40"
 Add-DnsServerZoneDelegation -Name $zone.ZoneName -ChildZoneName OneFS -NameServer "smartconnect.$env:USERDNSDOMAIN" -IPAddress "$IPv4Subnet.40"
+Add-DnsServerZoneDelegation -Name $zone.ZoneName -ChildZoneName OneFSremote -NameServer "smartconnectremote.$env:USERDNSDOMAIN" -IPAddress "$IPv4Subnet.60"
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     {
     Pause
