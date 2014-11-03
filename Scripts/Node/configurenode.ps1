@@ -23,10 +23,7 @@ $Addonfeatures = $Addonfeatures.Replace(" ","")
 $Features = $AddonFeatures.split(",")
 $IPv6subnet = "$IPv6Prefix$IPv4Subnet"
 $IPv6Address = "$IPv6Prefix$nodeIP"
-Write-Verbose $IPv6PrefixLength
-Write-Verbose $IPv6Address
-Write-Verbose $IPv6subnet
-Write-Verbose $AddonFeatures
+
 
 # Write-Verbose $AddressFamily
 $ScriptName = $MyInvocation.MyCommand.Name
@@ -35,7 +32,10 @@ $Builddir = $PSScriptRoot
 $Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
 New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
 Set-Content -Path "$Builddir\$ScriptName$Logtime.log" "$nodeIP, $IPv4Subnet, $nodename"
-
+Write-Verbose $IPv6PrefixLength
+Write-Verbose $IPv6Address
+Write-Verbose $IPv6subnet
+Write-Verbose $AddonFeatures
 
 # checking uefi or Normal Machine dirty hack
 if ($eth0 = Get-NetAdapter -Name "Ethernet0" -ErrorAction SilentlyContinue) {
