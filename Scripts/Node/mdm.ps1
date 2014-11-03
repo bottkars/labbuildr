@@ -4,15 +4,27 @@
 
 # 1. ######################################################################################################
 # Initilization. you may want to adjust the Parameters for your needs
-$Location = "Airplay"
-$PrimaryIP = "10.10.0.151"
-$SecondaryIP = "10.10.0.152" 
-$TiebreakerIP = "10.10.0.153" 
+$Location = $env:USERDOMAIN
+$nodes = Get-ClusterNode
 $mdm_ip ="$PrimaryIP,$SecondaryIP"
 $Devicename = "$Location"+"_Disk_$Driveletter"
 $VolumeName = "Volume_$Location"
-$ProtectionDomainName = "PD_EMCDemo"
-$StoragePoolName = "SP_Demo"
+$ProtectionDomainName = "PD_$Location"
+$StoragePoolName = "SP_$Location"
+$NodeIP = foreach ($node in $nodes)
+{
+Invoke-Command -ComputerName $node.name -ScriptBlock {param ($mdm_ip)
+(Get-NetIPAddress -AddressState Preferred -InterfaceAlias "Ethernet*" -SkipAsSource $false -AddressFamily IPv4 ).IPAddress
+} -ArgumentList $mdm_ip
+}
+
+
+
+
+$PrimaryIP = $NodeIP[0]
+$SecondaryIP = $NodeIP[1]
+$TiebreakerIP = $NodeIP[2]
+
 
 # 2. ######################################################################################################
 ####### create MDM
