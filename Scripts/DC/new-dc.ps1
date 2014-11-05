@@ -30,13 +30,13 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     Write-Output $PSCmdlet.MyInvocation.BoundParameters
     }
 
-
+<#
 $IPv6subnet = "$IPv6Prefix$IPv4Subnet"
 if ([System.Environment]::OSVersion.Version.Minor -ge 4)	
 {
 	Set-MpPreference -DisableRealtimeMonitoring $true
 	}
-
+#>
 # checking uefi or Normal Machine dirty hack
 if ($eth0 = Get-NetAdapter -Name "Ethernet0" -ErrorAction SilentlyContinue) {
 [switch]$uefi = $True
