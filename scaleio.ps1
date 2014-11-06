@@ -3,14 +3,12 @@ Param(
 [Parameter(Mandatory=$true)][String]
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$SCALEIOMasterPath,
 [Parameter(Mandatory=$true)][int32]$Nodes,
+[Parameter(Mandatory=$false)][int32]$Startnode = 1,
+[Parameter(Mandatory=$False)][int32]$Disks = 3,
 [Parameter(Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet
 )
 
 
-
-### prepare 
-
-# $SCALEIOMasterPath = "E:\LABBUILDR\ScaleIOVM_1.30.426.0"
 
 $MasterVMX = get-vmx -path $SCALEIOMasterPath
 
@@ -36,10 +34,22 @@ foreach ($Node in 1..$Nodes)
     $ScaleioClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName ScaleioNode$Node 
     $Config = Get-VMXConfig -config $ScaleioClone.config
     $Config = $config | ForEach-Object { $_ -replace "lsilogic" , "pvscsi" }
-    Write-Verbose "Creating Disk"
-    & $VMWAREpath\vmware-vdiskmanager.exe -c -s 100GB -a lsilogic -t 0 "$($ScaleioClone.Path)\0_1_100GB.vmdk" 2>&1 | Out-Null
-    $AddDrives = @('scsi0:1.present = "TRUE"','scsi0:1.deviceType = "disk"','scsi0:1.fileName = "0_1_100GB.vmdk"','scsi0:1.mode = "persistent"','scsi0:1.writeThrough = "false"')
-    $Config += $AddDrives
+    Write-Verbose "Creating Disks"
+
+  
+    foreach ( $Disk in 1..$Disks)
+        {
+        $Diskpath = "$($ScaleioClone.Path)\0_"+$Disk+"_100GB.vmdk"
+        Write-Verbose "Creating Disk # $Disk"
+        & $VMWAREpath\vmware-vdiskmanager.exe -c -s 100GB -a lsilogic -t 0 $Diskpath 2>&1 | Out-Null
+        $AddDrives  = @('scsi0:'+$Disk+'.present = "TRUE"')
+        $AddDrives += @('scsi0:'+$Disk+'.deviceType = "disk"')
+        $AddDrives += @('scsi0:'+$Disk+'.fileName = "0_'+$Disk+'_100GB.vmdk"')
+        $AddDrives += @('scsi0:'+$Disk+'.mode = "persistent"')
+        $AddDrives += @('scsi0:'+$Disk+'.writeThrough = "false"')
+        $Config += $AddDrives
+        }
+    
     $Config | set-Content -Path $ScaleioClone.Config
     write-verbose "Setting NIC0 to HostOnly"
     Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $ScaleioClone.Config

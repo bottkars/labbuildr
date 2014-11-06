@@ -32,6 +32,7 @@ switch ($role)
              
 Start-Process -FilePath "msiexec.exe" -ArgumentList '/i "\\vmware-host\shared folders\sources\Scaleio\Windows\EMC-ScaleIO-sdc-1.30-426.0.msi" /quiet' -PassThru -Wait
 Start-Process -FilePath "msiexec.exe" -ArgumentList '/i "\\vmware-host\shared folders\sources\Scaleio\Windows\EMC-ScaleIO-sds-1.30-426.0.msi" /quiet' -PassThru -Wait
+# Start-Process -FilePath "msiexec.exe" -ArgumentList '/i "\\vmware-host\shared folders\sources\Scaleio\Windows\EMC-ScaleIO-lia-1.30-426.0.msi" /quiet' -PassThru -Wait
 
 Stop-Service ShellHWDetection
 foreach ($Disk in (1..$Disks))
