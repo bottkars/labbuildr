@@ -1,0 +1,1 @@
+powershell -command "Set-ExecutionPolicy -ExecutionPolicy Bypass -Force"
