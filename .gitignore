@@ -248,3 +248,6 @@ diskpart.txt
 /98*
 /vipr*
 *.exe
+*.msi
+*.msu
+W81*
