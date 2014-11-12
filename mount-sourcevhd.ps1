@@ -44,16 +44,6 @@ if (!([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]
 { Write-Host -ForegroundColor Yellow "Sorry we need to run this as Admin !!!"
 break}
 
-$Driver = driverquery | where {$_ -match "vhdmp"}
-
-if ((Get-Service vhdmp).Status -eq "Stopped")
-    { Write-Host -ForegroundColor Red " The Command may fail up to 2 times since HD Drivers needs to be installed during plug and Play"
-    $waitfordriverevent = $true
-    
-    }
-
-
-
 
 
 ######### getting full name of $sourcevhd
@@ -72,21 +62,6 @@ $DiskpartDone = DiskPart /s $Builddir\diskpart.txt
 $DiskpartDone
 write-verbose "UnMount succeeded with $LASTEXITCODE"
 
-if ($waitfordriverevent)
-    {
-     Write-Verbose "We are waiting for VHD HBA Driver to be Installed"
-     do
-       {
-        write-host "." -NoNewline
-       }
-     until (Get-EventLog -LogName System -Newest 5 | where EventID -Match 20003)
-write-host
-}
-
-"rescan" | diskpart
-
-
-
 switch ($PsCmdlet.ParameterSetName){
 "mount" {
 $location = $Driveletter+":\"
@@ -94,8 +69,8 @@ Push-Location
 Set-Location $location
 mountvol /N
 mountvol /R
-# "rescan" | diskpart
-New-Item -ItemType Directory (Join-Path $location $Mountdir) -Force
+New-Item -ItemType Directory (Join-Path $location $Mountdir) -Force | Out-Null
+$diffbefore = "lis vol" | diskpart
 $Volbefore = mountvol
 $diskpart = @()
 $diskpartfile = New-Item -ItemType file "$Builddir\diskpart.txt" -Force
@@ -105,40 +80,29 @@ $diskpart | Set-Content $diskpartfile
 write-verbose "Trying mount"
 DiskPart /s $Builddir\diskpart.txt
 write-verbose "Mount succeeded with $LASTEXITCODE"
-if ($waitfordriverevent)
+Write-Host "Waiting for Volume to Appear" -ForegroundColor y
+do 
     {
-     Write-Verbose "We are waiting for VHD Volume Driver to be Installed"
-     do
-       {
-        write-host "." -NoNewline
-       }
-        Until ((Get-EventLog -LogName System -Newest 30 | where Message -Match "Driver Management concluded the process to install driver FileRepository\\volume.inf").count -ge 2)
-     }
-
-
- 
-write-host
-mountvol | Out-Null
-
-$volafter = mountvol
-
-
-
-$diffdisks = Compare-Object $Volbefore $volafter
-if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
-    {
-    write-host
-    Write-host -ForegroundColor Magenta "mountvol difference file:"
-    $diffdisks
+    Write-Host "." -NoNewline
+    $diffafter = "lis vol" | diskpart
+    $diffvol = Compare-Object $diffbefore $diffafter -ErrorAction SilentlyContinue
     }
+until ($diffvol)
+write-host
 
-$diffdisk = $diffdisks | where inputobject -match "\\Volume"
-$diffdisk = $diffdisk.InputObject.Trim()
-$diffdisk = $diffdisk.TrimEnd()
-
-Write-Verbose "we have volume $diffdisk to mount"
-Write-Output "Mounting volume $diffdisk"
-mountvol $Mountdir $diffdisk
+$mountvol = $diffvol | where inputobject -match "Volume"
+# $vol =$mountvol.InputObject
+$vol = $mountvol.InputObject.substring(2,10)
+write-verbose "Got Volume $vol"
+$Volnumber = ($vol.TrimEnd(" ")).split(" ")[-1]
+write-verbose "Got Volume $Volnumber"
+Write-Verbose "Try mounting volume wih Diskpart"
+$diskpart = @()
+$diskpartfile = New-Item -ItemType file "$Builddir\diskpart.txt" -Force
+$diskpart += "SELECT volume $Volnumber"
+$diskpart += "ASSIGN MOUNT=$location$Mountdir"
+$diskpart | Set-Content $diskpartfile
+DiskPart /s $Builddir\diskpart.txt
 Pop-Location
 }
 
