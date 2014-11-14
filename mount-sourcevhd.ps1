@@ -59,7 +59,8 @@ $diskpart += "DETACH VDISK"
 $diskpart | Set-Content $diskpartfile
 
 $DiskpartDone = DiskPart /s $Builddir\diskpart.txt
-$DiskpartDone
+"rescan" | diskpart
+Write-Host
 write-verbose "UnMount succeeded with $LASTEXITCODE"
 
 switch ($PsCmdlet.ParameterSetName){
