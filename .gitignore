@@ -251,3 +251,6 @@ diskpart.txt
 *.msi
 *.msu
 W81*
+DiscUtilsBin-0.10/
+ESXiNode*
+VMware ESXi 5/
