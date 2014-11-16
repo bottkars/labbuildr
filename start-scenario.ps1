@@ -1,10 +1,12 @@
 ﻿[CmdletBinding(DefaultParametersetName = "1")]
 	param (
-	[Parameter(ParameterSetName = "1", Mandatory = $true,Position = 0)][ValidateSet('Exchange','SQL','DPAD','EMCVSA','hyper-V','ScaleIO')]$Scenario
+	[Parameter(ParameterSetName = "1", Mandatory = $true,Position = 0)][ValidateSet('Exchange','SQL','DPAD','EMCVSA','hyper-V','ScaleIO','ESXi')]$Scenario
 	
 	)
 begin
 	{
+    if ((get-vmx .\DCNODE).state -ne "running")
+        {get-vmx .\DCNODE | start-vmx}
 	}
 process
 	{
