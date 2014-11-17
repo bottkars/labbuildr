@@ -26,7 +26,8 @@ Write-Output $PSCmdlet.MyInvocation.BoundParameters
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     {
     Pause
-    }$Domain = $env:USERDOMAIN
+    }
+$Domain = $env:USERDOMAIN
 $Dagname = $Domain+"DAG"
 $WitnessDirectory = "C:\FSW_"+$Dagname
 $DBNAME = $Dagname+"_DB1"

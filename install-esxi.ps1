@@ -11,7 +11,7 @@ Param(
 [Parameter(Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2"
 )
 
-
+$Nodeprefix = "ESXiNode"
 
 $MasterVMX = get-vmx -path $ESXIMasterPath
 
@@ -33,24 +33,35 @@ if (!$Basesnap)
 
 foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     {
-    write-verbose "Cloning ESXiNode$node"
-    $ESXiClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName ESXiNode$Node 
+    Write-Verbose "Checking VM $Nodeprefix$node already Exists"
+    If (!(get-vmx $Nodeprefix$node))
+    {
+    write-verbose "Cloning $Nodeprefix$node"
+    $ESXiClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$node 
     $Config = Get-VMXConfig -config $ESXiClone.config
     # $Config = $config | ForEach-Object { $_ -replace "lsilogic" , "pvscsi" }
     Write-Verbose "Creating Kickstart CD"
     $Content = Get-Content .\Scripts\ESX\KS.CFG
     ####modify $content
     $Content = $Content | where {$_ -NotMatch "network"}
-    $Content += "network --bootproto=static --device=vmnic0 --ip=$subnet.8$Node --netmask=255.255.255.0 --gateway=$Subnet.103 --nameserver=$Subnet.10 --hostname=ESXiNode$Node.$Builddomain.local"
+    $Content += "network --bootproto=static --device=vmnic0 --ip=$subnet.8$Node --netmask=255.255.255.0 --gateway=$Subnet.103 --nameserver=$Subnet.10 --hostname=$Nodeprefix$node.$Builddomain.local"
     $Content += "keyboard German"
         foreach ( $Disk in 1..$Disks)
         {
         write-Verbose "Customizing Datastore$Disk"
-        $Content += "partition Datastore$Disk@ESXiNode$Node --ondisk=mpx.vmhba1:C0:T$Disk"+":L0"
+        $Content += "partition Datastore$Disk@$Nodeprefix$node --ondisk=mpx.vmhba1:C0:T$Disk"+":L0"
         }
 
+    $Content += Get-Content .\Scripts\ESX\KS_POST.cfg
     ######
     $Content | Set-Content .\iso\KS\KS.CFG
+
+    if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+    {
+    Write-Host -ForegroundColor Yellow "Kickstart Config:"
+    $Content | Write-Host -ForegroundColor DarkGray
+    pause
+    }
     
     ####create iso, ned to figure out license of tools
     ####have to work on abs pathnames here
@@ -91,9 +102,14 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     #    }
     $Scenario = Set-VMXscenario -config $ESXiClone.Config -Scenarioname ESXi -Scenario 6
     $ActivationPrefrence = Set-VMXActivationPreference -config $ESXiClone.Config -activationpreference $Node 
-    Write-Verbose "Starting ESXiNode$Node"
+    Write-Verbose "Starting $Nodeprefix$node"
     # Set-VMXVnet -Adapter 0 -vnet vmnet2
     start-vmx -Path $ESXiClone.Path -VMXName $ESXiClone.CloneName
+    } # end check vm
+    else
+    {
+    Write-Verbose "VM $Nodeprefix$node already exists"
+    }
     }
 
 
