@@ -10,6 +10,8 @@ Param(
 [Parameter(Mandatory=$true)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$ESXIMasterPath = '.\VMware ESXi 5',
 [Parameter(Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2"
 )
+#requires -version 3.0
+#requires -module vmxtoolkit 
 
 $Nodeprefix = "ESXiNode"
 
