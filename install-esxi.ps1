@@ -106,6 +106,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     $ActivationPrefrence = Set-VMXActivationPreference -config $ESXiClone.Config -activationpreference $Node 
     Write-Verbose "Starting $Nodeprefix$node"
     # Set-VMXVnet -Adapter 0 -vnet vmnet2
+    Set-VMXDisplayName -config $ESXiClone.Config -Value "$($ESXiClone.CloneName)@$Builddomain"
     start-vmx -Path $ESXiClone.Path -VMXName $ESXiClone.CloneName
     } # end check vm
     else
