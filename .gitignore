@@ -246,7 +246,7 @@ diskpart.txt
 /ScaleION*
 /Scaleiovm*
 /98*
-/iso
+iso/
 /vipr*
 *.exe
 *.msi
