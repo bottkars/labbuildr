@@ -8,7 +8,9 @@ Param(
 [Parameter(Mandatory=$False)][ValidatePATTERN("[a-zA-Z]")][string]$Builddomain = "labbuildr",
 [Parameter(Mandatory=$false)][ValidateScript({ Test-Path -Path $_ -PathType Leaf -Include "ESX*labbuildr-ks.iso" -ErrorAction SilentlyContinue })]$esxiso = "c:\sources\esx\ESXi-5.5.0-1331820-labbuildr-ks.iso",
 [Parameter(Mandatory=$true)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$ESXIMasterPath = '.\VMware ESXi 5',
-[Parameter(Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2"
+[Parameter(Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
+[Parameter(Mandatory = $false)][switch]$kdriver
+
 )
 #requires -version 3.0
 #requires -module vmxtoolkit 
@@ -38,25 +40,55 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     Write-Verbose "Checking VM $Nodeprefix$node already Exists"
     If (!(get-vmx $Nodeprefix$node))
     {
-    write-verbose "Cloning $Nodeprefix$node"
-    $ESXiClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$node 
-    $Config = Get-VMXConfig -config $ESXiClone.config
     # $Config = $config | ForEach-Object { $_ -replace "lsilogic" , "pvscsi" }
     Write-Verbose "Creating Kickstart CD"
+    Write-Verbose "Clearing out old content"
+    if (Test-Path .\iso\ks) { Remove-Item -Path .\iso\ks -Recurse }
+    $KSDirectory = New-Item -ItemType Directory .\iso\KS
+    
     $Content = Get-Content .\Scripts\ESX\KS.CFG
     ####modify $content
     $Content = $Content | where {$_ -NotMatch "network"}
     $Content += "network --bootproto=static --device=vmnic0 --ip=$subnet.8$Node --netmask=255.255.255.0 --gateway=$Subnet.103 --nameserver=$Subnet.10 --hostname=$Nodeprefix$node.$Builddomain.local"
     $Content += "keyboard German"
+    
         foreach ( $Disk in 1..$Disks)
         {
         write-Verbose "Customizing Datastore$Disk"
         $Content += "partition Datastore$Disk@$Nodeprefix$node --ondisk=mpx.vmhba1:C0:T$Disk"+":L0"
         }
+    # $Content += Get-Content .\Scripts\ESX\KS_PRE.cfg
+    ### everything here goes to pre
+    # $Content += "timezone Europe/Berlin" 
+    #>
 
     $Content += Get-Content .\Scripts\ESX\KS_POST.cfg
+    ### everything here goes to post
+    
+    if ($kdriver.IsPresent)
+    {
+    write-verbose "injecting K-Driver"
+    $Content += "cp -a /vmfs/volumes/mpx.vmhba32:C0:T0:L0/KS/KDRIVER.VIB /vmfs/volumes/Datastore1@$Nodeprefix$node"
+    Get-ChildItem C:\sources\ESX\kdriver_RPESX-00.4.2*.vib | Sort-Object -Descending | Select-Object -First 1 | Copy-Item -Destination .\iso\KS\KDRIVER.VIB
+    }
+
+    
+
+    $Content += Get-Content .\Scripts\ESX\KS_FIRSTBOOT.cfg
+
+ if ($kdriver.IsPresent)
+    {
+     $Content += "esxcli software acceptance set --level=CommunitySupported"
+     $Content += "esxcli software vib install -v /vmfs/volumes/Datastore1@$Nodeprefix$node/KDRIVER.VIB"
+    }
+    $Content += "cp /var/log/hostd.log /vmfs/volumes/Datastore1@$Nodeprefix$node/firstboot-hostd.log"
+    $Content += "cp /var/log/esxi_install.log /vmfs/volumes/Datastore1@$Nodeprefix$node/firstboot-esxi_install.log" 
+    $Content += Get-Content .\Scripts\ESX\KS_REBOOT.ps1
     ######
-    $Content | Set-Content .\iso\KS\KS.CFG
+
+    $Content += Get-Content .\Scripts\ESX\KS_SECONDBOOT.cfg
+    #### finished
+    $Content | Set-Content $KSDirectory\KS.CFG 
 
     if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     {
@@ -66,9 +98,18 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     }
     
     ####create iso, ned to figure out license of tools
+   
+
+    # Uppercasing files for joliet
+    Get-ChildItem $KSDirectory -Recurse | Rename-Item -newname { $_.name.ToUpper() } -ErrorAction SilentlyContinue
+
+
     ####have to work on abs pathnames here
 
-    
+    write-verbose "Cloning $Nodeprefix$node"
+    $ESXiClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$node 
+    $Config = Get-VMXConfig -config $ESXiClone.config
+
     
     
     .\DiscUtilsBin-0.10\ISOCreate.exe "$($ESXiClone.path)\ks.iso" .\iso\ | Out-Null
