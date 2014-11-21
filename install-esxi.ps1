@@ -83,7 +83,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     }
     $Content += "cp /var/log/hostd.log /vmfs/volumes/Datastore1@$Nodeprefix$node/firstboot-hostd.log"
     $Content += "cp /var/log/esxi_install.log /vmfs/volumes/Datastore1@$Nodeprefix$node/firstboot-esxi_install.log" 
-    $Content += Get-Content .\Scripts\ESX\KS_REBOOT.ps1
+    $Content += Get-Content .\Scripts\ESX\KS_REBOOT.cfg
     ######
 
     $Content += Get-Content .\Scripts\ESX\KS_SECONDBOOT.cfg
