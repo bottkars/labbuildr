@@ -60,14 +60,14 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     
     $Config | set-Content -Path $NodeClone.Config
     write-verbose "Setting ext-a"
-    Set-VMXNetworkAdapter -Adapter 1 -ConnectionType custom -AdapterType e1000 -config $NodeClone.Config 
+    Set-VMXNetworkAdapter -Adapter 1 -ConnectionType custom -AdapterType e1000 -config $NodeClone.Config
     Set-VMXVnet -Adapter 1 -vnet $vmnet -config $NodeClone.Config 
     $Scenario = Set-VMXscenario -config $NodeClone.Config -Scenarioname $Nodeprefix -Scenario 6
     $ActivationPrefrence = Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node 
     Write-Verbose "Starting $Nodeprefix$node"
     # Set-VMXVnet -Adapter 0 -vnet vmnet2
     Set-VMXDisplayName -config $NodeClone.Config -Value "$($NodeClone.CloneName)@$Builddomain"
-    start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName
+    start-vmx -Path $NodeClone.config -VMXName $NodeClone.CloneName
     } # end check vm
     else
     {
