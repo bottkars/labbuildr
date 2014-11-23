@@ -5,7 +5,7 @@ Param(
 [Parameter(Mandatory=$False)][ValidateRange(3,6)][int32]$Disks = 5,
 [Parameter(Mandatory=$False)][ValidateSet('36GB','72GB','146GB')][string]$Disksize = "36GB",
 [Parameter(Mandatory=$False)]$Subnet = "10.10.0",
-[Parameter(Mandatory=$False)][ValidatePATTERN("[a-zA-Z]")][string]$Builddomain = "labbuildr",
+[Parameter(Mandatory=$False)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
 [Parameter(Mandatory=$true)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath = '.\ISImaster',
 [Parameter(Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2"
 )
@@ -131,14 +131,15 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         }
     
     $Config | set-Content -Path $NodeClone.Config
-    write-verbose "Setting ext-a"
+    write-verbose "Setting ext-1"
     Set-VMXNetworkAdapter -Adapter 1 -ConnectionType custom -AdapterType e1000 -config $NodeClone.Config
     Set-VMXVnet -Adapter 1 -vnet $vmnet -config $NodeClone.Config 
     $Scenario = Set-VMXscenario -config $NodeClone.Config -Scenarioname $Nodeprefix -Scenario 6
     $ActivationPrefrence = Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node 
-    Write-Verbose "Starting $Nodeprefix$node"
     # Set-VMXVnet -Adapter 0 -vnet vmnet2
-    Set-VMXDisplayName -config $NodeClone.Config -Value "$($NodeClone.CloneName)@$Builddomain"
+    write-verbose "Setting Display Name $($NodeClone.CloneName)@$Builddomain"
+    Set-VMXDisplayName -config $NodeClone.Config -Displayname "$($NodeClone.CloneName)@$Builddomain" 
+    Write-Verbose "Starting $Nodeprefix$node"
     start-vmx -Path $NodeClone.config -VMXName $NodeClone.CloneName
     } # end check vm
     else
