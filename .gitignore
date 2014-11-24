@@ -256,3 +256,5 @@ DiscUtilsBin-0.10/
 ESXiNode*
 VMware ESXi 5/
 *.version
+*.pass
+2012*
