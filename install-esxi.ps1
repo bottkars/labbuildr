@@ -7,9 +7,12 @@ Param(
 [Parameter(Mandatory=$False)][ValidateSet('36GB','72GB','146GB')][string]$Disksize = "146GB",
 [Parameter(Mandatory=$False)]$Subnet = "10.10.0",
 [Parameter(Mandatory=$False)][ValidateLength(1,1)][Validatepattern('[A-Z]')][String]$Driveletter = $env:SystemDrive,
-[Parameter(Mandatory=$False)][ValidatePATTERN("[a-zA-Z]")][string]$Builddomain = "labbuildr",
-[Parameter(Mandatory=$false)][ValidateScript({ Test-Path -Path $_ -PathType Leaf -Include "ESX*labbuildr-ks.iso" -ErrorAction SilentlyContinue })]$esxiso = "c:\sources\esx\ESXi-5.5.0-1331820-labbuildr-ks.iso",
-[Parameter(Mandatory=$true)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$ESXIMasterPath = '.\VMware ESXi 5',
+[Parameter(Mandatory=$False)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
+[Parameter(Mandatory=$false)][ValidateScript({Test-Path -Path $_ -PathType Leaf -Include "ESX*labbuildr-ks.iso"})]$esxiso,
+[Parameter(Mandatory=$true)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$ESXIMasterPath,
+ <# NFS Parameter configures the NFS Default Datastore from DCNODE#>
+[Parameter(Mandatory=$false)][switch]$nfs,
+[Parameter(Mandatory=$false)][switch]$initnfs,
 [Parameter(Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
 [Parameter(Mandatory = $false)][switch]$kdriver
 
@@ -22,7 +25,20 @@ $Mountroot = $Driveletter.ToUpper() + ":"
 $Sourcedir = "$Mountroot\$Sources"
 $Nodeprefix = "ESXiNode"
 $MasterVMX = get-vmx -path $ESXIMasterPath
+$Password = "Password123!"
 
+$Builddir = $PSScriptRoot
+
+if ($nfs.IsPresent -or $initnfs.IsPresent)
+    {
+    try {
+    (Get-vmx -path $Builddir\dcnode).state -eq 'running'
+    }
+    catch
+        {
+        
+        }
+    }
 
 if (!$MasterVMX.Template) 
     {
@@ -61,10 +77,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         write-Verbose "Customizing Datastore$Disk"
         $Content += "partition Datastore$Disk@$Nodeprefix$node --ondisk=mpx.vmhba1:C0:T$Disk"+":L0"
         }
-    # $Content += Get-Content .\Scripts\ESX\KS_PRE.cfg
-    ### everything here goes to pre
-    # $Content += "timezone Europe/Berlin" 
-    #>
+
 
     $Content += Get-Content .\Scripts\ESX\KS_POST.cfg
     ### everything here goes to post
@@ -73,8 +86,25 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     {
     write-verbose "injecting K-Driver"
     $Content += "cp -a /vmfs/volumes/mpx.vmhba32:C0:T0:L0/KS/KDRIVER.VIB /vmfs/volumes/Datastore1@$Nodeprefix$node"
-    Get-ChildItem "$Sourcedir\ESX\kdriver_RPESX-00.4.2*.vib" | Sort-Object -Descending | Select-Object -First 1 | Copy-Item -Destination .\iso\KS\KDRIVER.VIB
+    
+    try 
+    {
+    $Drivervib = Get-ChildItem "$Sourcedir\ESX\kdriver_RPESX-00.4.2*.vib" -ErrorAction Stop
     }
+ 
+     catch [Exception] {
+     Write-Warning "could not copy K-Driver VIB, cpleas make sure to have Kdriver in $Sourcedir or specify right -driveletter"
+     write-host $_.Exception.Message
+     break
+        }
+       $Drivervib| Sort-Object -Descending | Select-Object -First 1 | Copy-Item -Destination .\iso\KS\KDRIVER.VIB
+
+    
+   
+    
+    }
+    
+ #   }
 
     
 
@@ -92,6 +122,12 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
 
     $Content += Get-Content .\Scripts\ESX\KS_SECONDBOOT.cfg
     #### finished
+if ($nfs.IsPresent)
+    {
+    $Content += "esxcli storage nfs add --host $Subnet.10 --share /$BuildDomain"+"nfs volume-name=SWDEPOT --readonly"
+    $Content += "tar xzfv  /vmfs/volumes/SWDEPOT/ovf.tar.gz  -C /vmfs/volumes/Datastore1@$Nodeprefix$Node/"
+    $Content += '/vmfs/volumes/Datastore1@ESXiNode1/ovf/tools/ovftool --diskMode=thin --datastore=Datastore1@'+$Nodeprefix+$Node+' --noSSLVerify --X:injectOvfEnv --powerOn "--net:Network 1=VM Network" --powerOn --acceptAllEulas --prop:vami.ip0.VMware_vCenter_Server_Appliance=10.10.0.89 --prop:vami.gateway.VMware_vCenter_Server_Appliance=10.10.0.103 --prop:vami.DNS.VMware_vCenter_Server_Appliance=10.10.0.10 --prop:vami.hostname=vcenter1.labbuildr.local /vmfs/volumes/SWDEPOT/VMware-vCenter-Server-Appliance-5.5.0.20200-2183109_OVF10.ova "vi://root:'+$Password+'@127.0.0.1"'
+    }
     $Content | Set-Content $KSDirectory\KS.CFG 
 
     if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
@@ -115,33 +151,28 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     $Config = Get-VMXConfig -config $NodeClone.config
 
     
-    
+    try
+    {
     .\DiscUtilsBin-0.10\ISOCreate.exe "$($NodeClone.path)\ks.iso" .\iso\ | Out-Null
-    
-    Write-Verbose "Creating Disks"
-
-  <#
-    foreach ( $Disk in 1..$Disks)
+    }
+     catch [Exception] 
         {
-        $Diskpath = "$($NodeClone.Path)\0_"+$Disk+"_100GB.vmdk"
-        Write-Verbose "Creating Disk # $Disk"
-        & $VMWAREpath\vmware-vdiskmanager.exe -c -s 100GB -a lsilogic -t 0 $Diskpath 2>&1 | Out-Null
-        $AddDrives  = @('scsi0:'+$Disk+'.present = "TRUE"')
-        $AddDrives += @('scsi0:'+$Disk+'.deviceType = "disk"')
-        $AddDrives += @('scsi0:'+$Disk+'.fileName = "0_'+$Disk+'_100GB.vmdk"')
-        $AddDrives += @('scsi0:'+$Disk+'.mode = "persistent"')
-        $AddDrives += @('scsi0:'+$Disk+'.writeThrough = "false"')
-        $Config += $AddDrives
+        Write-Warning "could not createvirtual cd iamge"
+        write-host $_.Exception.Message
+        break
         }
-   #>
-   
-   
-   
 
-
+    $Content = $Content | where {$_ -NotMatch "ide1:0"}
+    write-verbose "injecting kickstart CDROM"
+    $Content += 'ide1:0.present = "TRUE'
+    $Content += 'ide1:0.fileName = "ks.iso"'
+    $Content += 'ide1:0.deviceType = "cdrom-image"'
+    write-verbose "injecting $esxiso CDROM"
+    $Content += 'ide0:0.present = "TRUE"'
+    $Content += 'ide0:0.fileName = "'+$esxiso+'"'
+    $Content += 'ide0:0.deviceType = "cdrom-image"'
     Write-Verbose "Creating Disks"
-
-  
+    Write-Verbose "Creating Disks"
     foreach ($Disk in 1..$Disks)
         {
      if ($Disk -le 6)
@@ -189,8 +220,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         $Diskname = "SCSI$SCSI"+"_LUN$LUN"+"_$Disksize.vmdk"
         $Diskpath = "$($NodeClone.Path)\$Diskname"
         Write-Verbose "Creating Disk #$Disk with $Diskname and a size of $Disksize"
-        & $VMWAREpath\vmware-vdiskmanager.exe -c -s $Disksize -a lsilogic -t 0 $Diskpath 2>> error.txt
-        
+        & $VMWAREpath\vmware-vdiskmanager.exe -c -s $Disksize -a lsilogic -t 0 $Diskpath 2>> error.txt | Out-Null
         $AddDrives  = @('scsi'+$scsi+':'+$LUN+'.present = "TRUE"')
         $AddDrives += @('scsi'+$scsi+':'+$LUN+'.deviceType = "disk"')
         $AddDrives += @('scsi'+$scsi+':'+$LUN+'.fileName = "'+$Diskname+'"')
