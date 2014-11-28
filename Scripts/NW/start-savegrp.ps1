@@ -12,5 +12,5 @@ write-host $nsrmsg
   }
 until (($nwlabel.Length+43) -eq $nsrmsg.length)
 # until ($nsrmsg -match "Using volume name")
-& 'C:\Program Files\EMC NetWorker\nsr\bin\savegrp.exe' Exchange_DAG
-pause
+# & 'C:\Program Files\EMC NetWorker\nsr\bin\savegrp.exe' Exchange_DAG
+# pause
