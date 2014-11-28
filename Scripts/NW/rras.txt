@@ -1,0 +1,331 @@
+﻿
+# ----------------------------------
+# IPv4 Configuration
+# ----------------------------------
+pushd interface ipv4
+set global icmpredirects=disabled
+add route prefix=0.0.0.0/0 interface="Ethernet" nexthop=x.x.x.103 publish=Yes
+set interface interface="Local Area Connection* 9" forwarding=enabled advertise=enabled nud=enabled ignoredefaultroutes=disabled
+set interface interface="Ethernet" forwarding=enabled advertise=enabled nud=enabled ignoredefaultroutes=disabled
+set interface interface="External DHCP" forwarding=enabled advertise=enabled nud=enabled ignoredefaultroutes=disabled
+popd
+# End of IPv4 configuration
+
+
+
+# ----------------------------------
+# IPv6 Configuration
+# ----------------------------------
+pushd interface ipv6
+
+set interface interface="Local Area Connection* 9" forwarding=enabled advertise=enabled nud=enabled ignoredefaultroutes=disabled
+set interface interface="Ethernet" forwarding=enabled advertise=enabled nud=enabled ignoredefaultroutes=disabled
+set interface interface="Local Area Connection* 11" forwarding=enabled advertise=enabled mtu=1280 nud=enabled ignoredefaultroutes=disabled
+set interface interface="External DHCP" forwarding=enabled advertise=enabled nud=enabled ignoredefaultroutes=disabled
+set interface interface="isatap.{06A09E99-6B69-4157-83A3-416574EE3515}" forwarding=enabled advertise=enabled nud=enabled ignoredefaultroutes=disabled
+set interface interface="isatap.localdomain" forwarding=enabled advertise=enabled nud=enabled ignoredefaultroutes=disabled
+
+
+popd
+# End of IPv6 configuration
+# ----------------------------------
+# TCP Configuration
+# ----------------------------------
+pushd interface tcp
+
+reset
+
+set global rss=enabled chimney=disabled autotuninglevel=normal congestionprovider=none ecncapability=enabled timestamps=disabled netdma=disabled dca=disabled initialrto=3000 rsc=enabled nonsackrttresiliency=disabled maxsynretransmissions=2
+
+
+popd
+# End of TCP configuration
+
+
+
+# ----------------------------------
+# Teredo Configuration
+# ----------------------------------
+pushd interface teredo
+set state type=client servername=win8.ipv6.microsoft.com. servervirtualip=0.0.0.0
+
+
+
+popd
+# End of Teredo configuration
+
+
+# ----------------------------------------- 
+# Remote Access Configuration               
+# ----------------------------------------- 
+pushd ras
+
+set authmode mode = standard
+delete authtype type = PAP
+delete authtype type = MD5CHAP
+delete authtype type = MSCHAPv2
+delete authtype type = EAP
+delete authtype type = CERT
+add authtype type = MSCHAPv2
+add authtype type = EAP
+delete link type = SWC
+delete link type = LCP
+add link type = SWC
+add link type = LCP
+delete multilink type = MULTI
+add multilink type = MULTI
+set conf confstate = enabled
+set type ipv4rtrtype = lanonly ipv6rtrtype = none rastype = none
+set wanports device = "WAN Miniport (SSTP)" rasinonly = disabled ddinout = disabled ddoutonly = disabled maxports = 5 
+set wanports device = "WAN Miniport (IKEv2)" rasinonly = disabled ddinout = enabled ddoutonly = disabled maxports = 5 
+set wanports device = "WAN Miniport (PPTP)" rasinonly = disabled ddinout = enabled ddoutonly = disabled maxports = 5 
+set wanports device = "WAN Miniport (L2TP)" rasinonly = disabled ddinout = enabled ddoutonly = disabled maxports = 5 
+set wanports device = "WAN Miniport (PPPOE)" ddoutonly = enabled
+
+set user name = Administrator dialin = policy cbpolicy = none 
+set user name = Guest dialin = policy cbpolicy = none 
+
+set ikev2connection idletimeout = 5 nwoutagetime = 30
+set ikev2saexpiry saexpirytime = 480 sadatasizelimit = 32767
+
+popd
+
+# End of Remote Access configuration.        
+                                             
+                                             
+
+                                            
+# ----------------------------------------- 
+# Remote Access Diagnostics Configuration   
+# ----------------------------------------- 
+pushd ras diagnostics
+
+set rastracing component = * state = disabled
+
+set modemtracing state = disabled
+
+set cmtracing state = disabled
+
+set securityeventlog state = disabled
+
+set loglevel events = warn
+
+
+popd
+
+# End of Remote Access Diagnostics Configuration.
+                                                 
+                                                 
+
+                                            
+# ----------------------------------------- 
+# Remote Access IP Configuration            
+# ----------------------------------------- 
+pushd ras ip
+
+delete pool
+
+set negotiation mode = allow
+set access mode = all
+set addrreq mode = deny
+set broadcastnameresolution mode = enabled
+set addrassign method = auto
+set preferredadapter 
+
+popd
+
+# End of Remote Access IP configuration.     
+                                             
+
+                                            
+# ----------------------------------------- 
+# Remote Access IPv6 Configuration          
+# ----------------------------------------- 
+pushd ras ipv6
+
+
+
+set negotiation mode = deny
+set access mode = all
+set routeradvertise mode = enabled
+set prefix prefix = ::
+
+popd
+
+# End of Remote Access IPv6 configuration.   
+                                             
+
+                                            
+# ----------------------------------------- 
+# Remote Access AAAA Configuration          
+# ----------------------------------------- 
+pushd ras aaaa
+
+set authentication provider = windows
+set accounting provider = windows
+
+delete authserver name = *
+delete acctserver name = *
+
+
+
+popd
+
+# End of Remote Access AAAA configuration.     
+                                               
+                                               
+# Routing Configuration
+pushd routing
+reset
+popd
+# IP Configuration
+pushd routing ip
+reset
+set loglevel error
+add preferenceforprotocol proto=LOCAL preflevel=1
+add preferenceforprotocol proto=STATIC preflevel=3
+add preferenceforprotocol proto=NONDOD preflevel=5
+add preferenceforprotocol proto=AUTOSTATIC preflevel=7
+add preferenceforprotocol proto=NetMgmt preflevel=10
+add preferenceforprotocol proto=EBGP preflevel=20
+add preferenceforprotocol proto=RIP preflevel=120
+add preferenceforprotocol proto=IBGP preflevel=200
+add interface name="Ethernet" state=enable
+set filter name="Ethernet" fragcheck=disable
+add interface name="External DHCP" state=enable
+set filter name="External DHCP" fragcheck=disable
+add interface name="Local Area Connection* 9" state=enable
+set filter name="Local Area Connection* 9" fragcheck=disable
+add interface name="Internal" state=enable
+add interface name="Loopback" state=enable
+popd
+# End of IP configuration
+
+
+
+# ---------------------------------- 
+# DNS Proxy configuration            
+# ---------------------------------- 
+pushd routing ip dnsproxy
+uninstall
+
+
+popd
+# End of DNS proxy configuration
+
+
+
+# ---------------------------------- 
+# IGMP Configuration                 
+# ---------------------------------- 
+pushd routing ip igmp
+uninstall
+install
+set global loglevel = ERROR
+
+
+# IGMP configuration for interface "Ethernet"
+
+delete interface name="Ethernet"
+add interface name="Ethernet" igmpprototype=IGMPRTRV3 ifenabled=enable robustvar=2 startupquerycount=2 startupqueryinterval=31 genqueryinterval=125 genqueryresptime=10 lastmemquerycount=2 lastmemqueryinterval=1000 accnonrtralertpkts=YES
+
+
+# IGMP configuration for interface "External DHCP"
+
+delete interface name="External DHCP"
+add interface name="External DHCP" igmpprototype=IGMPPROXY ifenabled=enable
+
+
+popd
+# End of IGMP configuration
+
+
+
+# ---------------------------------- 
+# NAT configuration                  
+# ---------------------------------- 
+pushd routing ip nat
+uninstall
+install
+set global tcptimeoutmins=1440 udptimeoutmins=1 loglevel=ERROR
+
+
+#
+#NAT Configuration For Interface Ethernet
+#
+add interface name="Ethernet" mode=PRIVATE
+
+
+#
+#NAT Configuration For Interface External DHCP
+#
+add interface name="External DHCP" mode=FULL
+
+
+#
+#NAT Configuration For Interface Internal
+#
+add interface name="Internal" mode=PRIVATE
+
+
+popd
+
+
+
+
+# ---------------------------------- 
+# DHCP Relay Agent configuration     
+# ---------------------------------- 
+pushd routing ip relay
+uninstall
+
+
+popd
+# End of DHCP Relay configuration
+
+
+
+# ---------------------------------- 
+# RIP configuration                  
+# ---------------------------------- 
+pushd routing ip rip
+uninstall
+
+
+popd
+# End of RIP configuration
+
+
+
+# ---------------------------------- 
+# Router Discovery Configuration     
+# ---------------------------------- 
+pushd routing ip routerdiscovery
+uninstall
+add interface name="Ethernet" disc=disable minint=7 maxint=10 life=30 level=0
+add interface name="External DHCP" disc=disable minint=7 maxint=10 life=30 level=0
+add interface name="Local Area Connection* 9" disc=disable minint=7 maxint=10 life=30 level=0
+add interface name="Internal" disc=disable minint=7 maxint=10 life=30 level=0
+add interface name="Loopback" disc=disable minint=7 maxint=10 life=30 level=0
+
+
+popd
+
+
+# ---------------------------------- 
+# DHCP Allocator Configuration       
+# ---------------------------------- 
+pushd routing ip autodhcp
+uninstall
+popd
+# End of DHCP Allocator Configuration
+
+# IPv6 Configuration
+pushd routing ipv6
+set filter name="Ethernet" fragcheck=disable
+set filter name="External DHCP" fragcheck=disable
+set filter name="Local Area Connection* 9" fragcheck=disable
+popd
+# End of IPv6 configuration
+
+
