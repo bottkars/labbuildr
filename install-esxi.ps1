@@ -151,19 +151,24 @@ if ($nfs.IsPresent)
     write-verbose "Cloning $Nodeprefix$node"
     $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$node 
     $Config = Get-VMXConfig -config $NodeClone.config
-
     
-    try
-    {
-    .\DiscUtilsBin-0.10\ISOCreate.exe "$($NodeClone.path)\ks.iso" .\iso\ | Out-Null
-    }
-     catch [Exception] 
+    
+   
+    IF (!(Test-Path $VMWAREpath\mkisofs.exe))
         {
-        Write-Warning "could not createvirtual cd iamge"
-        write-host $_.Exception.Message
-        break
+        Write-Warning "VMware ISO Tools not found, exiting"
         }
 
+    .$VMWAREpath\mkisofs.exe -o "$($NodeClone.path)\ks.iso"  "$Builddir\iso"#  | Out-Null
+    $LASTEXITCODE
+    switch ($LASTEXITCODE)
+        {
+            2
+                {
+                Write-Warning "could not create CD"
+                Break
+                }
+        }
     $Content = $Content | where {$_ -NotMatch "ide1:0"}
     write-verbose "injecting kickstart CDROM"
     $Content += 'ide1:0.present = "TRUE'

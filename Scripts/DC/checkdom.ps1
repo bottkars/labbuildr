@@ -13,7 +13,7 @@ $Builddir = $PSScriptRoot
 $Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
 New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
 New-Item -ItemType file -Path $Builddir\domain.txt -Force
-Set-Content -Value (Get-ADDomain).Name -Path $Builddir\domain.txt
+Set-Content -Value $env:USERDOMAIN -Path $Builddir\domain.txt
 New-Item -ItemType file -Path $Builddir\ip.txt -Force
 Set-Content -Value (Get-NetIPAddress -AddressFamily IPv4 | where IPAddress -ne "127.0.0.1").ipaddress -Path $Builddir\ip.txt
 New-Item -ItemType file -Path $Builddir\gateway.txt -Force
