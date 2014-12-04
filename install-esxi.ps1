@@ -5,6 +5,21 @@
    install-esxi is a standalone installer for esxi on vmware workstation
    the current devolpement requires a customized ESCi Image built for labbuildr
    currently, not all üparameters will e supported / verified
+
+   Copyright 2014 Karsten Bott
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
 .LINK
    https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released
 .EXAMPLE
