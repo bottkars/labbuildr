@@ -11,7 +11,8 @@
 param (
 
 [Parameter(Mandatory=$true)][ValidateSet('MDM','TB','SDS')]$role,
-[Parameter(Mandatory=$true)]$Disks
+[Parameter(Mandatory=$true)]$Disks,
+[Parameter(Mandatory=$true)]$ver
 )
 $ScriptName = $MyInvocation.MyCommand.Name
 $Host.UI.RawUI.WindowTitle = "$ScriptName"
@@ -23,16 +24,24 @@ New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
 switch ($role)
 		{
 			"MDM" {
-                    Start-Process -FilePath "msiexec.exe" -ArgumentList '/i "\\vmware-host\shared folders\sources\Scaleio\Windows\EMC-ScaleIO-mdm-1.30-426.0.msi" /quiet' -PassThru -Wait
+                    
+                    $ScaleIOArgs = '/i "\\vmware-host\shared folders\sources\Scaleio\Windows\EMC-ScaleIO-mdm-'+$ver+'.msi" /quiet'
+                    Start-Process -FilePath "msiexec.exe" -ArgumentList $ScaleIOArgs -PassThru -Wait
                   }
              "TB" {
-                    Start-Process -FilePath "msiexec.exe" -ArgumentList '/i "\\vmware-host\shared folders\sources\Scaleio\Windows\EMC-ScaleIO-tb-1.30-426.0.msi" /quiet' -PassThru -Wait
+                    $ScaleIOArgs = '/i "\\vmware-host\shared folders\sources\Scaleio\Windows\EMC-ScaleIO-tb-'+$ver+'.msi" /quiet'
+                    Start-Process -FilePath "msiexec.exe" -ArgumentList $ScaleIOArgs -PassThru -Wait
                   }
          }
              
-Start-Process -FilePath "msiexec.exe" -ArgumentList '/i "\\vmware-host\shared folders\sources\Scaleio\Windows\EMC-ScaleIO-sdc-1.30-426.0.msi" /quiet' -PassThru -Wait
-Start-Process -FilePath "msiexec.exe" -ArgumentList '/i "\\vmware-host\shared folders\sources\Scaleio\Windows\EMC-ScaleIO-sds-1.30-426.0.msi" /quiet' -PassThru -Wait
-# Start-Process -FilePath "msiexec.exe" -ArgumentList '/i "\\vmware-host\shared folders\sources\Scaleio\Windows\EMC-ScaleIO-lia-1.30-426.0.msi" /quiet' -PassThru -Wait
+
+$ScaleIOArgs = '/i "\\vmware-host\shared folders\sources\Scaleio\Windows\EMC-ScaleIO-sds-'+$ver+'.msi" /quiet'
+Start-Process -FilePath "msiexec.exe" -ArgumentList $ScaleIOArgs -PassThru -Wait
+$ScaleIOArgs = '/i "\\vmware-host\shared folders\sources\Scaleio\Windows\EMC-ScaleIO-sdc-'+$ver+'.msi" /quiet'
+Start-Process -FilePath "msiexec.exe" -ArgumentList $ScaleIOArgs -PassThru -Wait
+#Start-Process -FilePath "msiexec.exe" -ArgumentList '/i "\\vmware-host\shared folders\sources\Scaleio\Windows\EMC-ScaleIO-sdc-1.30-426.0.msi" /quiet' -PassThru -Wait
+#Start-Process -FilePath "msiexec.exe" -ArgumentList '/i "\\vmware-host\shared folders\sources\Scaleio\Windows\EMC-ScaleIO-sds-1.30-426.0.msi" /quiet' -PassThru -Wait
+#Start-Process -FilePath "msiexec.exe" -ArgumentList '/i "\\vmware-host\shared folders\sources\Scaleio\Windows\EMC-ScaleIO-lia-1.30-426.0.msi" /quiet' -PassThru -Wait
 
 Stop-Service ShellHWDetection
 foreach ($Disk in (1..$Disks))
