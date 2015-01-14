@@ -54,10 +54,11 @@ $Mountroot = $Driveletter.ToUpper() + ":"
 $Sourcedir = "$Mountroot\$Sources"
 $Nodeprefix = "ESXiNode"
 $MasterVMX = get-vmx -path $ESXIMasterPath
+$MasterVMX
 $Password = "Password123!"
 
 $Builddir = $PSScriptRoot
-
+Write-Verbose "Builddir is $Builddir"
 if ($nfs.IsPresent -or $initnfs.IsPresent)
     {
     try {
@@ -75,6 +76,7 @@ if (!$MasterVMX.Template)
     $template = $MasterVMX | Set-VMXTemplate
     }
 $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
+$Basesnap
 
 if (!$Basesnap) 
     {
@@ -165,7 +167,10 @@ if ($nfs.IsPresent)
 
     write-verbose "Cloning $Nodeprefix$node"
     $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$node 
+    write-verbose "Config : $($Nodeclone.config)"
+    
     $Config = Get-VMXConfig -config $NodeClone.config
+    
     
     
    
@@ -174,7 +179,8 @@ if ($nfs.IsPresent)
         Write-Warning "VMware ISO Tools not found, exiting"
         }
 
-    .$VMWAREpath\mkisofs.exe -o "$($NodeClone.path)\ks.iso"  "$Builddir\iso"#  | Out-Null
+        Write-Verbose "Node Clonepath =  $($NodeClone.Path)"
+    .$VMWAREpath\mkisofs.exe -o "$($NodeClone.path)\ks.iso"  "$Builddir\iso" #  | Out-Null
     $LASTEXITCODE
     switch ($LASTEXITCODE)
         {
@@ -184,16 +190,17 @@ if ($nfs.IsPresent)
                 Break
                 }
         }
-    $Content = $Content | where {$_ -NotMatch "ide1:0"}
+    $config = $config | where {$_ -NotMatch "ide1:0"}
+    
     write-verbose "injecting kickstart CDROM"
-    $Content += 'ide1:0.present = "TRUE'
-    $Content += 'ide1:0.fileName = "ks.iso"'
-    $Content += 'ide1:0.deviceType = "cdrom-image"'
+    $config += 'ide1:0.present = "TRUE"'
+    $config += 'ide1:0.fileName = "ks.iso"'
+    $config += 'ide1:0.deviceType = "cdrom-image"'
     write-verbose "injecting $esxiso CDROM"
-    $Content += 'ide0:0.present = "TRUE"'
-    $Content += 'ide0:0.fileName = "'+$esxiso+'"'
-    $Content += 'ide0:0.deviceType = "cdrom-image"'
-    Write-Verbose "Creating Disks"
+    $config = $config | where {$_ -NotMatch "ide0:0"}
+    $config += 'ide0:0.present = "TRUE"'
+    $config += 'ide0:0.fileName = "'+$esxiso+'"'
+    $config += 'ide0:0.deviceType = "cdrom-image"'
     Write-Verbose "Creating Disks"
     foreach ($Disk in 1..$Disks)
         {
@@ -242,28 +249,30 @@ if ($nfs.IsPresent)
         $Diskname = "SCSI$SCSI"+"_LUN$LUN"+"_$Disksize.vmdk"
         $Diskpath = "$($NodeClone.Path)\$Diskname"
         Write-Verbose "Creating Disk #$Disk with $Diskname and a size of $Disksize"
-        & $VMWAREpath\vmware-vdiskmanager.exe -c -s $Disksize -a lsilogic -t 0 $Diskpath 2>> error.txt | Out-Null
+        & $VMWAREpath\vmware-vdiskmanager.exe -c -s $Disksize -a lsilogic -t 0 $Diskpath # 2>> error.txt | Out-Null
         $AddDrives  = @('scsi'+$scsi+':'+$LUN+'.present = "TRUE"')
         $AddDrives += @('scsi'+$scsi+':'+$LUN+'.deviceType = "disk"')
         $AddDrives += @('scsi'+$scsi+':'+$LUN+'.fileName = "'+$Diskname+'"')
         $AddDrives += @('scsi'+$scsi+':'+$LUN+'.mode = "persistent"')
         $AddDrives += @('scsi'+$scsi+':'+$LUN+'.writeThrough = "false"')
         $Config += $AddDrives
+        $Config
         }
     
     $Config | set-Content -Path $NodeClone.Config
     write-verbose "Setting NICs"
     #Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config
-    # if ($vmnet)
-    #     {
-    #      Write-Verbose "Configuring NIC 2 and 3 for $vmnet"
+    if ($vmnet)
+         {
+          Write-Verbose "Configuring NIC 2 and 3 for $vmnet"
     #      Set-VMXNetworkAdapter -Adapter 1 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config 
          write-verbose "Setting NIC0"
-         Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType e1000 -config $NodeClone.Config 
+         Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType e1000 -config $NodeClone.Config
+    #     get-vmxconfig -config $NodeClone.Config
          Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config 
     #     Set-VMXVnet -Adapter 2 -vnet $vmnet -config $NodeClone.Config
-
-    #    }
+    #      get-vmxconfig -config $NodeClone.Config
+        }
     $Scenario = Set-VMXscenario -config $NodeClone.Config -Scenarioname ESXi -Scenario 6
     $ActivationPrefrence = Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node 
     Write-Verbose "Starting $Nodeprefix$node"
