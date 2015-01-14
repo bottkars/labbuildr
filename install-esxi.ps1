@@ -47,8 +47,8 @@ Param(
 
 #requires -version 3.0
 #requires -module vmxtoolkit 
-if (!($Driveletter)) {$Driveletter = $env:SystemDrive}
-$Driveletter = $Driveletter.Substring(0,1)
+if (!($Driveletter)) {$Driveletter = $env:SystemDrive.Substring(0,1)}
+# $Driveletter = $Driveletter.Substring(0,1)
 $Mountroot = $Driveletter.ToUpper() + ":"
 [string]$Sources = "Sources"
 $Sourcedir = "$Mountroot\$Sources"
@@ -249,7 +249,7 @@ if ($nfs.IsPresent)
         $Diskname = "SCSI$SCSI"+"_LUN$LUN"+"_$Disksize.vmdk"
         $Diskpath = "$($NodeClone.Path)\$Diskname"
         Write-Verbose "Creating Disk #$Disk with $Diskname and a size of $Disksize"
-        & $VMWAREpath\vmware-vdiskmanager.exe -c -s $Disksize -a lsilogic -t 0 $Diskpath # 2>> error.txt | Out-Null
+        & $VMWAREpath\vmware-vdiskmanager.exe -c -s $Disksize -a lsilogic -t 0 $Diskpath 2>> error.txt | Out-Null
         $AddDrives  = @('scsi'+$scsi+':'+$LUN+'.present = "TRUE"')
         $AddDrives += @('scsi'+$scsi+':'+$LUN+'.deviceType = "disk"')
         $AddDrives += @('scsi'+$scsi+':'+$LUN+'.fileName = "'+$Diskname+'"')
