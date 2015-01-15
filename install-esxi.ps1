@@ -32,7 +32,7 @@ Param(
 [Parameter(Mandatory=$false)][int32]$Startnode = 1,
 [Parameter(Mandatory=$False)][int32]$Disks = 1,
 [Parameter(Mandatory=$False)][ValidateSet('36GB','72GB','146GB')][string]$Disksize = "146GB",
-[Parameter(Mandatory=$False)]$Subnet = "10.10.0",
+[Parameter(Mandatory=$False)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet,
 [Parameter(Mandatory=$False)][ValidateLength(1,1)][Validatepattern('[A-Z]')][String]$Driveletter,
 [Parameter(Mandatory=$true)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain,
 [Parameter(Mandatory=$false)][ValidateScript({Test-Path -Path $_ -PathType Leaf -Include "ESX*labbuildr-ks.iso"})]$esxiso,
@@ -47,6 +47,9 @@ Param(
 
 #requires -version 3.0
 #requires -module vmxtoolkit 
+[System.Version]$subnet = $Subnet.ToString()
+$Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
+write-verbose "Subnet will be $subnet"
 if (!($Driveletter)) {$Driveletter = $env:SystemDrive.Substring(0,1)}
 # $Driveletter = $Driveletter.Substring(0,1)
 $Mountroot = $Driveletter.ToUpper() + ":"
@@ -54,9 +57,7 @@ $Mountroot = $Driveletter.ToUpper() + ":"
 $Sourcedir = "$Mountroot\$Sources"
 $Nodeprefix = "ESXiNode"
 $MasterVMX = get-vmx -path $ESXIMasterPath
-$MasterVMX
 $Password = "Password123!"
-
 $Builddir = $PSScriptRoot
 Write-Verbose "Builddir is $Builddir"
 if ($nfs.IsPresent -or $initnfs.IsPresent)
@@ -76,7 +77,6 @@ if (!$MasterVMX.Template)
     $template = $MasterVMX | Set-VMXTemplate
     }
 $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
-$Basesnap
 
 if (!$Basesnap) 
     {
