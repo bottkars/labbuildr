@@ -3,8 +3,13 @@
 
 .DESCRIPTION
    install-esxi is a standalone installer for esxi on vmware workstation
-   the current devolpement requires a customized ESCi Image built for labbuildr
-   currently, not all üparameters will e supported / verified
+   the current devolpement requires a customized ESXi Image built for labbuildr
+   currently, not all parameters will e supported / verified
+
+   The script will generate a kickstart cd with all required parameters, clones a master vmx and injects disk drives and cd´d into is.
+
+   The Required vmware Master can be downloaded fro https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released#OtherTable,
+   the customized esxi installimage can be found in https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released#SoftwareTable
 
    Copyright 2014 Karsten Bott
 
@@ -23,7 +28,7 @@
 .LINK
    https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released
 .EXAMPLE
-    .\install-esxi.ps1 -Nodes 3 -Startnode 1 -Disks 3 -Disksize 146GB -Subnet 10.10.0 -Driveletter  H -BuildDomain labbuildr -esxiso H:\sources\ESX\ESXi-5.5.0-1331820-labbuildr-ks.iso -ESXIMasterPath '.\VMware ESXi 5' -Verbose
+    PS E:\LABBUILDR> .\install-esxi.ps1 -Nodes 2 -Startnode 2 -Disks 3 -Disksize 146GB -subnet 10.0.0.0 -BuildDomain labbuildr -esxiso C:\sources\ESX\ESXi-5.5.0-1331820-labbuildr-ks.iso -ESXIMasterPath '.\VMware ESXi 5' -Verbose
 #>
 [CmdletBinding()]
 Param(
@@ -32,15 +37,20 @@ Param(
 [Parameter(Mandatory=$false)][int32]$Startnode = 1,
 [Parameter(Mandatory=$False)][int32]$Disks = 1,
 [Parameter(Mandatory=$False)][ValidateSet('36GB','72GB','146GB')][string]$Disksize = "146GB",
+<# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 [Parameter(Mandatory=$true)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet,
+<# If not using standard labbuildr, specigy the driveletter for your sources directory#>
 [Parameter(Mandatory=$False)][ValidateLength(1,1)][Validatepattern('[A-Z]')][String]$Driveletter,
 [Parameter(Mandatory=$true)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain,
 [Parameter(Mandatory=$false)][ValidateScript({Test-Path -Path $_ -PathType Leaf -Include "ESX*labbuildr-ks.iso"})]$esxiso,
 [Parameter(Mandatory=$true)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$ESXIMasterPath,
  <# NFS Parameter configures the NFS Default Datastore from DCNODE#>
 [Parameter(Mandatory=$false)][switch]$nfs,
+<# future use, initializes nfs on DC#>
 [Parameter(Mandatory=$false)][switch]$initnfs,
+<# should we use a differnt vmnet#>
 [Parameter(Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
+<# injects the kdriver for recoverpoint #>
 [Parameter(Mandatory = $false)][switch]$kdriver
 
 )
@@ -145,9 +155,10 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     #### finished
 if ($nfs.IsPresent)
     {
-    $Content += "esxcli storage nfs add --host $Subnet.10 --share /$BuildDomain"+"nfs volume-name=SWDEPOT --readonly"
+    $Content += "esxcli storage nfs add --host $Subnet.10 --share /$BuildDomain"+"nfs --volume-name=SWDEPOT --readonly"
     $Content += "tar xzfv  /vmfs/volumes/SWDEPOT/ovf.tar.gz  -C /vmfs/volumes/Datastore1@$Nodeprefix$Node/"
-    $Content += '/vmfs/volumes/Datastore1@ESXiNode1/ovf/tools/ovftool --diskMode=thin --datastore=Datastore1@'+$Nodeprefix+$Node+' --noSSLVerify --X:injectOvfEnv --powerOn "--net:Network 1=VM Network" --powerOn --acceptAllEulas --prop:vami.ip0.VMware_vCenter_Server_Appliance=10.10.0.89 --prop:vami.gateway.VMware_vCenter_Server_Appliance=10.10.0.103 --prop:vami.DNS.VMware_vCenter_Server_Appliance=10.10.0.10 --prop:vami.hostname=vcenter1.labbuildr.local /vmfs/volumes/SWDEPOT/VMware-vCenter-Server-Appliance-5.5.0.20200-2183109_OVF10.ova "vi://root:'+$Password+'@127.0.0.1"'
+    $Content += '/vmfs/volumes/Datastore1@ESXiNode1/ovf/tools/ovftool --diskMode=thin --datastore=Datastore1@'+$Nodeprefix+$Node+' --noSSLVerify --X:injectOvfEnv --powerOn "--net:Network 1=VM Network" --acceptAllEulas --prop:vami.ip0.VMware_vCenter_Server_Appliance='+$Subnet+'.89 --prop:vami.netmask0.VMware_vCenter_Server_Appliance=255.255.255.0 --prop:vami.gateway.VMware_vCenter_Server_Appliance='+$Subnet+'.103 --prop:vami.DNS.VMware_vCenter_Server_Appliance='+$Subnet+'.10 --prop:vami.hostname=vcenter1.labbuildr.local /vmfs/volumes/SWDEPOT/VMware-vCenter-Server-Appliance-5.5.0.20200-2183109_OVF10.ova "vi://root:'+$Password+'@127.0.0.1"'
+    $Content += "sleep 300"
     }
     $Content | Set-Content $KSDirectory\KS.CFG 
 
