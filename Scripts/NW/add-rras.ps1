@@ -17,6 +17,8 @@ $ScriptName = $MyInvocation.MyCommand.Name
 $Host.UI.RawUI.WindowTitle = "$ScriptName"
 $Builddir = $PSScriptRoot
 $Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
+$Domain = $env:USERDOMAIN
+
 New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
 Set-Content -Path "$Builddir\$ScriptName$Logtime.log" "$nodeIP, $subnet, $nodename"
 add-windowsfeature -Name RemoteAccess -IncludeAllSubFeature -IncludeManagementTools
@@ -25,7 +27,12 @@ $HopIP = Get-NetRoute -DestinationPrefix "0.0.0.0/0" -InterfaceAlias "External D
 Write-Verbose "Setting hop on DC"
 Invoke-Command -ComputerName $env:USERDOMAIN"DC" -ScriptBlock {param($HopIP) Add-DnsServerForwarder -ipaddress $HopIP} -ArgumentList "$HopIP"
 write-verbose "trying RRAS Configuration"
-netsh.exe -f C:\scripts\rras.txt
+
+$content = Get-Content -path "$Builddir\rras.txt"
+$content | foreach {$_ -replace "Ethernet", "$Domain"} | Set-Content "$Builddir\rras.txt"
+
+
+netsh.exe -f "$Builddir\rras.txt"
 Set-Service RemoteAccess -StartupType Automatic
 start-Service RemoteAccess
 

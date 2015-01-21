@@ -11,6 +11,7 @@
 [CmdletBinding()]
 param (
 $DCName,
+$Domain,
 $IPv4Subnet = "192.168.2",
 $IPv6Prefix = "",
 [Validateset('IPv4','IPv6','IPv4IPv6')]$AddressFamily, 
@@ -37,14 +38,10 @@ if ([System.Environment]::OSVersion.Version.Minor -ge 4)
 	Set-MpPreference -DisableRealtimeMonitoring $true
 	}
 #>
-# checking uefi or Normal Machine dirty hack
-if ($eth0 = Get-NetAdapter -Name "Ethernet0" -ErrorAction SilentlyContinue) {
-[switch]$uefi = $True
-}
-else
-{
-$eth0 = Get-NetAdapter -Name "Ethernet" -ErrorAction SilentlyContinue
-}
+$nics = @()
+$Nics = Get-NetAdapter | Sort-Object -Property ifIndex
+$eth0 = $nics[0]
+Rename-NetAdapter $eth0.Name -NewName $Domain
 
 If ($AddressFamily -match 'IPv4')
 {

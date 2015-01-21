@@ -113,7 +113,7 @@ $Folder=$_.Folder
 $Path=$_.Path -replace "BRSLAB", "$Domain" 
 $Path 
 New-PublicFolder -Name $Folder -Path $Path
-Enable-MailPublicFolder $Path\$Folder
+Enable-MailPublicFolder "$Path\$Folder"
 # Add-PublicFolderClientPermission $Path\$Folder -User Anonymous -AccessRights createitems
 
 Send-MailMessage -From $SenderSMTP -Subject "Welcome To Public Folders" -To $Folder$maildom -Body "This is Public Folder $Folder" -DeliveryNotificationOption None -SmtpServer $Smtpserver -Credential $Credential -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
