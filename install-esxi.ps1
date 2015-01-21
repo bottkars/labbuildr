@@ -158,7 +158,6 @@ if ($nfs.IsPresent)
     $Content += "esxcli storage nfs add --host $Subnet.10 --share /$BuildDomain"+"nfs --volume-name=SWDEPOT --readonly"
     $Content += "tar xzfv  /vmfs/volumes/SWDEPOT/ovf.tar.gz  -C /vmfs/volumes/Datastore1@$Nodeprefix$Node/"
     $Content += '/vmfs/volumes/Datastore1@ESXiNode1/ovf/tools/ovftool --diskMode=thin --datastore=Datastore1@'+$Nodeprefix+$Node+' --noSSLVerify --X:injectOvfEnv --powerOn "--net:Network 1=VM Network" --acceptAllEulas --prop:vami.ip0.VMware_vCenter_Server_Appliance='+$Subnet+'.89 --prop:vami.netmask0.VMware_vCenter_Server_Appliance=255.255.255.0 --prop:vami.gateway.VMware_vCenter_Server_Appliance='+$Subnet+'.103 --prop:vami.DNS.VMware_vCenter_Server_Appliance='+$Subnet+'.10 --prop:vami.hostname=vcenter1.labbuildr.local /vmfs/volumes/SWDEPOT/VMware-vCenter-Server-Appliance-5.5.0.20200-2183109_OVF10.ova "vi://root:'+$Password+'@127.0.0.1"'
-    $Content += "sleep 300"
     }
     $Content | Set-Content $KSDirectory\KS.CFG 
 

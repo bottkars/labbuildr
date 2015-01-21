@@ -27,7 +27,9 @@ $Mydomain = "$Domain$domainsuffix"
 $password = "Password123!" | ConvertTo-SecureString -asPlainText -Force
 $username = "$domain\Administrator" 
 $credential = New-Object System.Management.Automation.PSCredential($username,$password)
+# Add-Computer -DomainName $domain -Credential $credential
 Add-Computer -DomainName $Mydomain -Credential $credential
+
 New-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run -Name "Computerinfo" -Value "$PSHOME\powershell.exe -file c:\scripts\set-computerinfo.ps1"
 # Install-WindowsFeature -Name Failover-Clustering –IncludeManagementTools
 Start-Process C:\scripts\Autologon.exe -ArgumentList "Administrator $Domain Password123! /Accepteula"

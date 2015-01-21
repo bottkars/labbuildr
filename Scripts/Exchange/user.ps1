@@ -20,8 +20,8 @@ $Builddir = $PSScriptRoot
 $Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
 New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
 $Dot = "."
-$Domain = (get-addomain).name
-$ADDomain = (get-addomain).forest
+$Domain = $env:USERDOMAIN
+$ADDomain = $env:USERDNSDOMAIN
 $maildom= "@"+$ADDomain
 $Space = " "
 $Database = "DB1_"+$env:COMPUTERNAME
@@ -37,7 +37,6 @@ $SecurePassword = $PlainPassword | ConvertTo-SecureString -AsPlainText -Force
 $Credential = New-Object –TypeName System.Management.Automation.PSCredential –ArgumentList $DomainUser, $SecurePassword
 function Extract-Zip
 {
-	
     param([string]$zipfilename, [string] $destination)
     $copyFlag = 16 # overwrite = yes 
     $Origin = $MyInvocation.MyCommand
@@ -49,13 +48,8 @@ function Extract-Zip
 		$destinationFolder.CopyHere($zipPackage.Items(),$copyFlag)
 	}
 }
-
-# $Session = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri http://$env:COMPUTERNAME/PowerShell/ -Authentication Kerberos -Credential $Credential
-# Import-PSSession $Session -AllowClobber
-
 Set-TransportConfig -MaxReceiveSize 50MB
 Set-TransportConfig -MaxSendSize 50MB
-
 New-Item -ItemType Directory $AttachDir
 Extract-Zip c:\scripts\attachements.zip $AttachDir
 $Attachement = Get-ChildItem -Path $AttachDir -file -Filter *microsoft*release-notes*
@@ -64,6 +58,7 @@ Get-MailboxDatabase | Set-MailboxDatabase -CircularLoggingEnabled $false
 New-Item -ItemType Directory -Path R:\rdb
 New-Item -ItemType Directory -Path S:\rdb
 New-MailboxDatabase -Recovery -Name rdb$env:COMPUTERNAME -server $Smtpserver -EdbFilePath R:\rdb\rdb.edb  -logFolderPath S:\rdb
+Restart-Service MSExchangeIS
 Get-AddressList  | Update-AddressList
 # Enable-Mailbox -Identity $Domain\Administrator
 Enable-Mailbox -Identity $BackupAdmin
@@ -94,7 +89,7 @@ accountpassword=(ConvertTo-SecureString "Welcome1" -AsPlainText -Force);
 }
 New-ADUser @user -Enabled $True
 Enable-Mailbox $user.samaccountname -database $Database
-Send-MailMessage -From $SenderSMTP -Subject $Subject -Attachments $Attachement.FullName -To $UPN -Body $Body -DeliveryNotificationOption None -SmtpServer $Smtpserver -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
+Send-MailMessage -From $SenderSMTP -Subject $Subject -Attachments $Attachement.FullName -To $UPN -Body $Body -DeliveryNotificationOption None -SmtpServer $Smtpserver -Credential $Credential -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
 }
 
 
@@ -103,28 +98,35 @@ Send-MailMessage -From $SenderSMTP -Subject $Subject -Attachments $Attachement.F
 New-Mailbox -PublicFolder -Name $Domain -database $Database 
 $Newfolder = New-PublicFolder -Name $Domain
 Enable-MailPublicFolder $Newfolder
+# fixing the DSN 5.7.1. Create Item Change since Cu4
+Add-PublicFolderClientPermission $Newfolder -User ANONYMOUS -AccessRights createitems
 $PFSMTP = (Get-MailPublicFolder -Identity $Newfolder).EMAILAddresses[0].AddressString
-
-
-
 $count = (Get-ChildItem -Path $AttachDir -file).count
 $incr = 1
 foreach ( $file in Get-ChildItem -Path $AttachDir -file ) {
 Write-Progress -Activity "Sending File to Public Folder $Newfolder " -Status $file -PercentComplete (100/$count*$incr)
-Send-MailMessage -From $PFSMTP -Subject $file.name -To $PFSMTP -Attachments $file.FullName -DeliveryNotificationOption None -SmtpServer $Smtpserver -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
+Send-MailMessage -From $SenderSMTP -Subject $file.name -To $PFSMTP -Attachments $file.FullName -DeliveryNotificationOption None -SmtpServer $Smtpserver -Credential $Credential -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
 $incr++
 }
-
-################# Configuring SMTP receive Connector for non Exchange Servers and setting Up Mailhost on DNS
-Write-Host -ForegroundColor Yellow "Setting Up receive Connector"
 Import-CSV C:\Scripts\folders.csv | ForEach {
 $Folder=$_.Folder
 $Path=$_.Path -replace "BRSLAB", "$Domain" 
 $Path 
 New-PublicFolder -Name $Folder -Path $Path
 Enable-MailPublicFolder $Path\$Folder
-Send-MailMessage -From $SenderSMTP -Subject "Welcome To Public Folders" -To $Folder$maildom -Body "This is Public Folder $Folder" -DeliveryNotificationOption None -SmtpServer $Smtpserver -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
+# Add-PublicFolderClientPermission $Path\$Folder -User Anonymous -AccessRights createitems
+
+Send-MailMessage -From $SenderSMTP -Subject "Welcome To Public Folders" -To $Folder$maildom -Body "This is Public Folder $Folder" -DeliveryNotificationOption None -SmtpServer $Smtpserver -Credential $Credential -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
 }
+#Get-ReceiveConnector “*Default Frontend*" | Add-ADPermission -User “NT AUTHORITY\ANONYMOUS LOGON” -ExtendedRights “Ms-Exch-SMTP-Accept-Any-Recipient”
+
+################# Configuring SMTP receive Connector for non Exchange Servers and setting Up Mailhost on DNS
+#Write-Host -ForegroundColor Yellow "Setting Up receive Connector"
+
+# New-ReceiveConnector -Name SMTP -Usage Custom -Bindings $MyIP":25" -RemoteIPRanges "$Subnet.1-$Subnet.99","$Subnet.110-$Subnet.255"
+# Get-ReceiveConnector “*Default Frontend*" | Add-ADPermission -User “NT AUTHORITY\ANONYMOUS LOGON” -ExtendedRights “Ms-Exch-SMTP-Accept-Any-Recipient”
+# Get-ReceiveConnector | where identity -match "Default Frontend" | Add-ADPermission -User "NT AUTHORITY\ANONYMOUS LOGON" -ExtendedRights "Ms-Exch-SMTP-Accept-Any-Recipient"
+
 
 
 Write-Host -ForegroundColor Yellow "Setting Up C-record for mailhost"
