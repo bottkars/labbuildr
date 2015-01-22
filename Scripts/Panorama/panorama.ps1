@@ -22,6 +22,8 @@ Invoke-Command -ComputerName $SMBSERVER -ScriptBlock {
     }
 Start-Process -FilePath "msiexec.exe" -ArgumentList '/i "\\vmware-host\Shared Folders\Sources\Panorama\Syncplicity Panorama.msi" /passive' -PassThru -Wait
 Start-Process http://localhost:9000
+Set-NetFirewallProfile -Profile Public -Enabled False
+
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     {
     Pause
