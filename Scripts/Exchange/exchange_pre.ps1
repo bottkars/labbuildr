@@ -15,6 +15,7 @@ $Builddir = $PSScriptRoot
 $Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
 New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
 ############
+.$Builddir\test-sharedfolders.ps1
 .'\\vmware-host\shared Folders\sources\UcmaRuntimeSetup.exe' /passive /norestart
 c:\scripts\FilterPack64bit.exe /passive /norestart
 c:\scripts\filterpack2010sp1-kb2460041-x64-fullfile-en-us.exe /passive /norestart
