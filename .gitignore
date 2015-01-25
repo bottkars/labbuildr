@@ -259,3 +259,4 @@ VMware ESXi 5/
 *.pass
 2012*
 Panorama
+/release*
