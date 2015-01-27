@@ -157,13 +157,15 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
 
     $NodeClone | Invoke-VMXBash -Scriptblock "yast2 lan edit id=0 ip=$IP netmask=255.255.255.0 prefix=24 verbose" -Guestuser root -Guestpassword changeme -Verbose | Out-Null
     $NodeClone | Invoke-VMXBash -Scriptblock "hostname $($NodeClone.CloneName)" -Guestuser root -Guestpassword changeme -Verbose | Out-Null
-    $NodeClone | Invoke-VMXBash -Scriptblock "yast2 routing edit dest=default gateway=10.10.0.103" -Guestuser root -Guestpassword changeme -Verbose  | Out-Null
+    $Scriptblock = "echo 'default "+$subnet+" 10.10.0.103 - -' > /etc/sysconfig/network/routes"
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock  -Guestuser root -Guestpassword changeme -Verbose  | Out-Null
     $sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SEARCHLIST=\`"\`"/NETCONFIG_DNS_STATIC_SEARCHLIST=\`""+$BuildDomain+".local\`"/g' /etc/sysconfig/network/config" 
     $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser root -Guestpassword changeme -Verbose | Out-Null
     $sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SERVERS=\`"\`"/NETCONFIG_DNS_STATIC_SERVERS=\`""+$subnet+".10\`"/g' /etc/sysconfig/network/config"
     $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser root -Guestpassword changeme -Verbose | Out-Null
     $NodeClone | Invoke-VMXBash -Scriptblock "/sbin/netconfig -f update" -Guestuser root -Guestpassword changeme -Verbose | Out-Null
-    $NodeClone | Invoke-VMXBash -Scriptblock 'echo "ave1.labbuildr.local"  > /etc/HOSTNAME' -Guestuser root -Guestpassword changeme -Verbose | Out-Null
+    $Scriptblock = "echo '"+$Nodeprefix+$Node+"."+$BuildDomain+".local'  > /etc/HOSTNAME"
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser root -Guestpassword changeme -Verbose | Out-Null
     $NodeClone | Invoke-VMXBash -Scriptblock "/etc/init.d/network restart" -Guestuser root -Guestpassword changeme -Verbose | Out-Null
     # $NodeClone | Invoke-VMXBash -Scriptblock "shutdown -r now" -Guestuser root -Guestpassword changeme -Verbose -nowait
     Write-Verbose "rebooting VM $($NodeClone.Clonename)"
