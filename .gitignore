@@ -260,3 +260,7 @@ VMware ESXi 5/
 2012*
 Panorama
 /release*
+error.txt
+/AVE*
+/EMC*
+bash.ps1
