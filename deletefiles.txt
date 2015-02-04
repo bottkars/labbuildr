@@ -6,3 +6,6 @@
 .\scripts\dc\powerconf.ps107-04-2014_04-55-03.log
 .\scripts\dc\createdc.ps1
 .\labbuildripv6.ps1
+.\scripts\aag\pass.ps1
+.\scripts\Hyperv\pass.ps1
+.\scripts\sql\pass.ps1

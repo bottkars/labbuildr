@@ -28,29 +28,46 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     Write-Output $PSCmdlet.MyInvocation.BoundParameters
     }
 
-
+Write-Verbose $IPv6PrefixLength
+Write-Verbose $reverse
+Write-Verbose $IPV6Prefix
+$zone = Get-DnsServerzone $env:USERDNSDOMAIN
 Write-Host -ForegroundColor Yellow "Generating Reverse Lookup Zone"
 if ( $AddressFamily -match 'IPv4')
     {
     $reverse = $IPv4subnet+'.0/'+$IPv4PrefixLength
     Add-DnsServerPrimaryZone -NetworkID $reverse -ReplicationScope "Forest" -DynamicUpdate NonsecureAndSecure
+    
+    Write-Verbose "Setting Ressource Records for EMC VA´s"
+
+    Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name AveNode1 -IPv4Address "$IPv4Subnet.31" -ZoneName $zone.Zonename
+    Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name AveNode2 -IPv4Address "$IPv4Subnet.32" -ZoneName $zone.Zonename
+    Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name AveNode3 -IPv4Address "$IPv4Subnet.33" -ZoneName $zone.Zonename
+
+    Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name DDVE -IPv4Address "$IPv4Subnet.20" -ZoneName $zone.Zonename
+    Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name DDVeNode1 -IPv4Address "$IPv4Subnet.21" -ZoneName $zone.Zonename
+    Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name DDVeNode2 -IPv4Address "$IPv4Subnet.22"-ZoneName $zone.Zonename
+    Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name DDVeNode3 -IPv4Address "$IPv4Subnet.23" -ZoneName $zone.Zonename
+    
+    
     }
 if ( $AddressFamily -match 'IPv6')
     {
     $reverse = $IPV6Prefix+'/'+$IPv6PrefixLength
-    Add-DnsServerPrimaryZone -NetworkID $reverse -ReplicationScope "Forest" -DynamicUpdate NonsecureAndSecure
+
     }
-    Write-Verbose $IPv6PrefixLength
-    Write-Verbose $reverse
-    Write-Verbose $IPV6Prefix
 
 # Add-DnsServerPrimaryZone "$reverse.in-addr.arpa" -ZoneFile "$reverse.in-addr.arpa.dns" -DynamicUpdate NonsecureAndSecure
-$zone = Get-DnsServerzone $env:USERDNSDOMAIN
+
 Add-DnsServerZoneDelegation -Name $zone.ZoneName -ChildZoneName OneFS -NameServer "smartconnect.$env:USERDNSDOMAIN" -IPAddress "$IPv4Subnet.40"
 Add-DnsServerZoneDelegation -Name $zone.ZoneName -ChildZoneName OneFSremote -NameServer "smartconnectremote.$env:USERDNSDOMAIN" -IPAddress "$IPv4Subnet.60"
 $reversezone =  Get-DnsServerZone | where { $_.IsDsIntegrated -and $_.IsReverseLookupZone}
 $reversezone | Add-DnsServerResourceRecordPtr -AllowUpdateAny -Name "40" -PtrDomainName "smartconnect.$env:USERDNSDOMAIN"
 $reversezone | Add-DnsServerResourceRecordPtr -AllowUpdateAny -Name "60" -PtrDomainName "smartconnectremote.$env:USERDNSDOMAIN"
+## add some hosts vor avamar and ddve  and others. . . 
+
+
+
 
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     {

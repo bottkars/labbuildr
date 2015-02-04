@@ -50,4 +50,5 @@ $Setuppath = "\\vmware-host\Shared Folders\Sources\$NW_ver\win_x64\networkr\nmc\
 Start-Process -Wait -FilePath "$Setuppath" -ArgumentList '/S /v" /passive /l*v c:\scripts\nmcsetup2.log CONFIGFIREWALL=1 NW_FIREWALL_CONFIG=1 setuptype=Install"'
 
 Write-Verbose "Setting up NMC"
-Start-Process -Wait -FilePath "javaws.exe" -ArgumentList "-import -silent -system -shortcut -association http://localhost:9000/gconsole.jnlp"
+# Start-Process -Wait -FilePath "javaws.exe" -ArgumentList "-import -silent -system -shortcut -association http://localhost:9000/gconsole.jnlp"
+# start-process http://localhost:9000/gconsole.jnlp

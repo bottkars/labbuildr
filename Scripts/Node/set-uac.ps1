@@ -19,3 +19,6 @@ Set-NetFirewallProfile -Profile Domain,Private -Enabled False
 write-verbose "Configuring UAC"
 set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value 00000000 
 set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "EnableLUA" -Value 00000000 
+
+Write-Verbose "computer needs to be rebooted to finish UAC"
+# Restart-Computer

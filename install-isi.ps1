@@ -14,8 +14,31 @@ Param(
 
 $Nodeprefix = "ISINode"
 
-$MasterVMX = get-vmx -path $MasterPath
+If (!($MasterVMX = get-vmx -path $MasterPath))
+    {
+    Write-Error "No Valid Master Found"
+    break
+    }
 
+Write-Verbose "Tweaking VMX File"
+$Config = Get-VMXConfig -config $MasterVMX.Config
+$Config = $Config -notmatch "SCSI0:"
+$Config = $Config -notmatch "ide0:0.fileName"
+$Config += 'ide0:0.fileName = "boot0.vmdk"'
+$Config += 'scsi0:0.redo = ""'
+$Config += 'scsi0:0.present = "TRUE"'
+$Config += 'scsi0:0.fileName = "isi-nvram.vmdk"'
+$Config | set-Content -Path $MasterVMX.Config
+
+$tweakname = Get-ChildItem $MasterVMX.config
+$tweakdir = Split-Path -Leaf $tweakname.Directory
+If ($tweakname.BaseName -notmatch  $tweakdir)
+    {
+    Rename-Item $tweakname -NewName "$tweakdir.vmx"
+    }
+
+write-verbose "re-reading Master"
+$MasterVMX = get-vmx -path $MasterPath
 
 if (!$MasterVMX.Template) 
     {
@@ -39,98 +62,16 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     {
     write-verbose "Creating clone $Nodeprefix$node"
     $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$node 
-    $Config = Get-VMXConfig -config $NodeClone.config
-###### next will be replaced by add-vmxscsicontroller
-    if ($Disks -ge 15)
-        {
-        Write-Verbose "Configuring SCSI Controller SCSI1"
-        $Config = $Config |where {$_ -NotMatch "scsi1.present"}
-        $Config += 'scsi1.present = "TRUE"'
-        $Config = $Config |where {$_ -NotMatch "scsi1.VirtualDev"}
-        $Config += 'scsi1.virtualDev = "lsilogic"'
-        }
-    if ($Disks -ge 30)
-        {
-        Write-Verbose "Configuring SCSI Controller SCSI2"
-        $Config = $Config |where {$_ -NotMatch "scsi2.present"}
-        $Config += 'scsi2.present = "TRUE"'
-        $Config = $Config |where {$_ -NotMatch "scsi2.VirtualDev"}
-        $Config += 'scsi2.virtualDev = "lsilogic"'
-        }
-    if ($Disks -ge 45)
-        {
-        Write-Verbose "Configuring SCSI Controller SCSI3"
-        $Config = $Config |where {$_ -NotMatch "scsi3.present"}
-        $Config += 'scsi3.present = "TRUE"'
-        $Config = $Config |where {$_ -NotMatch "scsi3.VirtualDev"}
-        $Config += 'scsi3.virtualDev = "lsilogic"'
-        }
-######
-
-
-
-
     Write-Verbose "Creating Disks"
-
-  
-    foreach ($Disk in 1..$Disks)
-        {
-     if ($Disk -le 6)
-        {
-        $SCSI = 0
-        $Lun = $Disk
-        }
-     if (($Disk -gt 6) -and ($Disk -le 14))
-        {
-        $SCSI = 0
-        $Lun = $Disk+1
-        }
-     if (($Disk -gt 14) -and ($Disk -le 21))
-        {
-        $SCSI = 1
-        $Lun = $Disk-15
-        }
-     if (($Disk -gt 21) -and ($Disk -le 29))
-        {
-        $SCSI = 1
-        $Lun = $Disk-14
-        }
-     if (($Disk -gt 29) -and ($Disk -le 36))
-        {
-        $SCSI = 2
-        $Lun = $Disk-30
-        }
-     if (($Disk -gt 36) -and ($Disk -le 44))
-        {
-        $SCSI = 2
-        $Lun = $Disk-29
-        }
-     if (($Disk -gt 44) -and ($Disk -le 51))
-        {
-        $SCSI = 3
-        $Lun = $Disk-45
-        }
-     if (($Disk -gt 51) -and ($Disk -le 59))
-        {
-        $SCSI = 3
-        $Lun = $Disk-44
-        }
-
-        Write-Verbose "SCSI$($Scsi):$lun"
-        $Diskname = "SCSI$SCSI"+"_LUN$LUN"+"_$Disksize.vmdk"
-        $Diskpath = "$($NodeClone.Path)\$Diskname"
-        Write-Verbose "Creating Disk #$Disk with $Diskname and a size of $Disksize"
-        & $VMWAREpath\vmware-vdiskmanager.exe -c -s $Disksize -a lsilogic -t 0 $Diskpath 2>> error.txt
-        
-        $AddDrives  = @('scsi'+$scsi+':'+$LUN+'.present = "TRUE"')
-        $AddDrives += @('scsi'+$scsi+':'+$LUN+'.deviceType = "disk"')
-        $AddDrives += @('scsi'+$scsi+':'+$LUN+'.fileName = "'+$Diskname+'"')
-        $AddDrives += @('scsi'+$scsi+':'+$LUN+'.mode = "persistent"')
-        $AddDrives += @('scsi'+$scsi+':'+$LUN+'.writeThrough = "false"')
-        $Config += $AddDrives
-        }
-    
-    $Config | set-Content -Path $NodeClone.Config
+    $SCSI = 0
+    foreach ($LUN in (1..$Disks))
+            {
+            $Diskname =  "SCSI$SCSI"+"_LUN$LUN"+"_$Disksize.vmdk"
+            Write-Verbose "Building new Disk $Diskname"
+            $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
+            Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
+            $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
+            }
     write-verbose "Setting ext-1"
     Set-VMXNetworkAdapter -Adapter 1 -ConnectionType custom -AdapterType e1000 -config $NodeClone.Config
     Set-VMXVnet -Adapter 1 -vnet $vmnet -config $NodeClone.Config 
