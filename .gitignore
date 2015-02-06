@@ -266,3 +266,8 @@ error.txt
 bash.ps1
 /_dev
 7Cloud*
+CloudArray-ESXi5-5.0.1.6497/CloudArray-ESXi5-5.0.1.6497-Snapshot1.vmsn
+*.vmsd
+*.vmem
+*.vmss
+*.nvram
