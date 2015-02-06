@@ -9,3 +9,4 @@
 .\scripts\aag\pass.ps1
 .\scripts\Hyperv\pass.ps1
 .\scripts\sql\pass.ps1
+.\scaleio.ps1
