@@ -45,7 +45,7 @@ _______|_________|_____|_________
 [Parameter(Mandatory=$false)][int32]$Nodes=1,
 [Parameter(Mandatory=$false)][int32]$Startnode = 1,
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
-[Parameter(Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "10.10.0.0",
+[Parameter(Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
 [Parameter(Mandatory=$False)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
 
 [Parameter(Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
@@ -58,7 +58,8 @@ $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 
 $Builddir = $PSScriptRoot
 $Nodeprefix = "AVENode"
-
+$rootuser = "root"
+$rootpassword = "changeme"
 $MasterVMX = get-vmx -path $MasterPath
 
 if (!$MasterVMX.Template) 
@@ -132,7 +133,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
             }
         
     Write-Verbose "Configuring NIC"
-    $Netadater = $NodeClone | Set-VMXVnet -Adapter 0 -vnet vmnet2
+    $Netadater = $NodeClone | Set-VMXVnet -Adapter 0 -vnet $vmnet
     Write-Verbose "Disabling IDE0"
     $NodeClone | Set-VMXDisconnectIDE | Out-Null
     $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
@@ -153,21 +154,21 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     until ($ToolState.state -match "running")
 
     Write-Verbose "Configuring Disks"
-    $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/perl /usr/local/avamar/bin/ave-part.pl" -Guestuser root -Guestpassword changeme -Verbose | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/perl /usr/local/avamar/bin/ave-part.pl" -Guestuser $rootuser -Guestpassword changeme -Verbose | Out-Null
 
-    $NodeClone | Invoke-VMXBash -Scriptblock "yast2 lan edit id=0 ip=$IP netmask=255.255.255.0 prefix=24 verbose" -Guestuser root -Guestpassword changeme -Verbose | Out-Null
-    $NodeClone | Invoke-VMXBash -Scriptblock "hostname $($NodeClone.CloneName)" -Guestuser root -Guestpassword changeme -Verbose | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock "yast2 lan edit id=0 ip=$IP netmask=255.255.255.0 prefix=24 verbose" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock "hostname $($NodeClone.CloneName)" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
     $Scriptblock = "echo 'default "+$subnet+".103 - -' > /etc/sysconfig/network/routes"
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock  -Guestuser root -Guestpassword changeme -Verbose  | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock  -Guestuser $rootuser -Guestpassword $rootpassword -Verbose  | Out-Null
     $sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SEARCHLIST=\`"\`"/NETCONFIG_DNS_STATIC_SEARCHLIST=\`""+$BuildDomain+".local\`"/g' /etc/sysconfig/network/config" 
-    $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser root -Guestpassword changeme -Verbose | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
     $sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SERVERS=\`"\`"/NETCONFIG_DNS_STATIC_SERVERS=\`""+$subnet+".10\`"/g' /etc/sysconfig/network/config"
-    $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser root -Guestpassword changeme -Verbose | Out-Null
-    $NodeClone | Invoke-VMXBash -Scriptblock "/sbin/netconfig -f update" -Guestuser root -Guestpassword changeme -Verbose | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock "/sbin/netconfig -f update" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
     $Scriptblock = "echo '"+$Nodeprefix+$Node+"."+$BuildDomain+".local'  > /etc/HOSTNAME"
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser root -Guestpassword changeme -Verbose | Out-Null
-    $NodeClone | Invoke-VMXBash -Scriptblock "/etc/init.d/network restart" -Guestuser root -Guestpassword changeme -Verbose | Out-Null
-    # $NodeClone | Invoke-VMXBash -Scriptblock "shutdown -r now" -Guestuser root -Guestpassword changeme -Verbose -nowait
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock "/etc/init.d/network restart" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
+    # $NodeClone | Invoke-VMXBash -Scriptblock "shutdown -r now" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose -nowait
     Write-Verbose "rebooting VM $($NodeClone.Clonename)"
     # we do not use shutdown since toolstate does not reset
     $NodeClone | Stop-VMX | Out-Null
@@ -180,7 +181,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     until ($ToolState.state -match "running")
 
     Write-Verbose "Starting Avamar Installer, this may take a while"
-    $NodeClone | Invoke-VMXBash -Scriptblock "/bin/sh /usr/local/avamar/src/avinstaller-bootstrap-7.1.1-141.sles11_64.x86_64.run" -Guestuser root -Guestpassword changeme -Verbose | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock "/bin/sh /usr/local/avamar/src/avinstaller-bootstrap-7.1.1-141.sles11_64.x86_64.run" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
     Write-Host "Trying to connect to https://$subnet.3$($Node):8543/avi/avigui.html to complete the Installation"
     Start-Process "https://$subnet.3$($Node):8543/avi/avigui.html"
     
