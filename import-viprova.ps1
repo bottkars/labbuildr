@@ -51,7 +51,7 @@ foreach ($Disk in $Disks)
         {
         if (!$Viprova)
             { Write-Warning " wee need a OVA Template to extraxt. Please use -Viprova to specify a valid OVA"
-            break
+            exit
             }
 
         Write-Verbose "$Disk not found, deflating ViprDisk from OVA"
