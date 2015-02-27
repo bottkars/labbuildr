@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Envelope vmw:buildId="build-455964" xmlns="http://schemas.dmtf.org/ovf/envelope/1" xmlns:cim="http://schemas.dmtf.org/wbem/wscim/1/common" xmlns:ovf="http://schemas.dmtf.org/ovf/envelope/1" xmlns:rasd="http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_ResourceAllocationSettingData" xmlns:vmw="http://www.vmware.com/schema/ovf" xmlns:vssd="http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_VirtualSystemSettingData" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <!-- Virtual Disk Files --> 
+  <References>
+    <File ovf:href="vipr-2.2.0.0.1043-disk1.vmdk" ovf:id="file1" ovf:size="636707840"/>
+    <File ovf:href="vipr-2.2.0.0.1043-disk2.vmdk" ovf:id="file2" ovf:size="76800"/>
+    <File ovf:href="vipr-2.2.0.0.1043-disk5.vmdk" ovf:id="file3" ovf:size="2831872"/>
+  </References>
+  <!-- Virtual Disk Description -->
+  <DiskSection>
+    <Info>Virtual Disk Information</Info>
+    <Disk ovf:capacity="4" ovf:capacityAllocationUnits="byte * 2^30" ovf:diskId="vmdisk1" ovf:fileRef="file1" ovf:format="http://www.vmware.com/interfaces/specifications/vmdk.html#streamOptimized" ovf:populatedSize="654245888"/>
+    <Disk ovf:capacity="16" ovf:capacityAllocationUnits="byte * 2^30" ovf:diskId="vmdisk2" ovf:fileRef="file2" ovf:format="http://www.vmware.com/interfaces/specifications/vmdk.html#streamOptimized" ovf:populatedSize="196608"/>
+    <Disk ovf:capacity="100" ovf:capacityAllocationUnits="byte * 2^30" ovf:diskId="vmdisk3" ovf:fileRef="file3" ovf:format="http://www.vmware.com/interfaces/specifications/vmdk.html#streamOptimized" ovf:populatedSize="62652416"/>
+  </DiskSection>
+
+  <!-- Logical Networks -->
+  <NetworkSection>
+    <Info>The list of logical networks</Info>
+    <Network ovf:name="ViPR Network">
+      <Description>ViPR Network</Description>
+    </Network>
+  </NetworkSection>
+
+  <vmw:IpAssignmentSection ovf:required="false" vmw:protocols="IPv4" vmw:schemes="ovfenv">
+    <Info>Supported IP assignment schemes</Info>
+  </vmw:IpAssignmentSection>
+    <ProductSection>
+      <Info>Information about the installed software</Info>
+      <Product>vipr-standalone-labbuildr</Product>
+      <Vendor>EMC Corp</Vendor>
+      <Version>2.2.0.0</Version>
+      <FullVersion>2.2.0.0.1043</FullVersion>
+      <ProductUrl>http://www.emc.com/vipr</ProductUrl>
+      <VendorUrl>http://www.emc.com</VendorUrl>
+    </ProductSection>
+    <!-- vipr1 -->
+    <VirtualSystem ovf:id="vipr1">
+      <Info>EMC ViPR controller virtual nachine</Info>
+      <Name>vipr1</Name>
+      <OperatingSystemSection ovf:id="85" ovf:version="11" vmw:osType="sles11_64Guest">
+        <Info>Guest Operating System</Info>
+        <Description>Novell SUSE Linux Enterprise 11 (64-bit)</Description>
+      </OperatingSystemSection>
+
+      <!-- Virtual Hardware -->
+      <VirtualHardwareSection ovf:transport="com.vmware.guestInfo iso">
+        <Info>Virtual Hardware Requirements</Info>
+        <System>
+          <vssd:ElementName>Virtual Hardware Family</vssd:ElementName>
+          <vssd:InstanceID>0</vssd:InstanceID>
+          <vssd:VirtualSystemIdentifier>vipr</vssd:VirtualSystemIdentifier>
+          <vssd:VirtualSystemType>vmx-07</vssd:VirtualSystemType>
+        </System>
+        <Item>
+          <rasd:AllocationUnits>hertz * 10^6</rasd:AllocationUnits>
+          <rasd:Description>Number of Virtual CPUs</rasd:Description>
+          <rasd:ElementName>2 virtual CPU(s)</rasd:ElementName>
+          <rasd:InstanceID>1</rasd:InstanceID>
+          <rasd:ResourceType>3</rasd:ResourceType>
+          <rasd:VirtualQuantity>2</rasd:VirtualQuantity>
+        </Item>
+        <Item>
+          <rasd:AllocationUnits>byte * 2^20</rasd:AllocationUnits>
+          <rasd:Description>Memory Size</rasd:Description>
+          <rasd:ElementName>8192MB of memory</rasd:ElementName>
+          <rasd:InstanceID>2</rasd:InstanceID>
+          <rasd:ResourceType>4</rasd:ResourceType>
+          <rasd:VirtualQuantity>8192</rasd:VirtualQuantity>
+        </Item>
+        <Item>
+          <rasd:Address>0</rasd:Address>
+          <rasd:Description>SCSI Controller</rasd:Description>
+          <rasd:ElementName>SCSI controller 0</rasd:ElementName>
+          <rasd:InstanceID>3</rasd:InstanceID>
+          <rasd:ResourceSubType>lsilogic</rasd:ResourceSubType>
+          <rasd:ResourceType>6</rasd:ResourceType>
+        </Item>
+        <Item>
+          <rasd:Address>1</rasd:Address>
+          <rasd:Description>IDE Controller</rasd:Description>
+          <rasd:ElementName>IDE 1</rasd:ElementName>
+          <rasd:InstanceID>4</rasd:InstanceID>
+          <rasd:ResourceType>5</rasd:ResourceType>
+        </Item>
+        <Item>
+          <rasd:Address>0</rasd:Address>
+          <rasd:Description>IDE Controller</rasd:Description>
+          <rasd:ElementName>IDE 0</rasd:ElementName>
+          <rasd:InstanceID>5</rasd:InstanceID>
+          <rasd:ResourceType>5</rasd:ResourceType>
+        </Item>
+        <Item>
+          <rasd:AddressOnParent>0</rasd:AddressOnParent>
+          <rasd:ElementName>Harddisk 1</rasd:ElementName>
+          <rasd:HostResource>ovf:/disk/vmdisk1</rasd:HostResource>
+          <rasd:InstanceID>6</rasd:InstanceID>
+          <rasd:Parent>3</rasd:Parent>
+          <rasd:ResourceType>17</rasd:ResourceType>
+        </Item>
+        <Item>
+          <rasd:AddressOnParent>1</rasd:AddressOnParent>
+          <rasd:ElementName>Harddisk 2</rasd:ElementName>
+          <rasd:HostResource>ovf:/disk/vmdisk2</rasd:HostResource>
+          <rasd:InstanceID>7</rasd:InstanceID>
+          <rasd:Parent>3</rasd:Parent>
+          <rasd:ResourceType>17</rasd:ResourceType>
+        </Item>
+        <Item>
+          <rasd:AddressOnParent>2</rasd:AddressOnParent>
+          <rasd:ElementName>Harddisk 3</rasd:ElementName>
+          <rasd:HostResource>ovf:/disk/vmdisk3</rasd:HostResource>
+          <rasd:InstanceID>8</rasd:InstanceID>
+          <rasd:Parent>3</rasd:Parent>
+          <rasd:ResourceType>17</rasd:ResourceType>
+        </Item>
+        <Item>
+          <rasd:AddressOnParent>7</rasd:AddressOnParent>
+          <rasd:AutomaticAllocation>true</rasd:AutomaticAllocation>
+          <rasd:Connection>ViPR Network</rasd:Connection>
+          <rasd:Description>VmxNet3 ethernet adapter on &quot;ViPR Network&quot;</rasd:Description>
+          <rasd:ElementName>Network adapter 1</rasd:ElementName>
+          <rasd:InstanceID>9</rasd:InstanceID>
+          <rasd:ResourceSubType>VmxNet3</rasd:ResourceSubType>
+          <rasd:ResourceType>10</rasd:ResourceType>
+        </Item>
+        <Item ovf:required="false">
+          <rasd:AddressOnParent>0</rasd:AddressOnParent>
+          <rasd:AutomaticAllocation>false</rasd:AutomaticAllocation>
+          <rasd:ElementName>CD/DVD drive 1</rasd:ElementName>
+          <rasd:InstanceID>10</rasd:InstanceID>
+          <rasd:Parent>5</rasd:Parent>
+          <rasd:ResourceType>15</rasd:ResourceType>
+        </Item>
+        <vmw:Config ovf:required="false" vmw:key="tools.syncTimeWithHost" vmw:value="FALSE"/>
+      </VirtualHardwareSection>
+      <AnnotationSection ovf:required="false">
+        <Info>A human-readable annotation</Info>
+        <Annotation>EMC ViPR Controller Labbuildr Edition</Annotation>
+      </AnnotationSection>
+        
+      <ProductSection>
+        <Info>Information about the installed software</Info>
+        <Product>vipr-2.2.0.0.1043</Product>
+        <Vendor>EMC Corp</Vendor>
+        <Version>2.2.0.0</Version>
+        <FullVersion>2.2.0.0.1043</FullVersion>
+        <ProductUrl>http://www.emc.com/storageos</ProductUrl>
+        <VendorUrl>http://www.emc.com</VendorUrl>
+      </ProductSection>
+
+    </VirtualSystem>
+</Envelope>
