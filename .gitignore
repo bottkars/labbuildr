@@ -247,7 +247,6 @@ diskpart.txt
 /Scaleiovm*
 /98*
 iso/
-/vipr*
 *.exe
 *.msi
 *.msu

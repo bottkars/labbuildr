@@ -24,14 +24,14 @@
 .LINK
    https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released
 .EXAMPLE
-    PS E:\LABBUILDR> .\install-esxi.ps1 -Nodes 2 -Startnode 2 -Disks 3 -Disksize 146GB -subnet 10.0.0.0 -BuildDomain labbuildr -esxiso C:\sources\ESX\ESXi-5.5.0-1331820-labbuildr-ks.iso -ESXIMasterPath '.\VMware ESXi 5' -Verbose
 #>
 [CmdletBinding()]
 Param(
 
 [Parameter(Mandatory=$false)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$ViprOVA, 
-#= 'h:\_EMC-VAs\ViPR v2.2\vipr-2.2.0.0.1043-controller-1+0.ova',
-[Parameter(Mandatory=$false)]$targetname = "viprtest"
+[Parameter(Mandatory=$false)]$targetname = "vipr1",
+[Parameter(Mandatory=$false)]$viprmaster = "viprmaster-2.2.0.1"
+
 )
 
 if (get-vmx $targetname)
@@ -42,8 +42,7 @@ if (get-vmx $targetname)
 
 
 $Disks = ('disk1','disk2','disk5')
-
-$masterpath = "$PSScriptRoot\viprmaster"
+$masterpath = "$PSScriptRoot\$viprmaster"
 $Missing = @()
 foreach ($Disk in $Disks)
     {
@@ -51,23 +50,56 @@ foreach ($Disk in $Disks)
         {
         if (!$Viprova)
             { Write-Warning " wee need a OVA Template to extraxt. Please use -Viprova to specify a valid OVA"
-            exit
+            break
             }
 
-        Write-Verbose "$Disk not found, deflating ViprDisk from OVA"
+
+        Write-warning "$Disk not found, deflating ViprDisk from OVA"
         & $global:vmwarepath\7za.exe x "-o$masterpath" -y $ViprOVA "*$Disk.vmdk" | out-null
         }
 
     }
-& $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck  --name=$targetname $masterpath\viprmaster.ovf $PSScriptRoot 
 
+
+Write-Warning "importing the disks "
+
+if(!(Test-Path $PSScriptRoot\$targetname))
+    {
+    New-Item -ItemType Directory $PSScriptRoot\$targetname | Out-Null
+    }
+foreach ($Disk in $Disks)
+    {
+    
+    $SOURCEDISK = Get-ChildItem -Path "$masterpath\vipr-*$disk.vmdk"
+    $TargetDisk = "$PSScriptRoot\$targetname\$Disk.vmdk"
+    if (Test-Path $TargetDisk)
+        { 
+        write-warning "Master $TargetDisk already present, no conversion needed"
+        }
+    else
+        {
+        write-warning "converting $TargetDisk"
+        & $VMwarepath\vmware-vdiskmanager.exe -r $SOURCEDISK.FullName -t 0 $TargetDisk  2>&1 | Out-Null
+        If ($Disk -match "Disk5")
+            {
+            # will need this for the storageos installer once figure out ovf-env disk :-)
+            # & $VMwarepath\vmware-vdiskmanager.exe $PSScriptRoot\$targetname\disk3.vmdk -x 122GB
+            }
+        }
+    }
+
+
+# & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck  --name=$targetname $masterpath\viprmaster.ovf $PSScriptRoot 
+Write-Verbose " Copy base vm config to new master"
+
+Copy-Item .\viprmaster\viprmaster.vmx $targetname\$targetname.vmx
 $vmx = get-vmx $targetname
-
 $vmx | Set-VMXNetworkAdapter -Adapter 0 -AdapterType vmxnet3 -ConnectionType custom
 $vmx | Set-VMXVnet -Adapter 0 -vnet vmnet2
 Write-Verbose "Generating CDROM"
-& $Global:vmwarepath\mkisofs.exe -J -R -o "$PSScriptRoot\$Targetname\vipr.iso" e:\vipr2.2\cd
-
+convert-VMXdos2unix -Sourcefile .\viprmaster\cd\ovfenv.properties -Verbose
+convert-VMXdos2unix -Sourcefile .\viprmaster\cd\genconfig.sh -Verbose
+& $Global:vmwarepath\mkisofs.exe -J -R -o "$PSScriptRoot\$Targetname\vipr.iso" $PSScriptRoot\viprmaster\cd 2>&1 | Out-Null
 $config = $vmx | get-vmxconfig
     write-verbose "injecting CDROM"
     $config = $config | where {$_ -NotMatch "ide0:0"}
@@ -75,6 +107,5 @@ $config = $vmx | get-vmxconfig
     $config += 'ide0:0.fileName = "vipr.iso"'
     $config += 'ide0:0.deviceType = "cdrom-image"'
 $Config | set-Content -Path $vmx.config
-
 $vmx | Start-VMX
 
