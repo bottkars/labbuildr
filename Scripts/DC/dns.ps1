@@ -39,17 +39,16 @@ if ( $AddressFamily -match 'IPv4')
     Add-DnsServerPrimaryZone -NetworkID $reverse -ReplicationScope "Forest" -DynamicUpdate NonsecureAndSecure
     
     Write-Verbose "Setting Ressource Records for EMC VA´s"
-
+    Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name Vipr1 -IPv4Address "$IPv4Subnet.9" -ZoneName $zone.Zonename
     Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name AveNode1 -IPv4Address "$IPv4Subnet.31" -ZoneName $zone.Zonename
     Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name AveNode2 -IPv4Address "$IPv4Subnet.32" -ZoneName $zone.Zonename
     Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name AveNode3 -IPv4Address "$IPv4Subnet.33" -ZoneName $zone.Zonename
-
-    Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name DDVE -IPv4Address "$IPv4Subnet.20" -ZoneName $zone.Zonename
     Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name DDVeNode1 -IPv4Address "$IPv4Subnet.21" -ZoneName $zone.Zonename
     Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name DDVeNode2 -IPv4Address "$IPv4Subnet.22"-ZoneName $zone.Zonename
     Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name DDVeNode3 -IPv4Address "$IPv4Subnet.23" -ZoneName $zone.Zonename
-    
-    
+    Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name CloudBoost1 -IPv4Address "$IPv4Subnet.71" -ZoneName $zone.Zonename
+    Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name CloudArray1 -IPv4Address "$IPv4Subnet.81" -ZoneName $zone.Zonename
+
     }
 if ( $AddressFamily -match 'IPv6')
     {

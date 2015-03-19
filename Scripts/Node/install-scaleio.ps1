@@ -12,7 +12,7 @@ param (
 
 [Parameter(Mandatory=$true)][ValidateSet('MDM','TB','SDS','SDC')]$role,
 [Parameter(Mandatory=$true)]$Disks,
-[Parameter(Mandatory=$true)][ValidateSet('1.30-426.0','1.31-258.2')]$ver
+[Parameter(Mandatory=$true)][ValidateSet('1.30-426.0','1.31-258.2','1.31-1277.3')][alias('siover')]$ScaleIOVer
 )
 $ScriptName = $MyInvocation.MyCommand.Name
 $Host.UI.RawUI.WindowTitle = "$ScriptName"
@@ -21,21 +21,21 @@ $Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
 New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
 
 .$Builddir\test-sharedfolders.ps1
-$Setuppath = "\\vmware-host\shared folders\sources\Scaleio\Windows\EMC-ScaleIO-$role-$ver.msi"
-.$Builddir\test-setup.ps1 -setup "Saleio$role$ver" -setuppath $Setuppath
+$Setuppath = "\\vmware-host\shared folders\sources\Scaleio\Windows\EMC-ScaleIO-$role-$ScaleIOVer.msi"
+.$Builddir\test-setup.ps1 -setup "Saleio$role$ScaleIOVer" -setuppath $Setuppath
 $ScaleIOArgs = '/i "'+$Setuppath+'" /quiet'
 Start-Process -FilePath "msiexec.exe" -ArgumentList $ScaleIOArgs -PassThru -Wait
 
 ####sds checkup             
 $role = "sds"
-$Setuppath = "\\vmware-host\shared folders\sources\Scaleio\Windows\EMC-ScaleIO-$role-$ver.msi"
-.$Builddir\test-setup -setup "Saleio$role$ver" -setuppath $Setuppath
+$Setuppath = "\\vmware-host\shared folders\sources\Scaleio\Windows\EMC-ScaleIO-$role-$ScaleIOVer.msi"
+.$Builddir\test-setup -setup "Saleio$role$ScaleIOVer" -setuppath $Setuppath
 $ScaleIOArgs = '/i "'+$Setuppath+'" /quiet'
 Start-Process -FilePath "msiexec.exe" -ArgumentList $ScaleIOArgs -PassThru -Wait
 ####sdc checkup
 $role = "sdc"
-$Setuppath = "\\vmware-host\shared folders\sources\Scaleio\Windows\EMC-ScaleIO-$role-$ver.msi"
-.$Builddir\test-setup -setup "Saleio$role$ver" -setuppath $Setuppath
+$Setuppath = "\\vmware-host\shared folders\sources\Scaleio\Windows\EMC-ScaleIO-$role-$ScaleIOVer.msi"
+.$Builddir\test-setup -setup "Saleio$role$ScaleIOVer" -setuppath $Setuppath
 $ScaleIOArgs = '/i "'+$Setuppath+'" /quiet'
 Start-Process -FilePath "msiexec.exe" -ArgumentList $ScaleIOArgs -PassThru -Wait
 
