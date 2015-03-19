@@ -26,7 +26,7 @@ Param(
 #### install parameters#
 [Parameter(ParameterSetName = "install",Mandatory=$true)][String]
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$SCALEIOMasterPath,
-[Parameter(ParameterSetName = "install",Mandatory=$true)][int32]$Nodes,
+[Parameter(ParameterSetName = "install",Mandatory=$false)][int32]$Nodes=3,
 [Parameter(ParameterSetName = "install",Mandatory=$false)][int32]$Startnode = 1,
 [Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateRange(1,3)][int32]$Disks = 3,
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
@@ -36,6 +36,8 @@ Param(
 [Parameter(ParameterSetName = "install",Mandatory=$False)][switch]$sds,
 [Parameter(ParameterSetName = "install",Mandatory=$False)][switch]$sdc,
 [Parameter(ParameterSetName = "install",Mandatory=$False)][switch]$configure,
+[Parameter(ParameterSetName = "install",Mandatory=$False)][switch]$singlemdm,
+
 
 
 ### import parameters
@@ -52,6 +54,11 @@ Param(
 #requires -module vmxtoolkit
 
 
+if ($configure.IsPresent)
+    {
+    [switch]$sds = $true
+    [switch]$sdc = $true
+    }
 
 
 switch ($PsCmdlet.ParameterSetName)
@@ -70,7 +77,15 @@ switch ($PsCmdlet.ParameterSetName)
         $Disksize = "100GB"
         $scsi = 0
         $Nodeprefix = "ScaleIONode"
-        $mdm_ip="$subnet.191,$subnet.192"
+        If ($singlemdm.IsPresent)
+            {
+            Write-Warning "Single MDM installations with MemoryTweaking  are only for Test Deployments and Memory Contraints/Manager Laptops :-)"
+            $mdm_ip="$subnet.191"
+            }
+        else
+            {
+            $mdm_ip="$subnet.191,$subnet.192"
+            }
         $MasterVMX = get-vmx -path $SCALEIOMasterPath
         if (!$MasterVMX.Template) 
             {
@@ -119,7 +134,12 @@ switch ($PsCmdlet.ParameterSetName)
             }
         $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.CloneName)@$BuildDomain"
         $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname Scaleio -Scenario 6
-        $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node 
+        $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
+        if ($singlemdm.IsPresent -and $Node -ne 1)
+            {
+            Write-Warning "Tweaking memory for $Nodeprefix$Node"
+            $memorytweak = $NodeClone | Set-VMXmemory -MemoryMB 1536
+            } 
         Write-Verbose "Starting ScalioNode$Node"
         # Set-VMXVnet -Adapter 0 -vnet vmnet2
         start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName
@@ -141,15 +161,18 @@ switch ($PsCmdlet.ParameterSetName)
 #>
         $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway "$subnet.103" -device eth0 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node" -suse -rootuser $Guestuser -rootpassword $Guestpassword
         $NodeClone | Invoke-VMXBash -Scriptblock "rpm --import /root/install/RPM-GPG-KEY-ScaleIO" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose | Out-Null
-        if ($Node -in 1..2)
+        if (($Node -in 1..2 -and (!$singlemdm)) -or ($Node -eq 1))
             {
             Write-Verbose "trying MDM Install"
             $NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-mdm*.rpm" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose | Out-Null
             }
         if ($Node -eq 3)
             {
-            Write-Verbose "trying TB Install"
-            $NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-tb*.rpm" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose | Out-Null
+            if (!$singlemdm)
+                {
+                Write-Verbose "trying TB Install"
+                $NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-tb*.rpm" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose | Out-Null
+                }
             Write-Verbose "trying Gateway Install"
             $NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/jre-*-linux-x64.rpm"-Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose | Out-Null
 
@@ -188,9 +211,12 @@ if ($configure.IsPresent)
         Write-Verbose "We are now creating the ScaleIO Grid"
         $Primary | Invoke-VMXBash -Scriptblock "scli --add_primary_mdm --primary_mdm_ip $subnet.191 --mdm_management_ip $subnet.191 --accept_license" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose 
         $Primary | Invoke-VMXBash -Scriptblock "scli --login --username admin --password admin --mdm_ip $subnet.191;scli --set_password --old_password admin --new_password $MDMPassword  --mdm_ip $subnet.191" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose 
-        $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;scli --add_secondary_mdm --mdm_ip $subnet.191 --secondary_mdm_ip $subnet.192 --mdm_ip $subnet.191" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose 
-        $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;scli --add_tb --tb_ip $subnet.193 --mdm_ip $subnet.191" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose 
-        $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;scli --switch_to_cluster_mode --mdm_ip $subnet.191" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose
+        if (!$singlemdm.IsPresent)
+            {
+            $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;scli --add_secondary_mdm --mdm_ip $subnet.191 --secondary_mdm_ip $subnet.192 --mdm_ip $subnet.191" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose 
+            $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;scli --add_tb --tb_ip $subnet.193 --mdm_ip $subnet.191" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose 
+            $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;scli --switch_to_cluster_mode --mdm_ip $subnet.191" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose
+            }
         $sclicmd = "scli --add_protection_domain --protection_domain_name $ProtectionDomainName --mdm_ip $mdm_ip"
         Write-Verbose $sclicmd
         $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose
