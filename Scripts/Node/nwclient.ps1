@@ -9,7 +9,7 @@
 #requires -version 3
 [CmdletBinding()]
 param(
-[ValidateSet('nw821','nw8205','nw8204','nw8203','nw8202','nw82','nw8116','nw8115','nw8114', 'nw8113','nw8112', 'nw811',  'nw8105','nw8104','nw8102', 'nw81', 'nwunknown')]$nw_ver = "nw821"
+[ValidateSet('nw8211','nw821','nw8205','nw8204','nw8203','nw8202','nw82','nw8116','nw8115','nw8114', 'nw8113','nw8112', 'nw811',  'nw8105','nw8104','nw8102', 'nw81', 'nwunknown')]$nw_ver = "nw821"
 
 )
 $ScriptName = $MyInvocation.MyCommand.Name
