@@ -1,0 +1,16 @@
+<config>
+<nmm_ver>nmm821</nmm_ver>
+<nw_ver>nw8211</nw_ver>
+<master>2012R2FallUpdate</master>
+<sqlver>SQL2014</sqlver>
+<ex_cu></ex_cu>
+<vmnet>2</vmnet>
+<BuildDomain>labbuildr</BuildDomain>
+<MySubnet>192.168.2.0</MySubnet>
+<AddressFamily>IPv4</AddressFamily>
+<IPV6Prefix>FD00::</IPV6Prefix>
+<IPv6PrefixLength>8</IPv6PrefixLength>
+<NoAutomount>True</NoAutomount>
+<Gateway>True</Gateway>
+<Mountroot>H:</Mountroot>
+</config>
