@@ -28,13 +28,13 @@ $Host.UI.RawUI.WindowTitle = "$ScriptName"
 $Builddir = $PSScriptRoot
 $Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
 New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
+$Domain = $env:USERDOMAIN
 ############
 
 $NodeLIST = @()
 $AAGnodes = Get-ADComputer -Filter * | where name -match $Nodeprefix
 foreach ($AAGnode in $AAGnodes){
-$NodeLIST += $AAGNode.Name+"\MSSQL"+$AAGNode.Name
-#$NodeLIST += $AAGNode.Name+"\MSSQLAAG"
+$NodeLIST += $AAGNode.Name+"\MSSQL"+$Domain
 write-Host "Adding Node $AAGnode to AAG Nodelist"
 }
 Import-Module “sqlps” -DisableNameChecking
@@ -155,12 +155,12 @@ switch ($AddressFamily)
         $ListenerIP = "((N'$IPv4Subnet.169', N'255.255.255.0'),(N'$IPv6Prefix$IPv4Subnet.169'))"
         }
     }
-                
+$Listener = $AgName+'lstn'                
 $BCMD = "
 USE [master]
 GO
 ALTER AVAILABILITY GROUP [$AgName]
-ADD LISTENER N'NWAAG' (
+ADD LISTENER N'$Listener' (
 WITH IP $ListenerIP, PORT=55555)"
 
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)

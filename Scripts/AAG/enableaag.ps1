@@ -29,7 +29,7 @@ $NodeLIST = @()
 $AAGnodes = Get-ADComputer -Filter * | where name -match $Nodeprefix
 foreach ($AAGnode in $AAGnodes){
 #$NodeLIST += $AAGNode.Name+"\MSSQLAAG"
-$NodeLIST += $AAGNode.Name+"\MSSQL"+$AAGNode.Name
+$NodeLIST += $AAGNode.Name+"\MSSQL"+$Domain
 
 write-Host "Adding Node $AAGnode to AAG Nodelist"
 }
