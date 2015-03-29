@@ -26,9 +26,9 @@ $Setuppath = "\\vmware-host\Shared Folders\Sources\E2013$ex_cu\Setup.exe"
 
 
 .$Setuppath /mode:Install /role:ClientAccess,Mailbox /OrganizationName:"labbuildr" /IAcceptExchangeServerLicenseTerms /MdbName:$DB1 /DbFilePath:M:\DB1\DB1.edb /LogFolderPath:N:\DB1
-New-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce -Name $ScriptName -Value "$PSHOME\powershell.exe -Command `"New-Item -ItemType File -Path c:\scripts\$ScriptName.pass`""
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     {
     Pause
     }
+New-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce -Name $ScriptName -Value "$PSHOME\powershell.exe -Command `"New-Item -ItemType File -Path c:\scripts\$ScriptName.pass`""
 Restart-Computer

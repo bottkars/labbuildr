@@ -53,6 +53,9 @@ Set-TransportConfig -MaxSendSize 50MB
 New-Item -ItemType Directory $AttachDir
 Extract-Zip c:\scripts\attachements.zip $AttachDir
 $Attachement = Get-ChildItem -Path $AttachDir -file -Filter *microsoft*release-notes*
+$RoleGroup = "EMC NMM Exchange Admin Roles"
+$Roles = ("Database Copies", "Databases", "Disaster Recovery", "Mailbox Import Export", "Mail Recipient Creation", "Mail Recipients", "View-Only Configuration", "View-Only Recipients")
+New-RoleGroup -Name $RoleGroup -DisplayName $RoleGroup -Members $BackupAdmin -Roles $Roles -Description "This role group allows its users to perform database recovery and GLR"
 Add-RoleGroupMember "Discovery Management" –Member $BackupAdmin
 Get-MailboxDatabase | Set-MailboxDatabase -CircularLoggingEnabled $false
 New-Item -ItemType Directory -Path R:\rdb
@@ -65,6 +68,8 @@ Enable-Mailbox -Identity $BackupAdmin
 New-ManagementRoleAssignment -Role "Databases" -User $BackupAdmin
 Send-MailMessage -From $SenderSMTP -Subject $Subject -To "$BackupAdmin$maildom"  -Body $Body -Attachments $Attachement.FullName -DeliveryNotificationOption None -SmtpServer $Smtpserver -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
 get-ExchangeServer  | add-adpermission -user $BackupAdmin -accessrights ExtendedRight -extendedrights Send-As, Receive-As, ms-Exch-Store-Admin
+
+
 if (Get-DatabaseAvailabilityGroup){
 $DAGDatabase = Get-MailboxDatabase | where ReplicationType -eq Remote
 $Database = $DAGDatabase.Name}
