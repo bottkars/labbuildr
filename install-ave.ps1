@@ -28,7 +28,7 @@
 #>
 [CmdletBinding()]
 Param(
-[Parameter(Mandatory=$true)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath,
+[Parameter(ParameterSetName = "install",Mandatory=$true)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath,
 <# specify your desireed AVE Size 
 Valid Parameters: 0.5TB,1TB,2TB,4TB
 This will result in the following
@@ -41,15 +41,24 @@ _______|_________|_____|_________
   2TB   |  16GB   |  2  | 3*1000GB
   4TB   |  36GB   |  4  | 6*1000GB
 #>
-[Parameter(Mandatory=$False)][ValidateSet('0.5TB','1TB','2TB','4TB')][string]$AVESize = "0.5TB",
-[Parameter(Mandatory=$false)][int32]$Nodes=1,
-[Parameter(Mandatory=$false)][int32]$Startnode = 1,
+[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateSet('0.5TB','1TB','2TB','4TB')][string]$AVESize = "0.5TB",
+[Parameter(ParameterSetName = "install",Mandatory=$false)][int32]$Nodes=1,
+[Parameter(ParameterSetName = "install",Mandatory=$false)][int32]$Startnode = 1,
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
-[Parameter(Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
-[Parameter(Mandatory=$False)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
+[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
+[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
 
-[Parameter(Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
-[Parameter(Mandatory = $false)][switch]$configure
+[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
+[Parameter(ParameterSetName = "install",Mandatory = $false)][switch]$configure,
+
+
+### import parameters
+[Parameter(ParameterSetName = "import",Mandatory=$true)][String]
+
+[ValidateScript({ Test-Path -Path $_ -Filter *.ov* -PathType Leaf -ErrorAction SilentlyContinue })]$ovafile,
+[Parameter(ParameterSetName = "import",Mandatory=$true)][String]$mastername
+
+
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
@@ -60,77 +69,90 @@ $Builddir = $PSScriptRoot
 $Nodeprefix = "AVENode"
 $rootuser = "root"
 $rootpassword = "changeme"
-$MasterVMX = get-vmx -path $MasterPath
 
-if (!$MasterVMX.Template) 
-    {
-    write-verbose "Templating Master VMX"
-    $template = $MasterVMX | Set-VMXTemplate
-    }
-$Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
 
-if (!$Basesnap) 
-    {
-    Write-verbose "Base snap does not exist, creating now"
-    $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
-    }
 
-####Build Machines#
 
-foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
-    {
-    Write-Verbose "Checking VM $Nodeprefix$node already Exists"
-    If (!(get-vmx $Nodeprefix$node))
+switch ($PsCmdlet.ParameterSetName)
+{
+    "import"
         {
-        write-verbose "Creating clone $Nodeprefix$node"
-        $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXlinkedClone -CloneName $Nodeprefix$node -Clonepath "$Builddir"
-        # Write-Output $NodeClone
-        $SCSI= 0
-        switch ($AVESize)
-            {
-                "0.5TB"
-                    {
-                    Write-Verbose "SMALL AVE Selected"
-                    $NumDisks = 3
-                    $Disksize = "250GB"
-                    $memsize = 6144
-                    $Numcpu = 2
-                    }
-                "1TB"
-                    {
-                    Write-Verbose "Medium AVE Selected"
-                    $NumDisks = 6
-                    $Disksize = "250GB"
-                    $memsize = 8192
-                    $Numcpu = 2
-                    }
-                "2TB"
-                    {
-                    Write-Verbose "Large AVE Selected"
-                    $NumDisks = 3
-                    $Disksize = "1000GB"
-                    $memsize = 16384
-                    $Numcpu = 2
-                    }
-                "4TB"
-                    {
-                    Write-Verbose "XtraLarge AVE Selected"
-                    $NumDisks = 6
-                    $Disksize = "1000GB"
-                    $memsize = 36864
-                    $Numcpu = 4
-                    }
+        & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $ovafile $PSScriptRoot #
+        }
+     "install"
 
-            }
+        {
+        $MasterVMX = get-vmx -path $MasterPath
+
+        if (!$MasterVMX.Template) 
+          {
+          write-verbose "Templating Master VMX"
+          $template = $MasterVMX | Set-VMXTemplate
+          }
+        $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
+
+        if (!$Basesnap) 
+          {
+           Write-verbose "Base snap does not exist, creating now"
+           $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
+          }
+
+        ####Build Machines#
+
+        foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
+         {
+          Write-Verbose "Checking VM $Nodeprefix$node already Exists"
+          If (!(get-vmx $Nodeprefix$node))
+                {
+                write-verbose "Creating clone $Nodeprefix$node"
+               $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXlinkedClone -CloneName $Nodeprefix$node -Clonepath "$Builddir"
+              # Write-Output $NodeClone
+               $SCSI= 0
+               switch ($AVESize)
+                   {
+                      "0.5TB"
+                           {
+                         Write-Verbose "SMALL AVE Selected"
+                         $NumDisks = 3
+                         $Disksize = "250GB"
+                         $memsize = 6144
+                               $Numcpu = 2
+                            }
+                        "1TB"
+                            {
+                            Write-Verbose "Medium AVE Selected"
+                            $NumDisks = 6
+                            $Disksize = "250GB"
+                          $memsize = 8192
+                          $Numcpu = 2
+                           }
+                       "2TB"
+                           {
+                           Write-Verbose "Large AVE Selected"
+                           $NumDisks = 3
+                           $Disksize = "1000GB"
+                            $memsize = 16384
+                            $Numcpu = 2
+                           }
+                       "4TB"
+                           {
+                           Write-Verbose "XtraLarge AVE Selected"
+                          $NumDisks = 6
+                          $Disksize = "1000GB"
+                          $memsize = 36864
+                    $Numcpu = 4
+                          }
+        
+                 }
             
-            foreach ($LUN in (1..$NumDisks))
-            {
-            $Diskname =  "SCSI$SCSI"+"_LUN$LUN"+"_$Disksize.vmdk"
-            Write-Verbose "Building new Disk $Diskname"
-            $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-            Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
-            $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
-            }
+                 foreach ($LUN in (1..$NumDisks))
+                  {
+                   $Diskname =  "SCSI$SCSI"+"_LUN$LUN"+"_$Disksize.vmdk"
+                   Write-Verbose "Building new Disk $Diskname"
+                    $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
+                 Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
+                   $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
+                   }
         
     Write-Verbose "Configuring NIC"
     $Netadater = $NodeClone | Set-VMXVnet -Adapter 0 -vnet $vmnet
@@ -195,4 +217,5 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
 
 }
 
-
+}
+}

@@ -50,6 +50,7 @@ function Extract-Zip
 }
 Set-TransportConfig -MaxReceiveSize 50MB
 Set-TransportConfig -MaxSendSize 50MB
+Enable-Mailbox -Identity $BackupAdmin
 New-Item -ItemType Directory $AttachDir
 Extract-Zip c:\scripts\attachements.zip $AttachDir
 $Attachement = Get-ChildItem -Path $AttachDir -file -Filter *microsoft*release-notes*
@@ -64,8 +65,7 @@ New-MailboxDatabase -Recovery -Name rdb$env:COMPUTERNAME -server $Smtpserver -Ed
 Restart-Service MSExchangeIS
 Get-AddressList  | Update-AddressList
 # Enable-Mailbox -Identity $Domain\Administrator
-Enable-Mailbox -Identity $BackupAdmin
-New-ManagementRoleAssignment -Role "Databases" -User $BackupAdmin
+# New-ManagementRoleAssignment -Role "Databases" -User $BackupAdmin
 Send-MailMessage -From $SenderSMTP -Subject $Subject -To "$BackupAdmin$maildom"  -Body $Body -Attachments $Attachement.FullName -DeliveryNotificationOption None -SmtpServer $Smtpserver -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
 get-ExchangeServer  | add-adpermission -user $BackupAdmin -accessrights ExtendedRight -extendedrights Send-As, Receive-As, ms-Exch-Store-Admin
 
