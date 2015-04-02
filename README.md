@@ -1,4 +1,4 @@
-labbuildr
+labbuildr Harmony Beta
 =========
 
 labbuildr is a Framework based upon vmxtookit.
@@ -11,6 +11,10 @@ labbuildr deploys the folowing scenarios:
   - Mastering ESXi Installs
   - Automating EMC ScaleIO Installs
   - ....
+ 
+Harmony Beta
+==========
+new build command build-lab for even more ease of use
   
 Labbuildr requires doewload of a prebuilt sources.vhd and prebuilt os masters.
 See https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released for details
