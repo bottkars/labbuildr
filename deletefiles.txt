@@ -13,3 +13,4 @@
 .\viprmaster\viprmaster.ovf
 .\Disks
 .\labbuildr.ps1
+.\helper
