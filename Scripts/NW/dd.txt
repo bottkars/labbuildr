@@ -1,0 +1,9 @@
+﻿create type: NSR device;
+device access information: "ddvenode1:/nwserver/nw85";
+max nsrmmd count: 4;
+max sessions: 60;
+media type: Data Domain;
+name: ddvenode1_nw85;
+password: Password123!;
+remote user: ddboost;
+target sessions: 6;

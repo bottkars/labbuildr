@@ -1,0 +1,6 @@
+﻿create type: NSR label; 
+fields: ddvenode1, 001-999;
+name: ddvenode1;
+next: ddvenode1.001;
+separator: .;
+                        
