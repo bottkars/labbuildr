@@ -17,7 +17,7 @@ $Builddir = $PSScriptRoot
 $Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
 New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
 
-$Domain = $env:USERDOMAIN
+$Domain = $env:USERDNSDOMAIN
 Write-Verbose $Domain
 
 .$Builddir\test-sharedfolders.ps1

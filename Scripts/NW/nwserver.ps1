@@ -77,6 +77,27 @@ else
         Write-Error "Networker Setup File fould not be elvaluated"
         }
     }
+
+
+if (!(Test-Path "$env:USERPROFILE\AppData\LocalLow\Sun\Java\Deployment\security\exception.sites"))
+    {
+    Write-Verbose "Creating Java exception.sites for User"
+    New-Item -ItemType File "$env:USERPROFILE\AppData\LocalLow\Sun\Java\Deployment\security\exception.sites" | Out-Null
+    }
+$javaSites = @()
+$javaSites += "http://$($env:computername):9000"
+$javaSites += "http://localhost:9000"
+foreach ($javaSite in $Javasites)
+    {    
+        Write-Verbose "adding Java Exeption for $javaSite"
+        $CurrentContent = Get-Content "$env:USERPROFILE\AppData\LocalLow\Sun\Java\Deployment\security\exception.sites"
+        If  ((!$CurrentContent) -or ($CurrentContent -notmatch $javaSite))
+            {
+            Write-Verbose "adding $javaSite Java exception to $env:USERPROFILE\AppData\LocalLow\Sun\Java\Deployment\security\exception.sites"
+            add-Content -Value $javaSite -Path "$env:USERPROFILE\AppData\LocalLow\Sun\Java\Deployment\security\exception.sites" 
+            }
+    }
+
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     {
     Pause
