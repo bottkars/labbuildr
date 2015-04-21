@@ -8,10 +8,10 @@ begin
 	}
 process
 	{
-	get-vmx | where {$_.scenario -match $Scenario -and $_.vmxname -ne "dcnode"} | sort-object ActivationPreference -Descending | suspend-vmx
+	get-vmx | where {$_.scenario -match $Scenario -and $_.vmxname -ne "dcnode"} | sort-object ActivationPreference -Descending | stop-vmx
     if ($dc.IsPresent)
         {
-        get-vmx .\dcnode | suspend-vmx
+        get-vmx .\dcnode | stop-vmx
         }
 	}
 end {}

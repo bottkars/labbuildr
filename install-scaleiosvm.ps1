@@ -23,51 +23,47 @@
 #>
 [CmdletBinding(DefaultParametersetName = "action")]
 Param(
-#### install parameters#
-[Parameter(ParameterSetName = "install",Mandatory=$true)][String]
-[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$SCALEIOMasterPath,
-[Parameter(ParameterSetName = "install",Mandatory=$false)][int32]$Nodes=3,
-[Parameter(ParameterSetName = "install",Mandatory=$false)][int32]$Startnode = 1,
-[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateRange(1,3)][int32]$Disks = 3,
-<# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
-[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
-[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
-[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
-[Parameter(ParameterSetName = "install",Mandatory=$False)][switch]$sds,
-[Parameter(ParameterSetName = "install",Mandatory=$False)][switch]$sdc,
-[Parameter(ParameterSetName = "install",Mandatory=$False)][switch]$configure,
-[Parameter(ParameterSetName = "install",Mandatory=$False)][switch]$singlemdm,
-
-
-
 ### import parameters
 [Parameter(ParameterSetName = "import",Mandatory=$true)][String]
-
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$ovapaPath,
-[Parameter(ParameterSetName = "import",Mandatory=$true)][String]$mastername
-
-
-
-
+[Parameter(ParameterSetName = "import",Mandatory=$false)][String]$mastername = "SIOMaster",
+#### install parameters#
+[Parameter(ParameterSetName = "install",Mandatory=$true)]
+[Parameter(ParameterSetName = "sdsonly",Mandatory=$true)]
+[String]
+[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$SCALEIOMasterPath,
+[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[Parameter(ParameterSetName = "sdsonly",Mandatory=$false)][int32]$Nodes=1,
+[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[Parameter(ParameterSetName = "sdsonly",Mandatory=$false)][int32]$Startnode = 1,
+[Parameter(ParameterSetName = "sdsonly",Mandatory=$false)]
+[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateRange(1,3)][int32]$Disks = 1,
+<# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
+[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[Parameter(ParameterSetName = "sdsonly",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
+[Parameter(ParameterSetName = "sdsonly",Mandatory=$false)]
+[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
+[Parameter(ParameterSetName = "sdsonly",Mandatory=$false)]
+[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
+[Parameter(ParameterSetName = "sdsonly",Mandatory=$true)][switch]$sds,
+[Parameter(ParameterSetName = "sdsonly",Mandatory=$false)][switch]$sdc,
+[Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$configure,
+[Parameter(ParameterSetName = "install",Mandatory=$False)][switch]$singlemdm
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
-
-
 if ($configure.IsPresent)
     {
     [switch]$sds = $true
     [switch]$sdc = $true
     }
-
-
 switch ($PsCmdlet.ParameterSetName)
 {
     "import"
         {
         & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck  --name=$mastername $ovapaPath $PSScriptRoot #
         }
-     "install"
+     default
         {
         [System.Version]$subnet = $Subnet.ToString()
         $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
@@ -93,13 +89,12 @@ switch ($PsCmdlet.ParameterSetName)
             $template = $MasterVMX | Set-VMXTemplate
             }
         $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
-
+        
         if (!$Basesnap) 
         {
          Write-verbose "Base snap does not exist, creating now"
         $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
         }
-
 ####Build Machines#
 
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
@@ -161,28 +156,32 @@ switch ($PsCmdlet.ParameterSetName)
 #>
         $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway "$subnet.103" -device eth0 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node" -suse -rootuser $Guestuser -rootpassword $Guestpassword
         $NodeClone | Invoke-VMXBash -Scriptblock "rpm --import /root/install/RPM-GPG-KEY-ScaleIO" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose | Out-Null
-        if (($Node -in 1..2 -and (!$singlemdm)) -or ($Node -eq 1))
+        if (!($PsCmdlet.ParameterSetName -eq "sdsonly"))
             {
-            Write-Verbose "trying MDM Install"
-            $NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-mdm*.rpm" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose | Out-Null
-            }
-        if ($Node -eq 3)
-            {
-            if (!$singlemdm)
+            if (($Node -in 1..2 -and (!$singlemdm)) -or ($Node -eq 1))
                 {
-                Write-Verbose "trying TB Install"
-                $NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-tb*.rpm" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose | Out-Null
+                Write-Verbose "trying MDM Install"
+                $NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-mdm*.rpm" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose | Out-Null
                 }
-            Write-Verbose "trying Gateway Install"
-            $NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/jre-*-linux-x64.rpm"-Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose | Out-Null
-
-            $NodeClone | Invoke-VMXBash -Scriptblock "export GATEWAY_ADMIN_PASSWORD='Password123!';rpm -Uhv --nodeps  /root/install/EMC-ScaleIO-gateway*.rpm" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose | Out-Null 
             
-            Write-Verbose "Adding MDM to Gateway Server Config File"
-            $sed = "sed -i -- 's/mdm.ip.addresses=\`"\`"/mdm.ip.addresses=$subnet.191,$Subnet.192\`"/g' /opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classesmore/gatewayUser.properties" 
-            Write-Verbose $sed
-            $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose | Out-Null
-            $NodeClone | Invoke-VMXBash -Scriptblock "/etc/init.d/scaleio-gateway restart" -Guestuser $Guestpassword -Guestpassword $Guestpassword -Verbose | Out-Null
+            if ($Node -eq 3)
+                {
+                if (!$singlemdm)
+                    {
+                 Write-Verbose "trying TB Install"
+                    $NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-tb*.rpm" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose | Out-Null
+                    }
+                Write-Verbose "trying Gateway Install"
+                $NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/jre-*-linux-x64.rpm"-Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose | Out-Null
+                $NodeClone | Invoke-VMXBash -Scriptblock "export GATEWAY_ADMIN_PASSWORD='Password123!';rpm -Uhv --nodeps  /root/install/EMC-ScaleIO-gateway*.rpm" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose | Out-Null 
+                Write-Verbose "Adding MDM to Gateway Server Config File"
+                $sed = "sed -i -- 's/mdm.ip.addresses=\`"\`"/mdm.ip.addresses=$subnet.191,$Subnet.192\`"/g' /opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classesmore/gatewayUser.properties" 
+                Write-Verbose $sed
+                $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose | Out-Null
+                $NodeClone | Invoke-VMXBash -Scriptblock "/etc/init.d/scaleio-gateway restart" -Guestuser $Guestpassword -Guestpassword $Guestpassword -Verbose | Out-Null
+                }
+            Write-Verbose "trying LIA Install"
+            $NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-lia*.rpm" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose | Out-Null
             }
         if ($sds.IsPresent)
             {
@@ -194,12 +193,7 @@ switch ($PsCmdlet.ParameterSetName)
             Write-Verbose "trying SDC Install"
             $NodeClone | Invoke-VMXBash -Scriptblock "export MDM_IP=$mdm_ip;rpm -Uhv /root/install/EMC-ScaleIO-sdc*.rpm" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose | Out-Null
             }
-        Write-Verbose "trying LIA Install"
-        $NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-lia*.rpm" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose | Out-Null
-
     }
-
-
 if ($configure.IsPresent)
     {
     $mdmconnect = "scli --login --username admin --password $MDMPassword --mdm_ip $mdm_ip"
@@ -220,29 +214,12 @@ if ($configure.IsPresent)
         $sclicmd = "scli --add_protection_domain --protection_domain_name $ProtectionDomainName --mdm_ip $mdm_ip"
         Write-Verbose $sclicmd
         $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose
-       
         $sclicmd = "scli --add_storage_pool --storage_pool_name $StoragePoolName --protection_domain_name $ProtectionDomainName --mdm_ip $mdm_ip"
         Write-Verbose $sclicmd
         $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose
-
-       
         $sclicmd = "scli --rename_system --new_name $SystemName --mdm_ip $mdm_ip"
         Write-Verbose $sclicmd
         $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose
-  
-  <#      
-        foreach ($Node in $nodes)
-            {
-            $sclicmd = "scli --add_sds_device --sds_ip $subnet.19$Node --device_path /dev/sdb --device_name /dev/sdb --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --no_test --mdm_ip $mdm_ip"
-            Write-Verbose $sclicmd
-            $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose
-            }
-    #>
-
-       <#
- 
-
-       #>
         }#end Primary
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
             {
@@ -250,10 +227,12 @@ if ($configure.IsPresent)
             Write-Verbose $sclicmd
             $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $Guestuser -Guestpassword $Guestpassword -Verbose
             }
-
     }
 
-
+write-Warning "Login to the VM´s with root/admin"
 }#end install
+
 }#end switch 
+
+
 
