@@ -27,7 +27,6 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     {
     Write-Output $PSCmdlet.MyInvocation.BoundParameters
     }
-
 Write-Verbose $IPv6PrefixLength
 Write-Verbose $reverse
 Write-Verbose $IPV6Prefix
@@ -40,15 +39,15 @@ if ( $AddressFamily -match 'IPv4')
     
     Write-Verbose "Setting Ressource Records for EMC VA´s"
     Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name Vipr1 -IPv4Address "$IPv4Subnet.9" -ZoneName $zone.Zonename
-    Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name AveNode1 -IPv4Address "$IPv4Subnet.31" -ZoneName $zone.Zonename
-    Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name AveNode2 -IPv4Address "$IPv4Subnet.32" -ZoneName $zone.Zonename
-    Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name AveNode3 -IPv4Address "$IPv4Subnet.33" -ZoneName $zone.Zonename
-    Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name DDVeNode1 -IPv4Address "$IPv4Subnet.21" -ZoneName $zone.Zonename
-    Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name DDVeNode2 -IPv4Address "$IPv4Subnet.22"-ZoneName $zone.Zonename
-    Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name DDVeNode3 -IPv4Address "$IPv4Subnet.23" -ZoneName $zone.Zonename
-    Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name CloudBoost1 -IPv4Address "$IPv4Subnet.71" -ZoneName $zone.Zonename
-    Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name CloudArray1 -IPv4Address "$IPv4Subnet.81" -ZoneName $zone.Zonename
-
+    foreach ( $N in 1..3)
+        {
+        Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name "DDVeNode$N" -IPv4Address "$IPv4Subnet.2$N" -ZoneName $zone.Zonename
+        Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name "AveNode$N" -IPv4Address "$IPv4Subnet.3$N" -ZoneName $zone.Zonename
+        Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name "CloudBoost$N" -IPv4Address "$IPv4Subnet.7$N" -ZoneName $zone.Zonename
+        Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name "CloudArray$N" -IPv4Address "$IPv4Subnet.8$N" -ZoneName $zone.Zonename
+        Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name "ScaleIONode$N" -IPv4Address "$IPv4Subnet.19$N" -ZoneName $zone.Zonename
+        Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name "CentOSNode$N" -IPv4Address "$IPv4Subnet.22$N" -ZoneName $zone.Zonename
+        }
     }
 if ( $AddressFamily -match 'IPv6')
     {

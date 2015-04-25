@@ -86,6 +86,7 @@ if (!(Test-Path "$env:USERPROFILE\AppData\LocalLow\Sun\Java\Deployment\security\
     }
 $javaSites = @()
 $javaSites += "http://$($env:computername):9000"
+$javaSites += "http://$($env:computername).$($env:USERDNSDOMAIN):9000"
 $javaSites += "http://localhost:9000"
 foreach ($javaSite in $Javasites)
     {    

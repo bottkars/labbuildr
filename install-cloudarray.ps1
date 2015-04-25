@@ -11,7 +11,7 @@ Param(
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('36GB','72GB','146GB')][string]$Cachevolsize = "146GB",
 [Parameter(ParameterSetName = "install",Mandatory=$false)]$Subnet = "192.168.2",
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
-[Parameter(ParameterSetName = "install",Mandatory=$true)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath,
+[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath = ".\CloudArraymaster",
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2"
 )
 #requires -version 3.0

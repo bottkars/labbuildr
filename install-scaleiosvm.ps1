@@ -20,18 +20,27 @@
 .LINK
    https://community.emc.com/blogs/bottk/
 .EXAMPLE
+.\install-scaleiosvm.ps1 -ovaPath H:\_EMC-VAs\ScaleIOVM_1.31.1277.3.ova
+This will import the OVA File
+.EXAMPLE
+.\install-scaleiosvm.ps1 -SCALEIOMasterPath .\SIOMaster -configure -singlemdm
+This will Configure a SIO Cluster with 3 Nodes and Single MDM
+.EXAMPLE
+.\install-scaleiosvm.ps1 -SCALEIOMasterPath .\SIOMaster -Disks 3  -sds
+This will install a Single Node SDS
 #>
 [CmdletBinding(DefaultParametersetName = "action")]
 Param(
 ### import parameters
+<# for the Import, we specify the Path to the downloaded OVA. this will be dehydrated to a VMware Workstation Master #>
 [Parameter(ParameterSetName = "import",Mandatory=$true)][String]
-[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$ovapaPath,
+[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$ovaPath,
 [Parameter(ParameterSetName = "import",Mandatory=$false)][String]$mastername = "SIOMaster",
 #### install parameters#
-[Parameter(ParameterSetName = "install",Mandatory=$true)]
-[Parameter(ParameterSetName = "sdsonly",Mandatory=$true)]
+[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[Parameter(ParameterSetName = "sdsonly",Mandatory=$false)]
 [String]
-[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$SCALEIOMasterPath,
+[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$SCALEIOMasterPath = ".\SIOMaster",
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "sdsonly",Mandatory=$false)][int32]$Nodes=1,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
@@ -47,7 +56,9 @@ Param(
 [Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
 [Parameter(ParameterSetName = "sdsonly",Mandatory=$true)][switch]$sds,
 [Parameter(ParameterSetName = "sdsonly",Mandatory=$false)][switch]$sdc,
+<# Configure automatically configures the Scalio Cluster and will always install 3 Nodes !  #>
 [Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$configure,
+<# we use SingleMDM parameter with Configure for test and dev to Showcase ScaleIO und LowMem Machines #>
 [Parameter(ParameterSetName = "install",Mandatory=$False)][switch]$singlemdm
 )
 #requires -version 3.0
@@ -61,7 +72,7 @@ switch ($PsCmdlet.ParameterSetName)
 {
     "import"
         {
-        & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck  --name=$mastername $ovapaPath $PSScriptRoot #
+        & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck  --name=$mastername $ovaPath $PSScriptRoot #
         }
      default
         {
@@ -73,6 +84,11 @@ switch ($PsCmdlet.ParameterSetName)
         $Disksize = "100GB"
         $scsi = 0
         $Nodeprefix = "ScaleIONode"
+        If ($configure.IsPresent -and $Nodes -lt 3)
+            {
+            Write-Warning "Configure Present, setting nodes to 3"
+            $Nodes = 3
+            }
         If ($singlemdm.IsPresent)
             {
             Write-Warning "Single MDM installations with MemoryTweaking  are only for Test Deployments and Memory Contraints/Manager Laptops :-)"
