@@ -9,10 +9,10 @@
 
 [CmdletBinding()]
 param (
-[string]$Computername
+[string]$Computername = "."
 )
 #requires -version 3
 
 $Host.UI.RawUI.WindowTitle = "$Computername"
-do {Get-EventLog -LogName Application -Newest 20 -ComputerName $Computername -Source VSS,Networker,Nmm;Sort-Object Time -Descending; sleep 5 ;Clear-Host } 
+do {Get-EventLog -LogName Application -Newest 20 -ComputerName $Computername -Source VSS,Networker,Nmm | ft TimeGenerated,EventID, Source, Message -AutoSize ; sleep 5 ;Clear-Host } 
 until ($false)

@@ -108,4 +108,13 @@ $config = $vmx | get-vmxconfig
     $config += 'ide0:0.deviceType = "cdrom-image"'
 $Config | set-Content -Path $vmx.config
 $vmx | Start-VMX
+Write-Host -ForegroundColor Yellow "
+Press C in Vipr1 Console to Continue
+Login to vipr1 with user:root password:ChangeMe
+run: 
+mount /dev/sr0 /mnt
+sh /mnt/genconfig.sh
+wait a view minutes for storageos to be up and running
+point your browser to https://vipr1 and follow the wizard steps
+"
 

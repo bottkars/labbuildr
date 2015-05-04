@@ -12,7 +12,7 @@ param (
 
 [Parameter(Mandatory=$true)][ValidateSet('MDM','TB','SDS','SDC')]$role,
 [Parameter(Mandatory=$true)]$Disks,
-[Parameter(Mandatory=$true)][ValidateSet('1.30-426.0','1.31-258.2','1.31-1277.3','1.31-2333.2')][alias('siover')]$ScaleIOVer
+[Parameter(Mandatory=$true)][ValidateSet('1.30-426.0','1.31-258.2','1.31-1277.3','1.31-2333.2','1.32-277.0')][alias('siover')]$ScaleIOVer
 )
 $ScriptName = $MyInvocation.MyCommand.Name
 $Host.UI.RawUI.WindowTitle = "$ScriptName"
