@@ -30,9 +30,13 @@ Param(
 
 [Parameter(Mandatory=$false)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$ViprOVA, 
 [Parameter(Mandatory=$false)]$targetname = "vipr1",
-[Parameter(Mandatory=$false)]$viprmaster = "viprmaster-2.2.0.1"
+[Parameter(Mandatory=$false)]$viprmaster = "viprmaster-2.2.1.0",
+[Parameter(Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0"
+
 
 )
+[System.Version]$subnet = $Subnet.ToString()
+$Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 
 if (get-vmx $targetname)
     {
@@ -92,14 +96,16 @@ foreach ($Disk in $Disks)
 # & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck  --name=$targetname $masterpath\viprmaster.ovf $PSScriptRoot 
 Write-Verbose " Copy base vm config to new master"
 
-Copy-Item .\viprmaster\viprmaster.vmx $targetname\$targetname.vmx
+Copy-Item $PSScriptRoot\scripts\viprmaster\viprmaster.vmx $targetname\$targetname.vmx
 $vmx = get-vmx $targetname
 $vmx | Set-VMXNetworkAdapter -Adapter 0 -AdapterType vmxnet3 -ConnectionType custom
 $vmx | Set-VMXVnet -Adapter 0 -vnet vmnet2
+$vmx | Set-VMXDisplayName -DisplayName $targetname
 Write-Verbose "Generating CDROM"
-convert-VMXdos2unix -Sourcefile .\viprmaster\cd\ovfenv.properties -Verbose
-convert-VMXdos2unix -Sourcefile .\viprmaster\cd\genconfig.sh -Verbose
-& $Global:vmwarepath\mkisofs.exe -J -R -o "$PSScriptRoot\$Targetname\vipr.iso" $PSScriptRoot\viprmaster\cd 2>&1 | Out-Null
+$ovfenv = Get-Content $PSScriptRoot\scripts\viprmaster\ovf-env.xml
+$ovfenv -replace "192.168.2",$subnet | Set-Content -Path $PSScriptRoot\scripts\viprmaster\cd\ovf-env.xml -Force
+convert-VMXdos2unix -Sourcefile $PSScriptRoot\scripts\viprmaster\cd\ovf-env.xml -Verbose
+& $Global:vmwarepath\mkisofs.exe -J -R -o "$PSScriptRoot\$Targetname\vipr.iso" $PSScriptRoot\scripts\viprmaster\cd 2>&1 | Out-Null
 $config = $vmx | get-vmxconfig
     write-verbose "injecting CDROM"
     $config = $config | where {$_ -NotMatch "ide0:0"}
@@ -109,11 +115,6 @@ $config = $vmx | get-vmxconfig
 $Config | set-Content -Path $vmx.config
 $vmx | Start-VMX
 Write-Host -ForegroundColor Yellow "
-Press C in Vipr1 Console to Continue
-Login to vipr1 with user:root password:ChangeMe
-run: 
-mount /dev/sr0 /mnt
-sh /mnt/genconfig.sh
 wait a view minutes for storageos to be up and running
 point your browser to https://vipr1 and follow the wizard steps
 "
