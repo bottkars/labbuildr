@@ -14,3 +14,4 @@
 .\Disks
 .\labbuildr.ps1
 .\helper
+.\viprmaster
