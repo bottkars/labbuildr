@@ -15,3 +15,4 @@
 .\labbuildr.ps1
 .\helper
 .\viprmaster
+.\Scripts\Exchange

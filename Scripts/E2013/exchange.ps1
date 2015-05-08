@@ -9,7 +9,10 @@
 #requires -version 3
 [CmdletBinding()]
 param(
-$ex_cu
+[Parameter(Mandatory=$true)][ValidateSet('cu1', 'cu2', 'cu3', 'sp1','cu5','cu6','cu7','cu8')]$ex_cu,
+$ex_version= "E2013",
+$SourcePath = "\\vmware-host\Shared Folders\Sources",
+$Setupcmd = "Setup.exe"
 )
 $ScriptName = $MyInvocation.MyCommand.Name
 $Host.UI.RawUI.WindowTitle = "$ScriptName"
@@ -21,7 +24,8 @@ $DBpath =  New-Item -ItemType Directory -Path M:\DB1
 $LogPath = New-Item -ItemType Directory -Path N:\DB1
 
 .$Builddir\test-sharedfolders.ps1
-$Setuppath = "\\vmware-host\Shared Folders\Sources\E2013$ex_cu\Setup.exe"
+
+$Setuppath = "$SourcePath\$ex_version$ex_cu\$Setupcmd"
 .$Builddir\test-setup -setup Exchange -setuppath $Setuppath
 
 

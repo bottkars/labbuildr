@@ -11,8 +11,11 @@
 
 
 param (
-$Domain="vlab2go",
-$domainsuffix = ".local"
+$Domain="labbuildr",
+$domainsuffix = ".local",
+$subnet = "192.168.2",
+[Validateset('IPv4','IPv6','IPv4IPv6')]$AddressFamily,
+$IPv6Subnet
 )
 
 $ScriptName = $MyInvocation.MyCommand.Name
@@ -23,6 +26,32 @@ New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
 Set-Content -Path "$Builddir\$ScriptName$Logtime.log" "$Domain"
 C:\scripts\Autologon.exe Administrator $Domain Password123!
 New-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce -Name "Pass3" -Value "$PSHOME\powershell.exe -Command `"New-Item -ItemType File -Path c:\scripts\3.pass`""
+######Newtwork Sanity Check #######
+If ($AddressFamily -match "IPv6")
+    {
+    $subnet = "$IPv6Subnet$subnet"
+    }
+else 
+    {
+    $subnet = "$subnet"
+    }
+
+Do {
+    $Ping = Test-Connection "$Subnet.10" -ErrorAction SilentlyContinue
+    If (!$Ping)
+        {
+        Write-Warning "Can Not reach Domain Controller with $subnet.10
+                        This is most Likely a VMnet Configuration Issue
+                        please Fix Network Assignments ( vmnet ) and specify correct Addressfamily"
+        Pause
+        }
+    }
+ Until ($Ping)    
+
+
+
+
+
 $Mydomain = "$Domain$domainsuffix"
 $password = "Password123!" | ConvertTo-SecureString -asPlainText -Force
 $username = "$domain\Administrator" 

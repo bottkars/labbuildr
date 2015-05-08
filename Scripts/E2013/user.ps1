@@ -31,7 +31,7 @@ $Smtpserver = $env:COMPUTERNAME+$Dot+$ADDomain
 $BackupAdmin = "NMMBackupUser"
 $Body = "Welcome to Exchange at $Domain
 Enjoy the new Features
-Trry Neworker and/or Avamar with the new Environment !
+Try Neworker and/or Avamar with the new Environment !
 ... for Questions drop an email to Karsten.Bott@emc.com
 Follow me on twritter @Hyperv_Guy
 Make sure to Rate in my Blog !
@@ -59,8 +59,6 @@ New-Item -ItemType Directory -Path S:\rdb
 New-MailboxDatabase -Recovery -Name rdb$env:COMPUTERNAME -server $Smtpserver -EdbFilePath R:\rdb\rdb.edb  -logFolderPath S:\rdb
 Restart-Service MSExchangeIS
 Get-AddressList  | Update-AddressList
-# Enable-Mailbox -Identity $Domain\Administrator
-# New-ManagementRoleAssignment -Role "Databases" -User $BackupAdmin
 if ($Attachement)
     {
     Send-MailMessage -From $SenderSMTP -Subject $Subject -To "$BackupAdmin$maildom"  -Body $Body -Attachments $Attachement[0].FullName -DeliveryNotificationOption None -SmtpServer $Smtpserver -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
@@ -104,35 +102,32 @@ if (Get-DatabaseAvailabilityGroup)
     }
 #######
 ##Public Folder Structure
-New-Mailbox -PublicFolder -Name $Domain -database $Database 
-$Newfolder = New-PublicFolder -Name $Domain
-Enable-MailPublicFolder $Newfolder
-# fixing the DSN 5.7.1. Create Item Change since Cu4
-Add-PublicFolderClientPermission $Newfolder -User ANONYMOUS -AccessRights createitems
-$PFSMTP = (Get-MailPublicFolder -Identity $Newfolder).EMAILAddresses[0].AddressString
-$Attachements = Get-ChildItem -Path $AttachDir -Recurse -file
-$count = $Attachements.count
-$incr = 1
-foreach ($file in $Attachements) {
-    Write-Progress -Activity "Sending $File to Public Folder $Newfolder " -Status $file -PercentComplete (100/$count*$incr)
-    Send-MailMessage -From $SenderSMTP -Subject $file.name -To $PFSMTP -Attachments $file.FullName -DeliveryNotificationOption None -SmtpServer $Smtpserver -Credential $Credential -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
-    $incr++
-    }
-Import-CSV C:\Scripts\folders.csv | ForEach {
-    $Folder=$_.Folder
-    $Path=$_.Path -replace "BRSLAB", "$Domain" 
-    $Path 
-    New-PublicFolder -Name $Folder -Path $Path
-    Enable-MailPublicFolder "$Path\$Folder"
-    Send-MailMessage -From $SenderSMTP -Subject "Welcome To Public Folders" -To $Folder$maildom -Body "This is Public Folder $Folder" -DeliveryNotificationOption None -SmtpServer $Smtpserver -Credential $Credential -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
+$NewPFMailbox = New-Mailbox -PublicFolder -Name $Domain -database $Database 
+If ($NewPFMailbox)
+    {
+    # will be superseeded by try catch, errorhandling for singlenode 
+    $Newfolder = New-PublicFolder -Name $Domain
+    Enable-MailPublicFolder $Newfolder
+    # fixing the DSN 5.7.1. Create Item Change since Cu4
+    Add-PublicFolderClientPermission $Newfolder -User ANONYMOUS -AccessRights createitems
+    $PFSMTP = (Get-MailPublicFolder -Identity $Newfolder).EMAILAddresses[0].AddressString
+    $Attachements = Get-ChildItem -Path $AttachDir -Recurse -file
+    $count = $Attachements.count
+    $incr = 1
+    foreach ($file in $Attachements) {
+        Write-Progress -Activity "Sending $File to Public Folder $Newfolder " -Status $file -PercentComplete (100/$count*$incr)
+        Send-MailMessage -From $SenderSMTP -Subject $file.name -To $PFSMTP -Attachments $file.FullName -DeliveryNotificationOption None -SmtpServer $Smtpserver -Credential $Credential -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
+        $incr++
+        }
+    Import-CSV C:\Scripts\folders.csv | ForEach {
+        $Folder=$_.Folder
+        $Path=$_.Path -replace "BRSLAB", "$Domain" 
+        $Path 
+        New-PublicFolder -Name $Folder -Path $Path
+        Enable-MailPublicFolder "$Path\$Folder"
+        Send-MailMessage -From $SenderSMTP -Subject "Welcome To Public Folders" -To $Folder$maildom -Body "This is Public Folder $Folder" -DeliveryNotificationOption None -SmtpServer $Smtpserver -Credential $Credential -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
 }
-#Get-ReceiveConnector “*Default Frontend*" | Add-ADPermission -User “NT AUTHORITY\ANONYMOUS LOGON” -ExtendedRights “Ms-Exch-SMTP-Accept-Any-Recipient”
-
-################# Configuring SMTP receive Connector for non Exchange Servers and setting Up Mailhost on DNS
-#Write-Host -ForegroundColor Yellow "Setting Up receive Connector"
-# New-ReceiveConnector -Name SMTP -Usage Custom -Bindings $MyIP":25" -RemoteIPRanges "$Subnet.1-$Subnet.99","$Subnet.110-$Subnet.255"
-# Get-ReceiveConnector “*Default Frontend*" | Add-ADPermission -User “NT AUTHORITY\ANONYMOUS LOGON” -ExtendedRights “Ms-Exch-SMTP-Accept-Any-Recipient”
-# Get-ReceiveConnector | where identity -match "Default Frontend" | Add-ADPermission -User "NT AUTHORITY\ANONYMOUS LOGON" -ExtendedRights "Ms-Exch-SMTP-Accept-Any-Recipient"
+    }
 Write-Host -ForegroundColor Yellow "Setting Up C-record for mailhost"
 If ($AddressFamily -match 'IPv4')
     {
