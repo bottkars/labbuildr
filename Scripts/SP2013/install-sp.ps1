@@ -26,5 +26,3 @@ Write-Warning "Installing Sharepoint may take up to 25 Minutes"
 Start-Process $Setuppath -ArgumentList $arguments -Wait
 Write-Verbose "Setting Sharepoint VSS Writer"
 Start-Process "C:\Program Files\Common Files\microsoft shared\Web Server Extensions\15\BIN\STSADM.EXE" -ArgumentList "-o registerwsswriter" -Wait
-Get-Service SPWriterV4 | Set-Service -StartupType Automatic
-Start-Service SPWriterV4 -Verbose
