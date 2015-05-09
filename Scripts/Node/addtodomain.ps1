@@ -7,9 +7,6 @@
    https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released
 #>
 #requires -version 3
-
-
-
 param (
 $Domain="labbuildr",
 $domainsuffix = ".local",
@@ -17,15 +14,14 @@ $subnet = "192.168.2",
 [Validateset('IPv4','IPv6','IPv4IPv6')]$AddressFamily,
 $IPv6Subnet
 )
-
 $ScriptName = $MyInvocation.MyCommand.Name
 $Host.UI.RawUI.WindowTitle = "$ScriptName"
 $Builddir = $PSScriptRoot
 $Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
 New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
 Set-Content -Path "$Builddir\$ScriptName$Logtime.log" "$Domain"
-C:\scripts\Autologon.exe Administrator $Domain Password123!
 New-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce -Name "Pass3" -Value "$PSHOME\powershell.exe -Command `"New-Item -ItemType File -Path c:\scripts\3.pass`""
+Start-Process C:\scripts\Autologon.exe -ArgumentList "Administrator $Domain Password123! /Accepteula"
 ######Newtwork Sanity Check #######
 If ($AddressFamily -match "IPv6")
     {
@@ -46,20 +42,23 @@ Do {
         Pause
         }
     }
- Until ($Ping)    
-
-
-
-
-
+Until ($Ping)    
 $Mydomain = "$Domain$domainsuffix"
 $password = "Password123!" | ConvertTo-SecureString -asPlainText -Force
 $username = "$domain\Administrator" 
 $credential = New-Object System.Management.Automation.PSCredential($username,$password)
-# Add-Computer -DomainName $domain -Credential $credential
-Add-Computer -DomainName $Mydomain -Credential $credential
-
+Do {
+    $Domain_OK = Add-Computer -DomainName $Mydomain -Credential $credential -PassThru
+    If (!$Domain_OK.HasSucceeded)
+        {
+        Write-Warning "Can Not Join Domain $Domain, please verify and retry
+                    Most likely this Computer has not been removed from Domain or Domain needs to refresh
+                    Please Check Active Directory Users and Computers on the DC"
+        Pause
+        }
+    }
+Until ($Domain_OK.HasSucceeded)    
 New-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run -Name "Computerinfo" -Value "$PSHOME\powershell.exe -file c:\scripts\set-computerinfo.ps1"
-# Install-WindowsFeature -Name Failover-Clustering –IncludeManagementTools
-Start-Process C:\scripts\Autologon.exe -ArgumentList "Administrator $Domain Password123! /Accepteula"
+Start-Process C:\scripts\Autologon.exe -ArgumentList "Administrator $Domain Password123! /Accepteula" -Wait
+
 Restart-Computer
