@@ -1,5 +1,5 @@
 .\labbuildr\
-.\labbuildripv6.ps1
+.\scaleio.ps1
 .\viprmaster\viprmaster.ovf
 .\Disks
 .\labbuildr.ps1
