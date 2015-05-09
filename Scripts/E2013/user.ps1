@@ -37,7 +37,7 @@ Follow me on twritter @Hyperv_Guy
 Make sure to Rate in my Blog !
 https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released
 "
-$AttachDir =  '\\vmware-host\Shared Folders\Sources\Attachements'
+$AttachDir =  '\\vmware-host\Shared Folders\Sources\Attachments'
 $PlainPassword = "Password123!"
 $DomainUser = "$Domain\Administrator"
 $SecurePassword = $PlainPassword | ConvertTo-SecureString -AsPlainText -Force
@@ -47,7 +47,7 @@ Set-TransportConfig -MaxSendSize 50MB
 Enable-Mailbox -Identity $BackupAdmin
 if (Test-Path $AttachDir)
     {
-    $Attachement = Get-ChildItem -Path $AttachDir -Recurse -file -Filter *microsoft*release-notes*
+    $Attachment = Get-ChildItem -Path $AttachDir -Recurse -file -Filter *networker-ms*
     }
 $RoleGroup = "EMC NMM Exchange Admin Roles"
 $Roles = ("Database Copies", "Databases", "Disaster Recovery", "Mailbox Import Export", "Mail Recipient Creation", "Mail Recipients", "View-Only Configuration", "View-Only Recipients")
@@ -59,9 +59,9 @@ New-Item -ItemType Directory -Path S:\rdb
 New-MailboxDatabase -Recovery -Name rdb$env:COMPUTERNAME -server $Smtpserver -EdbFilePath R:\rdb\rdb.edb  -logFolderPath S:\rdb
 Restart-Service MSExchangeIS
 Get-AddressList  | Update-AddressList
-if ($Attachement)
+if ($attachment)
     {
-    Send-MailMessage -From $SenderSMTP -Subject $Subject -To "$BackupAdmin$maildom"  -Body $Body -Attachments $Attachement[0].FullName -DeliveryNotificationOption None -SmtpServer $Smtpserver -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
+    Send-MailMessage -From $SenderSMTP -Subject $Subject -To "$BackupAdmin$maildom"  -Body $Body -Attachments $attachment[0].FullName -DeliveryNotificationOption None -SmtpServer $Smtpserver -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
     }
 else
     {
@@ -98,7 +98,7 @@ if (Get-DatabaseAvailabilityGroup)
             }
         New-ADUser @user -Enabled $True
         Enable-Mailbox $user.samaccountname -database $Database
-        Send-MailMessage -From $SenderSMTP -Subject $Subject -Attachments $Attachement.FullName -To $UPN -Body $Body -DeliveryNotificationOption None -SmtpServer $Smtpserver -Credential $Credential -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
+        Send-MailMessage -From $SenderSMTP -Subject $Subject -Attachments $attachment.FullName -To $UPN -Body $Body -DeliveryNotificationOption None -SmtpServer $Smtpserver -Credential $Credential -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
     }
 #######
 ##Public Folder Structure
@@ -111,10 +111,10 @@ If ($NewPFMailbox)
     # fixing the DSN 5.7.1. Create Item Change since Cu4
     Add-PublicFolderClientPermission $Newfolder -User ANONYMOUS -AccessRights createitems
     $PFSMTP = (Get-MailPublicFolder -Identity $Newfolder).EMAILAddresses[0].AddressString
-    $Attachements = Get-ChildItem -Path $AttachDir -Recurse -file
-    $count = $Attachements.count
+    $attachments = Get-ChildItem -Path $AttachDir -Recurse -file
+    $count = $attachments.count
     $incr = 1
-    foreach ($file in $Attachements) {
+    foreach ($file in $attachments) {
         Write-Progress -Activity "Sending $File to Public Folder $Newfolder " -Status $file -PercentComplete (100/$count*$incr)
         Send-MailMessage -From $SenderSMTP -Subject $file.name -To $PFSMTP -Attachments $file.FullName -DeliveryNotificationOption None -SmtpServer $Smtpserver -Credential $Credential -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
         $incr++
