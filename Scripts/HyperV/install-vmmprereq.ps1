@@ -23,12 +23,26 @@ $Setupcmd = "adksetup.exe"
 $Setuppath = "$SourcePath\$SCVMMVER$Prereq\$Setupcmd"
 .$Builddir\test-setup -setup $Setupcmd -setuppath $Setuppath
 Write-Warning "Starting ADKSETUP"
-Start-Process $Setuppath -ArgumentList "/ceip off /features OptionID.DeploymentTools OptionID.WindowsPreinstallationEnvironment OptionID.SQLExpress2012 /quiet"
+Start-Process $Setuppath -ArgumentList "/ceip off /features OptionID.DeploymentTools OptionID.WindowsPreinstallationEnvironment /quiet"
 Start-Sleep  -Seconds 30
 while (Get-Process | where {$_.ProcessName -eq "adksetup"}){
 Start-Sleep -Seconds 5
 Write-Host -NoNewline -ForegroundColor Yellow "."
 }
+
+
+$Setupcmd = "sqlncli.msi"
+$Setuppath = "$SourcePath\$SCVMMVER$Prereq\$Setupcmd"
+.$Builddir\test-setup -setup $Setupcmd -setuppath $Setuppath
+$SetupArgs = '/i "'+$Setuppath+'" /quiet'
+Start-Process -FilePath "msiexec.exe" -ArgumentList $SetupArgs -PassThru -Wait
+
+$Setupcmd = "SqlCmdLnUtils.msi"
+$Setuppath = "$SourcePath\$SCVMMVER$Prereq\$Setupcmd"
+.$Builddir\test-setup -setup $Setupcmd -setuppath $Setuppath
+$SetupArgs = '/i "'+$Setuppath+'" /quiet'
+Start-Process -FilePath "msiexec.exe" -ArgumentList $SetupArgs -PassThru -Wait
+
 # NETFX 4.52 Setup
 $Setupcmd = "NDP452-KB2901907-x86-x64-AllOS-ENU.exe"
 $Setuppath = "$SourcePath\$SCVMMVER$Prereq\$Setupcmd"

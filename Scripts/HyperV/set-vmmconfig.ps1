@@ -12,15 +12,13 @@ $Host.UI.RawUI.WindowTitle = "$ScriptName"
 $Builddir = $PSScriptRoot
 $Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
 New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
-
 ############
-
-
 $Domain = $env:USERDOMAIN
 New-ItemProperty -Path HKLM:Software\Microsoft\Windows\CurrentVersion\policies\system -Name EnableLUA -PropertyType DWord -Value 0 -Force
 New-ItemProperty -Path HKLM:Software\Microsoft\Windows\CurrentVersion\policies\system -Name ConsentPromptBehaviorAdmin -PropertyType DWord -Value 0 -Force
 $Files = Get-ChildItem -Path $Builddir -Filter VMserver.ini
 foreach ($file in $Files) {
 $content = Get-Content -path $File.fullname
-$content | foreach {$_ -replace "VMMINSTANCE", "MSSQL$Env:COMPUTERNAME"} | Set-Content $file.FullName
+$content | foreach {$_ -replace "BRS2GO", "$env:USERDOMAIN"}
+$content | foreach {$_ -replace "VMMINSTANCE", "MSSQL$env:USERDOMAIN"} | Set-Content $file.FullName
 }
