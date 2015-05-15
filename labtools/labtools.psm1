@@ -14,19 +14,31 @@
 	.EXAMPLE
 #>
 
+function Set-labDefaultGateway
+{
+	[CmdletBinding(HelpUri = "http://labbuildr.bottnet.de/modules/")]
+	param (
+	[Parameter(ParameterSetName = "1", Mandatory = $false )][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 1)][system.net.ipaddress]$DefaultGateway
+    )
+$Defaults = get-labdefaults -Defaultsfile $Defaultsfile
+$Defaults.DefaultGateway = $DefaultGateway
+Write-Verbose "Setting Default Gateway $Gateway"
+save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
+}
+
 function Set-labGateway
 {
 	[CmdletBinding(HelpUri = "http://labbuildr.bottnet.de/modules/")]
 	param (
 	[Parameter(ParameterSetName = "1", Mandatory = $false,Position = 1)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
-    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 2)][system.net.ipaddress]$Gateway
+    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 2)][switch]$Gateway
     )
 $Defaults = get-labdefaults -Defaultsfile $Defaultsfile
-$Defaults.Gateway = $Gateway
-Write-Verbose "Setting Default Gateway $Gateway"
+$Defaults.DefaultGateway = $Gateway.IsPresent
+Write-Verbose "Setting $Gateway"
 save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
 }
-
 
 function Set-labsubnet
 {
@@ -73,6 +85,7 @@ process {
         $object | Add-Member -MemberType NoteProperty -Name BuildDomain -Value $Default.config.Builddomain
         $object | Add-Member -MemberType NoteProperty -Name MySubnet -Value ([system.net.ipaddress]$Default.config.MySubnet)
         $object | Add-Member -MemberType NoteProperty -Name vmnet -Value $Default.config.vmnet
+        $object | Add-Member -MemberType NoteProperty -Name DefaultGateway -Value $Default.config.DefaultGateway
         $object | Add-Member -MemberType NoteProperty -Name Gateway -Value $Default.config.Gateway
         $object | Add-Member -MemberType NoteProperty -Name AddressFamily -Value $Default.config.AddressFamily
         $object | Add-Member -MemberType NoteProperty -Name IPV6Prefix -Value $Default.Config.IPV6Prefix
@@ -131,6 +144,7 @@ process {
         $xmlcontent += ("<IPV6Prefix>$($Defaults.IPV6Prefix)</IPV6Prefix>")
         $xmlcontent += ("<IPv6PrefixLength>$($Defaults.IPv6PrefixLength)</IPv6PrefixLength>")
         $xmlcontent += ("<Gateway>$($Defaults.Gateway)</Gateway>")
+        $xmlcontent += ("<DefaultGateway>$($Defaults.DefaultGateway)</DefaultGateway>")
         $xmlcontent += ("<Sourcedir>$($Defaults.Sourcedir)</Sourcedir>")
         $xmlcontent += ("<ScaleIOVer>$($Defaults.ScaleIOVer)</ScaleIOVer>")
         $xmlcontent += ("</config>")

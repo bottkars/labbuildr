@@ -47,13 +47,17 @@ If ($Defaults.IsPresent)
      $subnet = $labdefaults.MySubnet
      $BuildDomain = $labdefaults.BuildDomain
      $Sourcedir = $labdefaults.Sourcedir
-     $gateway = $labdefaults.Gateway
+     $gateway = $labdefaults.DefaultGateway
      }
+
 
 
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
-
+if (!$gateway)
+    {
+    $gateway = "$subnet.9"
+    }
 if (get-vmx $targetname)
     {
     Write-Warning " the Virtual Machine already exists"
