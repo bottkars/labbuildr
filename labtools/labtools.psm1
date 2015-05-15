@@ -14,8 +14,49 @@
 	.EXAMPLE
 #>
 
+function Set-labGateway
+{
+	[CmdletBinding(HelpUri = "http://labbuildr.bottnet.de/modules/")]
+	param (
+	[Parameter(ParameterSetName = "1", Mandatory = $false,Position = 1)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 2)][system.net.ipaddress]$Gateway
+    )
+$Defaults = get-labdefaults -Defaultsfile $Defaultsfile
+$Defaults.Gateway = $Gateway
+Write-Verbose "Setting Default Gateway $Gateway"
+save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
+}
 
-function get-labdefaults
+
+function Set-labsubnet
+{
+	[CmdletBinding(HelpUri = "http://labbuildr.bottnet.de/modules/")]
+	param (
+	[Parameter(ParameterSetName = "1", Mandatory = $false,Position = 1)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 2)][system.net.ipaddress]$subnet
+    )
+$Defaults = get-labdefaults -Defaultsfile $Defaultsfile
+$Defaults.Mysubnet = $subnet
+Write-Verbose "Setting subnet $subnet"
+save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
+}
+
+function Set-labBuilddomain
+{
+	[CmdletBinding(HelpUri = "http://labbuildr.bottnet.de/modules/")]
+	param (
+	[Parameter(ParameterSetName = "1", Mandatory = $false,Position = 1)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+    [ValidateLength(3,10)]
+    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 2)]
+    [ValidatePattern("^[a-zA-Z\s]+$")][string]$builddomain
+    )
+$Defaults = get-labdefaults -Defaultsfile $Defaultsfile
+$Defaults.builddomain = $builddomain
+Write-Verbose "Setting builddomain $builddomain"
+save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
+}
+
+function Get-labDefaults
 {
 	[CmdletBinding(HelpUri = "http://labbuildr.bottnet.de/modules/")]
 	param (

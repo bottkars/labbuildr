@@ -27,14 +27,30 @@
 #>
 [CmdletBinding()]
 Param(
-
-[Parameter(Mandatory=$false)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$ViprOVA, 
-[Parameter(Mandatory=$false)]$targetname = "vipr1",
-[Parameter(Mandatory=$false)]$viprmaster = "viprmaster-2.2.1.0",
-[Parameter(Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0"
-
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install", Mandatory=$false)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$ViprOVA, 
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory=$false)]$targetname = "vipr1",
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory=$false)]$viprmaster = "viprmaster-2.2.1.0",
+[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+[Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults
 
 )
+
+Measure-Command {
+If ($Defaults.IsPresent)
+    {
+     $labdefaults = Get-labDefaults
+     $vmnet = "vmnet$($labdefaults.vmnet)"
+     $subnet = $labdefaults.MySubnet
+     $BuildDomain = $labdefaults.BuildDomain
+     $Sourcedir = $labdefaults.Sourcedir
+     $gateway = $labdefaults.Gateway
+     }
+
+
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 
@@ -44,7 +60,14 @@ if (get-vmx $targetname)
     Break
     }
 
-
+if ($gateway)
+    {
+    $defaultgateway = "$subnet.103"
+    }
+    else
+    {
+    $defaultgateway = "$subnet.9"
+    }
 $Disks = ('disk1','disk2','disk5')
 $masterpath = "$PSScriptRoot\$viprmaster"
 $Missing = @()
@@ -98,12 +121,51 @@ Write-Verbose " Copy base vm config to new master"
 
 Copy-Item $PSScriptRoot\scripts\viprmaster\viprmaster.vmx $targetname\$targetname.vmx
 $vmx = get-vmx $targetname
+$vmx | Set-VMXTemplate -unprotect
 $vmx | Set-VMXNetworkAdapter -Adapter 0 -AdapterType vmxnet3 -ConnectionType custom
 $vmx | Set-VMXVnet -Adapter 0 -vnet vmnet2
 $vmx | Set-VMXDisplayName -DisplayName $targetname
 Write-Verbose "Generating CDROM"
+
+Write-Verbose "Creating OVFenvironment"
+$ovfenv = '<?xml version="1.0" encoding="UTF-8"?>
+<Environment
+     xmlns="http://schemas.dmtf.org/ovf/environment/1"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xmlns:oe="http://schemas.dmtf.org/ovf/environment/1"
+     xmlns:ve="http://www.vmware.com/schema/ovfenv"
+     oe:id="vipr1"
+     ve:vCenterId="vm-21012">
+   <PlatformSection>
+      <Kind>VMware ESXi</Kind>
+      <Version>5.5.0</Version>
+      <Vendor>VMware, Inc.</Vendor>
+      <Locale>de_DE</Locale>
+   </PlatformSection>
+   <PropertySection>
+         <Property oe:key="network_1_ipaddr" oe:value="'+$subnet+'.9"/>
+         <Property oe:key="network_1_ipaddr6" oe:value="::0"/>
+         <Property oe:key="network_gateway" oe:value="'+$defaultgateway+'"/>
+         <Property oe:key="network_gateway6" oe:value="::0"/>
+         <Property oe:key="network_netmask" oe:value="255.255.255.0"/>
+         <Property oe:key="network_prefix_length" oe:value="24"/>
+         <Property oe:key="network_vip" oe:value="'+$subnet+'.9"/>
+         <Property oe:key="network_vip6get" oe:value="::0"/>
+         <Property oe:key="node_count" oe:value="1"/>
+   </PropertySection>
+</Environment>
+'
+
+if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+    {
+    Write-Host -ForegroundColor Yellow $ovfenv
+    }
+
+<#
 $ovfenv = Get-Content $PSScriptRoot\scripts\viprmaster\ovf-env.xml
 $ovfenv -replace "192.168.2",$subnet | Set-Content -Path $PSScriptRoot\scripts\viprmaster\cd\ovf-env.xml -Force
+#>
+$ovfenv  | Set-Content -Path $PSScriptRoot\scripts\viprmaster\cd\ovf-env.xml -Force
 convert-VMXdos2unix -Sourcefile $PSScriptRoot\scripts\viprmaster\cd\ovf-env.xml -Verbose
 & $Global:vmwarepath\mkisofs.exe -J -R -o "$PSScriptRoot\$Targetname\vipr.iso" $PSScriptRoot\scripts\viprmaster\cd 2>&1 | Out-Null
 $config = $vmx | get-vmxconfig
@@ -119,3 +181,4 @@ wait a view minutes for storageos to be up and running
 point your browser to https://vipr1 and follow the wizard steps
 "
 
+}

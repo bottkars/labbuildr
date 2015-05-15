@@ -24,38 +24,50 @@
 This will install 3 Centos Nodes CentOSNode1 -CentOSNode3 from the Default CentOS Master , in the Default 192.168.2.0 network, IP .221 - .223
 
 #>
-[CmdletBinding(DefaultParametersetName = "install")]
+[CmdletBinding(DefaultParametersetName = "defaults")]
 Param(
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath = '.\CentOS 64-bit',
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [int32]$Nodes=3,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [int32]$Startnode = 1,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateRange(1,3)][int32]$Disks = 1,
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
+
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
 [Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
-[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2"
+[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+[Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults
+
 
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
-switch ($PsCmdlet.ParameterSetName)
-{
-     default
-        {
-        [System.Version]$subnet = $Subnet.ToString()
-        $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
-        $Guestuser = "root"
-        $Guestpassword = "Password123!"
-        $Disksize = "100GB"
-        $scsi = 0
-        $Nodeprefix = "CentOSNode"
-        $MasterVMX = get-vmx -path $MasterPath
-        if (!$MasterVMX.Template) 
+If ($Defaults.IsPresent)
+    {
+     $labdefaults = Get-labDefaults
+     $vmnet = "vmnet$($labdefaults.vmnet)"
+     $subnet = $labdefaults.MySubnet
+     $BuildDomain = $labdefaults.BuildDomain
+     $Sourcedir = $labdefaults.Sourcedir
+     }
+[System.Version]$subnet = $Subnet.ToString()
+$Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
+$Guestuser = "root"
+$Guestpassword = "Password123!"
+$Disksize = "100GB"
+$scsi = 0
+$Nodeprefix = "CentOSNode"
+$MasterVMX = get-vmx -path $MasterPath
+if (!$MasterVMX.Template) 
             {
             write-verbose "Templating Master VMX"
             $template = $MasterVMX | Set-VMXTemplate
@@ -67,16 +79,16 @@ switch ($PsCmdlet.ParameterSetName)
         $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
         }
 ####Build Machines#
-
+    $machinesBuilt = @()
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
+        {
+        If (!(get-vmx $Nodeprefix$node))
         {
         write-verbose " Creating $Nodeprefix$node"
         $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node 
         If ($Node -eq 1){$Primary = $NodeClone}
         $Config = Get-VMXConfig -config $NodeClone.config
         Write-Verbose "Tweaking Config"
-  #      $Config = $config | ForEach-Object { $_ -replace "lsilogic" , "pvscsi" }
-  #      $Config | set-Content -Path $NodeClone.Config
         Write-Verbose "Creating Disks"
         foreach ($LUN in (1..$Disks))
             {
@@ -99,11 +111,17 @@ switch ($PsCmdlet.ParameterSetName)
         $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
         Write-Verbose "Starting CentosNode$Node"
         start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
+        $machinesBuilt += $($NodeClone.cloneName)
     }
-    foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
+    else
         {
-        $ip="$subnet.22$Node"
-        $NodeClone = get-vmx $Nodeprefix$Node
+        write-Warning "Machine $Nodeprefix$node already Exists"
+        }
+    }
+    foreach ($Node in $machinesBuilt)
+        {
+        $ip="$subnet.22$($Node[-1])"
+        $NodeClone = get-vmx $Node
         do {
             $ToolState = Get-VMXToolsState -config $NodeClone.config
             Write-Verbose "VMware tools are in $($ToolState.State) state"
@@ -116,10 +134,11 @@ switch ($PsCmdlet.ParameterSetName)
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
         $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway "$subnet.103" -device eth0 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $Guestuser -rootpassword $Guestpassword
     }
-write-Warning "Login to the VM´s with root/Password123!"
-}#end install
+    write-Warning "Login to the VM´s with root/Password123!"
+    
 
-}#end switch 
+
+
 
 
 
