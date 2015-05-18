@@ -98,11 +98,11 @@ if (Get-DatabaseAvailabilityGroup)
     }
 #######
 ##Public Folder Structure
-$NewPFMailbox = New-Mailbox -PublicFolder -Name $Domain -database $Database 
+$NewPFMailbox = New-Mailbox -PublicFolder -Name "PFMailbox_$Domain" -database $Database 
 If ($NewPFMailbox)
     {
     # will be superseeded by try catch, errorhandling for singlenode 
-    $Newfolder = New-PublicFolder -Name $Domain
+    $Newfolder = New-PublicFolder -Name "PF$Domain"
     Enable-MailPublicFolder $Newfolder
     # fixing the DSN 5.7.1. Create Item Change since Cu4
     Add-PublicFolderClientPermission $Newfolder -User ANONYMOUS -AccessRights createitems
@@ -117,12 +117,12 @@ If ($NewPFMailbox)
         }
     Import-CSV C:\Scripts\folders.csv | ForEach {
         $Folder=$_.Folder
-        $Path=$_.Path -replace "BRSLAB", "$Domain" 
+        $Path=$_.Path -replace "BRSLAB", "PF$Domain" 
         $Path 
         New-PublicFolder -Name $Folder -Path $Path
         Enable-MailPublicFolder "$Path\$Folder"
         Send-MailMessage -From $SenderSMTP -Subject "Welcome To Public Folders" -To $Folder$maildom -Body "This is Public Folder $Folder" -DeliveryNotificationOption None -SmtpServer $Smtpserver -Credential $Credential -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
-}
+        }
     }
 Write-Host -ForegroundColor Yellow "Setting Up C-record for mailhost"
 If ($AddressFamily -match 'IPv4')

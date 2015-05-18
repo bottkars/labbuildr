@@ -23,7 +23,7 @@ $Credential = New-Object –TypeName System.Management.Automation.PSCredential –Ar
 $Session = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri http://$env:COMPUTERNAME/PowerShell/ -Authentication Kerberos -Credential $Credential
 Import-PSSession $Session
 $ADDomain = (get-addomain).forest
-$Smtpserver = $env:COMPUTERNAME+$env:USERDNSDOMAIN
+$Smtpserver = $env:COMPUTERNAME+"."+$env:USERDNSDOMAIN
 New-Item -ItemType Directory -Path r:\rdb
 New-Item -ItemType Directory -Path s:\rdb
 New-MailboxDatabase -Recovery -Name rdb$env:COMPUTERNAME -server $Smtpserver -EdbFilePath R:\rdb\rdb.edb  -logFolderPath S:\rdb
