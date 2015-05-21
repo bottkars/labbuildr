@@ -1,10 +1,4 @@
-﻿
-
-
-
-
-
-<#	
+﻿<#	
 	.SYNOPSIS
 	Get-VMXProcessesInGuest
 	
@@ -207,4 +201,14 @@ while ($readlength -ne 0)
  
 $targetfile.close()
 Write-Host 
-} 
+}
+
+function enable-labfolders
+    {
+    get-vmx | where state -match running  | Set-VMXSharedFolderState -enabled
+    }
+
+function get-labscenario
+    {
+    Get-VMX | get-vmxscenario | Sort-Object Scenarioname | ft -AutoSize
+    }
