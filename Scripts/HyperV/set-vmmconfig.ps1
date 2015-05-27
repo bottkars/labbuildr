@@ -19,6 +19,6 @@ New-ItemProperty -Path HKLM:Software\Microsoft\Windows\CurrentVersion\policies\s
 $Files = Get-ChildItem -Path $Builddir -Filter VMserver.ini
 foreach ($file in $Files) {
 $content = Get-Content -path $File.fullname
-$content | foreach {$_ -replace "BRS2GO", "$env:USERDOMAIN"}
+$content = $content | foreach {$_ -replace "BRS2GO", "$env:USERDOMAIN"}
 $content | foreach {$_ -replace "VMMINSTANCE", "MSSQL$env:USERDOMAIN"} | Set-Content $file.FullName
 }

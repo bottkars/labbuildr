@@ -10,7 +10,8 @@
 [CmdletBinding()]
 param(
 	[ValidateSet('nmm821','nmm300', 'nmm301', 'nmm2012', 'nmm3012', 'nmm82','nmm85','nmm85.BR1','nmm85.BR2')]
-    $nmm_ver
+    $nmm_ver,
+    [switch]$scvmm
 )
 $ScriptName = $MyInvocation.MyCommand.Name
 $Host.UI.RawUI.WindowTitle = "$ScriptName"
@@ -40,9 +41,27 @@ else
         }
     else
         {
-        Write-Error "Networker Setup File could not be elvaluated"
+        Write-Error "Networker Setup File could not be evaluated"
         }
     }
+
+
+if ($scvmm.IsPresent)
+    {
+    if ($nmm_ver -ge "nmm85" )
+        {
+        Write-Verbose "Installing Networker Extended Client" 
+        $nw_ver = $nmm_ver -replace "nmm","nw"
+        $Setuppath = "\\vmware-host\Shared Folders\Sources\$nw_ver\win_x64\networkr\lgtoxtdclnt-8.5.0.0.exe" 
+        .$Builddir\test-setup -setup lgtoxtdclnt-8.5.0.0 -setuppath $Setuppath
+        Start-Process $Setuppath -ArgumentList "/q" -Wait
+        }
+    $SCVMMPlugin = $NMM_VER -replace "nmm","scvmm"
+    $Setuppath = "\\vmware-host\Shared Folders\Sources\$SCVMMPlugin\win_x64\SCVMM DP Add-in.exe" 
+    .$Builddir\test-setup -setup NMM -setuppath $Setuppath
+    Start-Process $Setuppath -ArgumentList "/q" -Wait
+    }
+
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     {
     Pause

@@ -12,7 +12,6 @@ param(
 $SCVMMVER = "SCVMM2012R2",
 $SourcePath = "\\vmware-host\Shared Folders\Sources"
 )
-
 $ScriptName = $MyInvocation.MyCommand.Name
 $Host.UI.RawUI.WindowTitle = "$ScriptName"
 $Builddir = $PSScriptRoot
@@ -24,6 +23,16 @@ $Setuppath = "$SourcePath\$SCVMMVER\$Setupcmd"
 .$Builddir\test-setup -setup $Setupcmd -setuppath $Setuppath
 Write-Warning "Starting $SCVMMVER setup, this may take a while"
 start-process "$Setuppath" -ArgumentList "/server /i /f C:\scripts\VMServer.ini /SqlDBAdminDomain $Domain /SqlDBAdminName SVC_SQL /SqlDBAdminPassword Password123! /VmmServiceDomain $Domain /VmmServiceUserName SVC_SCVMM /VmmServiceUserPassword Password123! /IACCEPTSCEULA" -Wait 
-while (Get-Process | where {$_.ProcessName -eq "SetupVM"}){
-Start-Sleep -Seconds 2
-}
+write-verbose "Checking for Updates"
+foreach ($Updatepattern in ("*vmmserver*.msp","*Admin*.msp"))
+    {
+    $VMMUpdate = Get-ChildItem "$SourcePath\$SCVMMVER\updates"  -Filter $Updatepattern
+    if ($VMMUpdate)
+        {
+        $VMMUpdate = $VMMUpdate | Sort-Object -Property Name -Descending
+	    $LatestVMMUpdate = $VMMUpdate[0]
+        .$Builddir\test-setup -setup $LatestVMMUpdate.BaseName -setuppath $LatestVMMUpdate.FullName
+        Write-Warning "Starting VMM Patch setup, this may take a while"
+        start-process $LatestVMMUpdate.FullName -ArgumentList "/Passive" -Wait 
+        }
+    }
