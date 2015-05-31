@@ -18,4 +18,3 @@ New-Item -ItemType file -Path $Builddir\ip.txt -Force
 Set-Content -Value (Get-NetIPAddress -AddressFamily IPv4 | where IPAddress -ne "127.0.0.1").ipaddress -Path $Builddir\ip.txt
 New-Item -ItemType file -Path $Builddir\gateway.txt -Force
 Set-Content -Value (Get-NetIPConfiguration).ipv4DefaultGateway.NextHop -Path $Builddir\Gateway.txt
-

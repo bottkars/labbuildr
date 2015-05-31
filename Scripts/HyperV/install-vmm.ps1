@@ -36,3 +36,14 @@ foreach ($Updatepattern in ("*vmmserver*.msp","*Admin*.msp"))
         start-process $LatestVMMUpdate.FullName -ArgumentList "/Passive" -Wait 
         }
     }
+
+Write-Warning "Fixing AddIn Pipeline"
+$rule = New-Object System.Security.AccessControl.FileSystemAccessRule("NT AUTHORITY\Authenticated Users"," Write, ReadAndExecute, Synchronize", "ContainerInherit, ObjectInherit", "None", "Allow")
+$ACL = get-acl "C:\Program Files\Microsoft System Center 2012 R2\Virtual Machine Manager\bin\AddInPipeline\"
+$acl.SetOwner([System.Security.Principal.NTAccount] "Administrators")
+set-acl -Path "C:\Program Files\Microsoft System Center 2012 R2\Virtual Machine Manager\bin\AddInPipeline" $Acl
+$acl.SetAccessRuleProtection($True, $False) 
+$Acl.AddAccessRule($rule) 
+set-acl -Path "C:\Program Files\Microsoft System Center 2012 R2\Virtual Machine Manager\bin\AddInPipeline" $Acl
+
+

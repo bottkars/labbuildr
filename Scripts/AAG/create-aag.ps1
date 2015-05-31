@@ -16,7 +16,8 @@ Param
     [string] $BackupShare = "\\vmware-host\Shared Folders\Sources\AWORKS",
     $IPv4Subnet = "192.168.2",
     $IPv6Prefix = "",
-    [Validateset('IPv4','IPv6','IPv4IPv6')]$AddressFamily='IPv4'
+    [Validateset('IPv4','IPv6','IPv4IPv6')]$AddressFamily='IPv4',
+    $Port = '1433'
 )
 
 $IPv6subnet = "$IPv6Prefix$IPv4Subnet"
@@ -161,7 +162,7 @@ USE [master]
 GO
 ALTER AVAILABILITY GROUP [$AgName]
 ADD LISTENER N'$Listener' (
-WITH IP $ListenerIP, PORT=55555)"
+WITH IP $ListenerIP, PORT=$Port)"
 
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     {

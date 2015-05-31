@@ -97,6 +97,21 @@ Write-Verbose "Setting builddomain $builddomain"
 save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
 }
 
+
+function Set-labSources
+{
+	[CmdletBinding(HelpUri = "http://labbuildr.bottnet.de/modules/")]
+	param (
+	[Parameter(ParameterSetName = "1", Mandatory = $false,Position = 1)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+    [ValidateLength(3,10)]
+    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 2)][ValidateScript({ Test-Path -Path $_ })]$Sourcedir
+    )
+$Defaults = get-labdefaults -Defaultsfile $Defaultsfile
+$Defaults.sourcedir = $Sourcedir
+Write-Verbose "Setting builddomain $Sourcedir"
+save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
+}
+
 function Get-labDefaults
 {
 	[CmdletBinding(HelpUri = "http://labbuildr.bottnet.de/modules/")]
@@ -183,6 +198,26 @@ process {
 end {}
 }
 
+
+function Expand-LABZip
+{
+	param ([string]$zipfilename, [string] $destination)
+	$copyFlag = 16 # overwrite = yes
+	$Origin = $MyInvocation.MyCommand
+	if (test-path($zipfilename))
+	{		
+        Write-Verbose "extracting $zipfilename"
+        if (!(test-path  $destination))
+            {
+            New-Item -ItemType Directory -Force -Path $destination | Out-Null
+            }
+        $shellApplication = new-object -com shell.application
+		$zipPackage = $shellApplication.NameSpace($zipfilename)
+		$destinationFolder = $shellApplication.NameSpace($destination)
+		$destinationFolder.CopyHere($zipPackage.Items(), $copyFlag)
+	}
+}
+
 function Get-LABFTPFile
 { 
 [CmdletBinding(HelpUri = "http://labbuildr.bottnet.de/modules/")]
@@ -190,10 +225,9 @@ Param(
     [Parameter(ParameterSetName = "1", Mandatory = $true)]$Source,
     [Parameter(ParameterSetName = "1", Mandatory = $false)]$Target,
     [Parameter(ParameterSetName = "1", Mandatory = $false)]$UserName = "Anonymous",
-    [Parameter(ParameterSetName = "1", Mandatory = $false)]$Password = "Admin@labbuildr.local"
+    [Parameter(ParameterSetName = "1", Mandatory = $false)]$Password = "Admin@labbuildr.local",
+    [Parameter(ParameterSetName = "1", Mandatory = $false)][switch]$Defaultcredentials
 ) 
-
-
 if (!$Target)
     {
     $Target = Split-Path -Leaf $Source 
@@ -202,8 +236,15 @@ if (!$Target)
 $ftprequest = [System.Net.FtpWebRequest]::create($Source) 
  
 # set the request's network credentials for an authenticated connection 
-$ftprequest.Credentials = New-Object System.Net.NetworkCredential($username,$password) 
- 
+if ($Defaultcredentials.Ispresent)
+    {
+    $ftprequest.UseDefaultCredentials 
+    }
+else
+    {
+    $ftprequest.Credentials = New-Object System.Net.NetworkCredential($username,$password)
+    }     
+
 $ftprequest.Method = [System.Net.WebRequestMethods+Ftp]::DownloadFile 
 $ftprequest.UseBinary = $true 
 $ftprequest.KeepAlive = $false 
@@ -211,7 +252,7 @@ $ftprequest.KeepAlive = $false
 # send the ftp request to the server 
 $ftpresponse = $ftprequest.GetResponse() 
 Write-Verbose $ftpresponse.WelcomeMessage
-Write-Verbose "Filesize: $($ftpresponse.ContentLength/1MB) MB"
+Write-Verbose "Filesize: $($ftpresponse.ContentLength)"
  
 # get a download stream from the server response 
 $responsestream = $ftpresponse.GetResponseStream() 
@@ -235,7 +276,8 @@ do{
 while ($readlength -ne 0) 
  
 $targetfile.close()
-Write-Host 
+Write-Host
+return $true
 }
 
 function enable-labfolders

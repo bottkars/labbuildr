@@ -12,7 +12,7 @@ param (
 
 [Parameter(Mandatory=$true)][ValidateSet('MDM','TB','SDS','SDC')]$role,
 [Parameter(Mandatory=$true)]$Disks,
-[Parameter(Mandatory=$true)][ValidateSet('1.30-426.0','1.31-258.2','1.31-1277.3','1.31-2333.2','1.32-277.0')][alias('siover')]$ScaleIOVer
+[Parameter(Mandatory=$true)][ValidateSet('1.30-426.0','1.31-258.2','1.31-1277.3','1.31-2333.2','1.32-277.0','1.32-402.1')][alias('siover')]$ScaleIOVer
 )
 $ScriptName = $MyInvocation.MyCommand.Name
 $Host.UI.RawUI.WindowTitle = "$ScriptName"
@@ -20,21 +20,25 @@ $Builddir = $PSScriptRoot
 $Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
 New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
 
+
+$ScaleIO_Major = ($ScaleIOVer.Split("-"))[0]
+$ScaleIOPath = "ScaleIO_$($ScaleIO_Major)_Complete_Windows_SW_Download\ScaleIO_$($ScaleIO_Major)_Windows_Download"
+
 .$Builddir\test-sharedfolders.ps1
-$Setuppath = "\\vmware-host\shared folders\sources\Scaleio\Windows\EMC-ScaleIO-$role-$ScaleIOVer.msi"
+$Setuppath = "\\vmware-host\shared folders\sources\Scaleio\$ScaleIOPath\EMC-ScaleIO-$role-$ScaleIOVer.msi"
 .$Builddir\test-setup.ps1 -setup "Saleio$role$ScaleIOVer" -setuppath $Setuppath
 $ScaleIOArgs = '/i "'+$Setuppath+'" /quiet'
 Start-Process -FilePath "msiexec.exe" -ArgumentList $ScaleIOArgs -PassThru -Wait
 
 ####sds checkup             
 $role = "sds"
-$Setuppath = "\\vmware-host\shared folders\sources\Scaleio\Windows\EMC-ScaleIO-$role-$ScaleIOVer.msi"
+$Setuppath = "\\vmware-host\shared folders\sources\Scaleio\$ScaleIOPath\EMC-ScaleIO-$role-$ScaleIOVer.msi"
 .$Builddir\test-setup -setup "Saleio$role$ScaleIOVer" -setuppath $Setuppath
 $ScaleIOArgs = '/i "'+$Setuppath+'" /quiet'
 Start-Process -FilePath "msiexec.exe" -ArgumentList $ScaleIOArgs -PassThru -Wait
 ####sdc checkup
 $role = "sdc"
-$Setuppath = "\\vmware-host\shared folders\sources\Scaleio\Windows\EMC-ScaleIO-$role-$ScaleIOVer.msi"
+$Setuppath = "\\vmware-host\shared folders\sources\Scaleio\$ScaleIOPath\EMC-ScaleIO-$role-$ScaleIOVer.msi"
 .$Builddir\test-setup -setup "Saleio$role$ScaleIOVer" -setuppath $Setuppath
 $ScaleIOArgs = '/i "'+$Setuppath+'" /quiet'
 Start-Process -FilePath "msiexec.exe" -ArgumentList $ScaleIOArgs -PassThru -Wait
@@ -58,4 +62,3 @@ foreach ($Disk in 1..$Disks)
     # get-Disk  -Number $Disk | Initialize-Disk -PartitionStyle GPT
     # get-Disk  -Number $Disk | New-Partition -UseMaximumSize -AssignDriveLetter # -DriveLetter $Driveletter
     }
-# Start-Service ShellHWDetection

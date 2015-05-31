@@ -11,7 +11,8 @@
 param (
 $sp_version= "SP2013sp1fndtn",
 $SourcePath = "\\vmware-host\Shared Folders\Sources",
-$Setupcmd = "Setup.exe"
+$Setupcmd = "Setup.exe",
+[Validateset('AAG','MSDE')]$DBtype
 )
 $ScriptName = $MyInvocation.MyCommand.Name
 $Host.UI.RawUI.WindowTitle = "$ScriptName"
@@ -21,8 +22,24 @@ New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
 .$Builddir\test-sharedfolders.ps1
 $Setuppath = "$SourcePath\$sp_version\$Setupcmd"
 .$Builddir\test-setup.ps1 -setup "Sharepoint 2013" -setuppath $Setuppath
-$arguments = "/config `"$Sourcepath\$sp_version\files\setupsilent\config.xml`""
+switch ($DBtype)
+    {
+    'AAG'
+    {
+    $arguments = "/config `"$Sourcepath\$sp_version\files\setupfarmsilent\config.xml`""
+    }
+    'MSDE'
+    {
+    }
+    default
+    {
+    $arguments = "/config `"$Sourcepath\$sp_version\files\setupsilent\config.xml`""
+    }
+
+    }
+
 Write-Warning "Installing Sharepoint may take up to 25 Minutes"
 Start-Process $Setuppath -ArgumentList $arguments -Wait
 Write-Verbose "Setting Sharepoint VSS Writer"
 Start-Process "C:\Program Files\Common Files\microsoft shared\Web Server Extensions\15\BIN\STSADM.EXE" -ArgumentList "-o registerwsswriter" -Wait
+

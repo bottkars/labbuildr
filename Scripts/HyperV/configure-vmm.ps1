@@ -22,15 +22,6 @@ $PlainPassword = "Password123!"
 $DomainUser = "$Domain\Administrator"
 Import-Module 'C:\Program Files\Microsoft System Center 2012 R2\Virtual Machine Manager\bin\psModules\virtualmachinemanager'
 Get-SCVMMServer $Env:COMPUTERNAME
-Write-Verbose "setting VMM Secuity Fix for AddIns"
-$rule = New-Object System.Security.AccessControl.FileSystemAccessRule("NT AUTHORITY\Authenticated Users"," Write, ReadAndExecute, Synchronize", "ContainerInherit, ObjectInherit", "None", "Allow")
-$ACL = get-acl "C:\Program Files\Microsoft System Center 2012 R2\Virtual Machine Manager\bin\AddInPipeline\"
-$acl.SetOwner([System.Security.Principal.NTAccount] "Administrators")
-set-acl -Path "C:\Program Files\Microsoft System Center 2012 R2\Virtual Machine Manager\bin\AddInPipeline" $Acl
-$acl.SetAccessRuleProtection($True, $False) 
-$Acl.AddAccessRule($rule) 
-set-acl -Path "C:\Program Files\Microsoft System Center 2012 R2\Virtual Machine Manager\bin\AddInPipeline" $Acl
-
 ####
 $SecurePassword = $PlainPassword | ConvertTo-SecureString -AsPlainText -Force
 $Credential = New-Object –TypeName System.Management.Automation.PSCredential –ArgumentList $DomainUser, $SecurePassword

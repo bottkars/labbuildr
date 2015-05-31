@@ -8,7 +8,7 @@
 #>
 #requires -version 3
 param(
-    [string]$client = "hvnode1"
+[Parameter(mandatory=$true)][string]$client
 )
 $ScriptName = $MyInvocation.MyCommand.Name
 $Host.UI.RawUI.WindowTitle = "$ScriptName"
