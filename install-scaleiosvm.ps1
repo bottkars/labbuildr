@@ -20,27 +20,32 @@
 .LINK
    https://community.emc.com/blogs/bottk/
 .EXAMPLE
-.\install-scaleiosvm.ps1 -ovaPath H:\_EMC-VAs\ScaleIOVM_1.31.1277.3.ova
-This will import the OVA File
+.\install-scaleiosvm.ps1 -Sourcedir d:\sources
 .EXAMPLE
-.\install-scaleiosvm.ps1 -SCALEIOMasterPath .\SIOMaster -configure -singlemdm
+.\install-scaleiosvm.ps1 -configure -Defaults
+This will Install and Configure a 3-Node ScaleIO with default Configuration
+.EXAMPLE
+.\install-scaleiosvm.ps1 -SCALEIOMaster ".\ScaleIOVM_1.32.402.1" -configure -singlemdm
 This will Configure a SIO Cluster with 3 Nodes and Single MDM
 .EXAMPLE
-.\install-scaleiosvm.ps1 -SCALEIOMasterPath .\SIOMaster -Disks 3  -sds
+.\install-scaleiosvm.ps1 -SCALEIOMaster ".\ScaleIOVM_1.32.402.1" -Disks 3  -sds
 This will install a Single Node SDS
 #>
 [CmdletBinding(DefaultParametersetName = "action")]
 Param(
 ### import parameters
-<# for the Import, we specify the Path to the downloaded OVA. this will be dehydrated to a VMware Workstation Master #>
+<# for the Import, we specify the Path to the Sources. 
+Sources are the Root of the Extracted ScaleIO_VMware_SW_Download.zip
+If not available, it will be downloaded from http://www.emc.com/scaleio
+The extracte OVA will be dehydrated to a VMware Workstation Master #>
 [Parameter(ParameterSetName = "import",Mandatory=$true)][String]
-[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$ovaPath,
-[Parameter(ParameterSetName = "import",Mandatory=$false)][String]$mastername = "SIOMaster",
+[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir,
 #### install parameters#
+<# The ScaleIO Master created from -sourcedir  #>
 [Parameter(ParameterSetName = "defaults",Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "sdsonly",Mandatory=$false)]
-[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })][String]$SCALEIOMasterPath = ".\SIOMaster",
+[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })][String]$SCALEIOMaster = ".\ScaleIOVM_1.32.402.1",
 <# Number of Nodes, default to 3 #>
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
@@ -74,7 +79,9 @@ Param(
 [Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$configure,
 <# we use SingleMDM parameter with Configure for test and dev to Showcase ScaleIO und LowMem Machines #>
 [Parameter(ParameterSetName = "install",Mandatory=$False)][switch]$singlemdm,
+<# Path to a Defaults.xml #>
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+<# Use labbuildr Defaults.xml #>
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults
 )
 #requires -version 3.0
@@ -98,7 +105,56 @@ switch ($PsCmdlet.ParameterSetName)
 {
     "import"
         {
-        & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck  --name=$mastername $ovaPath $PSScriptRoot #
+        if (!($OVAPath = Get-ChildItem -Path "$Sourcedir\ScaleIO\ScaleIO_1.32_Complete_VMware_SW_Download\ScaleIO_1.32_ESX_Download\" -Filter "*.ova" -ErrorAction SilentlyContinue))
+            {
+                    write-warning "Checking for Downloaded Package"
+                    $URL = "ftp://ftp.emc.com/Downloads/ScaleIO/ScaleIO_VMware_SW_Download.zip"
+                    $FileName = Split-Path -Leaf -Path $Url
+                    if (!(test-path  $Sourcedir\$FileName))
+                        {
+                                    
+                        $ok = Get-labyesnoabort -title "Could no find Master OVA, we need to dowload from ww.emc.com" -message "Should we Download VMware / Scaleio  OVA from ww.emc.com ?" 
+                        switch ($ok)
+                            {
+
+                            "0"
+                                {
+                                Write-Verbose "$FileName not found, trying Download"
+                                if (!( Get-LABFTPFile -Source $URL -Target $Sourcedir\$FileName -verbose -Defaultcredentials))
+                                    { 
+                                    write-warning "Error Downloading file $Url, Please check connectivity"
+                                    Remove-Item -Path $Sourcedir\$FileName -Verbose
+                                    }
+                                } 
+                            default
+                                {
+                                Write-Verbose "User requested Abort"
+                                exit
+                                }
+                            }
+                        
+                        }
+                        if (Test-Path "$Sourcedir\$FileName")
+                            {
+                            Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\ScaleIO\"
+                            }
+                        else
+                            {
+                            exit
+                            }
+            
+
+        }
+           
+        $OVAPath = Get-ChildItem -Path "$Sourcedir\ScaleIO\ScaleIO_1.32_Complete_VMware_SW_Download\ScaleIO_1.32_ESX_Download\" -Filter "*.ova"
+        Write-Warning "Creating ScaleIO Master for $($ovaPath.Basename), may take a while"
+        & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --name=$($ovaPath.Basename) $ovaPath.FullName $PSScriptRoot  #
+        $MasterVMX = get-vmx -path ".\$($ovaPath.Basename)"
+        if (!$MasterVMX.Template) 
+            {
+            write-verbose "Templating Master VMX"
+            $MasterVMX | Set-VMXTemplate
+            }
         }
      default
         {
@@ -124,7 +180,7 @@ switch ($PsCmdlet.ParameterSetName)
             {
             $mdm_ip="$subnet.191,$subnet.192"
             }
-        $MasterVMX = get-vmx -path $SCALEIOMasterPath
+        $MasterVMX = get-vmx -path $SCALEIOMaster
         if (!$MasterVMX.Template) 
             {
             write-verbose "Templating Master VMX"
@@ -274,6 +330,7 @@ if ($configure.IsPresent)
     }
 
 write-host "Login to the VM´s with root/admin"
+write-host "Connect with ScaleIO UI to $subnet.191 admin/Password123!"
 }#end install
 }
 }#end switch 
