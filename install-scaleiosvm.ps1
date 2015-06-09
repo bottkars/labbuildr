@@ -31,7 +31,7 @@ This will Configure a SIO Cluster with 3 Nodes and Single MDM
 .\install-scaleiosvm.ps1 -SCALEIOMaster ".\ScaleIOVM_1.32.402.1" -Disks 3  -sds
 This will install a Single Node SDS
 #>
-[CmdletBinding(DefaultParametersetName = "action")]
+[CmdletBinding(DefaultParametersetName = "import")]
 Param(
 ### import parameters
 <# for the Import, we specify the Path to the Sources. 
@@ -105,6 +105,11 @@ switch ($PsCmdlet.ParameterSetName)
 {
     "import"
         {
+        if (!(Test-Path $Sourcedir)) 
+            {
+            Wite-Warning "We need a Valid Sourcedir"
+            exit
+            }
         if (!($OVAPath = Get-ChildItem -Path "$Sourcedir\ScaleIO\ScaleIO_1.32_Complete_VMware_SW_Download\ScaleIO_1.32_ESX_Download\" -Filter "*.ova" -ErrorAction SilentlyContinue))
             {
                     write-warning "Checking for Downloaded Package"

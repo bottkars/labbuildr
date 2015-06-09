@@ -9,7 +9,7 @@
 #requires -version 3
 [CmdletBinding()]
 param(
-	[ValidateSet('nmm821','nmm300', 'nmm301', 'nmm2012', 'nmm3012', 'nmm82','nmm85','nmm85.BR1','nmm85.BR2')]
+	[ValidateSet('nmm8212','nmm821','nmm300', 'nmm301', 'nmm2012', 'nmm3012', 'nmm82','nmm85','nmm85.BR1','nmm85.BR2')]
     $nmm_ver
 )
 $ScriptName = $MyInvocation.MyCommand.Name

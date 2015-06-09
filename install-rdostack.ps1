@@ -1,8 +1,8 @@
 ﻿<#
 .Synopsis
-   .\install-scaleio.ps1 
+   .\install-rdostack.ps1 
 .DESCRIPTION
-  install-scaleio is  the a vmxtoolkit solutionpack for configuring and deploying scaleio svm´s
+  install-rdostack is  the a vmxtoolkit solutionpack for configuring and deploying centos openstack vm´s
       
       Copyright 2014 Karsten Bott
 
@@ -33,10 +33,10 @@ Param(
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath = '.\CentOS 64-bit',
+[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath = '.\CentOS7 Master',
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[int32]$Nodes=3,
+[int32]$Nodes=1,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [int32]$Startnode = 1,
@@ -53,6 +53,7 @@ Param(
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
+$Range = "24"
 If ($Defaults.IsPresent)
     {
      $labdefaults = Get-labDefaults
@@ -64,48 +65,15 @@ If ($Defaults.IsPresent)
 
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
-$Guestuser = "root"
 $Guestpassword = "Password123!"
+$Rootuser = "root"
+$Guestuser = "stack"
+$Guestpassword  = "Password123!"
+
 $Disksize = "100GB"
 $scsi = 0
-$Nodeprefix = "CentOSNode"
-##### cecking for linux binaries
-$url = "ftp://ftp.emc.com/Downloads/ScaleIO/ScaleIO_RHEL6_Download.zip"
-write-warning "Checking for Downloaded RPM Packages"
-if (!($rpmpath  = Get-ChildItem -Path "$Sourcedir\ScaleIO\ScaleIO_1.32_RHEL6_FnF\ScaleIO_1.32_RHEL6_Download" -Filter "*.rpm" -ErrorAction SilentlyContinue))
-    {
-    $FileName = Split-Path -Leaf -Path $Url
-    if (!(test-path  $Sourcedir\$FileName))
-        {
-        $ok = Get-labyesnoabort -title "Could no find ScaleIO Linux Binaries, we need to dowload from ww.emc.com" -message "Should we start Download from ww.emc.com ?" 
-        switch ($ok)
-        {
-         "0"
-            {
-            Write-Verbose "$FileName not found, trying Download"
-            if (!( Get-LABFTPFile -Source $URL -Target $Sourcedir\$FileName -verbose -Defaultcredentials))
-                { 
-                write-warning "Error Downloading file $Url, Please check connectivity"
-                Remove-Item -Path $Sourcedir\$FileName -Verbose
-                }
-                else {$Downloadok = $true}
-            } 
-         "2"
-            {
-            Write-Verbose "User requested Abort"
-            exit
-            }
-         default
-            {}
-        }
-                        
-        }
-    if (Test-Path "$Sourcedir\$FileName")
-        {
-            Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\ScaleIO\"
-        }
-}
-pause
+$Nodeprefix = "StackNode"
+
 $MasterVMX = get-vmx -path $MasterPath
 if (!$MasterVMX.Template) 
             {
@@ -118,6 +86,10 @@ if (!$MasterVMX.Template)
          Write-verbose "Base snap does not exist, creating now"
         $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
         }
+if (!(Test-path "$Sourcedir\Openstack"))
+    {New-Item -ItemType Directory "$Sourcedir\Openstack"}
+
+
 ####Build Machines#
     $machinesBuilt = @()
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
@@ -139,16 +111,18 @@ if (!$MasterVMX.Template)
             $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
             }
         write-verbose "Setting NIC0 to HostOnly"
-        Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config
+        Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config | Out-Null
         if ($vmnet)
             {
             Write-Verbose "Configuring NIC 0 for $vmnet"
-            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config 
-            Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config 
+            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config | Out-Null
+            Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config | Out-Null
             }
         $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.CloneName)@$BuildDomain"
         $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname CentOS -Scenario 7
         $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
+        $NodeClone | Set-VMXprocessor -Processorcount 4 | Out-Null
+        $NodeClone | Set-VMXmemory -MemoryMB 4096 | Out-Null
         Write-Verbose "Starting CentosNode$Node"
         start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
         $machinesBuilt += $($NodeClone.cloneName)
@@ -160,7 +134,7 @@ if (!$MasterVMX.Template)
     }
     foreach ($Node in $machinesBuilt)
         {
-        $ip="$subnet.22$($Node[-1])"
+        $ip="$subnet.$Range$($Node[-1])"
         $NodeClone = get-vmx $Node
         do {
             $ToolState = Get-VMXToolsState -config $NodeClone.config
@@ -172,13 +146,54 @@ if (!$MasterVMX.Template)
         $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
         Write-Verbose "Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
-        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway "$subnet.103" -device eth0 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $Guestuser -rootpassword $Guestpassword
+        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway "$subnet.103" -device eno16777984 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
+        
     }
-    write-Warning "Login to the VM´s with root/Password123!"
-    
+
+write-warning "trying to fetch RDO"
+$myrepo="/mnt/hgfs/Sources/Openstack/openstack-juno/"
+write-verbose "installing openstack repo location"
+$Scriptblock = "yum install -y https://repos.fedorapeople.org/repos/openstack/openstack-juno/rdo-release-juno-1.noarch.rpm"
+$NodeClone |Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+write-verbose "downloading openstack files"
+$Scriptblock = "reposync -l --repoid=openstack-juno --download_path=/mnt/hgfs/Sources/Openstack --downloadcomps --download-metadata -n"
+$NodeClone |Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+write-verbose "creating openstack repository"
+$Scriptblock = "createrepo $myrepo"
+$NodeClone |Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
+write-verbose "creating local Repository"
+$baseurl="file://$myrepo"
+$File = "/etc/yum.repos.d/rdo-release.repo"
+$Property = "baseurl"
+$Scriptblock = "sed -i '/.*$Property.*/ c\$Property=$baseurl' $file"
+Write-Verbose $Scriptblock
+$NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
+$Property = "gpgcheck"
+$Scriptblock = "sed -i '/.*$Property.*/ c\$Property=0' $file"
+Write-Verbose $Scriptblock
+
+$NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
+write-verbose "installing packstack"
+$Scriptblock = "yum install -y openstack-packstack"
+$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
 
 
+Write-Warning "Installing AllInOne Openstack.... this will take a While !!!
+you might open putty to $ip and run TOP with user stack"
+#$Scriptblock = "/usr/bin/expect -c 'spawn `"/usr/bin/packstack`" `"--allinone`";expect `"*password:`" { send `"Password123!\r`" };interact'"
 
+$Scriptblock = "/usr/bin/expect -c 'set timeout -1;spawn `"/usr/bin/packstack`" `"--allinone`";expect `"*password:`" { send `"Password123!\r`" };interact'"
+$NodeClone |Invoke-VMXBash -Scriptblock "$Scriptblock" -Guestuser $Guestuser -Guestpassword $Guestpassword
+write-Warning "Login to the $ip vms with stack/Password123!"
+<#
+expect << EOF
+set timeout -1
+spawn `"/usr/bin/packstack`" `"--allinone`"
+expect `"root@192.168.2.241's password:`"
+send `"Password123!\n`"
+expect eof
+EOF"
+#>
 
 
 

@@ -27,6 +27,7 @@
 #>
 [CmdletBinding()]
 Param(
+[Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install", Mandatory=$false)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$ViprOVA, 
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
@@ -34,8 +35,8 @@ Param(
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]$viprmaster = "viprmaster-2.2.1.0",
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
-[Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
+
 
 )
 
