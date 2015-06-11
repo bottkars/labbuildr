@@ -123,6 +123,9 @@ if (!(Test-path "$Sourcedir\Openstack"))
         $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
         $NodeClone | Set-VMXprocessor -Processorcount 4 | Out-Null
         $NodeClone | Set-VMXmemory -MemoryMB 4096 | Out-Null
+        $Config = $Nodeclone | Get-VMXConfig
+        $Config = $Config -notmatch "ide1:0.fileName"
+        $Config | Set-Content -Path $NodeClone.config 
         Write-Verbose "Starting CentosNode$Node"
         start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
         $machinesBuilt += $($NodeClone.cloneName)
@@ -144,6 +147,8 @@ if (!(Test-path "$Sourcedir\Openstack"))
         until ($ToolState.state -match "running")
         Write-Verbose "Setting Shared Folders"
         $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
+        Write-verbose "Cleaning Shared Folders"
+        $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources
         Write-Verbose "Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
         $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway "$subnet.103" -device eno16777984 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
