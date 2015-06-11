@@ -190,15 +190,17 @@ you might open putty to $ip and run TOP with user stack"
 $Scriptblock = "/usr/bin/expect -c 'set timeout -1;spawn `"/usr/bin/packstack`" `"--allinone`";expect `"*password:`" { send `"Password123!\r`" };interact'"
 $NodeClone |Invoke-VMXBash -Scriptblock "$Scriptblock" -Guestuser $Guestuser -Guestpassword $Guestpassword
 write-Warning "Login to the $ip vms with stack/Password123!"
-<#
+Write-Warning "Copy the following Text into BASH:
+---------- snip --------------
 expect << EOF
 set timeout -1
 spawn `"/usr/bin/packstack`" `"--allinone`"
 expect `"root@192.168.2.241's password:`"
 send `"Password123!\n`"
 expect eof
-EOF"
-#>
+EOF
+---------- snip --------------"
+
 
 
 
