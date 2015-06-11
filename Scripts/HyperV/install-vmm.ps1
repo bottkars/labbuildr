@@ -26,7 +26,7 @@ start-process "$Setuppath" -ArgumentList "/server /i /f C:\scripts\VMServer.ini 
 write-verbose "Checking for Updates"
 foreach ($Updatepattern in ("*vmmserver*.msp","*Admin*.msp"))
     {
-    $VMMUpdate = Get-ChildItem "$SourcePath\$SCVMMVER\updates"  -Filter $Updatepattern
+    $VMMUpdate = Get-ChildItem "$($SourcePath)\$($SCVMMVER)updates"  -Filter $Updatepattern
     if ($VMMUpdate)
         {
         $VMMUpdate = $VMMUpdate | Sort-Object -Property Name -Descending
