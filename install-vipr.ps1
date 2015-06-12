@@ -4,9 +4,6 @@
 .DESCRIPTION
    import-viprva
 
-   The Required vmware Master can be downloaded fro https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released#OtherTable,
-   the customized esxi installimage can be found in https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released#SoftwareTable
-
    Copyright 2014 Karsten Bott
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,19 +24,15 @@
 #>
 [CmdletBinding()]
 Param(
-[Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install", Mandatory=$false)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$ViprOVA, 
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)]$targetname = "vipr1",
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)]$viprmaster = "viprmaster-2.2.1.0",
-[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$Defaults,
+[Parameter(ParameterSetName = "defaults", Mandatory=$false)]$viprmaster = "vipr-2.2.1.0.1106",
+[Parameter(ParameterSetName = "defaults",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
-
-
 )
 
+$targetname = "vipr1"
+$ViprURL = "ftp://ftp.emc.com/ViPR/ViPR_Controller_Download.zip"
+$viprmaster = "vipr-2.2.1.0.1106"
 Measure-Command {
 If ($Defaults.IsPresent)
     {
@@ -51,7 +44,10 @@ If ($Defaults.IsPresent)
      $gateway = $labdefaults.DefaultGateway
      }
 
-
+if (!($Sourcedir))
+    {
+    Write-Warning "we need a Directory for sources specified"
+    }
 
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
@@ -73,6 +69,7 @@ if ($gateway)
     {
     $defaultgateway = "$subnet.9"
     }
+
 $Disks = ('disk1','disk2','disk5')
 $masterpath = "$PSScriptRoot\$viprmaster"
 $Missing = @()
@@ -80,14 +77,42 @@ foreach ($Disk in $Disks)
     {
     if (!(Test-Path -Path "$masterpath\*$Disk.vmdk"))
         {
-        if (!$Viprova)
-            { Write-Warning " wee need a OVA Template to extraxt. Please use -Viprova to specify a valid OVA"
-            break
+        if (!(Test-Path "$Sourcedir\ViPRC*\vipr*controller-1+0.ova"))
+            {
+            Write-Warning "Vipr OVA Not Found, we try for Zip Package in Sources"
+            if (!(Test-Path "$Sourcedir\*vipr*down*.zip"))
+                {
+                Write-Warning "Vipr Controller Download Package not found
+                               we will try download"
+                
+                $Zippackage = Split-Path -Leaf $ViprURL
+                Get-LABFTPFile -Source $ViprURL -Defaultcredentials -Target $Sourcedir\$Zippackage -Verbose
+                }
+            $Zipfiles = Get-ChildItem "$Sourcedir\*vipr*down*.zip"
+            $Zipfiles = $Zipfiles| Sort-Object -Property Name -Descending
+		    $LatestZip = $Zipfiles[0].FullName
+	        write-verbose "We are going to extract $LatestZip now"    	
+            Expand-LABZip -zipfilename $LatestZip -destination $Sourcedir
             }
-
-
-        Write-warning "$Disk not found, deflating ViprDisk from OVA"
-        & $global:vmwarepath\7za.exe x "-o$masterpath" -y $ViprOVA "*$Disk.vmdk" | out-null
+            $Viprova = Get-ChildItem "$Sourcedir\ViPRC*\vipr*controller-1+0.ova" -ErrorAction SilentlyContinue
+            $Viprova = $Viprova| Sort-Object -Property Name -Descending
+		    $LatestViprOVA = $Viprova[0].FullName
+            $LatestVipr = $Viprova[0].Name.Replace("-controller-1+0.ova","")
+            $LatestViprLic = Get-ChildItem -Path "$Sourcedir\ViPRC*\*" -Filter *.lic
+            Write-Warning "We found $LatestVipr"
+            $masterpath = "$Sourcedir\$LatestVipr"
+            if (!$LatestViprOVA)
+                { 
+                Write-Warning "Could not find any ViprOVA in $Sourcedir to use"
+                exit
+                }
+            
+            Write-warning "$Disk not found, deflating ViprDisk from OVA"
+            & $global:vmwarepath\7za.exe x "-o$masterpath" -y $LatestViprOVA "*$Disk.vmdk" 
+            if (!(Test-Path "$Sourcedir\$LatestVipr\$($LatestViprLic.Name)"))
+                {
+                Copy-Item $LatestViprLic.FullName -Destination "$masterpath\$($LatestViprLic.Name)" -Force
+                }
         }
 
     }
@@ -182,8 +207,10 @@ $config = $vmx | get-vmxconfig
 $Config | set-Content -Path $vmx.config
 $vmx | Start-VMX
 Write-Host -ForegroundColor Yellow "
+Successfully Deployed $viprmaster
 wait a view minutes for storageos to be up and running
 point your browser to https://vipr1 and follow the wizard steps
+The License File can be found in $masterpath
 "
 
 }
