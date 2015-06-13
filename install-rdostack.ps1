@@ -52,7 +52,8 @@ Param(
 #requires -module vmxtoolkit
 $Range = "24"
 $Start = "1"
-$Nodeprefix = "StackNode"
+$Szenarioname = "Openstack"
+$Nodeprefix = "$($Szenarioname)Node"
 If ($Defaults.IsPresent)
     {
      $labdefaults = Get-labDefaults
@@ -67,7 +68,7 @@ If ($Defaults.IsPresent)
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 
-
+$DefaultTimezone = "Europe/Berlin"
 $Guestpassword = "Password123!"
 $Rootuser = "root"
 $Guestuser = "stack"
@@ -105,7 +106,9 @@ if (!(Test-path "$Sourcedir\Openstack"))
             {$Primary = $NodeClone
             If ($IsGateway.IsPresent)
                 {
-                $Gateway = "$subnet.$Range.$Start"
+                $DefaultGateway = "$subnet.$Range$Start"
+                $DNS1 = $DefaultGateway
+                Write-Verbose "Setting $DefaultGateway as Lab Defaultgateway"
                 Set-labDefaultGateway -DefaultGateway $DefaultGateway
                 Set-labDNS1 -DNS1 $DefaultGateway
                 $NodeClone | Set-VMXNetworkAdapter -Adapter 1 -ConnectionType nat -AdapterType vmxnet3          
@@ -135,14 +138,14 @@ if (!(Test-path "$Sourcedir\Openstack"))
             Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config | Out-Null
             }
         $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.CloneName)@$BuildDomain"
-        $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname CentOS -Scenario 7
+        $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname $Szenarioname -Scenario 7
         $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
         $NodeClone | Set-VMXprocessor -Processorcount 4 | Out-Null
         $NodeClone | Set-VMXmemory -MemoryMB 4096 | Out-Null
         $Config = $Nodeclone | Get-VMXConfig
         $Config = $Config -notmatch "ide1:0.fileName"
         $Config | Set-Content -Path $NodeClone.config 
-        Write-Verbose "Starting CentosNode$Node"
+        Write-Verbose "Starting $Nodeprefix$Node"
         start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
         $machinesBuilt += $($NodeClone.cloneName)
     }
@@ -168,48 +171,76 @@ if (!(Test-path "$Sourcedir\Openstack"))
         Write-Verbose "Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
         $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device eno16777984 -Peerdns -DNS1 $DNS1 -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
-    if ($IsGateway.IsPresent -and $NodeClone.vmxname -eq $Primary.clonename )
-        {
-        $NodeClone | Set-VMXLinuxNetwork -dhcp -device eno33557248 -rootuser $Rootuser -rootpassword $Guestpassword 
-        }    
-    }
+        if ($IsGateway.IsPresent -and $NodeClone.vmxname -eq $Primary.clonename )
+            {
+            $Natdevice = "eno33557248"
+            $NodeClone | Set-VMXLinuxNetwork -dhcp -device $Natdevice -rootuser $Rootuser -rootpassword $Guestpassword
+            write-verbose "Installing NAT"
+            $Scriptblock = "yum -y install dnsmasq"
+            Write-Verbose $Scriptblock
+            $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
+
+            $Scriptblock = "chkconfig dnsmasq on && systemctl restart dnsmasq.service"
+            Write-Verbose $Scriptblock
+            $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
+        
+            $Scriptblock = "/sbin/iptables --table nat -A POSTROUTING -o $Natdevice -j MASQUERADE"
+            Write-Verbose $Scriptblock
+            $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
+        
+            $Scriptblock = "echo 'net.ipv4.ip_forward = 1' >> /etc/sysctl.d/98-forward.conf"
+            Write-Verbose $Scriptblock
+            $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
+            }
+
+
+    write-verbose "Setting Timezone"
+    $Scriptblock = "timedatectl set-timezone $DefaultTimezone"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+
+    write-verbose "Setting Hostname"
+    $Scriptblock = "hostnamectl set-hostname $($NodeClone.vmxname)"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
 
     Pause
 
-write-warning "trying to fetch RDO"
-$myrepo="/mnt/hgfs/Sources/Openstack/openstack-juno/"
-write-verbose "installing openstack repo location"
-$Scriptblock = "yum install -y https://repos.fedorapeople.org/repos/openstack/openstack-juno/rdo-release-juno-1.noarch.rpm"
-$NodeClone |Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
-write-verbose "downloading openstack files"
-$Scriptblock = "reposync -l --repoid=openstack-juno --download_path=/mnt/hgfs/Sources/Openstack --downloadcomps --download-metadata -n"
-$NodeClone |Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
-write-verbose "creating openstack repository"
-$Scriptblock = "createrepo $myrepo"
-$NodeClone |Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
-write-verbose "creating local Repository"
-$baseurl="file://$myrepo"
-$File = "/etc/yum.repos.d/rdo-release.repo"
-$Property = "baseurl"
-$Scriptblock = "sed -i '/.*$Property.*/ c\$Property=$baseurl' $file"
-Write-Verbose $Scriptblock
-$NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
-$Property = "gpgcheck"
-$Scriptblock = "sed -i '/.*$Property.*/ c\$Property=0' $file"
-Write-Verbose $Scriptblock
+    write-warning "trying to fetch RDO"
+    $myrepo="/mnt/hgfs/Sources/Openstack/openstack-juno/"
+    write-verbose "installing openstack repo location"
+    $Scriptblock = "yum install -y https://repos.fedorapeople.org/repos/openstack/openstack-juno/rdo-release-juno-1.noarch.rpm"
+    $NodeClone |Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+    write-verbose "downloading openstack files"
+    $Scriptblock = "reposync -l --repoid=openstack-juno --download_path=/mnt/hgfs/Sources/Openstack --downloadcomps --download-metadata -n"
+    $NodeClone |Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+    write-verbose "creating openstack repository"
+    $Scriptblock = "createrepo $myrepo"
+    $NodeClone |Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
+    write-verbose "creating local Repository"
+    $baseurl="file://$myrepo"
+    $File = "/etc/yum.repos.d/rdo-release.repo"
+    $Property = "baseurl"
+    $Scriptblock = "sed -i '/.*$Property.*/ c\$Property=$baseurl' $file"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
+    $Property = "gpgcheck"
+    $Scriptblock = "sed -i '/.*$Property.*/ c\$Property=0' $file"
+    Write-Verbose $Scriptblock
 
-$NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
-write-verbose "installing packstack"
-$Scriptblock = "yum install -y openstack-packstack"
-$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+    $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
+    write-verbose "installing packstack"
+    $Scriptblock = "yum install -y openstack-packstack"
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
 
 
-Write-Warning "Installing AllInOne Openstack.... this will take a While !!!
-you might open putty to $ip and run TOP with user stack"
-#$Scriptblock = "/usr/bin/expect -c 'spawn `"/usr/bin/packstack`" `"--allinone`";expect `"*password:`" { send `"Password123!\r`" };interact'"
+    Write-Warning "Installing AllInOne Openstack.... this will take a While !!!
+    you might open putty to $ip and run TOP with user stack"
+    #$Scriptblock = "/usr/bin/expect -c 'spawn `"/usr/bin/packstack`" `"--allinone`";expect `"*password:`" { send `"Password123!\r`" };interact'"
 
-$Scriptblock = "/usr/bin/expect -c 'set timeout -1;spawn `"/usr/bin/packstack`" `"--allinone`";expect `"*password:`" { send `"Password123!\r`" };interact'"
-$NodeClone |Invoke-VMXBash -Scriptblock "$Scriptblock" -Guestuser $Guestuser -Guestpassword $Guestpassword
+    $Scriptblock = "/usr/bin/expect -c 'set timeout -1;spawn `"/usr/bin/packstack`" `"--allinone`";expect `"*password:`" { send `"Password123!\r`" };interact'"
+    $NodeClone |Invoke-VMXBash -Scriptblock "$Scriptblock" -Guestuser $Guestuser -Guestpassword $Guestpassword
+}
 write-Warning "Login to the $ip vms with stack/Password123!"
 Write-Warning "Copy the following Text into BASH:
 ---------- snip --------------
@@ -221,6 +252,8 @@ send `"Password123!\n`"
 expect eof
 EOF
 ---------- snip --------------"
+
+
 
 
 

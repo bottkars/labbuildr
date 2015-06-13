@@ -52,7 +52,7 @@ function Set-labDefaultGateway
     )
 $Defaults = get-labdefaults -Defaultsfile $Defaultsfile
 $Defaults.DefaultGateway = $DefaultGateway
-Write-Verbose "Setting Default Gateway $Gateway"
+Write-Verbose "Setting Default Gateway $DefaultGateway"
 save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
 }
 
@@ -79,7 +79,7 @@ function Set-labGateway
     [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 2)][switch]$Gateway
     )
 $Defaults = get-labdefaults -Defaultsfile $Defaultsfile
-$Defaults.DefaultGateway = $Gateway.IsPresent
+$Defaults.Gateway = $Gateway.IsPresent
 Write-Verbose "Setting $Gateway"
 save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
 }

@@ -28,7 +28,6 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     Write-Output $PSCmdlet.MyInvocation.BoundParameters
     }
 Write-Verbose $IPv6PrefixLength
-Write-Verbose $reverse
 Write-Verbose $IPV6Prefix
 $zone = Get-DnsServerzone $env:USERDNSDOMAIN
 Write-Host -ForegroundColor Yellow "Generating Reverse Lookup Zone"

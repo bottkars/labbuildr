@@ -17,7 +17,7 @@ $IPv6Prefix = "",
 [Validateset('IPv4','IPv6','IPv4IPv6')]$AddressFamily, 
 [ValidateSet('24')]$IPv4PrefixLength = '24',
 [ValidateSet('8','24','32','48','64')]$IPv6PrefixLength = '8',
-[switch]$Gateway
+[ipaddress]$DefaultGateway
 )
 $ScriptName = $MyInvocation.MyCommand.Name
 $Host.UI.RawUI.WindowTitle = "$ScriptName"
@@ -31,13 +31,6 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     Write-Output $PSCmdlet.MyInvocation.BoundParameters
     }
 
-<#
-$IPv6subnet = "$IPv6Prefix$IPv4Subnet"
-if ([System.Environment]::OSVersion.Version.Minor -ge 4)	
-{
-	Set-MpPreference -DisableRealtimeMonitoring $true
-	}
-#>
 $nics = @()
 $Nics = Get-NetAdapter | Sort-Object -Property ifIndex
 $eth0 = $nics[0]
@@ -46,11 +39,11 @@ Rename-NetAdapter $eth0.Name -NewName $Domain
 If ($AddressFamily -match 'IPv4')
 {
 
-    if ($Gateway.IsPresent)
+    if ($DefaultGateway)
             {
         # New-NetIPAddress –InterfaceIndex $eth0.ifIndex –IPAddress "$Subnet.10" –PrefixLength 24 -DefaultGateway "$subnet.103"
         # $NewIP = 
-        New-NetIPAddress -InterfaceIndex $eth0.ifIndex -AddressFamily IPv4 –IPAddress "$IPv4Subnet.10" –PrefixLength $IPv4PrefixLength -DefaultGateway "$IPv4subnet.103"
+        New-NetIPAddress -InterfaceIndex $eth0.ifIndex -AddressFamily IPv4 –IPAddress "$IPv4Subnet.10" –PrefixLength $IPv4PrefixLength -DefaultGateway $DefaultGateway
         }
     else
         {
@@ -63,11 +56,11 @@ Set-DnsClientServerAddress –InterfaceIndex $eth0.ifIndex -ServerAddresses "$IPv4
 If ($AddressFamily -match 'IPv6')
 {
 
-    if ($Gateway.IsPresent)
+    if ($DefaultGateway)
             {
         # New-NetIPAddress –InterfaceIndex $eth0.ifIndex –IPAddress "$Subnet.10" –PrefixLength 24 -DefaultGateway "$subnet.103"
         # $NewIP = 
-        New-NetIPAddress -InterfaceIndex $eth0.ifIndex -AddressFamily IPv6 –IPAddress "$IPv6subnet.10" –PrefixLength $IPv6PrefixLength -DefaultGateway "$IPv6subnet.103"
+        New-NetIPAddress -InterfaceIndex $eth0.ifIndex -AddressFamily IPv6 –IPAddress "$IPv6subnet.10" –PrefixLength $IPv6PrefixLength -DefaultGateway "$IPv6subnet.$(([System.Version]$DefaultGateway.ToString()).revision)"
         }
     else
         {
