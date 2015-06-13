@@ -56,6 +56,21 @@ Write-Verbose "Setting Default Gateway $Gateway"
 save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
 }
 
+
+function Set-labDNS1
+{
+	[CmdletBinding(HelpUri = "http://labbuildr.bottnet.de/modules/")]
+	param (
+	[Parameter(ParameterSetName = "1", Mandatory = $false )][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 1)][system.net.ipaddress]$DNS1
+    )
+$Defaults = get-labdefaults -Defaultsfile $Defaultsfile
+$Defaults.DNS1 = $DNS1
+Write-Verbose "Setting DNS1 $DNS1"
+save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
+}
+
+
 function Set-labGateway
 {
 	[CmdletBinding(HelpUri = "http://labbuildr.bottnet.de/modules/")]
@@ -130,6 +145,7 @@ process {
         $object | Add-Member -MemberType NoteProperty -Name MySubnet -Value ([system.net.ipaddress]$Default.config.MySubnet)
         $object | Add-Member -MemberType NoteProperty -Name vmnet -Value $Default.config.vmnet
         $object | Add-Member -MemberType NoteProperty -Name DefaultGateway -Value $Default.config.DefaultGateway
+        $object | Add-Member -MemberType NoteProperty -Name DNS1 -Value $Default.config.DNS1
         $object | Add-Member -MemberType NoteProperty -Name Gateway -Value $Default.config.Gateway
         $object | Add-Member -MemberType NoteProperty -Name AddressFamily -Value $Default.config.AddressFamily
         $object | Add-Member -MemberType NoteProperty -Name IPV6Prefix -Value $Default.Config.IPV6Prefix
@@ -189,6 +205,7 @@ process {
         $xmlcontent += ("<IPv6PrefixLength>$($Defaults.IPv6PrefixLength)</IPv6PrefixLength>")
         $xmlcontent += ("<Gateway>$($Defaults.Gateway)</Gateway>")
         $xmlcontent += ("<DefaultGateway>$($Defaults.DefaultGateway)</DefaultGateway>")
+        $xmlcontent += ("<DNS1>$($Defaults.DNS1)</DNS1>")
         $xmlcontent += ("<Sourcedir>$($Defaults.Sourcedir)</Sourcedir>")
         $xmlcontent += ("<ScaleIOVer>$($Defaults.ScaleIOVer)</ScaleIOVer>")
         $xmlcontent += ("</config>")

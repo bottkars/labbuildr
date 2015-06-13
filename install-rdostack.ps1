@@ -20,8 +20,6 @@
 .LINK
    https://community.emc.com/blogs/bottk/
 .EXAMPLE
-.\install-centos4scaleio.ps1
-This will install 3 Centos Nodes CentOSNode1 -CentOSNode3 from the Default CentOS Master , in the Default 192.168.2.0 network, IP .221 - .223
 
 #>
 [CmdletBinding(DefaultParametersetName = "defaults")]
@@ -40,20 +38,21 @@ Param(
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [int32]$Startnode = 1,
-
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
-
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
 [Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
 [Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory=$False)][switch]$IsGateway,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
-
 
 
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
 $Range = "24"
+$Start = "1"
+$Nodeprefix = "StackNode"
 If ($Defaults.IsPresent)
     {
      $labdefaults = Get-labDefaults
@@ -61,10 +60,14 @@ If ($Defaults.IsPresent)
      $subnet = $labdefaults.MySubnet
      $BuildDomain = $labdefaults.BuildDomain
      $Sourcedir = $labdefaults.Sourcedir
+     $Gateway = $labdefaults.Gateway
+     $DefaultGateway = $labdefaults.Defaultgateway
+     $DNS1 = $labdefaults.DNS1
      }
-
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
+
+
 $Guestpassword = "Password123!"
 $Rootuser = "root"
 $Guestuser = "stack"
@@ -72,7 +75,7 @@ $Guestpassword  = "Password123!"
 
 $Disksize = "100GB"
 $scsi = 0
-$Nodeprefix = "StackNode"
+
 
 $MasterVMX = get-vmx -path $MasterPath
 if (!$MasterVMX.Template) 
@@ -98,7 +101,20 @@ if (!(Test-path "$Sourcedir\Openstack"))
         {
         write-verbose " Creating $Nodeprefix$node"
         $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node 
-        If ($Node -eq 1){$Primary = $NodeClone}
+        If ($Node -eq $Start)
+            {$Primary = $NodeClone
+            If ($IsGateway.IsPresent)
+                {
+                $Gateway = "$subnet.$Range.$Start"
+                Set-labDefaultGateway -DefaultGateway $DefaultGateway
+                Set-labDNS1 -DNS1 $DefaultGateway
+                $NodeClone | Set-VMXNetworkAdapter -Adapter 1 -ConnectionType nat -AdapterType vmxnet3          
+                }
+            }
+        if (!($DefaultGateway))
+            {
+            $DefaultGateway = "$subnet.$Range.$Node"
+            }
         $Config = Get-VMXConfig -config $NodeClone.config
         Write-Verbose "Tweaking Config"
         Write-Verbose "Creating Disks"
@@ -151,9 +167,14 @@ if (!(Test-path "$Sourcedir\Openstack"))
         $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources
         Write-Verbose "Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
-        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway "$subnet.103" -device eno16777984 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
-        
+        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device eno16777984 -Peerdns -DNS1 $DNS1 -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
+    if ($IsGateway.IsPresent -and $NodeClone.vmxname -eq $Primary.clonename )
+        {
+        $NodeClone | Set-VMXLinuxNetwork -dhcp -device eno33557248 -rootuser $Rootuser -rootpassword $Guestpassword 
+        }    
     }
+
+    Pause
 
 write-warning "trying to fetch RDO"
 $myrepo="/mnt/hgfs/Sources/Openstack/openstack-juno/"
