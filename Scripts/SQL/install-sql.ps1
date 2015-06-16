@@ -58,6 +58,12 @@ Switch ($SQLVER)
         $Setuppath = "$SourcePath\$SQLVER\$Setupcmd"
         .$Builddir\test-setup -setup $Setupcmd -setuppath $Setuppath
         }
+    'SQL2014'
+        {
+        $Setupcmd = "setup.exe"
+        $Setuppath = "$SourcePath\$SQLVER\$Setupcmd"
+        .$Builddir\test-setup -setup $Setupcmd -setuppath $Setuppath
+        }
     }
 if (!$DefaultDBpath.IsPresent)
     {
