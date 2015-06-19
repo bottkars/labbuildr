@@ -84,6 +84,19 @@ Write-Verbose "Setting $Gateway"
 save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
 }
 
+function Set-labNMM
+{
+	[CmdletBinding(HelpUri = "http://labbuildr.bottnet.de/modules/")]
+	param (
+	[Parameter(ParameterSetName = "1", Mandatory = $false,Position = 1)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 2)][switch]$NMM
+    )
+$Defaults = get-labdefaults -Defaultsfile $Defaultsfile
+$Defaults.NMM = $NMM.IsPresent
+Write-Verbose "Setting NMM to $($NMM.IsPresent)"
+save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
+}
+
 function Set-labsubnet
 {
 	[CmdletBinding(HelpUri = "http://labbuildr.bottnet.de/modules/")]
@@ -102,7 +115,7 @@ function Set-labBuilddomain
 	[CmdletBinding(HelpUri = "http://labbuildr.bottnet.de/modules/")]
 	param (
 	[Parameter(ParameterSetName = "1", Mandatory = $false,Position = 1)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
-    [ValidateLength(3,10)]
+    [ValidateLength(1,15)]
     [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 2)]
     [ValidatePattern("^[a-zA-Z\s]+$")][string]$builddomain
     )
@@ -155,6 +168,7 @@ process {
         $object | Add-Member -MemberType NoteProperty -Name ex_cu -Value $Default.config.ex_cu
         $object | Add-Member -MemberType NoteProperty -Name NMM_Ver -Value $Default.config.nmm_ver
         $object | Add-Member -MemberType NoteProperty -Name NW_Ver -Value $Default.config.nw_ver
+        $object | Add-Member -MemberType NoteProperty -Name NMM -Value $Default.config.nmm
         Write-Output $object
         }
 
@@ -193,6 +207,7 @@ process {
         $xmlcontent =@()
         $xmlcontent += ("<config>")
         $xmlcontent += ("<nmm_ver>$($Defaults.nmm_ver)</nmm_ver>")
+        $xmlcontent += ("<nmm>$($Defaults.nmm)</nmm>")
         $xmlcontent += ("<nw_ver>$($Defaults.nw_ver)</nw_ver>")
         $xmlcontent += ("<master>$($Defaults.Master)</master>")
         $xmlcontent += ("<sqlver>$($Defaults.SQLVER)</sqlver>")
