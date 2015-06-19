@@ -12,7 +12,7 @@
 Param
 (
     [string[]] $Nodeprefix = "AAGNODE",
-    [string] $EndpointPort = 5022,
+    [string] $EndpointPort = 1433,
     [string] $EndpointName = "AlwaysOn_Endpoint"
 )
 

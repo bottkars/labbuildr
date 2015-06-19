@@ -41,7 +41,7 @@ If ($Defaults.IsPresent)
      $subnet = $labdefaults.MySubnet
      $BuildDomain = $labdefaults.BuildDomain
      $Sourcedir = $labdefaults.Sourcedir
-     $gateway = $labdefaults.DefaultGateway
+     $Defaultgateway = $labdefaults.DefaultGateway
      }
 
 if (!($Sourcedir))
@@ -51,9 +51,9 @@ if (!($Sourcedir))
 
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
-if (!$gateway)
+if (!$Defaultgateway)
     {
-    $gateway = "$subnet.9"
+    $Defaultgateway = "$subnet.9"
     }
 if (get-vmx $targetname)
     {

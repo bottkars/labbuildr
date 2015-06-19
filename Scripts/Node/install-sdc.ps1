@@ -19,7 +19,7 @@ $Builddir = $PSScriptRoot
 $Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
 New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
 
-
+$role = "sdc"
 $ScaleIO_Major = ($ScaleIOVer.Split("-"))[0]
 $ScaleIOPath = "ScaleIO_$($ScaleIO_Major)_Complete_Windows_SW_Download\ScaleIO_$($ScaleIO_Major)_Windows_Download"
 

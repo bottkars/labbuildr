@@ -99,6 +99,7 @@ If ($Defaults.IsPresent)
      $subnet = $labdefaults.MySubnet
      $BuildDomain = $labdefaults.BuildDomain
      $Sourcedir = $labdefaults.Sourcedir
+     $DefaultGateway = $labdefaults.DefaultGateway
      }
 
 switch ($PsCmdlet.ParameterSetName)
@@ -258,7 +259,8 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
             sleep 5
             }
         until ($ToolState.state -match "running")
-        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway "$subnet.103" -device eth0 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node" -suse -rootuser $Guestuser -rootpassword $Guestpassword 
+        If (!$DefaultGateway) {$DefaultGateway = $Ip}
+        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device eth0 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node" -suse -rootuser $Guestuser -rootpassword $Guestpassword 
         $NodeClone | Invoke-VMXBash -Scriptblock "rpm --import /root/install/RPM-GPG-KEY-ScaleIO" -Guestuser $Guestuser -Guestpassword $Guestpassword
         if (!($PsCmdlet.ParameterSetName -eq "sdsonly"))
             {
