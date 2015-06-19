@@ -70,6 +70,18 @@ Write-Verbose "Setting DNS1 $DNS1"
 save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
 }
 
+function Set-labVMNET
+{
+	[CmdletBinding(HelpUri = "http://labbuildr.bottnet.de/modules/")]
+	param (
+	[Parameter(ParameterSetName = "1", Mandatory = $false )][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 1)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet
+    )
+$Defaults = get-labdefaults -Defaultsfile $Defaultsfile
+$Defaults.vmnet = $VMnet
+Write-Verbose "Setting LAB VMnet $VMnet"
+save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
+}
 
 function Set-labGateway
 {
