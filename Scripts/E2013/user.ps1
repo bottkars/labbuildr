@@ -74,24 +74,25 @@ if (Get-DatabaseAvailabilityGroup)
         $Users += Import-CSV '\\vmware-host\Shared Folders\Sources\customuser*.csv'
         }
     $Users | ForEach {
-        $givenname=$_.givenname
-        $surname=$_.surname
-        $Displayname = "$givenname $surname"
-        $SamAccountName = "$($givenname.Substring(0,1))$surname"
-        $UPN = $SamAccountName+$maildom
-        $emailaddress = "$givenname.$surname$maildom"
-        $name = "$givenname $surname "
-        $user = @{
-            givenname=$givenname;
-            surname=$surname;
-            name=$name;
-            displayname=$Displayname;
-            samaccountname=$SamAccountName;
-            userprincipalname=$UPN;
-            emailaddress=$emailaddress;
-            homedirectory=" ";
-            accountpassword=(ConvertTo-SecureString "Welcome1" -AsPlainText -Force);
-            }
+$givenname=$_.givenname
+$surname=$_.surname
+$Displayname = $givenname+$Space+$surname
+$SamAccountName = $Givenname.Substring(0,1)+$surname
+$UPN = $SamAccountName+$maildom
+$emailaddress = "$givenname$Dot$surname$maildom"
+$name = "$givenname $surname"
+$user = @{
+givenname=$givenname;
+surname=$surname;
+name=$name;
+displayname=$Displayname;
+samaccountname=$SamAccountName;
+userprincipalname=$UPN;
+emailaddress=$emailaddress;
+homedirectory=" ";
+accountpassword=(ConvertTo-SecureString "Welcome1" -AsPlainText -Force);
+}
+
         $user
         New-ADUser @user -Enabled $True
         Enable-Mailbox $user.samaccountname -database $Database
