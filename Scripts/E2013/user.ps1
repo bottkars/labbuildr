@@ -69,9 +69,9 @@ if (Get-DatabaseAvailabilityGroup)
     $DAGDatabase = Get-MailboxDatabase | where ReplicationType -eq Remote
     $Database = $DAGDatabase.Name}
     $Users = Import-CSV C:\Scripts\user.csv 
-    if (Test-Path '\\vmware-host\Shared Folders\Sources\customusers.csv')
+    if (Test-Path '\\vmware-host\Shared Folders\Sources\customuser*.csv')
         {
-        $Users += Import-CSV '\\vmware-host\Shared Folders\Sources\customusers.csv'
+        $Users += Import-CSV '\\vmware-host\Shared Folders\Sources\customuser*.csv'
         }
     $Users | ForEach {
         $givenname=$_.givenname
