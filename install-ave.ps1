@@ -82,7 +82,12 @@ switch ($PsCmdlet.ParameterSetName)
      "install"
 
         {
-        $MasterVMX = get-vmx -path $MasterPath
+        if (!($MasterVMX = get-vmx -path $MasterPath))
+            {
+            Write-Error "$Masterpath is not a Virtual machine"
+            exit
+            }
+
 
         if (!$MasterVMX.Template) 
           {
@@ -97,6 +102,10 @@ switch ($PsCmdlet.ParameterSetName)
            $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
           }
 
+        If (!($Basesnap))
+            {
+            Write-Error "Error creating/finding Basesnap"
+            }
         ####Build Machines#
 
         foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
