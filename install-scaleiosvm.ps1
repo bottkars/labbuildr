@@ -18,7 +18,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://community.emc.com/blogs/bottk/
+   https://community.emc.com/blogs/bottk/2015/05/31/labbuildr-scaleio-132-support-part2-building-scaleio-nodes-from-scaleio-svm
 .EXAMPLE
 .\install-scaleiosvm.ps1 -Sourcedir d:\sources
 .EXAMPLE
@@ -45,7 +45,7 @@ The extracte OVA will be dehydrated to a VMware Workstation Master #>
 [Parameter(ParameterSetName = "defaults",Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "sdsonly",Mandatory=$false)]
-[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })][String]$SCALEIOMaster = ".\ScaleIOVM_1.32.402.1",
+[String]$SCALEIOMaster = ".\ScaleIOVM_1.32.402.1",
 <# Number of Nodes, default to 3 #>
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
@@ -67,7 +67,7 @@ The extracte OVA will be dehydrated to a VMware Workstation Master #>
 
 <# VMnet to use#>
 [Parameter(ParameterSetName = "sdsonly",Mandatory=$false)]
-[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
+[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$vmnet = "vmnet2",
 <# SDS only#>
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "sdsonly",Mandatory=$true)][switch]$sds,
@@ -95,7 +95,7 @@ if ($configure.IsPresent)
 If ($Defaults.IsPresent)
     {
      $labdefaults = Get-labDefaults
-     $vmnet = "vmnet$($labdefaults.vmnet)"
+     $vmnet = $labdefaults.vmnet
      $subnet = $labdefaults.MySubnet
      $BuildDomain = $labdefaults.BuildDomain
      $Sourcedir = $labdefaults.Sourcedir
@@ -164,6 +164,12 @@ switch ($PsCmdlet.ParameterSetName)
         }
      default
         {
+        if (!(Test-Path $SCALEIOMaster))
+            {
+            Write-Warning "please run .\install-scaleiosvm.ps1 -Sourcedir [sourcedir] to download / create Master"
+            exit
+            }
+        $Mastervmx = get-vmx $SCALEIOMaster    
         [System.Version]$subnet = $Subnet.ToString()
         $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
         $Guestuser = "root"
@@ -186,7 +192,7 @@ switch ($PsCmdlet.ParameterSetName)
             {
             $mdm_ip="$subnet.191,$subnet.192"
             }
-        $MasterVMX = get-vmx -path $SCALEIOMaster
+        
         if (!$MasterVMX.Template) 
             {
             write-verbose "Templating Master VMX"

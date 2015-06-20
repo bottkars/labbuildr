@@ -15,7 +15,7 @@
    <PropertySection>
          <Property oe:key="network_1_ipaddr" oe:value="192.168.2.9"/>
          <Property oe:key="network_1_ipaddr6" oe:value="::0"/>
-         <Property oe:key="network_gateway" oe:value="192.168.2.103"/>
+         <Property oe:key="network_gateway" oe:value="192.168.2.9"/>
          <Property oe:key="network_gateway6" oe:value="::0"/>
          <Property oe:key="network_netmask" oe:value="255.255.255.0"/>
          <Property oe:key="network_prefix_length" oe:value="24"/>

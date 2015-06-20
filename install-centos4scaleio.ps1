@@ -56,7 +56,7 @@ Param(
 If ($Defaults.IsPresent)
     {
      $labdefaults = Get-labDefaults
-     $vmnet = "vmnet$($labdefaults.vmnet)"
+     $vmnet = $labdefaults.vmnet
      $subnet = $labdefaults.MySubnet
      $BuildDomain = $labdefaults.BuildDomain
      $Sourcedir = $labdefaults.Sourcedir

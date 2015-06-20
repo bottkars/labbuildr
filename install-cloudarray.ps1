@@ -1,18 +1,61 @@
-﻿[CmdletBinding()]
+﻿<#
+.Synopsis
+   .\install-scaleio.ps1 
+.DESCRIPTION
+  install-scaleio is  the a vmxtoolkit solutionpack for configuring and deploying scaleio svm´s
+      
+      Copyright 2014 Karsten Bott
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+.LINK
+   https://community.emc.com/blogs/bottk/2015/02/05/labbuildrgoes-emc-cloudarray
+.EXAMPLE
+.\install-cloudarray.ps1 -ovf D:\Sources\CloudArray-ESXi5-5.1.0.6695\CloudArray-ESXi5-5.1.0.6695.ovf 
+This will convert Cloudarray ESX Template 
+.EXAMPLE
+.\install-cloudarray.ps1 -MasterPath .\CloudArray-ESXi5-5.1.0.6695 -Defaults  
+This will Install default Cloud Array
+#>
+[CmdletBinding()]
 Param(
 ### import parameters
 [Parameter(ParameterSetName = "import",Mandatory=$true)][String]
-[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$ovapaPath,
-[Parameter(ParameterSetName = "import",Mandatory=$false)][String]$mastername = "CloudArraymaster",
+[ValidateScript({ Test-Path -Path $_ -Filter *.ovf -PathType Leaf})]$ovf,
+[Parameter(ParameterSetName = "import",Mandatory=$false)][String]$mastername,
 ### install param
-[Parameter(ParameterSetName = "install",Mandatory=$false)][int32]$Nodes =1,
-[Parameter(ParameterSetName = "install",Mandatory=$false)][int32]$Startnode = 1,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateRange(1,3)][int32]$Cachevols = 1,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('36GB','72GB','146GB')][string]$Cachevolsize = "146GB",
-[Parameter(ParameterSetName = "install",Mandatory=$false)]$Subnet = "192.168.2",
-[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
+
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath = ".\CloudArraymaster",
-[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2"
+
+
+
+[Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+
+
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory=$false)][int32]$Nodes=1,
+
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory=$false)][int32]$Startnode = 1,
+
+[Parameter(ParameterSetName = "install", Mandatory = $true)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = "vmnet2"
+
+
 )
 #requires -version 3.0
 #requires -module vmxtoolkit 
@@ -20,19 +63,48 @@ switch ($PsCmdlet.ParameterSetName)
 {
     "import"
         {
-        & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck  --name=$mastername $ovapaPath $PSScriptRoot #
+        if (!((Get-ChildItem $ovf).Extension -match "ovf"))
+            {
+            write-warning "no OVF Template found"
+            exit
+            }
+        
+        if (!($mastername)) {$mastername = (Split-Path -Leaf $ovf).Replace(".ovf","")}
+        & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck  --name=$mastername $ovf $PSScriptRoot #
         $Content = Get-Content $PSScriptRoot\$mastername\$mastername.vmx
         $Content = $Content-notmatch 'snapshot.maxSnapshots'
-        $Content | Set-Content $PSScriptRoot\$mastername\$mastername.vmx 
+        $Content | Set-Content $PSScriptRoot\$mastername\$mastername.vmx
+        write-Warning "Now run .\install-cloudarray.ps1 -MasterPath .\$mastername -Defaults " 
         }
 default
     {
+
+
+            
+            
+    If ($Defaults.IsPresent)
+            {
+            $labdefaults = Get-labDefaults
+            $vmnet = $labdefaults.vmnet
+            $subnet = $labdefaults.MySubnet
+            $BuildDomain = $labdefaults.BuildDomain
+            $Sourcedir = $labdefaults.Sourcedir
+            $Gateway = $labdefaults.Gateway
+            $DefaultGateway = $labdefaults.Defaultgateway
+            $DNS1 = $labdefaults.DNS1
+            $configure = $true
+            }
+
+
+
     $Nodeprefix = "Cloudarray"
     If (!($MasterVMX = get-vmx -path $MasterPath))
       {
        Write-Error "No Valid Master Found"
       break
      }
+    
+
     $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
     if (!$Basesnap) 
         {
@@ -87,9 +159,12 @@ default
             Write-Verbose "VM $Nodeprefix$node already exists"
             }
         }#end foreach
+    write-Warning "Login to Cloudarray with admin / password"
     } # end default
+
+
 }# end switch
 
 
-write-Warning "Login to Cloudarray with admin / password"
+
 

@@ -50,10 +50,16 @@ function Set-labDefaultGateway
 	[Parameter(ParameterSetName = "1", Mandatory = $false )][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
     [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 1)][system.net.ipaddress]$DefaultGateway
     )
-$Defaults = get-labdefaults -Defaultsfile $Defaultsfile
-$Defaults.DefaultGateway = $DefaultGateway
-Write-Verbose "Setting Default Gateway $DefaultGateway"
-save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
+    if (!(Test-Path $Defaultsfile))
+    {
+        Write-Warning "Creating new defaultsfile"
+        new-labdefaults -Defaultsfile $Defaultsfile
+    }
+
+    $Defaults = get-labdefaults -Defaultsfile $Defaultsfile
+    $Defaults.DefaultGateway = $DefaultGateway
+    Write-Verbose "Setting Default Gateway $DefaultGateway"
+    save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
 }
 
 
@@ -64,10 +70,16 @@ function Set-labDNS1
 	[Parameter(ParameterSetName = "1", Mandatory = $false )][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
     [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 1)][system.net.ipaddress]$DNS1
     )
-$Defaults = get-labdefaults -Defaultsfile $Defaultsfile
-$Defaults.DNS1 = $DNS1
-Write-Verbose "Setting DNS1 $DNS1"
-save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
+    if (!(Test-Path $Defaultsfile))
+    {
+        Write-Warning "Creating new defaultsfile"
+        new-labdefaults -Defaultsfile $Defaultsfile
+    }
+
+    $Defaults = get-labdefaults -Defaultsfile $Defaultsfile
+    $Defaults.DNS1 = $DNS1
+    Write-Verbose "Setting DNS1 $DNS1"
+    save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
 }
 
 function Set-labVMNET
@@ -77,23 +89,33 @@ function Set-labVMNET
 	[Parameter(ParameterSetName = "1", Mandatory = $false )][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
     [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 1)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet
     )
-$Defaults = get-labdefaults -Defaultsfile $Defaultsfile
-$Defaults.vmnet = $VMnet
-Write-Verbose "Setting LABVMnet $VMnet"
-save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
+    if (!(Test-Path $Defaultsfile))
+    {
+        Write-Warning "Creating new defaultsfile"
+        new-labdefaults -Defaultsfile $Defaultsfile
+    }
+    $Defaults = get-labdefaults -Defaultsfile $Defaultsfile
+    $Defaults.vmnet = $VMnet
+    Write-Verbose "Setting LABVMnet $VMnet"
+    save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
 }
 
 function Set-labGateway
 {
 	[CmdletBinding(HelpUri = "http://labbuildr.bottnet.de/modules/")]
 	param (
-	[Parameter(ParameterSetName = "1", Mandatory = $false,Position = 1)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
-    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 2)][switch]$Gateway
+	[Parameter(ParameterSetName = "1", Mandatory = $false,Position = 2)]$Defaultsfile=".\defaults.xml",
+    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 1)][switch]$Gateway
     )
-$Defaults = get-labdefaults -Defaultsfile $Defaultsfile
-$Defaults.Gateway = $Gateway.IsPresent
-Write-Verbose "Setting $Gateway"
-save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
+if (!(Test-Path $Defaultsfile))
+    {
+    Write-Warning "Creating new defaultsfile"
+    new-labdefaults -Defaultsfile $Defaultsfile
+    }
+    $Defaults = get-labdefaults -Defaultsfile $Defaultsfile
+    $Defaults.Gateway = $Gateway.IsPresent
+    Write-Verbose "Setting $Gateway"
+    save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
 }
 
 function Set-labNMM
@@ -103,38 +125,54 @@ function Set-labNMM
 	[Parameter(ParameterSetName = "1", Mandatory = $false,Position = 1)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
     [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 2)][switch]$NMM
     )
-$Defaults = get-labdefaults -Defaultsfile $Defaultsfile
-$Defaults.NMM = $NMM.IsPresent
-Write-Verbose "Setting NMM to $($NMM.IsPresent)"
-save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
+    if (!(Test-Path $Defaultsfile))
+    {
+        Write-Warning "Creating new defaultsfile"
+        new-labdefaults -Defaultsfile $Defaultsfile
+    }
+
+    $Defaults = get-labdefaults -Defaultsfile $Defaultsfile
+    $Defaults.NMM = $NMM.IsPresent
+    Write-Verbose "Setting NMM to $($NMM.IsPresent)"
+    save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
 }
 
 function Set-labsubnet
 {
 	[CmdletBinding(HelpUri = "http://labbuildr.bottnet.de/modules/")]
 	param (
-	[Parameter(ParameterSetName = "1", Mandatory = $false,Position = 1)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
-    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 2)][system.net.ipaddress]$subnet
+	[Parameter(ParameterSetName = "1", Mandatory = $false,Position)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 1)][system.net.ipaddress]$subnet
     )
-$Defaults = get-labdefaults -Defaultsfile $Defaultsfile
-$Defaults.Mysubnet = $subnet
-Write-Verbose "Setting subnet $subnet"
-save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
+    if (!(Test-Path $Defaultsfile))
+    {
+        Write-Warning "Creating new defaultsfile"
+        new-labdefaults -Defaultsfile $Defaultsfile
+    }
+    $Defaults = get-labdefaults -Defaultsfile $Defaultsfile
+    $Defaults.Mysubnet = $subnet
+    Write-Verbose "Setting subnet $subnet"
+    save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
 }
 
 function Set-labBuilddomain
 {
 	[CmdletBinding(HelpUri = "http://labbuildr.bottnet.de/modules/")]
 	param (
-	[Parameter(ParameterSetName = "1", Mandatory = $false,Position = 1)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+	[Parameter(ParameterSetName = "1", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
     [ValidateLength(1,15)]
-    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 2)]
+    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 1)]
     [ValidatePattern("^[a-zA-Z\s]+$")][string]$builddomain
     )
-$Defaults = get-labdefaults -Defaultsfile $Defaultsfile
-$Defaults.builddomain = $builddomain
-Write-Verbose "Setting builddomain $builddomain"
-save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
+    if (!(Test-Path $Defaultsfile))
+    {
+        Write-Warning "Creating new defaultsfile"
+        new-labdefaults -Defaultsfile $Defaultsfile
+    }
+    $Defaults = get-labdefaults -Defaultsfile $Defaultsfile
+    $Defaults.builddomain = $builddomain
+    Write-Verbose "Setting builddomain $builddomain"
+    save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
 }
 
 
@@ -142,14 +180,19 @@ function Set-labSources
 {
 	[CmdletBinding(HelpUri = "http://labbuildr.bottnet.de/modules/")]
 	param (
-	[Parameter(ParameterSetName = "1", Mandatory = $false,Position = 1)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+	[Parameter(ParameterSetName = "1", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
     [ValidateLength(3,10)]
-    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 2)][ValidateScript({ Test-Path -Path $_ })]$Sourcedir
+    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 1)][ValidateScript({ Test-Path -Path $_ })]$Sourcedir
     )
-$Defaults = get-labdefaults -Defaultsfile $Defaultsfile
-$Defaults.sourcedir = $Sourcedir
-Write-Verbose "Setting builddomain $Sourcedir"
-save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
+    if (!(Test-Path $Defaultsfile))
+    {
+        Write-Warning "Creating new defaultsfile"
+        new-labdefaults -Defaultsfile $Defaultsfile
+    }
+    $Defaults = get-labdefaults -Defaultsfile $Defaultsfile
+    $Defaults.sourcedir = $Sourcedir
+    Write-Verbose "Setting builddomain $Sourcedir"
+    save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
 }
 
 function Get-labDefaults
@@ -160,7 +203,15 @@ function Get-labDefaults
     )
 begin {
     }
-process {
+process 
+{
+    if (!(Test-Path $Defaultsfile))
+    {
+        Write-Warning "Defaults does not exist. please create with new-labdefaults or set any parameter with set-labxxx"
+    }
+    else
+        {
+
         Write-Verbose "Loading defaults from $Defaultsfile"
         [xml]$Default = Get-Content -Path $Defaultsfile
         $object = New-Object psobject
@@ -183,7 +234,7 @@ process {
         $object | Add-Member -MemberType NoteProperty -Name NMM -Value $Default.config.nmm
         Write-Output $object
         }
-
+    }
 end {
     }
 }
@@ -333,3 +384,35 @@ function get-labscenario
     {
     Get-VMX | get-vmxscenario | Sort-Object Scenarioname | ft -AutoSize
     }
+
+
+function new-labdefaults   
+{
+    [CmdletBinding(HelpUri = "http://labbuildr.bottnet.de/modules/")]
+	param (
+	[Parameter(ParameterSetName = "1", Mandatory = $false)]$Defaultsfile=".\defaults.xml"
+    )
+        Write-Verbose "Saving defaults to $Defaultsfile"
+        $xmlcontent =@()
+        $xmlcontent += ("<config>")
+        $xmlcontent += ("<nmm_ver></nmm_ver>")
+        $xmlcontent += ("<nmm></nmm>")
+        $xmlcontent += ("<nw_ver></nw_ver>")
+        $xmlcontent += ("<master></master>")
+        $xmlcontent += ("<sqlver></sqlver>")
+        $xmlcontent += ("<ex_cu></ex_cu>")
+        $xmlcontent += ("<vmnet></vmnet>")
+        $xmlcontent += ("<BuildDomain></BuildDomain>")
+        $xmlcontent += ("<MySubnet></MySubnet>")
+        $xmlcontent += ("<AddressFamily></AddressFamily>")
+        $xmlcontent += ("<IPV6Prefix></IPV6Prefix>")
+        $xmlcontent += ("<IPv6PrefixLength></IPv6PrefixLength>")
+        $xmlcontent += ("<Gateway></Gateway>")
+        $xmlcontent += ("<DefaultGateway></DefaultGateway>")
+        $xmlcontent += ("<DNS1></DNS1>")
+        $xmlcontent += ("<Sourcedir></Sourcedir>")
+        $xmlcontent += ("<ScaleIOVer></ScaleIOVer>")
+        $xmlcontent += ("</config>")
+        $xmlcontent | Set-Content $defaultsfile
+     }
+

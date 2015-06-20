@@ -19,14 +19,13 @@
    limitations under the License.
 
 .LINK
-   https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released
+   https://community.emc.com/blogs/bottk/2015/05/04/labbuildrannouncement-unattended-vipr-controller-deployment-for-vmware-workstation
 .EXAMPLE
 #>
 [CmdletBinding()]
 Param(
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$Defaults,
 [Parameter(ParameterSetName = "defaults", Mandatory=$false)]$viprmaster = "vipr-2.2.1.0.1106",
-[Parameter(ParameterSetName = "defaults",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
 )
 
@@ -37,16 +36,17 @@ Measure-Command {
 If ($Defaults.IsPresent)
     {
      $labdefaults = Get-labDefaults
-     $vmnet = "vmnet$($labdefaults.vmnet)"
+     $vmnet = $labdefaults.vmnet
      $subnet = $labdefaults.MySubnet
      $BuildDomain = $labdefaults.BuildDomain
      $Sourcedir = $labdefaults.Sourcedir
      $Defaultgateway = $labdefaults.DefaultGateway
      }
 
-if (!($Sourcedir))
+if (!(test-path $Sourcedir))
     {
-    Write-Warning "we need a Directory for sources specified"
+    Write-Warning " $Sourcedir not found. we need a Valid Directory for sources specified with set-labsources"
+    exit
     }
 
 [System.Version]$subnet = $Subnet.ToString()
