@@ -79,7 +79,7 @@ function Set-labVMNET
     )
 $Defaults = get-labdefaults -Defaultsfile $Defaultsfile
 $Defaults.vmnet = $VMnet
-Write-Verbose "Setting LAB VMnet $VMnet"
+Write-Verbose "Setting LABVMnet $VMnet"
 save-labdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
 }
 
@@ -167,7 +167,7 @@ process {
 	    $object | Add-Member -MemberType NoteProperty -Name Master -Value $Default.config.master
         $object | Add-Member -MemberType NoteProperty -Name ScaleIOVer -Value $Default.config.scaleiover
         $object | Add-Member -MemberType NoteProperty -Name BuildDomain -Value $Default.config.Builddomain
-        $object | Add-Member -MemberType NoteProperty -Name MySubnet -Value ([system.net.ipaddress]$Default.config.MySubnet)
+        $object | Add-Member -MemberType NoteProperty -Name MySubnet -Value $Default.config.MySubnet
         $object | Add-Member -MemberType NoteProperty -Name vmnet -Value $Default.config.vmnet
         $object | Add-Member -MemberType NoteProperty -Name DefaultGateway -Value $Default.config.DefaultGateway
         $object | Add-Member -MemberType NoteProperty -Name DNS1 -Value $Default.config.DNS1

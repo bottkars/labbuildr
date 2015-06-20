@@ -18,7 +18,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://community.emc.com/blogs/bottk/
+   https://community.emc.com/blogs/bottk/2015/01/27/labbuildrnew-solution-pack-install-ave-to-autodeploy-avamar-nodes
 .EXAMPLE
     .\install-ave.ps1 -MasterPath F:\labbuildr\ave -AVESize 4TB
     installs a 4TB AVE
@@ -28,6 +28,14 @@
 #>
 [CmdletBinding()]
 Param(
+
+<### import parameters##>
+[Parameter(ParameterSetName = "import",Mandatory=$true)][String]
+[ValidateScript({ Test-Path -Path $_ -Filter *.ov* -PathType Leaf -ErrorAction SilentlyContinue })]$ovf,
+[Parameter(ParameterSetName = "import",Mandatory=$false)][String]$mastername,
+
+[Parameter(ParameterSetName = "configure", Mandatory = $true)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $true)]
 [Parameter(ParameterSetName = "install",Mandatory=$true)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath,
 <# specify your desireed AVE Size 
 Valid Parameters: 0.5TB,1TB,2TB,4TB
@@ -41,24 +49,29 @@ _______|_________|_____|_________
   2TB   |  16GB   |  2  | 3*1000GB
   4TB   |  36GB   |  4  | 6*1000GB
 #>
+[Parameter(ParameterSetName = "configure", Mandatory = $false)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateSet('0.5TB','1TB','2TB','4TB')][string]$AVESize = "0.5TB",
+
+[Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+
+
+[Parameter(ParameterSetName = "configure", Mandatory = $false)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][int32]$Nodes=1,
+
+[Parameter(ParameterSetName = "configure", Mandatory = $false)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][int32]$Startnode = 1,
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
-[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
-[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
+[Parameter(ParameterSetName = "configure",Mandatory=$true)][ipaddress]$subnet = "192.168.2.0",
+[Parameter(ParameterSetName = "configure",Mandatory=$true)][ValidateLength(1,15)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
 
-[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
-[Parameter(ParameterSetName = "install",Mandatory = $false)][switch]$configure,
+[Parameter(ParameterSetName = "configure", Mandatory = $true)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = "vmnet2",
 
-
-### import parameters
-[Parameter(ParameterSetName = "import",Mandatory=$true)][String]
-
-[ValidateScript({ Test-Path -Path $_ -Filter *.ov* -PathType Leaf -ErrorAction SilentlyContinue })]$ovafile,
-[Parameter(ParameterSetName = "import",Mandatory=$true)][String]$mastername
-
-
+[Parameter(ParameterSetName = "defaults",Mandatory = $false)]
+[Parameter(ParameterSetName = "configure", Mandatory = $true)][switch]$configure
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
@@ -71,20 +84,35 @@ $rootuser = "root"
 $rootpassword = "changeme"
 
 
-
-
 switch ($PsCmdlet.ParameterSetName)
 {
     "import"
         {
-        & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $ovafile $PSScriptRoot #
+        if (!($mastername)) {$mastername = (Split-Path -Leaf $ovf).Replace(".ovf","")}
+        & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $ovf $PSScriptRoot #
+        Write-Output "Use install-ave -Master"
         }
-     "install"
 
+     default
         {
+        If ($Defaults.IsPresent)
+            {
+            $labdefaults = Get-labDefaults
+            $vmnet = $labdefaults.vmnet
+            $subnet = $labdefaults.MySubnet
+            $BuildDomain = $labdefaults.BuildDomain
+            $Sourcedir = $labdefaults.Sourcedir
+            $Gateway = $labdefaults.Gateway
+            $DefaultGateway = $labdefaults.Defaultgateway
+            $DNS1 = $labdefaults.DNS1
+            $configure = $true
+            }
+
+
         if (!($MasterVMX = get-vmx -path $MasterPath))
             {
-            Write-Error "$Masterpath is not a Virtual machine"
+            Write-Warning "No Valid Base Machine could be found $Masterpath
+            was the ovf Template expanded with install-ave.ps1 -ovf ?"
             exit
             }
 
@@ -105,6 +133,7 @@ switch ($PsCmdlet.ParameterSetName)
         If (!($Basesnap))
             {
             Write-Error "Error creating/finding Basesnap"
+            exit
             }
         ####Build Machines#
 
@@ -176,6 +205,7 @@ switch ($PsCmdlet.ParameterSetName)
     $Started = $NodeClone | start-vmx
     if ($configure.IsPresent)
     {
+    $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
     $ip="$subnet.3$Node"
      do {
         $ToolState = Get-VMXToolsState -config $NodeClone.config
@@ -183,10 +213,18 @@ switch ($PsCmdlet.ParameterSetName)
         sleep 10
         }
     until ($ToolState.state -match "running")
+    <#
+    do {
+        Write-Warning "Waiting for Avamar to come up"
+        $Process = Get-VMXProcessesInGuest -config $NodeClone.config -Guestuser $rootuser -Guestpassword $rootpassword
+        sleep 10
+        }
+    until ($process -match "mingetty")
+
 
     Write-Verbose "Configuring Disks"
     $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/perl /usr/local/avamar/bin/ave-part.pl" -Guestuser $rootuser -Guestpassword changeme -Verbose | Out-Null
-
+    #>
     $NodeClone | Invoke-VMXBash -Scriptblock "yast2 lan edit id=0 ip=$IP netmask=255.255.255.0 prefix=24 verbose" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
     $NodeClone | Invoke-VMXBash -Scriptblock "hostname $($NodeClone.CloneName)" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
     $Scriptblock = "echo 'default "+$subnet+".103 - -' > /etc/sysconfig/network/routes"
@@ -202,8 +240,8 @@ switch ($PsCmdlet.ParameterSetName)
     # $NodeClone | Invoke-VMXBash -Scriptblock "shutdown -r now" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose -nowait
     Write-Verbose "rebooting VM $($NodeClone.Clonename)"
     # we do not use shutdown since toolstate does not reset
-    $NodeClone | Stop-VMX | Out-Null
-    $NodeClone | start-vmx | Out-Null
+    # $NodeClone | Stop-VMX | Out-Null
+    # $NodeClone | start-vmx | Out-Null
     do {
         $ToolState = Get-VMXToolsState -config $NodeClone.config 
         Write-Verbose "VMware tools are in $($ToolState.State) state"
@@ -211,10 +249,10 @@ switch ($PsCmdlet.ParameterSetName)
         }
     until ($ToolState.state -match "running")
 
-    Write-Verbose "Starting Avamar Installer, this may take a while"
-    $NodeClone | Invoke-VMXBash -Scriptblock "/bin/sh /usr/local/avamar/src/avinstaller-bootstrap-7.1.1-141.sles11_64.x86_64.run" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
-    Write-Host "Trying to connect to https://$subnet.3$($Node):8543/avi/avigui.html to complete the Installation"
-    Start-Process "https://$subnet.3$($Node):8543/avi/avigui.html"
+    # Write-Verbose "Starting Avamar Installer, this may take a while"
+    # $NodeClone | Invoke-VMXBash -Scriptblock "/bin/sh /usr/local/avamar/src/avinstaller-bootstrap-7.1.1-141.sles11_64.x86_64.run" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
+    Write-Host "Trying to connect to https://$subnet.3$($Node):7543/avi/avigui.html to complete the Installation"
+    # Start-Process "https://$subnet.3$($Node):8543/avi/avigui.html"
     
     } # end configure
     $NodeClone
