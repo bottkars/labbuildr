@@ -232,6 +232,8 @@ process
         $object | Add-Member -MemberType NoteProperty -Name NMM_Ver -Value $Default.config.nmm_ver
         $object | Add-Member -MemberType NoteProperty -Name NW_Ver -Value $Default.config.nw_ver
         $object | Add-Member -MemberType NoteProperty -Name NMM -Value $Default.config.nmm
+        $object | Add-Member -MemberType NoteProperty -Name Masterpath -Value $Default.config.Masterpath
+
         Write-Output $object
         }
     }
@@ -286,10 +288,10 @@ process {
         $xmlcontent += ("<DNS1>$($Defaults.DNS1)</DNS1>")
         $xmlcontent += ("<Sourcedir>$($Defaults.Sourcedir)</Sourcedir>")
         $xmlcontent += ("<ScaleIOVer>$($Defaults.ScaleIOVer)</ScaleIOVer>")
+        $xmlcontent += ("<Masterpath>$($Masterpath)</Masterpath>")
         $xmlcontent += ("</config>")
         $xmlcontent | Set-Content $defaultsfile
         }
-
 end {}
 }
 
@@ -412,6 +414,7 @@ function new-labdefaults
         $xmlcontent += ("<DNS1></DNS1>")
         $xmlcontent += ("<Sourcedir></Sourcedir>")
         $xmlcontent += ("<ScaleIOVer></ScaleIOVer>")
+        $xmlcontent += ("<Masterpath></Masterpath>")
         $xmlcontent += ("</config>")
         $xmlcontent | Set-Content $defaultsfile
      }

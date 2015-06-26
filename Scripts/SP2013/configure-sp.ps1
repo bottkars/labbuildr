@@ -53,7 +53,7 @@ $credential = New-Object System.Management.Automation.PSCredential($SQLUsername,
 Write-Warning  "Creating $ConfigDB and $AdminDB, this might take a while..."
 $FarmCredentials = New-Object System.Management.Automation.PSCredential $SQLUsername, (ConvertTo-SecureString $SQLPassword -AsPlainText -Force)
 Add-PsSnapin Microsoft.SharePoint.PowerShell -ErrorAction SilentlyContinue
-New-SPConfigurationDatabase -DatabaseServer $SQLServer -DatabaseName $ConfigDB -AdministrationContentDatabaseName $AdminDB -Passphrase (ConvertTo-SecureString $FarmPassphrase -AsPlainText -Force) -FarmCredentials $FarmCredentials
+New-SPConfigurationDatabase -DatabaseServer "$SQLServer\mssqllabbuildr" -DatabaseName $ConfigDB -AdministrationContentDatabaseName $AdminDB -Passphrase (ConvertTo-SecureString $FarmPassphrase -AsPlainText -Force) -FarmCredentials $FarmCredentials -Verbose
 Write-Warning "Installing Helpcollection"
 Install-SPHelpCollection -All
 Initialize-SPResourceSecurity

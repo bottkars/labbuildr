@@ -12,7 +12,7 @@ $Host.UI.RawUI.WindowTitle = "$ScriptName"
 $Builddir = $PSScriptRoot
 $Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
 $Domain = $env:USERDOMAIN
-.$Builddir\Add-DomainUserToLocalGroup.ps1 -group Administrators -user svc_winrm -domain $Domain -computer $env:COMPUTERNAME
+.$Builddir\Add-DomainUserToLocalGroup.ps1 -group "WinRMRemoteWMIUsers__" -user svc_winrm -domain $Domain -computer $env:COMPUTERNAME
 New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
 powercfg.exe /setacvalueindex SCHEME_CURRENT SUB_VIDEO VIDEOIDLE 0
 powercfg.exe /setacvalueindex SCHEME_CURRENT SUB_VIDEO VIDEOCONLOCK 0
