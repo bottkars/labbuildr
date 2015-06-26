@@ -11,7 +11,7 @@
 param(
 
 )
-$Attachements = "\\vmware-host\shared folders\Sources\Attachements"
+$Attachements = "\\vmware-host\shared folders\Sources\Attachments"
 $ScriptName = $MyInvocation.MyCommand.Name
 $Host.UI.RawUI.WindowTitle = "$ScriptName"
 $Builddir = $PSScriptRoot
