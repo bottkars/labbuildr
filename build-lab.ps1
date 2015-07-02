@@ -83,7 +83,6 @@ param (
 	[Parameter(ParameterSetName = "Sharepoint")][switch]$Sharepoint,
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $true)][ValidateSet('BuiltIn','AlwaysOn')]$SPdbtype = "BuiltIn",
     <#
-    <#
     Selects the SQL Scenario
     IP-Addresses: .130
     #>
