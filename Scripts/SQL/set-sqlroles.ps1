@@ -11,7 +11,7 @@
 param(
 $Servername = $env:COMPUTERNAME,
 $Instancename = "MSSQL$env:USERDOMAIN",
-$Loginnames = ("NT AUTHORITY\SYSTEM","$env:USERDOMAIN\$env:USERNAME"),
+$Loginnames = ("NT AUTHORITY\SYSTEM","$env:USERDOMAIN\$env:USERNAME","$env:USERDOMAIN\$env:COMPUTERNAME$","$env:USERDOMAIN\SQL_ADMINS","$env:USERDOMAIN\svc_sqladm"),
 $Serverroles = ("dbcreator","sysadmin")
 )
 $ScriptName = $MyInvocation.MyCommand.Name

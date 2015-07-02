@@ -20,11 +20,12 @@
 .LINK
    https://community.emc.com/blogs/bottk/2015/01/27/labbuildrnew-solution-pack-install-ave-to-autodeploy-avamar-nodes
 .EXAMPLE
-    .\install-ave.ps1 -MasterPath F:\labbuildr\ave -AVESize 4TB
-    installs a 4TB AVE
+    .\install-ave.ps1 -ovf D:\Sources\AVE-7.2.0.390.ovf\OVF\AVE-7.2.0.390.ovf 
+    This extracts the AVE OVF into a template Ready Source
 .EXAMPLE
-    .\install-ave.ps1 -MasterPath F:\labbuildr\ave -configure
-    Installs the AVE Default 0.5TB and configures Network with defaults and start the AVInstaller
+    .\install-ave.ps1 -Defaults -MasterPath .\AVE-7.2.0.390 
+    installs a AVE with labbuildrdefaults
+
 #>
 [CmdletBinding()]
 Param(

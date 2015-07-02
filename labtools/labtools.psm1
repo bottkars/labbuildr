@@ -419,3 +419,37 @@ function new-labdefaults
         $xmlcontent | Set-Content $defaultsfile
      }
 
+function start-LABScenario
+    {
+    [CmdletBinding(DefaultParametersetName = "1")]
+	    param (
+	    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 0)][ValidateSet('Exchange','SQL','DPAD','EMCVSA','hyper-V','ScaleIO','ESXi','labbuildr')]$Scenario
+	
+	)
+begin
+	{
+    if ((get-vmx .\DCNODE).state -ne "running")
+        {get-vmx .\DCNODE | start-vmx}
+	}
+process
+	{
+	get-vmx | where scenario -match $Scenario | sort-object ActivationPreference | start-vmx
+	}
+end { }
+}
+
+function start-LABPC
+   {
+    param ([String]$MAC= $(throw 'No MAC addressed passed, please pass as xx:xx:xx:xx:xx:xx'))
+    $MACAddr = $MAC.split(':') | %{ [byte]('0x' + $_) }
+    if ($MACAddr.Length -ne 6)
+    {
+        throw 'MAC address must be format xx:xx:xx:xx:xx:xx'
+    }
+    $UDPclient = new-Object System.Net.Sockets.UdpClient
+    $UDPclient.Connect(([System.Net.IPAddress]::Broadcast),4000)
+    $packet = [byte[]](,0xFF * 6)
+    $packet += $MACAddr * 16
+    [void] $UDPclient.Send($packet, $packet.Length)
+    write "Wake-On-Lan magic packet sent to $MACAddrString, length $($packet.Length)"
+ }

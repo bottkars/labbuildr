@@ -40,6 +40,3 @@ switch ($DBtype)
 
 Write-Warning "Installing Sharepoint may take up to 25 Minutes"
 Start-Process $Setuppath -ArgumentList $arguments -Wait
-Write-Verbose "Setting Sharepoint VSS Writer"
-Start-Process "C:\Program Files\Common Files\microsoft shared\Web Server Extensions\15\BIN\STSADM.EXE" -ArgumentList "-o registerwsswriter" -Wait
-

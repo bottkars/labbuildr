@@ -39,13 +39,14 @@ $dbname = "labbuildr_Content"
 switch ($DBtype)
     {
     'AAG'
-    {
-    $SQLServer = $env:USERDOMAIN+"AAGlstn"
-
-    }
+        {
+        $SQLServer = $env:USERDOMAIN+"AAGlstn"
+        }
     default
-    {
-    exit
+        {
+        Write-Verbose "Setting Sharepoint VSS Writer"
+        Start-Process "C:\Program Files\Common Files\microsoft shared\Web Server Extensions\15\BIN\STSADM.EXE" -ArgumentList "-o registerwsswriter" -Wait
+        exit
     }
 
     }
@@ -81,4 +82,7 @@ New-SPSite -URL $url -OwnerAlias $PrimaryLogin -SecondaryOwnerAlias $SecondaryLo
 # New-SPSite "$($url):$webPort/sites/Teams1" -OwnerAlias "$env:USERDOMAIN\Administrator" -Name "$env:USERDOMAIN" -Template $Template 
 $web = Get-SPWeb $webApp.url                             
 $web.CreateDefaultAssociatedGroups($PrimaryLogin,$SecondaryLogin,"") 
+ADD-SPShellAdmin -UserName "$Domain\$env:COMPUTERNAME$"
 Remove-PSSnapin Microsoft.SharePoint.PowerShell
+Write-Verbose "Setting Sharepoint VSS Writer"
+Start-Process "C:\Program Files\Common Files\microsoft shared\Web Server Extensions\15\BIN\STSADM.EXE" -ArgumentList "-o registerwsswriter" -Wait
