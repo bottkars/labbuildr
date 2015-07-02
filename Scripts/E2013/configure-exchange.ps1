@@ -26,10 +26,6 @@ $PlainPassword = "Password123!"
 $SecurePassword = $PlainPassword | ConvertTo-SecureString -AsPlainText -Force
 $ContentSubmitters = "ContentSubmitters"
 $Domain = $env:USERDOMAIN
-
-
-
-
 Function Add-DomainUserToLocalGroup 
 { 
 [cmdletBinding()] 
@@ -38,7 +34,6 @@ Param(
 [Parameter(Mandatory=$True)][string]$group, 
 [Parameter(Mandatory=$True)][string]$domain, 
 [Parameter(Mandatory=$True)][string]$user
-
 ) 
 $de = [ADSI]"WinNT://$computer/$Group,group" 
 $de.psbase.Invoke("Add",([ADSI]"WinNT://$domain/$user").path) 
@@ -85,16 +80,12 @@ foreach ($localgroup in ( "Administrators", "Backup Operators","Remote Desktop U
 
 ##### setting managed availablty diskspace counter
 New-ItemProperty "HKLM:Software\Microsoft\ExchangeServer\v15\ActiveMonitoring\Parameters\" -Name "SpaceMonitorLowSpaceThresholdInMB" -Value 10 -PropertyType "DWord" 
-
-
 ####### Installing CDO
 $Setupcmd = "ExchangeMapiCdo.msi"
 $Setuppath = "$SourcePath\$ex_version$Prereq\ExchangeMapiCdo\$Setupcmd"
 .$Builddir\test-setup -setup $Setupcmd -setuppath $Setuppath
 Start-Process $Setuppath -ArgumentList "/quiet /passive" -Wait
 ######################
-
-
 cd c:\windows\system32\inetsrv
 c:\windows\system32\inetsrv\appcmd.exe set config "Default Web Site/Powershell" -section:system.webServer/security/authentication/windowsAuthentication /useKernelMode:"False"  /commit:apphost
 

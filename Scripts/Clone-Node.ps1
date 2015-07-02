@@ -1,4 +1,13 @@
-﻿[CmdletBinding()]
+﻿<#
+.Synopsis
+   Short description
+.DESCRIPTION
+   labbuildr is a Self Installing Windows/Networker/NMM Environemnt Supporting Exchange 2013 and NMM 3.0
+.LINK
+   https://community.emc.com/blogs/bottk/2015/03/30/labbuildrbeta
+#>
+#requires -version 3
+[CmdletBinding()]
 Param(
 [Parameter(Mandatory=$false)][string]$Builddir = $PSScriptRoot,
 [Parameter(Mandatory=$true)][string]$MasterVMX,

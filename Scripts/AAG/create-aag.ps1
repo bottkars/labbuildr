@@ -19,7 +19,6 @@ Param
     [Validateset('IPv4','IPv6','IPv4IPv6')]$AddressFamily='IPv4',
     $Port = '1433'
 )
-
 $IPv6subnet = "$IPv6Prefix$IPv4Subnet"
 $IPv6Address = "$IPv6Prefix$nodeIP"
 Write-Verbose $IPv6Address

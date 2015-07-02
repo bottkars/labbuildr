@@ -6,8 +6,6 @@
 .LINK
    https://community.emc.com/blogs/bottk/2015/03/30/labbuildrbeta
 #>
-
-
 [CmdletBinding()]
 param (
 [parameter(mandatory = $false)][ValidateRange(1,10)]$CSVnum = 3,
@@ -19,8 +17,6 @@ param (
 #requires -module FailoverClusters
 # 1. ######################################################################################################
 # Initilization. you may want to adjust the Parameters for your needs
-
-
 if (!(Get-Cluster . -ErrorAction SilentlyContinue) )
     {
     Write-Warning " This Deploymentmethod requires Windows Failover Cluster Configured"

@@ -44,9 +44,7 @@ else
 $eth0 = Get-NetAdapter -Name "Ethernet" -ErrorAction SilentlyContinue
 }
 #>
-
 $nics = @()
-
 $Nics = Get-NetAdapter | Sort-Object -Property Name
 if ($nics.Count -gt 1)
     { $eth1 = Get-NetIPAddress -PrefixOrigin Dhcp | Get-NetAdapter 
