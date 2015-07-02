@@ -1,4 +1,4 @@
-$ScriptName = $MyInvocation.MyCommand.Name
+﻿$ScriptName = $MyInvocation.MyCommand.Name
 New-Item -ItemType file -Path c:\scripts\$ScriptName.log
 $Host.UI.RawUI.WindowTitle = "$ScriptName"
 

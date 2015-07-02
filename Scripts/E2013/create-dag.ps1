@@ -1,10 +1,10 @@
-<#
+ï»¿<#
 .Synopsis
    Short description
 .DESCRIPTION
    labbuildr is a Self Installing Windows/Networker/NMM Environemnt Supporting Exchange 2013 and NMM 3.0
 .LINK
-   https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released
+   https://community.emc.com/blogs/bottk/2015/03/30/labbuildrbeta
 #>
 #requires -version 3
 [CmdletBinding()]
@@ -34,7 +34,7 @@ $DBNAME = $Dagname+"_DB1"
 $PlainPassword = "Password123!"
 $DomainUser = "$Domain\Administrator"
 $SecurePassword = $PlainPassword | ConvertTo-SecureString -AsPlainText -Force
-$Credential = New-Object –TypeName System.Management.Automation.PSCredential –ArgumentList $DomainUser, $SecurePassword
+$Credential = New-Object â€“TypeName System.Management.Automation.PSCredential â€“ArgumentList $DomainUser, $SecurePassword
 $Session = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri http://$env:COMPUTERNAME/PowerShell/ -Authentication Kerberos -Credential $Credential
 Import-PSSession $Session
 

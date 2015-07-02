@@ -19,7 +19,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released
+   https://community.emc.com/blogs/bottk/2015/03/30/labbuildrbeta
 .EXAMPLE
     build-lab.ps1 -createshortcut
     Creates a Desktop Shortcut for labbuildr
@@ -1337,7 +1337,7 @@ if (!$Master)
     catch [Exception] 
     {
     Write-Warning "Could not find $Masterpath\$Master"
-    Write-Warning "Please download a Master from https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released"
+    Write-Warning "Please download a Master from https://community.emc.com/blogs/bottk/2015/03/30/labbuildrbeta"
     Write-Warning "And extract to $Masterpath"
     # write-verbose $_.Exception
     break

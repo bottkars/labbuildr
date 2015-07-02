@@ -4,8 +4,8 @@
 .DESCRIPTION
    import-viprva
 
-   The Required vmware Master can be downloaded fro https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released#OtherTable,
-   the customized esxi installimage can be found in https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released#SoftwareTable
+   The Required vmware Master can be downloaded fro https://community.emc.com/blogs/bottk/2015/03/30/labbuildrbeta#OtherTable,
+   the customized esxi installimage can be found in https://community.emc.com/blogs/bottk/2015/03/30/labbuildrbeta#SoftwareTable
 
    Copyright 2014 Karsten Bott
 
@@ -22,7 +22,7 @@
    limitations under the License.
 
 .LINK
-   https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released
+   https://community.emc.com/blogs/bottk/2015/03/30/labbuildrbeta
 .EXAMPLE
 #>
 [CmdletBinding()]

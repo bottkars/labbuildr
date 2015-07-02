@@ -1,10 +1,10 @@
-<#
+﻿<#
 .Synopsis
    Short description
 .DESCRIPTION
    labbuildr is a Self Installing Windows/Networker/NMM Environemnt Supporting Exchange 2013 and NMM 3.0
 .LINK
-   https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released
+   https://community.emc.com/blogs/bottk/2015/03/30/labbuildrbeta
 #>
 #requires -version 3
 [CmdletBinding()]
@@ -36,7 +36,7 @@ if ( $AddressFamily -match 'IPv4')
     $reverse = $IPv4subnet+'.0/'+$IPv4PrefixLength
     Add-DnsServerPrimaryZone -NetworkID $reverse -ReplicationScope "Forest" -DynamicUpdate NonsecureAndSecure
     
-    Write-Verbose "Setting Ressource Records for EMC VA�s"
+    Write-Verbose "Setting Ressource Records for EMC VA´s"
     Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name Vipr1 -IPv4Address "$IPv4Subnet.9" -ZoneName $zone.Zonename
     foreach ( $N in 1..3)
         {

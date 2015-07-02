@@ -1,10 +1,10 @@
-<#
+Ôªø<#
 .Synopsis
    Short description
 .DESCRIPTION
    labbuildr is a Self Installing Windows/Networker/NMM Environemnt Supporting Exchange 2013 and NMM 3.0
 .LINK
-   https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released
+   https://community.emc.com/blogs/bottk/2015/03/30/labbuildrbeta
 #>
 #requires -version 3
 [CmdletBinding()]
@@ -38,7 +38,7 @@ foreach ($AAGnode in $AAGnodes){
 $NodeLIST += $AAGNode.Name+"\MSSQL"+$Domain
 write-Host "Adding Node $AAGnode to AAG Nodelist"
 }
-Import-Module ìsqlpsî -DisableNameChecking
+Import-Module ‚Äúsqlps‚Äù -DisableNameChecking
 # Initialize some collections
 $serverObjects = @()
 $replicas = @()
@@ -137,7 +137,7 @@ foreach ($secondary in $secondaries)
     Add-SqlAvailabilityDatabase -InputObject $ag -Database $DatabaseList 
 
 }
-#ADD LISTENER ëMyAg2ListenerIvP6í ( WITH IP ( ('2001:db88:f0:f00f::cf3c'),('2001:4898:e0:f213::4ce2') ) , PORT = 60173 ); 
+#ADD LISTENER ‚ÄòMyAg2ListenerIvP6‚Äô ( WITH IP ( ('2001:db88:f0:f00f::cf3c'),('2001:4898:e0:f213::4ce2') ) , PORT = 60173 ); 
 ## Creating the Listener
 
 

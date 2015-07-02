@@ -1,10 +1,10 @@
-<#
+ï»¿<#
 .Synopsis
    Short description
 .DESCRIPTION
    labbuildr is a Self Installing Windows/Networker/NMM Environemnt Supporting Exchange 2013 and NMM 3.0
 .LINK
-   https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released
+   https://community.emc.com/blogs/bottk/2015/03/30/labbuildrbeta
 #>
 #requires -version 3
 [CmdletBinding()]
@@ -35,13 +35,13 @@ Try Neworker and/or Avamar with the new Environment !
 ... for Questions drop an email to Karsten.Bott@emc.com
 Follow me on twritter @Hyperv_Guy
 Make sure to Rate in my Blog !
-https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released
+https://community.emc.com/blogs/bottk/2015/03/30/labbuildrbeta
 "
 $AttachDir =  '\\vmware-host\Shared Folders\Sources\Attachments'
 $PlainPassword = "Password123!"
 $DomainUser = "$Domain\Administrator"
 $SecurePassword = $PlainPassword | ConvertTo-SecureString -AsPlainText -Force
-$Credential = New-Object –TypeName System.Management.Automation.PSCredential –ArgumentList $DomainUser, $SecurePassword
+$Credential = New-Object â€“TypeName System.Management.Automation.PSCredential â€“ArgumentList $DomainUser, $SecurePassword
 Set-TransportConfig -MaxReceiveSize 50MB
 Set-TransportConfig -MaxSendSize 50MB
 Enable-Mailbox -Identity $BackupAdmin
@@ -52,7 +52,7 @@ if (Test-Path $AttachDir)
 $RoleGroup = "EMC NMM Exchange Admin Roles"
 $Roles = ("Database Copies", "Databases", "Disaster Recovery", "Mailbox Import Export", "Mail Recipient Creation", "Mail Recipients", "View-Only Configuration", "View-Only Recipients")
 New-RoleGroup -Name $RoleGroup -DisplayName $RoleGroup -Members $BackupAdmin -Roles $Roles -Description "This role group allows its users to perform database recovery and GLR"
-Add-RoleGroupMember "Discovery Management" –Member $BackupAdmin
+Add-RoleGroupMember "Discovery Management" â€“Member $BackupAdmin
 Get-MailboxDatabase | Set-MailboxDatabase -CircularLoggingEnabled $false
 New-Item -ItemType Directory -Path R:\rdb
 New-Item -ItemType Directory -Path S:\rdb

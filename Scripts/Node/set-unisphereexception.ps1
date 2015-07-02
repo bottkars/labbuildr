@@ -21,7 +21,7 @@ set-unisphereexception.ps1 -IPAddress <IPAddress> [<CommonParameters>]
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released
+   https://community.emc.com/blogs/bottk/2015/03/30/labbuildrbeta
 .EXAMPLE
     set-unisphereexception.ps1 -Domainname labbuildr.local
     Disable Popup Blocker, Sets java exception and adds domain to Trusted IE Sites

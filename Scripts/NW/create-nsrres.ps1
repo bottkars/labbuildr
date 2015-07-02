@@ -1,4 +1,4 @@
-$ScriptName = $MyInvocation.MyCommand.Name
+﻿$ScriptName = $MyInvocation.MyCommand.Name
 $Host.UI.RawUI.WindowTitle = "$ScriptName"
 $Builddir = $PSScriptRoot
 New-Item -ItemType file  "$Builddir\$ScriptName.log" -ErrorAction SilentlyContinue

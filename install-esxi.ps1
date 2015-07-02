@@ -8,8 +8,8 @@
 
    The script will generate a kickstart cd with all required parameters, clones a master vmx and injects disk drives and cd´d into is.
 
-   The Required vmware Master can be downloaded fro https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released#OtherTable,
-   the customized esxi installimage can be found in https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released#SoftwareTable
+   The Required vmware Master can be downloaded fro https://community.emc.com/blogs/bottk/2015/03/30/labbuildrbeta#OtherTable,
+   the customized esxi installimage can be found in https://community.emc.com/blogs/bottk/2015/03/30/labbuildrbeta#SoftwareTable
 
    Copyright 2014 Karsten Bott
 
@@ -26,7 +26,7 @@
    limitations under the License.
 
 .LINK
-   https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released
+   https://community.emc.com/blogs/bottk/2015/03/30/labbuildrbeta
 .EXAMPLE
     PS E:\LABBUILDR> .\install-esxi.ps1 -Nodes 2 -Startnode 2 -Disks 3 -Disksize 146GB -subnet 10.0.0.0 -BuildDomain labbuildr -esxiso C:\sources\ESX\ESXi-5.5.0-1331820-labbuildr-ks.iso -ESXIMasterPath '.\VMware ESXi 5' -Verbose
 #>
