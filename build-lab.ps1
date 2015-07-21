@@ -526,6 +526,8 @@ $latest_sql  = 'SQL2014'
 $latest_master = '2012R2FallUpdate'
 $latest_sql_2012 = 'SQL2012SP2'
 $NW85_requiredJava = "jre-7u61-windows-x64"
+$latest_java8 = "jre-8u51-windows-x64.exe"
+$latest_java8uri = "http://javadl.sun.com/webapps/download/AutoDL?BundleId=107944"
 $SourceScriptDir = "$Builddir\Scripts\"
 $Adminuser = "Administrator"
 $Adminpassword = "Password123!"
@@ -1075,6 +1077,7 @@ switch ($PsCmdlet.ParameterSetName)
 					    $UpdateSource = "https://community.emc.com/$uri"
 					    $UpdateDestination = "$Updatepath\$Updatefile"
 					    get-update -UpdateSource $UpdateSource -Updatedestination $UpdateDestination
+                        Unblock-File -Path $UpdateDestination
 					    switch ($Updatefile)
                             {
                                 $vmxtoolkit
@@ -2207,37 +2210,49 @@ if ($nw.IsPresent) { workorder "Networker $nw_ver Node will be installed" }
 write-verbose "Checking Environment"
 if ($NW.IsPresent -or $NWServer.IsPresent)
 {
-    if (!$Scenarioname) {$Scenarioname = "nwserver";$Scenario = 8}
+    if (!$Scenarioname) 
+        {
+        $Scenarioname = "nwserver"
+        $Scenario = 8
+        }
 	if (!($Acroread = Get-ChildItem -Path $Sourcedir -Filter 'a*rdr*.exe'))
-	{
+	    {
 		status "Adobe reader not found ...."
-	}
+	    }
 	else
-	{
+	    {
 		$Acroread = $Acroread | Sort-Object -Property Name -Descending
 		$LatestReader = $Acroread[0].Name
 		write-verbose "Found Adobe $LatestReader"
-	}
+	    }
 	
 	##### Check Java
 	if (!($Java7 = Get-ChildItem -Path $Sourcedir -Filter 'jre-7*x64*'))
-	{
+	    {
 		write-warning "Java7 not found, please download from www.java.com"
-	}
+	    }
     else
         {
 	    $Java7 = $Java7 | Sort-Object -Property Name -Descending
 	    $LatestJava7 = $Java7[0].Name
         }
+
+    Write-Verbose "Asking for latest Java8"
+    get-labJava64 -DownloadDir $Sourcedir
+ 
 	if (!($Java8 = Get-ChildItem -Path $Sourcedir -Filter 'jre-8*x64*'))
-	{
-		Write-Warning "Java8 not found, please download from www.java.com"
-	}
+	    {
+		Write-Warning "Java8 not found, please try manual download"
+        break
+	    }
     else
         {
         $Java8 = $Java8 | Sort-Object -Property Name -Descending
 	    $LatestJava8 = $Java8[0].Name
+        Write-Verbose "Got $LatestJava8"
         }
+        
+         
 If ($nw_ver -gt "nw85.BR1")
             {
             if ($LatestJava7)

@@ -438,6 +438,29 @@ process
 end { }
 }
 
+function stop-LABScenario
+    {
+    [CmdletBinding(DefaultParametersetName = "1")]
+	    param (
+	    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 0)][ValidateSet('Exchange','SQL','DPAD','EMCVSA','hyper-V','ScaleIO','ESXi','labbuildr')]$Scenario,
+        [Parameter(ParameterSetName = "1", Mandatory = $false)][switch]$dcnode
+	
+	)
+begin
+	{
+
+	}
+process
+	{
+	get-vmx | where { $_.scenario -match $Scenario -and $_.vmxname -notmatch "dcnode" } | sort-object ActivationPreference  -Descending | stop-vmx
+        if ($dcnode)
+            {
+            get-vmx .\DCNODE | stop-vmx
+            }
+	}
+end { }
+}
+
 function start-LABPC
    {
     param ([String]$MAC= $(throw 'No MAC addressed passed, please pass as xx:xx:xx:xx:xx:xx'))
@@ -453,3 +476,63 @@ function start-LABPC
     [void] $UDPclient.Send($packet, $packet.Length)
     write "Wake-On-Lan magic packet sent to $MACAddrString, length $($packet.Length)"
  }
+
+
+ function get-labJava64
+    {
+    [CmdletBinding(HelpUri = "http://labbuildr.bottnet.de/modules/")]
+	param (
+	[Parameter(ParameterSetName = "1", Mandatory = $false)]$DownloadDir=$vmxdir
+    )
+    Write-warning "Asking for latest Java"
+    Try
+        {
+        $javaparse = Invoke-WebRequest https://www.java.com/inc/BrowserRedirect1.jsp?locale=de
+        }
+    catch [Exception] 
+        {
+        Write-Warning "Could not connect to java.com"
+        Write-Warning $_.Exception
+        break
+        }
+    
+    $Link = $javaparse.Links | Where-Object outerText -Match "Windows Offline \(64-Bit\)" | Select-Object href
+    If ($Link)
+        {
+        $latest_java8uri = $link.href
+        Write-Verbose "$($link.href)"
+        $Headers = Invoke-WebRequest  $Link.href -UseBasicParsing -Method Head
+        $File =  $Headers.BaseResponse | Select-Object responseUri
+        $Length = $Headers.Headers.'Content-Length'
+        $Latest_java8 = split-path -leaf $File.ResponseUri.AbsolutePath
+        Write-verbose "We found $latest_java8 online"
+        if (!(Test-Path "$DownloadDir\$Latest_java8"))
+            {
+            Write-Verbose "Downloading $Latest_java8"
+            Try
+                {
+                Invoke-WebRequest "$latest_java8uri" -OutFile "$DownloadDir\$latest_java8" -TimeoutSec 60
+                }
+            catch [Exception] 
+                {
+                Write-Warning "Could not DOWNLOAD FROM java.com"
+                Write-Warning $_.Exception
+                break
+                } 
+            if ( (Get-ChildItem $DownloadDir\$Latest_java8).length -ne $Length )
+                {
+                Write-Warning "Invalid FileSize, must be $Length, Deleting Download File"
+                Remove-Item $DownloadDir\$Latest_java8 -Force
+                break
+                }
+            }
+        else
+            {
+            Write-Warning "$Latest_java8 already exists in $DownloadDir"
+            }
+            $object = New-Object psobject
+	        $object | Add-Member -MemberType NoteProperty -Name LatestJava8 -Value $Latest_java8
+	        $object | Add-Member -MemberType NoteProperty -Name LatestJava8File -Value (Join-Path $DownloadDir $Latest_java8)
+            Write-Output $object
+        }
+    }
