@@ -24,14 +24,20 @@
 #>
 [CmdletBinding()]
 Param(
+
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$Defaults,
-[Parameter(ParameterSetName = "defaults", Mandatory=$false)]$viprmaster = "vipr-2.2.1.0.1106",
+[Parameter(ParameterSetName = "defaults", Mandatory=$false)][ValidateSet("vipr-2.3.0.0.828","vipr-2.2.1.0.1106")]$viprmaster = "vipr-2.3.0.0.828",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
+
 )
 
 $targetname = "vipr1"
-$ViprURL = "ftp://ftp.emc.com/ViPR/ViPR_Controller_Download.zip"
-$viprmaster = "vipr-2.2.1.0.1106"
+
+
+# $viprmaster = "vipr-2.2.1.0.1106"
+$Viprver = $viprmaster.Replace("vipr-","")
+Write-Verbose $Viprver
+$ViprMajor = $Viprver.Substring(0,3)
 Measure-Command {
 If ($Defaults.IsPresent)
     {
@@ -42,12 +48,18 @@ If ($Defaults.IsPresent)
      $Sourcedir = $labdefaults.Sourcedir
      $Defaultgateway = $labdefaults.DefaultGateway
      }
+else
+    {
+    $subnet = "192.168.2.0"
+    }
 
 if (!(test-path $Sourcedir))
     {
     Write-Warning " $Sourcedir not found. we need a Valid Directory for sources specified with set-labsources"
     exit
     }
+
+
 
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
@@ -61,15 +73,6 @@ if (get-vmx $targetname)
     Break
     }
 
-if ($gateway)
-    {
-    $defaultgateway = "$subnet.103"
-    }
-    else
-    {
-    $defaultgateway = "$subnet.9"
-    }
-
 $Disks = ('disk1','disk2','disk5')
 $masterpath = "$PSScriptRoot\$viprmaster"
 $Missing = @()
@@ -77,28 +80,42 @@ foreach ($Disk in $Disks)
     {
     if (!(Test-Path -Path "$masterpath\*$Disk.vmdk"))
         {
-        if (!(Test-Path "$Sourcedir\ViPRC*\vipr*controller-1+0.ova"))
+        if (!(Test-Path "$Sourcedir\ViPR*$ViprMajor*\vipr*controller-1+0.ova"))
             {
-            Write-Warning "Vipr OVA Not Found, we try for Zip Package in Sources"
-            if (!(Test-Path "$Sourcedir\*vipr*down*.zip"))
+            Write-Warning "Vipr OVA for $Viprver not Found, we try for Zip Package in Sources"
+            if (!(Test-Path "$Sourcedir\$viprmaster.zip"))
                 {
                 Write-Warning "Vipr Controller Download Package not found
                                we will try download"
                 
+                Switch ($Viprver)
+                {
+            "2.2.1.0.1106"
+                {
+                $ViprURL = "ftp://ftp.emc.com/ViPR/ViPR_Controller_Download.zip"
                 $Zippackage = Split-Path -Leaf $ViprURL
-                Get-LABFTPFile -Source $ViprURL -Defaultcredentials -Target $Sourcedir\$Zippackage -Verbose
+                Get-LABFTPFile -Source $ViprURL -Defaultcredentials -Target "$Sourcedir\$viprmaster.zip" -Verbose
+
                 }
-            $Zipfiles = Get-ChildItem "$Sourcedir\*vipr*down*.zip"
+            "2.3.0.0.828"
+                {
+                $ViprURL = "https://downloads.emc.com/emc-com/usa/ViPR/ViPR_Controller_Download.zip"
+                Start-BitsTransfer -Source $ViprURL -Destination "$Sourcedir\$viprmaster.zip" -Verbose
+                }
+            }
+
+             }
+            $Zipfiles = Get-ChildItem "$Sourcedir\$viprmaster.zip"
             $Zipfiles = $Zipfiles| Sort-Object -Property Name -Descending
 		    $LatestZip = $Zipfiles[0].FullName
 	        write-verbose "We are going to extract $LatestZip now"    	
             Expand-LABZip -zipfilename $LatestZip -destination $Sourcedir
             }
-            $Viprova = Get-ChildItem "$Sourcedir\ViPRC*\vipr*controller-1+0.ova" -ErrorAction SilentlyContinue
+            $Viprova = Get-ChildItem "$Sourcedir\ViPR*$ViprMajor*\$($viprmaster)-controller-1+0.ova" -ErrorAction SilentlyContinue
             $Viprova = $Viprova| Sort-Object -Property Name -Descending
 		    $LatestViprOVA = $Viprova[0].FullName
             $LatestVipr = $Viprova[0].Name.Replace("-controller-1+0.ova","")
-            $LatestViprLic = Get-ChildItem -Path "$Sourcedir\ViPRC*\*" -Filter *.lic
+            $LatestViprLic = Get-ChildItem -Path "$Sourcedir\ViPRC*$ViprMajor*\*" -Filter *.lic
             Write-Warning "We found $LatestVipr"
             $masterpath = "$Sourcedir\$LatestVipr"
             if (!$LatestViprOVA)
@@ -178,7 +195,6 @@ $ovfenv = '<?xml version="1.0" encoding="UTF-8"?>
          <Property oe:key="network_gateway" oe:value="'+$defaultgateway+'"/>
          <Property oe:key="network_gateway6" oe:value="::0"/>
          <Property oe:key="network_netmask" oe:value="255.255.255.0"/>
-         <Property oe:key="network_prefix_length" oe:value="24"/>
          <Property oe:key="network_vip" oe:value="'+$subnet+'.9"/>
          <Property oe:key="network_vip6get" oe:value="::0"/>
          <Property oe:key="node_count" oe:value="1"/>
@@ -209,8 +225,7 @@ $vmx | Start-VMX
 Write-Host -ForegroundColor Yellow "
 Successfully Deployed $viprmaster
 wait a view minutes for storageos to be up and running
-point your browser to https://vipr1 and follow the wizard steps
+point your browser to https://$subnet.9 and follow the wizard steps
 The License File can be found in $masterpath
 "
-
 }
