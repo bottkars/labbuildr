@@ -102,7 +102,30 @@ foreach ($Disk in $Disks)
             "2.3.0.0.828"
                 {
                 $ViprURL = "https://downloads.emc.com/emc-com/usa/ViPR/ViPR_Controller_Download.zip"
-                Start-BitsTransfer -Source $ViprURL -Destination "$Sourcedir\$viprmaster.zip" -Verbose
+                try
+                    {
+                    Invoke-WebRequest $ViprURL -UseBasicParsing -Method Head -Verbose
+                    }
+                catch [Exception] 
+                    {
+                    Write-Warning "Could not downlod $ViprURL. please download manually"
+                    Write-Warning $_.Exception
+                    exit
+                    }
+                
+                
+                # Start-BitsTransfer -Source $ViprURL -Destination "$Sourcedir\$viprmaster.zip" -Verbose
+                try
+                    {
+                    Write-Warning "Trying to download $ViprURL, this might tahe a while...."
+                    Invoke-WebRequest $ViprURL -OutFile "$Sourcedir\$viprmaster.zip" -Verbose
+                    }
+                catch [Exception] 
+                    {
+                    Write-Warning "Could not downlod $ViprURL. please download manually"
+                    Write-Warning $_.Exception
+                    exit
+                    }                    
                 }
             }
 
