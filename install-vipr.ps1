@@ -21,6 +21,8 @@
 .LINK
    https://community.emc.com/blogs/bottk/2015/05/04/labbuildrannouncement-unattended-vipr-controller-deployment-for-vmware-workstation
 .EXAMPLE
+ Download and Install ViPR 2.3:
+ .\install-vipr.ps1 -Defaults -viprmaster vipr-2.3.0.0.828
 #>
 [CmdletBinding()]
 Param(

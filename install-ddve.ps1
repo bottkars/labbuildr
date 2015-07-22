@@ -3,6 +3,15 @@
    .\install-ddve.ps1 -MasterPath F:\labbuildr\ddve-5.6.0.3-485123\
 .DESCRIPTION
   install-ddve only applies to internal Testers of the Virtual DDVe
+  install-ddve is a 2 Step Process.
+  Once DDVE is downloaded via feedbckcentral, run 
+  1.) ( only once )
+   .\install-ddve.ps1 -ovf G:\Sources\ddve-5.6.0.3-485123\ddve-5.6.0.3-485123.ovf
+   This creates a DDVE Master in your labbuildr directory.
+  2.)
+  .\install-ddve.ps1 -MasterPath .\ddve-5.6.0.3-485123\ -Defaults
+  This installs a DDVE using the defaults file and the just extracted ddve Master
+    
       
       Copyright 2014 Karsten Bott
 
@@ -18,7 +27,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://community.emc.com/blogs/bottk/
+   https://inside.emc.com/people/bottk/blog/2015/07/22/labbuildrnew-solutionpack-install-ddveps1
 .EXAMPLE
     Importing the ovf template
  .\install-ddve.ps1 -ovf G:\Sources\ddve-5.6.0.3-485123\ddve-5.6.0.3-485123.ovf
@@ -43,6 +52,9 @@
     VMXname   Status  Starttime
     -------   ------  ---------
     DDvENode1 Started 07.21.2015 12:27:11
+.EXAMPLE
+    to create a 2TB Node DDvENde2 run
+    .\install-ddve.ps1 -MasterPath .\ddve-5.5.1.4-464376  -Defaults -DDVESize 2TB -Verbose -Startnode 2 -Nodes 1
 #>
 [CmdletBinding()]
 Param(
@@ -60,13 +72,14 @@ Machine Configurations:
 =================================
 Size    | Memory  | CPU | Disk
 _____ __|_________|_____|_________
-  2TB   |  4GB    |  2  |  1*500GB
-  4TB   |  6GB    |  2  |  1*500GB
-  8TB   |  8GB    |  2  |  1*500GB
+0.5TB   |  6GB    |  2  |  1*500GB
+  2TB   |  6GB    |  2  |  4*500GB
+  4TB   |  8GB    |  2  |  8*500GB
+  8TB   |  16GB   |  2  |  16*500GB
 
 #>
 [Parameter(ParameterSetName = "defaults",Mandatory=$False)]
-[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateSet('2TB')][string]$DDVESize = "2TB",
+[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateSet('0.5TB','2TB','4TB','8TB')][string]$DDVESize = "2TB",
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
@@ -97,7 +110,7 @@ switch ($PsCmdlet.ParameterSetName)
             $mastername = (Split-Path -Leaf $ovf).Replace(".ovf","")
             }
         & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $ovf $PSScriptRoot #
-        Write-Output "Use install-ddve -Master $Mastername"
+        Write-Output "Use install-ddve -Masterpath .\$Mastername"
         }
 
      default
@@ -135,12 +148,19 @@ switch ($PsCmdlet.ParameterSetName)
             {
             write-verbose "Tweaking Base VMX"
             $config = Get-VMXConfig -config $MasterVMX.config
-            $config = $config -notmatch "scsi0.virtualDev"
-            $config += 'scsi0.virtualDev = "pvscsi"'
             $config = $config -notmatch "virtualhw.version"
             $config += 'virtualhw.version = "9"'
             $config = $config -notmatch 'scsi0:0.mode = "independent_persistent"'
             $config += 'scsi0:0.mode = "persistent"'
+            $config = $config -notmatch 'scsi0:1.mode = "independent_persistent"'
+            $config += 'scsi0:1.mode = "persistent"'
+            foreach ($scsi in 0..3)
+                {
+                $config = $config -notmatch "scsi$scsi.virtualDev"
+                $config += 'scsi'+$scsi+'.virtualDev = "pvscsi"'
+                $config = $config -notmatch "scsi$scsi.present"
+                $config += 'scsi'+$scsi+'.present = "true"'
+                }
             Set-Content -Path $MasterVMX.config -Value $config
             Write-verbose "Base snap does not exist, creating now"
             $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName Base
@@ -153,52 +173,131 @@ switch ($PsCmdlet.ParameterSetName)
                 {
                 write-verbose "Creating clone $Nodeprefix$node"
                 $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXlinkedClone -CloneName $Nodeprefix$node -Clonepath "$Builddir"
-                $SCSI= 0
                 switch ($DDvESize)
                     {
-                "2TB"
+                "0.5TB"
                     {
-                    Write-Verbose "2TB DDvE Selected"
+                    Write-Verbose "0.5TB DDvE Selected"
                     $NumDisks = 1
+                    $NumCrtl = 1
                     $Disksize = "500GB"
                     $memsize = 6044
                     $Numcpu = 2
                     }
+                "2TB"
+                    {
+                    Write-Verbose "2TB DDvE Selected"
+                    $NumDisks = 1
+                    $NumCrtl = 4
+                    $Disksize = "500GB"
+                    $memsize = 6044
+                    $Numcpu = 2
+                    }
+                "4TB"
+                    {
+                    Write-Verbose "4TB DDvE Selected"
+                    $NumDisks = 2
+                    $NumCrtl = 4
+                    $Disksize = "500GB"
+                    $memsize = 8192
+                    $Numcpu = 2
+                    }
+                "8TB"
+                    {
+                    Write-Verbose "8TB DDvE Selected"
+                    $NumDisks = 4
+                    $NumCrtl = 4
+                    $Disksize = "500GB"
+                    $memsize = 8192
+                    $Numcpu = 2
+                    }
 
             }
-            
+            $scsi = 0
             foreach ($LUN in (2..($NumDisks+1)))
-            {
-            $Diskname =  "SCSI$SCSI"+"_LUN$LUN"+"_$Disksize.vmdk"
-            Write-Verbose "Building new Disk $Diskname"
-            $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-            Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
-            $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
-            }
-        
-    Write-Verbose "Configuring NIC0"
-    $Netadater0 = $NodeClone | Set-VMXVnet -Adapter 0 -vnet vmnet2
-    Write-Verbose "Configuring NIC1"
-    $Netadater1 = $NodeClone | Set-VMXVnet -Adapter 1 -vnet vmnet2
-    $Netadater1connected = $NodeClone | Connect-VMXNetworkAdapter -Adapter 1
-    $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
-    Write-Verbose "Configuring Memory to $memsize"
-    $Memory = $NodeClone | Set-VMXmemory -MemoryMB $memsize
-    Write-Verbose "Configuring $Numcpu CPUs"
-    $Processor = $nodeclone | Set-VMXprocessor -Processorcount $Numcpu
-    Write-Verbose "Starting VM $($NodeClone.Clonename)"
-    $NodeClone | start-vmx
-    if ($configure.IsPresent)
-    {
-    $ip="$subnet.2$Node"
-    }
-    }
-    else
-        {
-        Write-Warning "Node $Nodeprefix$node already exists"
-        }
+                    {
+                    $Diskname =  "SCSI$SCSI"+"_LUN$LUN"+"_$Disksize.vmdk"
+                    Write-Verbose "Building new Disk $Diskname"
+                    $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
+                    Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
+                    $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
+                    }
 
-}
-}
+            if ($NumCrtl -gt 1)
+                {
+                foreach ($SCSI in 1..($NumCrtl-1))
+                    {
+                    foreach ($LUN in (0..($NumDisks-1)))
+                        {
+                        $Diskname =  "SCSI$SCSI"+"_LUN$LUN"+"_$Disksize.vmdk"
+                        Write-Verbose "Building new Disk $Diskname"
+                        $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
+                        Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
+                        $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
+                        }
+                    }
+                }
+        
+            Write-Verbose "Configuring NIC0"
+            $Netadater0 = $NodeClone | Set-VMXVnet -Adapter 0 -vnet $VMnet
+            Write-Verbose "Configuring NIC1"
+            # $Netadater1 = $NodeClone | Set-VMXVnet -Adapter 1 -vnet vmnet8
+            $Netadater1 = $NodeClone | Set-VMXNetworkAdapter -Adapter 1 -ConnectionType nat -AdapterType vmxnet3
+            $Netadater1connected = $NodeClone | Connect-VMXNetworkAdapter -Adapter 1
+            $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
+            Write-Verbose "Configuring Memory to $memsize"
+            $Memory = $NodeClone | Set-VMXmemory -MemoryMB $memsize
+            Write-Verbose "Configuring $Numcpu CPUs"
+            $Processor = $nodeclone | Set-VMXprocessor -Processorcount $Numcpu
+            Write-Verbose "Starting VM $($NodeClone.Clonename)"
+            $NodeClone | start-vmx
+            if ($configure.IsPresent)
+                {
+                $ip="$subnet.2$Node"
+                }
+            }
+            else
+            {
+                Write-Warning "Node $Nodeprefix$node already exists"
+            }
+
+        }
+    Write-Warning "
+    Please login with 
+    username:sysadmin 
+    password: abc123
+
+
+    When the Wizard starts, press Ctrl-C
+
+    enter 'storage add dev3'
+    enter 'filesys create'
+    enter 'filesys enable'
+    enter 'adminaccess enable http' ( for DDVE 5.5.1 and above )    
+    enter 'config setup'
+
+    Answer yes for GUI Wizard
+    Answer yes for Configure Network
+    Answer No for DHCP
+    Enter $Nodeprefix$Node.$BuildDomain as hostname
+    Enter $BuildDomain as DNSDomainname
+    (The orde of the next command and Devicenames may vary from Version to Version )
+    Enter yes for Enable Ethernet eth1
+    Enter yes for DHCP
+    Enter Yes for Enable Ethernet Port ethV0
+    Enter NO for DHCP
+    Enter $subnet.2$Node as IP Address
+    Leave Subnet to default
+    
+    Enter $DefaultGateway for Gateway IP Address
+    Leave IPv6 Gateway Blank
+    Enter $subnet.10 as DNS Server
+    Enter Save to Save
+     
+    NOTE !!!!!!
+    +++++++++++++DDVE 5.5.1.4 and 5.6 ( feedbackcentral ) do not have WEB UI enabled by default ! +++++++++++++
+    +++++++++++++make sure you did 'adminaccess enable http' from above !!!!                      +++++++++++++
+    "
+    }# end default
 }
 
