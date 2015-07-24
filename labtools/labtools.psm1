@@ -478,7 +478,66 @@ function start-LABPC
  }
 
 
- function get-labJava64
+function get-LABHttpFile
+ {
+    [CmdletBinding(DefaultParametersetName = "1")]
+	param (
+	[Parameter(ParameterSetName = "1", Mandatory = $true,Position = 0)]$SourceURL,
+    [Parameter(ParameterSetName = "1", Mandatory = $false)]$TargetFile
+    )
+
+
+begin
+{}
+process
+{
+if (!$TargetFile)
+    {
+    $TargetFile = Split-Path -Leaf $SourceURL
+    }
+try
+                    {
+                    $Request = Invoke-WebRequest $SourceURL -UseBasicParsing -Method Head
+                    }
+                catch [Exception] 
+                    {
+                    Write-Warning "Could not downlod $SourceURL"
+                    Write-Warning $_.Exception
+                    break
+                    }
+                
+                $Length = $request.Headers.'content-length'
+                try
+                    {
+                    # $Size = "{0:N2}" -f ($Length/1GB)
+                    # Write-Warning "
+                    # Trying to download $SourceURL 
+                    # The File size is $($size)GB, this might take a while....
+                    # Please do not interrupt the download"
+                    Invoke-WebRequest $SourceURL -OutFile $TargetFile
+                    }
+                catch [Exception] 
+                    {
+                    Write-Warning "Could not downlod $SourceURL. please download manually"
+                    Write-Warning $_.Exception
+                    break
+                    }
+                if ( (Get-ChildItem  $TargetFile).length -ne $Length)
+                    {
+                    Write-Warning "File size does not match"
+                    Remove-Item $TargetFile -Force
+                    break
+                    }                       
+
+
+}
+end
+{}
+}                 
+
+
+
+ function get-LABJava64
     {
     [CmdletBinding(HelpUri = "http://labbuildr.bottnet.de/modules/")]
 	param (

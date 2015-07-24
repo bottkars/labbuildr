@@ -72,10 +72,15 @@ param (
     #>
 	[Parameter(ParameterSetName = "Hyperv")][switch][alias('hv')]$HyperV,
     <# 
-    Exchange Scenario: Installs a Standalone or DAG Exchange 2013 Installation.
+    E15 Scenario: Installs a Standalone or DAG Exchange 2013 Installation.
     IP-Addresses: .110 - .119
     #>
-	[Parameter(ParameterSetName = "Exchange")][switch][alias('ex')]$Exchange,
+	[Parameter(ParameterSetName = "E15",Mandatory = $true)][switch][alias('ex15')]$Exchange2013,
+    <# 
+    Exchange16 Scenario: Installs a Standalone or DAG Exchange 2016 Installation.
+    IP-Addresses: .120 - .129
+    #>
+	[Parameter(ParameterSetName = "E16",Mandatory = $true)][switch][alias('ex16')]$Exchange2016,
     <#
     Selects the Sharepoint
     IP-Addresses: .140
@@ -123,24 +128,38 @@ param (
     <#
     Determines if Exchange should be installed in a DAG
     #>
-	[Parameter(ParameterSetName = "Exchange", Mandatory = $false)][switch]$DAG,
+    [Parameter(ParameterSetName = "E16", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E15", Mandatory = $false)][switch]$DAG,
     <# Specify the Number of Exchange Nodes#>
-	[Parameter(ParameterSetName = "Exchange", Mandatory = $false)][ValidateRange(1, 10)][int][alias('exn')]$EXNodes = "1",
+    [Parameter(ParameterSetName = "E16", Mandatory = $false)]
+    [Parameter(ParameterSetName = "E15", Mandatory = $false)][ValidateRange(1, 10)][int][alias('exn')]$EXNodes = "1",
     <# Specify the Starting exchange Node#>
-	[Parameter(ParameterSetName = "Exchange", Mandatory = $false)][ValidateRange(1, 9)][int][alias('exs')]$EXStartNode = "1",
-	<#
+    [Parameter(ParameterSetName = "E16", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E15", Mandatory = $false)][ValidateRange(1, 9)][int][alias('exs')]$EXStartNode = "1",
+    <#
+    Determines Exchange CU Version to be Installed
+    Valid Versions are:
+    'Preview1'
+    Default is latest
+    CU Location is [Driveletter]:\sources\e2016[cuver], e.g. c:\sources\e2016Preview1
+    #>
+	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+    [ValidateSet('Preview1')]$e16_cu,
+<#
     Determines Exchange CU Version to be Installed
     Valid Versions are:
     'cu1','cu2','cu3','cu4','sp1','cu6','cu7'
     Default is latest
     CU Location is [Driveletter]:\sources\e2013[cuver], e.g. c:\sources\e2013cu7
     #>
-	[Parameter(ParameterSetName = "Exchange", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
     [ValidateSet('cu1', 'cu2', 'cu3', 'sp1','cu5','cu6','cu7','cu8','cu9')]$ex_cu,
     <# schould we prestage users ? #>	
-    [Parameter(ParameterSetName = "Exchange", Mandatory = $false)][switch]$nouser,
+    [Parameter(ParameterSetName = "E16", Mandatory = $false)]
+    [Parameter(ParameterSetName = "E15", Mandatory = $false)][switch]$nouser,
     <# Install a DAG without Management IP Address ? #>
-	[Parameter(ParameterSetName = "Exchange", Mandatory = $false)][switch]$DAGNOIP,
+    [Parameter(ParameterSetName = "E16", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E15", Mandatory = $false)][switch]$DAGNOIP,
     <# Specify Number of Spaces Hosts #>
     [Parameter(ParameterSetName = "Spaces", Mandatory = $false)][ValidateRange(1, 2)][int]$SpaceNodes = "1",
     <# Specify Number of Hyper-V Hosts #>
@@ -192,7 +211,8 @@ param (
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
-	[Parameter(ParameterSetName = "Exchange", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+    [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
     [Parameter(ParameterSetName = "DConly", Mandatory = $false)]
@@ -204,7 +224,8 @@ param (
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
-	[Parameter(ParameterSetName = "Exchange", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+    [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
     [Parameter(ParameterSetName = "DConly", Mandatory = $false)]
@@ -224,7 +245,8 @@ param (
 <# select vmnet, number from 1 to 19#>                                        	
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
-	[Parameter(ParameterSetName = "Exchange", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+    [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
     [Parameter(ParameterSetName = "DConly", Mandatory = $false)]
@@ -237,7 +259,8 @@ param (
 <# This stores the defaul config in defaults.xml#>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
-	[Parameter(ParameterSetName = "Exchange", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+    [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
 	[Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
     [Parameter(ParameterSetName = "DConly", Mandatory = $false)]
@@ -264,7 +287,8 @@ param (
 #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
-	[Parameter(ParameterSetName = "Exchange", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+    [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
 	[Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
     [Parameter(ParameterSetName = "DConly", Mandatory = $false)]
@@ -302,7 +326,8 @@ Machine Sizes
 <# Specify your own Domain name#>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
-	[Parameter(ParameterSetName = "Exchange", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+    [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
 	[Parameter(ParameterSetName = "DConly", Mandatory = $false)]
     [Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
@@ -320,7 +345,8 @@ Machine Sizes
     <# install Networker Modules for Microsoft #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
-	[Parameter(ParameterSetName = "Exchange", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+    [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
@@ -331,7 +357,8 @@ Version Of Networker Modules
 #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
-	[Parameter(ParameterSetName = "Exchange", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+    [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
@@ -341,7 +368,8 @@ $nmm_ver,
 <# Indicates to install Networker Server with Scenario #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
-	[Parameter(ParameterSetName = "Exchange", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+    [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
 	[Parameter(ParameterSetName = "DConly", Mandatory = $false)]
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
@@ -357,7 +385,8 @@ mus be extracted to [sourcesdir]\[nw_ver], ex. c:\sources\nw82
 #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
-	[Parameter(ParameterSetName = "Exchange", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+    [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
 	[Parameter(ParameterSetName = "DConly", Mandatory = $false)]
     [Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
@@ -374,7 +403,8 @@ This should be used in Distributed scenario´s
  #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
-	[Parameter(ParameterSetName = "Exchange", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+    [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
 	[Parameter(ParameterSetName = "DConly", Mandatory = $false)]
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
@@ -386,7 +416,8 @@ This should be used in Distributed scenario´s
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
-	[Parameter(ParameterSetName = "Exchange", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+    [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "DConly", Mandatory = $false)]
     [Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
@@ -400,7 +431,8 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
 #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
-	[Parameter(ParameterSetName = "Exchange", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+    [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
 	[Parameter(ParameterSetName = "DConly", Mandatory = $false)]
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
@@ -413,7 +445,8 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
 <# Specify your IPv6 ULA Prefix, consider https://www.sixxs.net/tools/grh/ula/  #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
-	[Parameter(ParameterSetName = "Exchange", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+    [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
 	[Parameter(ParameterSetName = "DConly", Mandatory = $false)]
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
@@ -426,7 +459,8 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
 <# Specify your IPv6 ULA Prefix Length, #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
-	[Parameter(ParameterSetName = "Exchange", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+    [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
 	[Parameter(ParameterSetName = "DConly", Mandatory = $false)]
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
@@ -444,7 +478,8 @@ Sources should be populated from a bases sources.zip
 	#[Parameter(ParameterSetName = "default", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
-	[Parameter(ParameterSetName = "Exchange", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+    [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
 	[Parameter(ParameterSetName = "DConly", Mandatory = $false)]
     [Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
@@ -456,7 +491,8 @@ Sources should be populated from a bases sources.zip
 <# Turn on Logging to Console#>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
-	[Parameter(ParameterSetName = "Exchange", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+    [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
 	[Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
     [Parameter(ParameterSetName = "DConly", Mandatory = $false)]
@@ -521,6 +557,7 @@ $major = "4.0"
 $latest_ScaleIO = '1.32-402.1'
 $latest_nmm = 'nmm8212'
 $latest_nw = 'nw8213'
+$latest_e16 = 'Preview1'
 $latest_ex = 'cu9'
 $latest_sql  = 'SQL2014'
 $latest_master = '2012R2FallUpdate'
@@ -542,7 +579,6 @@ $DCNODE = "DCNODE"
 $NWNODE = "NWSERVER"
 $SPver = "SP2013SP1fndtn"
 $SPPrefix = "SP2013"
-$EX_Version = "E2013"
 $vmxtoolkit = "vmxtoolkit.zip"
 $labbuildr = "labbuildr4.zip"
 $Updatefiles = ($labbuildr,$vmxtoolkit)
@@ -1203,6 +1239,7 @@ if ($defaults.IsPresent)
         if (!$Master) {$master = $Default.config.master}
         if (!$SQLVER) {$sqlver = $Default.config.sqlver }
         if (!$ex_cu | Out-Null) {$ex_cu = $Default.config.ex_cu}
+        if (!$e16_cu | Out-Null) {$e16_cu = $Default.config.ex_cu}
         if (!$ScaleIOVer | Out-Null) {$ScaleIOVer = $Default.config.scaleiover}
         if (!$vmnet) {$vmnet = $Default.config.vmnet}
         # $NW = $Default.config.nw
@@ -1242,6 +1279,7 @@ if (!$nmm_ver) {$nmm_ver = $latest_nmm}
 if (!$nw_ver) {$nw_ver = $latest_nw}
 if (!$SQLVER) {$SQLVER = $latest_sql}
 if (!$ex_cu) {$ex_cu = $latest_ex}
+if (!$e16_cu) {$e16_cu = $latest_e16}
 if (!$Master) {$Master = $latest_master}
 if (!$vmnet) {$vmnet = "vmnet2"}
 write-verbose "After defaults !!!! "
@@ -1290,6 +1328,7 @@ $config += ("<nw_ver>$nw_ver</nw_ver>")
 $config += ("<master>$Master</master>")
 $config += ("<sqlver>$SQLVER</sqlver>")
 $config += ("<ex_cu>$ex_cu</ex_cu>")
+$config += ("<e16_cu>$e16_cu</e16_cu>")
 $config += ("<vmnet>$VMnet</vmnet>")
 $config += ("<BuildDomain>$BuildDomain</BuildDomain>")
 $config += ("<MySubnet>$MySubnet</MySubnet>")
@@ -1418,9 +1457,15 @@ $Sourcever = @()
 # $Sourcever = @("$nw_ver","$nmm_ver","E2013$ex_cu","$WAIKVER","$SQL2012R2")
 if (!($DConly.IsPresent))
 {
-	if ($Exchange.IsPresent -or $DAG.IsPresent) 
+	if ($Exchange2013.IsPresent) 
         {
-        # $Sourcever += "$EX_Version$ex_cu"
+        $EX_Version = "E2013"
+        $Scenarioname = "Exchange"
+        $Scenario = 1
+        }
+    if ($Exchange2016.IsPresent) 
+        {
+        $EX_Version = "E2016"
         $Scenarioname = "Exchange"
         $Scenario = 1
         }
@@ -1471,10 +1516,10 @@ status "# EMC Integration for Networker, OneFS, Avamar, DD, ScaleIO and other VA
 status "# Idea and Scripting by @HyperV_Guy                                                                                   #"
 status $Commentline
 workorder "Building Proposed Workorder"
-If ($DAG.IsPresent)
-    {
-    $Exchange = $True
-    }
+#If ($DAG.IsPresent)
+#    {
+#    $Exchange = $True
+#    }
 if ($Blanknode.IsPresent)
 {
 	workorder "We are going to Install $BlankNodes Blank Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
@@ -1533,9 +1578,8 @@ if ($NWServer.IsPresent -or $NW.IsPresent)
         }
 
     }
-if ($Exchange.IsPresent)
+if ($Exchange2013.IsPresent)
 {
-
     $Prereqdir = "Attachments"
     $attachments = (
     "http://www.cisco.com/c/dam/en/us/solutions/collateral/data-center-virtualization/unified-computing/fle_vmware.pdf",
@@ -1567,7 +1611,7 @@ if ($Exchange.IsPresent)
     
     $Prereqdir = $EX_Version+"prereq"
 
-    Write-Verbose "We are now going to Test Exchange Prereqs"
+    Write-Verbose "We are now going to Test E15 Prereqs"
     $DownloadUrls = (
 		        "http://download.microsoft.com/download/A/A/3/AA345161-18B8-45AE-8DC8-DA6387264CB9/filterpack2010sp1-kb2460041-x64-fullfile-en-us.exe",
                 "http://download.microsoft.com/download/0/A/2/0A28BBFA-CBFA-4C03-A739-30CCA5E21659/FilterPack64bit.exe",
@@ -1581,7 +1625,7 @@ if ($Exchange.IsPresent)
         }
         else
         {
-        Write-Verbose "Creating Sourcedir for Exchange Prereqs"
+        Write-Verbose "Creating Sourcedir for E15 Prereqs"
         New-Item -ItemType Directory -Path $Sourcedir\$Prereqdir | Out-Null
         }
 
@@ -1601,7 +1645,8 @@ if ($Exchange.IsPresent)
         
         }
     
-    if (!(test-path  "$Sourcedir\$Prereqdir\ExchangeMapiCdo.msi"))
+     Write-Verbose "Testing $Sourcedir\$Prereqdir\ExchangeMapiCdo\ExchangeMapiCdo.msi"      
+      if (!(test-path  "$Sourcedir\$Prereqdir\ExchangeMapiCdo\ExchangeMapiCdo.msi"))
         {
         Write-Verbose "Extracting MAPICDO"
         Start-Process -FilePath "$Sourcedir\$Prereqdir\ExchangeMapiCdo.EXE" -ArgumentList "/x:$Sourcedir\$Prereqdir /q" -Wait
@@ -1609,11 +1654,11 @@ if ($Exchange.IsPresent)
 
     if (Test-Path $Sourcedir/$EX_Version$ex_cu/setup.exe)
         {
-        Write-Verbose "Exchange $ex_cu Found"
+        Write-Verbose "E15 $ex_cu Found"
         }
         else
         {
-        Write-Warning "We need to Extract Exchange $ex_cu, this may take a while"
+        Write-Warning "We need to Extract E15 $ex_cu, this may take a while"
         # New-Item -ItemType Directory -Path $Sourcedir\$EX_Version$ex_cu | Out-Null
         # }
         Switch ($ex_cu)
@@ -1661,7 +1706,7 @@ if ($Exchange.IsPresent)
         $FileName = Split-Path -Leaf -Path $Url
         if (!(test-path  $Sourcedir\$FileName))
             {
-            "We need to Download Exchange $ex_cu, this may take a while"
+            "We need to Download E15 $ex_cu, this may take a while"
             if (!(get-prereq -DownLoadUrl $URL -destination $Sourcedir\$FileName))
                 { write-warning "Error Downloading file $Url, Please check connectivity"
                 exit
@@ -1679,13 +1724,136 @@ if ($Exchange.IsPresent)
             {
             Write-Verbose "Found attachments"
             }
-	    workorder "We are going to Install Exchange 2013 $ex_cu with Nodesize $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
+	    workorder "We are going to Install E15 2013 $ex_cu with Nodesize $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
 	    if ($DAG.IsPresent)
 	        {
 		    workorder "We will form a $EXNodes-Node DAG"
 	        }
 
 }
+
+if ($Exchange2016.IsPresent)
+{
+    $Prereqdir = "Attachments"
+    $attachments = (
+    "http://www.cisco.com/c/dam/en/us/solutions/collateral/data-center-virtualization/unified-computing/fle_vmware.pdf",
+    "http://www.emc.com/collateral/white-papers/h12234-emc-integration-for-microsoft-private-cloud-wp.pdf",
+    "http://www.emc.com/collateral/software/data-sheet/h2257-networker-ds.pdf",
+    "http://www.emc.com/collateral/software/data-sheet/h2479-networker-app-modules-ds.pdf",
+    "http://www.emc.com/collateral/software/data-sheet/h4525-networker-ms-apps-ds.pdf",
+    "http://www.emc.com/collateral/handouts/h14152-cloudboost-handout.pdf",
+    "http://www.emc.com/collateral/software/data-sheet/h2257-networker-ds.pdf",
+    "http://www.emc.com/collateral/software/data-sheet/h3979-networker-dedupe-ds.pdf"
+    )
+    
+    if (!(Test-Path $Sourcedir\$Prereqdir)){New-Item -ItemType Directory -Path $Sourcedir\$Prereqdir}
+     foreach ($URL in $attachments)
+        {
+        $FileName = Split-Path -Leaf -Path $Url
+        if (!(test-path  $Sourcedir\$Prereqdir\$FileName))
+            {
+            Write-Verbose "$FileName not found, trying Download"
+            if (!(get-prereq -DownLoadUrl $URL -destination $Sourcedir\$Prereqdir\$FileName))
+                { write-warning "Error Downloading file $Url, Please check connectivity"
+                  Write-Warning "Creating Dummy File"
+                  New-Item -ItemType file -Path "$Sourcedir\$Prereqdir\$FileName"
+                }
+            }
+
+        
+        }
+    
+    $Prereqdir = $EX_Version+"prereq"
+
+    Write-Verbose "We are now going to Test $EX_Version Prereqs"
+    $DownloadUrls = (
+		        "http://download.microsoft.com/download/E/2/1/E21644B5-2DF2-47C2-91BD-63C560427900/NDP452-KB2901907-x86-x64-AllOS-ENU.exe",
+#                "http://download.microsoft.com/download/A/A/3/AA345161-18B8-45AE-8DC8-DA6387264CB9/filterpack2010sp1-kb2460041-x64-fullfile-en-us.exe",
+#                "http://download.microsoft.com/download/0/A/2/0A28BBFA-CBFA-4C03-A739-30CCA5E21659/FilterPack64bit.exe",
+                "http://download.microsoft.com/download/2/C/4/2C47A5C1-A1F3-4843-B9FE-84C0032C61EC/UcmaRuntimeSetup.exe",
+                "http://download.microsoft.com/download/6/2/D/62DFA722-A628-4CF7-A789-D93E17653111/ExchangeMapiCdo.EXE"
+                
+                ) 
+    if (Test-Path -Path "$Sourcedir\$Prereqdir")
+        {
+        Write-Verbose "$EX_Version Sourcedir Found"
+        }
+        else
+        {
+        Write-Verbose "Creating Sourcedir for $EX_Version Prereqs"
+        New-Item -ItemType Directory -Path $Sourcedir\$Prereqdir | Out-Null
+        }
+
+
+    foreach ($URL in $DownloadUrls)
+        {
+        $FileName = Split-Path -Leaf -Path $Url
+        if (!(test-path  $Sourcedir\$Prereqdir\$FileName))
+            {
+            Write-Verbose "$FileName not found, trying Download"
+            if (!(get-prereq -DownLoadUrl $URL -destination $Sourcedir\$Prereqdir\$FileName))
+                { write-warning "Error Downloading file $Url, Please check connectivity"
+                exit
+                }
+            }
+
+        
+        }
+      Write-Verbose "Testing $Sourcedir\$Prereqdir\ExchangeMapiCdo\ExchangeMapiCdo.msi"      
+      if (!(test-path  "$Sourcedir\$Prereqdir\ExchangeMapiCdo\ExchangeMapiCdo.msi"))
+        {
+        Write-Verbose "Extracting MAPICDO"
+        Start-Process -FilePath "$Sourcedir\$Prereqdir\ExchangeMapiCdo.EXE" -ArgumentList "/x:$Sourcedir\$Prereqdir /q" -Wait
+        }
+    write-verbose "Testing $Sourcedir/$EX_Version$e16_cu/setup.exe"
+    if (Test-Path "$Sourcedir/$EX_Version$e16_cu/setup.exe")
+        {
+        Write-Verbose "E16 $e16_cu Found"
+        }
+        else
+        {
+        Write-Warning "We need to Extract $EX_Version $e16_cu, this may take a while"
+        # New-Item -ItemType Directory -Path $Sourcedir\$EX_Version$ex_cu | Out-Null
+        # }
+        Switch ($e16_cu)
+
+            {
+                "Preview1"
+                {
+                $URL = "http://download.microsoft.com/download/D/F/7/DF7BC677-B1BE-45FC-AD48-B86C917100D8/Exchange2016-x64-Preview.exe"
+                }
+
+            }
+
+        $FileName = Split-Path -Leaf -Path $Url
+        if (!(test-path  $Sourcedir\$FileName))
+            {
+            "We need to Download $EX_Version $e16_cu, this may take a while"
+            if (!(get-prereq -DownLoadUrl $URL -destination $Sourcedir\$FileName))
+                { write-warning "Error Downloading file $Url, Please check connectivity"
+                exit
+            }
+        }
+        Write-Verbose "Extracting $FileName"
+        Start-Process -FilePath "$Sourcedir\$FileName" -ArgumentList "/extract:$Sourcedir\$EX_Version$e16_cu /passive" -Wait
+            
+    } #end else
+    if (!(Test-Path $Sourcedir\attachments))
+        {
+         Write-Warning "attachments Directory not found. Please Create $Sourcedir\attachments and copy some Documents for Mail and Public Folder Deployment"
+            }
+        else
+            {
+            Write-Verbose "Found attachments"
+            }
+	    workorder "We are going to Install $EX_Version $e16_cu with Nodesize $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
+	    if ($DAG.IsPresent)
+	        {
+		    workorder "We will form a $EXNodes-Node DAG"
+	        }
+
+}
+
 
 if ($NMM.IsPresent) { debug "Networker Modules $nmm_ver will be intalled by User selection" }
 if ($Sharepoint.IsPresent)
@@ -2537,7 +2705,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 
 switch ($PsCmdlet.ParameterSetName)
 {
-	"Exchange"{
+	"E15"{
         # we need ipv4
         if ($AddressFamily -notmatch 'ipv4')
             { 
@@ -2549,7 +2717,7 @@ switch ($PsCmdlet.ParameterSetName)
         }
         if ($DAG.IsPresent)
             {
-            Write-Warning "Running Exchange Avalanche Install"
+            Write-Warning "Running E15 Avalanche Install"
 
             if ($DAGNOIP.IsPresent)
 			    {
@@ -2563,7 +2731,7 @@ switch ($PsCmdlet.ParameterSetName)
 		foreach ($EXNODE in ($EXStartNode..($EXNodes+$EXStartNode-1)))
             {
 			###################################################
-			# Setup Exchange Node
+			# Setup E15 Node
 			# Init
 			$Nodeip = "$IPv4Subnet.11$EXNODE"
 			$Nodename = "$EX_Version"+"N"+"$EXNODE"
@@ -2590,7 +2758,7 @@ switch ($PsCmdlet.ParameterSetName)
                 }
 		    test-dcrunning
 		    status $Commentline
-		    workorder "Creating Exchange Host $Nodename with IP $Nodeip in Domain $BuildDomain"
+		    workorder "Creating E15 Host $Nodename with IP $Nodeip in Domain $BuildDomain"
 		    $CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Exchange -Size $Exchangesize -Sourcedir $Sourcedir "
 		    ###################################################
 		    If ($CloneOK)
@@ -2606,11 +2774,11 @@ switch ($PsCmdlet.ParameterSetName)
 			domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $EXAddressFamiliy -AddOnfeatures $AddonFeatures
 			write-verbose "Setup Database Drives"
 			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script prepare-disks.ps1
-			write-verbose "Setup Exchange Prereqs"
+			write-verbose "Setup E15 Prereqs"
 			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-exchangeprereqs.ps1 -interactive
 			write-verbose "Setting Power Scheme"
 			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script powerconf.ps1 -interactive
-			write-verbose "Installing Exchange, this may take up to 60 Minutes ...."
+			write-verbose "Installing E15, this may take up to 60 Minutes ...."
 			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-exchange.ps1 -interactive -nowait -Parameter "$CommonParameter -ex_cu $ex_cu"
             }
             }
@@ -2622,7 +2790,7 @@ switch ($PsCmdlet.ParameterSetName)
             $CloneVMX = (get-vmx $Nodename).config
             # 
 			test-user -whois Administrator
-            status "Waiting for Pass 4 (Exchange Installed) for $Nodename"
+            status "Waiting for Pass 4 (E15 Installed) for $Nodename"
             #$EXSetupStart = Get-Date
 			    While ($FileOK = (&$vmrun -gu $BuildDomain\Administrator -gp Password123! fileExistsInGuest $CloneVMX c:\$Script_dir\exchange.pass) -ne "The file exists.")
 			    {
@@ -2635,7 +2803,7 @@ switch ($PsCmdlet.ParameterSetName)
                          Write-Verbose $ToolState.State
                         }
                     until ($ToolState.state -match "running")
-            write-Verbose "Performing Exchange Post Install Tasks:"
+            write-Verbose "Performing E15 Post Install Tasks:"
     		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script configure-exchange.ps1 -interactive
      
     
@@ -2682,6 +2850,157 @@ switch ($PsCmdlet.ParameterSetName)
         }
 } #End Switchblock Exchange
 	
+	"E16"{
+        Write-Verbose "Starting $EX_Version $e16_cu Setup"
+        # we need ipv4
+        if ($AddressFamily -notmatch 'ipv4')
+            { 
+            $EXAddressFamiliy = 'IPv4IPv6'
+            }
+        else
+        {
+        $EXAddressFamiliy = $AddressFamily
+        }
+        if ($DAG.IsPresent)
+            {
+            Write-Warning "Running e16 Avalanche Install"
+
+            if ($DAGNOIP.IsPresent)
+			    {
+				$DAGIP = ([System.Net.IPAddress])::None
+			    }
+			else
+                {
+                $DAGIP = "$IPv4subnet.110"
+                }
+        }
+		foreach ($EXNODE in ($EXStartNode..($EXNodes+$EXStartNode-1)))
+            {
+			###################################################
+			# Setup e16 Node
+			# Init
+			$Nodeip = "$IPv4Subnet.12$EXNODE"
+			$Nodename = "$EX_Version"+"N"+"$EXNODE"
+			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+			$EXLIST += $CloneVMX
+		    $SourceScriptDir = "$Builddir\$Script_dir\$EX_Version\"
+		    # $Exprereqdir = "$Sourcedir\EXPREREQ\"
+            $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features"
+            # $AddonFeatures = "$AddonFeatures, RSAT-DNS-SERVER, Desktop-Experience, RPC-over-HTTP-proxy, RSAT-Clustering, RSAT-Clustering-CmdInterface, Web-Mgmt-Console, WAS-Process-Model, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI, Windows-Identity-Foundation" 
+            $AddonFeatures = "$AddonFeatures, AS-HTTP-Activation, Desktop-Experience, NET-Framework-45-Features, RPC-over-HTTP-proxy, RSAT-Clustering, RSAT-Clustering-CmdInterface, RSAT-Clustering-Mgmt, RSAT-Clustering-PowerShell, Web-Mgmt-Console, WAS-Process-Model, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI, Windows-Identity-Foundation"
+
+
+			###################################################
+	    	
+            Write-Verbose $IPv4Subnet
+            Write-Verbose "IPv4PrefixLength = $IPv4PrefixLength"
+            write-verbose $Nodename
+            write-verbose $Nodeip
+            Write-Verbose "IPv6Prefix = $IPV6Prefix"
+            Write-Verbose "IPv6PrefixLength = $IPv6PrefixLength"
+            Write-Verbose "Addressfamily = $AddressFamily"
+            Write-Verbose "EXAddressFamiliy = $EXAddressFamiliy"
+            if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+                { 
+                Write-verbose "Now Pausing"
+                pause
+                }
+            $Exchangesize = "XXL"
+		    test-dcrunning
+		    status $Commentline
+		    workorder "Creating $EX_Version Host $Nodename with IP $Nodeip in Domain $BuildDomain"
+		    $CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Exchange -Size $Exchangesize -Sourcedir $Sourcedir "
+		    ###################################################
+		    If ($CloneOK)
+            {
+            $EXnew = $True
+			write-verbose "Copy Configuration files, please be patient"
+			copy-tovmx -Sourcedir $NodeScriptDir
+			copy-tovmx -Sourcedir $SourceScriptDir
+			# copy-tovmx -Sourcedir $Exprereqdir
+			write-verbose "Waiting System Ready"
+			test-user -whois Administrator
+			write-Verbose "Starting Customization"
+			domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $EXAddressFamiliy -AddOnfeatures $AddonFeatures
+			write-verbose "Setup Database Drives"
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script prepare-disks.ps1
+			write-verbose "Setup e16 Prereqs"
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-exchangeprereqs.ps1 -interactive
+            checkpoint-progress -step exprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
+			write-verbose "Setting Power Scheme"
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script powerconf.ps1 -interactive
+			write-verbose "Installing e16, this may take up to 60 Minutes ...."
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-exchange.ps1 -interactive -nowait -Parameter "$CommonParameter -ex_cu $e16_cu"
+            }
+            }
+        if ($EXnew)
+        {
+        foreach ($EXNODE in ($EXStartNode..($EXNodes+$EXStartNode-1)))
+            {
+            $Nodename = "$EX_Version"+"N"+"$EXNODE"
+            $CloneVMX = (get-vmx $Nodename).config
+            # 
+			test-user -whois Administrator
+            status "Waiting for Pass 4 (e16 Installed) for $Nodename"
+            #$EXSetupStart = Get-Date
+			    While ($FileOK = (&$vmrun -gu $BuildDomain\Administrator -gp Password123! fileExistsInGuest $CloneVMX c:\$Script_dir\exchange.pass) -ne "The file exists.")
+			    {
+				    sleep $Sleep
+				    #runtime $EXSetupStart "Exchange"
+			    } #end while
+			    Write-Host
+                    do {
+                        $ToolState = Get-VMXToolsState -config $CloneVMX
+                         Write-Verbose $ToolState.State
+                        }
+                    until ($ToolState.state -match "running")
+            write-Verbose "Performing e16 Post Install Tasks:"
+    		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script configure-exchange.ps1 -interactive
+     
+    
+    #  -nowait
+            if ($EXNode -eq ($EXNodes+$EXStartNode-1)) #are we last sever in Setup ?!
+                {
+                if ($DAG.IsPresent) 
+                    {
+				    write-verbose "Creating DAG"
+				    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -activeWindow -interactive -Script create-dag.ps1 -Parameter "-DAGIP $DAGIP -AddressFamily $EXAddressFamiliy -EX_Version $EX_Version $CommonParameter"
+				    } # end if $DAG
+                if (!($nouser.ispresent))
+                    {
+                    write-verbose "Creating Accounts and Mailboxes:"
+	                do
+				        {
+					    ($cmdresult = &$vmrun -gu "$BuildDomain\Administrator" -gp Password123! runPrograminGuest  $CloneVMX -activeWindow -interactive c:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe ". 'C:\Program Files\Microsoft\Exchange Server\V15\bin\RemoteExchange.ps1'; Connect-ExchangeServer -auto; C:\$Script_dir\User.ps1 -subnet $IPv4Subnet -AddressFamily $AddressFamily -IPV6Prefix $IPV6Prefix $CommonParameter") 
+					    if ($BugTest) { debug $Cmdresult }
+				        }
+				    until ($VMrunErrorCondition -notcontains $cmdresult)
+                    } #end creatuser
+            }# end if last server
+       }      
+		
+        foreach ($EXNODE in ($EXStartNode..($EXNodes+$EXStartNode-1)))
+            {
+            $Nodename = "$EX_Version"+"N"+"$EXNODE"
+            $CloneVMX = (get-vmx $Nodename).config				
+			write-verbose "Setting Local Security Policies"
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script create-security.ps1 -interactive
+			########### Entering networker Section ##############
+			if ($NMM.IsPresent)
+			{
+				write-verbose "Install NWClient"
+				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+				write-verbose "Install NMM"
+				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-nmm.ps1 -interactive -Parameter $nmm_ver
+			    write-verbose "Performin NMM Post Install Tasks"
+			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script finish-nmm.ps1 -interactive
+            }# end nmm
+			########### leaving NMM Section ###################
+		    invoke-postsection
+    }#end foreach exnode
+        }
+} #End Switchblock Exchange
+
 
 ##### Hyper-V Block #####	
 	"HyperV" {
@@ -3338,6 +3657,7 @@ switch ($PsCmdlet.ParameterSetName)
         } # end isilon
 
 }
+
 
 
 if ($NW.IsPresent -or $NWServer.IsPresent)

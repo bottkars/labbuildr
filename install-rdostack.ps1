@@ -35,6 +35,9 @@ Param(
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [int32]$Nodes=1,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[ValidateSet('juno','kilo')]$release="juno",
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [int32]$Startnode = 1,
@@ -54,6 +57,7 @@ $Range = "24"
 $Start = "1"
 $Szenarioname = "Openstack"
 $Nodeprefix = "$($Szenarioname)Node"
+$release = $release.tolower()
 If ($Defaults.IsPresent)
     {
      $labdefaults = Get-labDefaults
@@ -207,12 +211,13 @@ if (!(Test-path "$Sourcedir\Openstack"))
     Pause
 
     write-warning "trying to fetch RDO"
-    $myrepo="/mnt/hgfs/Sources/Openstack/openstack-juno/"
+    $myrepo="/mnt/hgfs/Sources/Openstack/openstack-$release/"
     write-verbose "installing openstack repo location"
-    $Scriptblock = "yum install -y https://repos.fedorapeople.org/repos/openstack/openstack-juno/rdo-release-juno-1.noarch.rpm"
+    $Scriptblock = "yum install -y https://repos.fedorapeople.org/repos/openstack/openstack-$release/rdo-release-$release-1.noarch.rpm"
+    #                              https://repos.fedorapeople.org/repos/openstack/openstack-kilo/rdo-release-kilo-1.noarch.rpm
     $NodeClone |Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
     write-verbose "downloading openstack files"
-    $Scriptblock = "reposync -l --repoid=openstack-juno --download_path=/mnt/hgfs/Sources/Openstack --downloadcomps --download-metadata -n"
+    $Scriptblock = "reposync -l --repoid=openstack-$release --download_path=/mnt/hgfs/Sources/Openstack --downloadcomps --download-metadata -n"
     $NodeClone |Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
     write-verbose "creating openstack repository"
     $Scriptblock = "createrepo $myrepo"
