@@ -58,6 +58,7 @@ $Start = "1"
 $Szenarioname = "Openstack"
 $Nodeprefix = "$($Szenarioname)Node"
 $release = $release.tolower()
+$username = "stack"
 If ($Defaults.IsPresent)
     {
      $labdefaults = Get-labDefaults
@@ -208,7 +209,6 @@ if (!(Test-path "$Sourcedir\Openstack"))
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
 
-    Pause
 
     write-warning "trying to fetch RDO"
     $myrepo="/mnt/hgfs/Sources/Openstack/openstack-$release/"
@@ -237,28 +237,50 @@ if (!(Test-path "$Sourcedir\Openstack"))
     write-verbose "installing packstack"
     $Scriptblock = "yum install -y openstack-packstack"
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+### generate user ss keys
+    $Scriptblock ="/usr/bin/ssh-keygen -t rsa -N '' -f /home/$Guestuser/.ssh/id_rsa"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
+
+    
+    $Scriptblock = "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys;chmod 0600 ~/.ssh/authorized_keys"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
 
 
+
+#### Start ssh for pwless  root local login
+    $Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword 
+
+    $Scriptblock = "cat /home/stack/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+
+    $Scriptblock = "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys;chmod 0600 /root/.ssh/authorized_keys"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+
+    $Scriptblock = "{ echo -n '$($NodeClone.vmxname) '; cat /etc/ssh/ssh_host_rsa_key.pub; } >> ~/.ssh/known_hosts"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+
+    $Scriptblock = "{ echo -n 'localhost '; cat /etc/ssh/ssh_host_rsa_key.pub; } >> ~/.ssh/known_hosts"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+
+
+    
+    #### end ssh
     Write-Warning "Installing AllInOne Openstack.... this will take a While !!!
     you might open putty to $ip and run TOP with user stack"
-    #$Scriptblock = "/usr/bin/expect -c 'spawn `"/usr/bin/packstack`" `"--allinone`";expect `"*password:`" { send `"Password123!\r`" };interact'"
-
-    $Scriptblock = "/usr/bin/expect -c 'set timeout -1;spawn `"/usr/bin/packstack`" `"--allinone`";expect `"*password:`" { send `"Password123!\r`" };interact'"
-    $NodeClone |Invoke-VMXBash -Scriptblock "$Scriptblock" -Guestuser $Guestuser -Guestpassword $Guestpassword
+    # $username = "stack"
+    $Scriptblock = "/usr/bin/packstack --allinone"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
 }
-write-Warning "Login to the $ip vms with stack/Password123!"
-Write-Warning "Copy the following Text into BASH:
----------- snip --------------
-expect << EOF
-set timeout -1
-spawn `"/usr/bin/packstack`" `"--allinone`"
-expect `"root@192.168.2.241's password:`"
-send `"Password123!\n`"
-expect eof
-EOF
----------- snip --------------"
-
-
+    
 
 
 
