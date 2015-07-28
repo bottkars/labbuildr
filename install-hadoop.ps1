@@ -53,9 +53,9 @@ Param(
 #requires -module vmxtoolkit
 $Range = "23"
 $Start = "1"
-$Szenarioname = "Hadoop"
-$Guestuser = $Szenarioname.ToLower()
-$Nodeprefix = "$($Szenarioname)Node"
+$Scenarioname = "Hadoop"
+$Guestuser = $Scenarioname.ToLower()
+$Nodeprefix = "$($Scenarioname)Node"
 If ($Defaults.IsPresent)
     {
      $labdefaults = Get-labDefaults
@@ -96,10 +96,14 @@ if (!$MasterVMX.Template)
          Write-verbose "Base snap does not exist, creating now"
         $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
         }
-if (!(Test-path "$Sourcedir\Openstack"))
-    {New-Item -ItemType Directory "$Sourcedir\Openstack"}
+if (!(Test-path "$Sourcedir\$Scenarioname"))
+    {New-Item -ItemType Directory "$Sourcedir\$Scenarioname"}
 
-
+if (!(Test-Path "$Sourcedir\$Scenarioname\$release.tar.gz"))
+    { 
+    write-verbose "Downloading $release"
+    get-LABHttpFile -SourceURL "http://apache.claz.org/hadoop/common/$release/$release.tar.gz" -TargetFile "$Sourcedir\$Scenarioname\$release.tar.gz"
+    }
 ####Build Machines#
     $machinesBuilt = @()
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
@@ -146,7 +150,7 @@ if (!(Test-path "$Sourcedir\Openstack"))
             Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config | Out-Null
             }
         $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.CloneName)@$BuildDomain"
-        $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname $Szenarioname -Scenario 7
+        $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname $Scenarioname -Scenario 7
         $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
         $NodeClone | Set-VMXprocessor -Processorcount 4 | Out-Null
         $NodeClone | Set-VMXmemory -MemoryMB 4096 | Out-Null
@@ -284,19 +288,19 @@ if (!(Test-path "$Sourcedir\Openstack"))
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
 #### end ssh
 
-### aquiring software
+<### aquiring software
 
 
     $Scriptblock = "/usr/bin/wget http://apache.claz.org/hadoop/common/$release/$release.tar.gz -P ~"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
-
-    $Scriptblock = "tar xzfv /home/$Guestuser/$release.tar.gz -C /home/$Guestuser/"
+### end software#>
+    $Scriptblock = "tar xzfv /mnt/hgfs/Sources/$Scenarioname/$release.tar.gz -C /home/$Guestuser/"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
 
 
-### end software
+
     $HADOOP_HOME = "/home/hadoop/$release"
     Write-Verbose "Setting Environment"
     $Scriptblock = "echo 'export JAVA_HOME=/usr/lib/jvm/jre`nexport HADOOP_HOME=/home/hadoop/$release`nexport HADOOP_INSTALL=`$HADOOP_HOME`nexport HADOOP_MAPRED_HOME=`$HADOOP_HOME`nexport HADOOP_COMMON_HOME=`$HADOOP_HOME`nexport HADOOP_HDFS_HOME=`$HADOOP_HOME`nexport HADOOP_YARN_HOME=`$HADOOP_HOME`nexport HADOOP_COMMON_LIB_NATIVE_DIR=`$HADOOP_HOME/lib/native`nexport PATH=`$PATH:`$HADOOP_HOME/sbin:`$HADOOP_HOME/bin`nexport JAVA_LIBRARY_PATH=`$HADOOP_HOME/lib/native:`$JAVA_LIBRARY_PATH' >> /home/$Guestuser/.bashrc"
