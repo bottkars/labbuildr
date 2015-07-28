@@ -42,13 +42,19 @@ Param(
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ipaddress]$subnet = "192.168.2.0",
 [Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateLength(1,15)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
 [Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = "vmnet2",
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[ValidateSet('hadoop-2.7.0','hadoop-2.7.1')]$release="hadoop-2.7.1",
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$Update
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
 $Range = "23"
 $Start = "1"
 $Szenarioname = "Hadoop"
+$Guestuser = $Szenarioname.ToLower()
 $Nodeprefix = "$($Szenarioname)Node"
 If ($Defaults.IsPresent)
     {
@@ -67,7 +73,6 @@ $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 $DefaultTimezone = "Europe/Berlin"
 $Guestpassword = "Password123!"
 $Rootuser = "root"
-$Guestuser = "hadoop"
 $Guestpassword  = "Password123!"
 
 $Disksize = "100GB"
@@ -203,63 +208,155 @@ if (!(Test-path "$Sourcedir\Openstack"))
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
 
+
+
+    write-verbose "Disabling IPv&"
+    $Scriptblock = "echo 'net.ipv6.conf.all.disable_ipv6 = 1' >> /etc/sysctl.conf;sysctl -p"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+
+
     write-verbose "Setting Hostname"
     $Scriptblock = "hostnamectl set-hostname $($NodeClone.vmxname)"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
-
-    Pause
-    <#
-    write-warning "trying to fetch RDO"
-    $myrepo="/mnt/hgfs/Sources/Openstack/openstack-juno/"
-    write-verbose "installing openstack repo location"
-    $Scriptblock = "yum install -y https://repos.fedorapeople.org/repos/openstack/openstack-juno/rdo-release-juno-1.noarch.rpm"
-    $NodeClone |Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
-    write-verbose "downloading openstack files"
-    $Scriptblock = "reposync -l --repoid=openstack-juno --download_path=/mnt/hgfs/Sources/Openstack --downloadcomps --download-metadata -n"
-    $NodeClone |Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
-    write-verbose "creating openstack repository"
-    $Scriptblock = "createrepo $myrepo"
-    $NodeClone |Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
-    write-verbose "creating local Repository"
-    $baseurl="file://$myrepo"
-    $File = "/etc/yum.repos.d/rdo-release.repo"
-    $Property = "baseurl"
-    $Scriptblock = "sed -i '/.*$Property.*/ c\$Property=$baseurl' $file"
+    
+    $Scriptblock =  "echo '$ip $($NodeClone.vmxname) $($NodeClone.vmxname).$BuildDomain.local'  >> /etc/hosts"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
-    $Property = "gpgcheck"
-    $Scriptblock = "sed -i '/.*$Property.*/ c\$Property=0' $file"
-    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
 
-    $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
-    write-verbose "installing packstack"
-    $Scriptblock = "yum install -y openstack-packstack"
+    $Scriptblock = "systemctl disable iptables.service"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+    
+    $Scriptblock = "systemctl stop iptables.service"
+    Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
 
 
-    Write-Warning "Installing AllInOne Openstack.... this will take a While !!!
-    you might open putty to $ip and run TOP with user stack"
-    #$Scriptblock = "/usr/bin/expect -c 'spawn `"/usr/bin/packstack`" `"--allinone`";expect `"*password:`" { send `"Password123!\r`" };interact'"
+    Write-Verbose "Creating $Guestuser"
+    $Scriptblock = "useradd $Guestuser"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
 
-    $Scriptblock = "/usr/bin/expect -c 'set timeout -1;spawn `"/usr/bin/packstack`" `"--allinone`";expect `"*password:`" { send `"Password123!\r`" };interact'"
-    $NodeClone |Invoke-VMXBash -Scriptblock "$Scriptblock" -Guestuser $Guestuser -Guestpassword $Guestpassword
+    Write-Verbose "Changing Password for $Guestuser to $Guestpassword"
+    $Scriptblock = "echo $Guestpassword | passwd $Guestuser --stdin"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+
+    if ($update.IsPresent)
+        {
+        Write-Verbose "Performing yum update, this may take a while"
+        $Scriptblock = "yum update -y"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+        }
+
+    $Packages = "tar wget java-1.7.0-openjdk"
+    Write-Verbose "Checking for $Packages"
+    $Scriptblock = "yum install -y $Packages"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+
+#### Start ssh for pwless local login
+    
+        
+    $Scriptblock ="/usr/bin/ssh-keygen -t dsa -N '' -f /home/$Guestuser/.ssh/id_dsa"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
+
+    
+    $Scriptblock = "cat ~/.ssh/id_dsa.pub >> ~/.ssh/authorized_keys;chmod 0600 ~/.ssh/authorized_keys"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
+
+    $Scriptblock = "{ echo -n 'localhost '; cat /etc/ssh/ssh_host_ecdsa_key.pub; } >> ~/.ssh/known_hosts"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
+    
+    $Scriptblock = "{ echo -n '0.0.0.0 '; cat /etc/ssh/ssh_host_ecdsa_key.pub; } >> ~/.ssh/known_hosts"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
+
+
+    $Scriptblock = "{ echo -n '$($NodeClone.vmxname) '; cat /etc/ssh/ssh_host_ecdsa_key.pub; } >> ~/.ssh/known_hosts"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
+#### end ssh
+
+### aquiring software
+
+
+    $Scriptblock = "/usr/bin/wget http://apache.claz.org/hadoop/common/$release/$release.tar.gz -P ~"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
+
+    $Scriptblock = "tar xzfv /home/$Guestuser/$release.tar.gz -C /home/$Guestuser/"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
+
+
+### end software
+    $HADOOP_HOME = "/home/hadoop/$release"
+    Write-Verbose "Setting Environment"
+    $Scriptblock = "echo 'export JAVA_HOME=/usr/lib/jvm/jre`nexport HADOOP_HOME=/home/hadoop/$release`nexport HADOOP_INSTALL=`$HADOOP_HOME`nexport HADOOP_MAPRED_HOME=`$HADOOP_HOME`nexport HADOOP_COMMON_HOME=`$HADOOP_HOME`nexport HADOOP_HDFS_HOME=`$HADOOP_HOME`nexport HADOOP_YARN_HOME=`$HADOOP_HOME`nexport HADOOP_COMMON_LIB_NATIVE_DIR=`$HADOOP_HOME/lib/native`nexport PATH=`$PATH:`$HADOOP_HOME/sbin:`$HADOOP_HOME/bin`nexport JAVA_LIBRARY_PATH=`$HADOOP_HOME/lib/native:`$JAVA_LIBRARY_PATH' >> /home/$Guestuser/.bashrc"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
+
+    $XMLfile = "$HADOOP_HOME/etc/hadoop/core-site.xml"
+    Write-Verbose "Configuring $XMLfile"
+    $Scriptblock = "sed  '\|<configuration>|a <property>\n  <name>fs.default.name</name>\n    <value>hdfs://$($ip):9000</value>\n</property>' $XMLfile -i"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
+
+
+    $XMLfile = "$HADOOP_HOME/etc/hadoop/hdfs-site.xml"
+    Write-Verbose "Configuring $XMLfile"
+    $Scriptblock = "sed  '\|</configuration>|i<property>\n <name>dfs.replication</name>\n <value>1</value>\n</property>' $XMLfile -i"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
+
+
+    $XMLfile = "$HADOOP_HOME/etc/hadoop/yarn-site.xml"
+    Write-Verbose "Editing $XMLfile"
+    $Scriptblock = "sed  '\|</configuration>|i<property>\n    <name>yarn.nodemanager.aux-services</name>\n    <value>mapreduce_shuffle</value>\n</property>' $XMLfile -i"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
+
+    
+    $XMLfile = "$HADOOP_HOME/etc/hadoop/mapred-site.xml"
+    Write-Verbose "Editing $XMLfile"
+    $Scriptblock = "cp $HADOOP_HOME/etc/hadoop/mapred-site.xml.template $XMLfile"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
+
+    $Scriptblock = "sed  '\|</configuration>|i<property>\n  <name>mapreduce.framework.name</name>\n   <value>yarn</value>\n</property>' $XMLfile -i"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
+
+    Write-Verbose "editing $HADOOP_HOME/etc/hadoop/hadoop-env.sh"
+    $Scriptblock = "echo 'export JAVA_HOME=/usr/lib/jvm/jre' >> $HADOOP_HOME/etc/hadoop/hadoop-env.sh"
+    <#
+    $Scriptblock = "echo 'export HADOOP_OPTS=-Djava.net.preferIPv4Stack=true' >> $HADOOP_HOME/etc/hadoop/hadoop-env.sh"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
     #>
-}
-write-Warning "Login to the $ip vms with stack/Password123!"
-Write-Warning "Copy the following Text into BASH:
----------- snip --------------
-expect << EOF
-set timeout -1
-spawn `"/usr/bin/packstack`" `"--allinone`"
-expect `"root@192.168.2.241's password:`"
-send `"Password123!\n`"
-expect eof
-EOF
----------- snip --------------"
 
+    $Scriptblock = "source /home/$Guestuser/.bashrc;hdfs namenode -format"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
 
+    $Scriptblock = "source /home/$Guestuser/.bashrc;start-dfs.sh"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
 
+    $Scriptblock = "source /home/$Guestuser/.bashrc;start-yarn.sh"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
 
+    Write-Warning "Hadoop Installation finished for $($NodeClone.VMXname)
 
-
+    Use the Following URLS to connect: 
+        ressourcemanager on http://$($ip):8088
+        namenode on         http://$($ip):50070"
+ }
