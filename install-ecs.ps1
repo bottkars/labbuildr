@@ -18,7 +18,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://community.emc.com/blogs/bottk/
+   https://community.emc.com/blogs/bottk/2015/07/28/labbuildrgoes-emc-ecs
 .EXAMPLE
 
 #>
