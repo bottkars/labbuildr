@@ -38,31 +38,41 @@ Param(
 
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
 [Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
-[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
+[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = "vmnet2",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
 $Range = "24"
+
+
+
 If ($Defaults.IsPresent)
     {
      $labdefaults = Get-labDefaults
-     $vmnet = "vmnet$($labdefaults.vmnet)"
+     $vmnet = $labdefaults.vmnet
      $subnet = $labdefaults.MySubnet
      $BuildDomain = $labdefaults.BuildDomain
      $Sourcedir = $labdefaults.Sourcedir
+     $Gateway = $labdefaults.Gateway
+     $DefaultGateway = $labdefaults.Defaultgateway
+     $DNS1 = $labdefaults.DNS1
      }
 
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
+
+$Scenarioname = "Coprhd"
+$Nodeprefix = "$($Scenarioname)Node"
+# $release = $release.tolower()
 $Guestpassword = "Password123!"
 $Rootuser = "root"
-$Guestuser = "stack"
-$Guestpassword  = "Password123!"
+$Guestuser = $Scenarioname.ToLower()
+$Scriptdir = "$Sourcedir\$($Scenarioname.ToLower())"
+
 
 $Disksize = "100GB"
 $scsi = 0
-$Nodeprefix = "CoprHD"
 $Node = "1"
 
 $MasterVMX = get-vmx -path $MasterPath
@@ -71,14 +81,16 @@ if (!$MasterVMX.Template)
             write-verbose "Templating Master VMX"
             $template = $MasterVMX | Set-VMXTemplate
             }
-        $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
+$Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
         if (!$Basesnap) 
         {
          Write-verbose "Base snap does not exist, creating now"
         $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
         }
-if (!(Test-path "$Sourcedir\$Nodeprefix"))
-    {New-Item -ItemType Directory "$Sourcedir\$Nodeprefix"}
+if (!(Test-path "$Sourcedir\$Scenarioname"))
+    {
+    New-Item -ItemType Directory "$Sourcedir\$Scenarioname"
+    }
 
 
 
@@ -131,56 +143,181 @@ if (!(Test-path "$Sourcedir\$Nodeprefix"))
         $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources
         Write-Verbose "Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
-        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway "$subnet.103" -device eno16777984 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
-        }
-    
-<#
-write-warning "trying to fetch RDO"
-$myrepo="/mnt/hgfs/Sources/Openstack/openstack-juno/"
-write-verbose "installing openstack repo location"
-$Scriptblock = "yum install -y https://repos.fedorapeople.org/repos/openstack/openstack-juno/rdo-release-juno-1.noarch.rpm"
-$NodeClone |Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
-write-verbose "downloading openstack files"
-$Scriptblock = "reposync -l --repoid=openstack-juno --download_path=/mnt/hgfs/Sources/Openstack --downloadcomps --download-metadata -n"
-$NodeClone |Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
-write-verbose "creating openstack repository"
-$Scriptblock = "createrepo $myrepo"
-$NodeClone |Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
-write-verbose "creating local Repository"
-$baseurl="file://$myrepo"
-$File = "/etc/yum.repos.d/rdo-release.repo"
-$Property = "baseurl"
-$Scriptblock = "sed -i '/.*$Property.*/ c\$Property=$baseurl' $file"
-Write-Verbose $Scriptblock
-$NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
-$Property = "gpgcheck"
-$Scriptblock = "sed -i '/.*$Property.*/ c\$Property=0' $file"
-Write-Verbose $Scriptblock
-
-$NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
-write-verbose "installing packstack"
-$Scriptblock = "yum install -y openstack-packstack"
-$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -suse -device eno16777984 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
+        $NodeClone | Invoke-VMXBash -Scriptblock "/sbin/rcnetwork restart" -Guestuser $Rootuser -Guestpassword $Guestpassword
 
 
-Write-Warning "Installing AllInOne Openstack.... this will take a While !!!
-you might open putty to $ip and run TOP with user stack"
-#$Scriptblock = "/usr/bin/expect -c 'spawn `"/usr/bin/packstack`" `"--allinone`";expect `"*password:`" { send `"Password123!\r`" };interact'"
 
-$Scriptblock = "/usr/bin/expect -c 'set timeout -1;spawn `"/usr/bin/packstack`" `"--allinone`";expect `"*password:`" { send `"Password123!\r`" };interact'"
-$NodeClone |Invoke-VMXBash -Scriptblock "$Scriptblock" -Guestuser $Guestuser -Guestpassword $Guestpassword
-write-Warning "Login to the $ip vms with stack/Password123!"
-Write-Warning "Copy the following Text into BASH:
----------- snip --------------
-expect << EOF
-set timeout -1
-spawn `"/usr/bin/packstack`" `"--allinone`"
-expect `"root@192.168.2.241's password:`"
-send `"Password123!\n`"
-expect eof
+
+
+
+### Adding Repos        
+        $Scriptname = "add_repos.sh"
+        $content = "#!/bin/bash
+# Contains apache-maven
+cat >> /etc/zypp/repos.d/suse-13.1-cesarizu.repo <<EOF
+[suse-13.1-cesarizu]
+name=suse-13.1-cesarizu
+enabled=1
+autorefresh=0
+baseurl=http://download.opensuse.org/repositories/home:/cesarizu/openSUSE_13.1
+type=NONE
 EOF
----------- snip --------------"
+ 
+# Contains atop
+cat >> /etc/zypp/repos.d/suse-13.2-monitoring.repo <<EOF
+[suse-13.2-monitoring]
+name=suse-13.2-monitoring
+enabled=1
+autorefresh=0
+baseurl=http://download.opensuse.org/repositories/server:/monitoring/openSUSE_13.2
+type=NONE
+EOF
+ 
+ 
+# Contains python-cjson
+cat >> /etc/zypp/repos.d/suse-13.2-python.repo <<EOF
+[suse-13.2-python]
+name=suse-13.2-python
+enabled=1
+autorefresh=0
+baseurl=http://download.opensuse.org/repositories/devel:/languages:/python/openSUSE_13.2
+type=NONE
+EOF
+ 
+# Contains gradle
+cat >> /etc/zypp/repos.d/suse-13.2-scalpel4k.repo <<EOF
+[suse-13.2-scalpel4k]
+name=suse-13.2-scalpel4k
+enabled=1
+autorefresh=0
+baseurl=http://download.opensuse.org/repositories/home:/scalpel4k/openSUSE_13.2
+type=NONE
+EOF
+ 
+# Contains sipcalc
+cat >> /etc/zypp/repos.d/suse-13.2-seife.repo <<EOF
+[suse-13.2-seife]
+name=suse-13.2-seife
+enabled=1
+autorefresh=0
+baseurl=http://download.opensuse.org/repositories/home:/seife:/testing/openSUSE_13.2
+type=NONE
+EOF
+"
+# cachedir = /var/cache/zypp
+    $Scriptblock = "sed '\|# cachedir = /var/cache/zypp|icachedir = /mnt/hgfs/Sources/CoprHD/zypp/\n' /etc/zypp/zypp.conf -i"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
 
+
+
+    $Scriptblock = "sudo zypper modifyrepo -k --all"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+
+
+
+        $Content | Set-Content -Path $Scriptdir\$Scriptname
+        convert-VMXdos2unix -Sourcefile $Scriptdir\$Scriptname -Verbose
+        $NodeClone | copy-VMXfile2guest -Sourcefile $Scriptdir\$Scriptname -targetfile "/root/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword
+        
+        $Scriptblock = "sh /root/$Scriptname &> /tmp/$Scriptname.log"
+        Write-Verbose $Scriptblock
+        Write-Warning "When creating local Repo Cache, this might take a while first time!"
+        $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
+#### Install Prereqs
+        $Scriptname = "inst_pre.sh" 
+        $Content ="#!/bin/bash
+zypper --gpg-auto-import-keys refresh
+zypper -n rm patterns-openSUSE-minimal_base-conflicts
+zypper -n install gcc make pcre-devel zlib-devel ant apache2-mod_perl createrepo expect gcc-c++ gpgme inst-source-utils java-1_7_0-openjdk java-1_7_0-openjdk-devel kernel-default-devel kernel-source kiwi-desc-isoboot kiwi-desc-oemboot kiwi-desc-vmxboot kiwi-templates libtool openssh-fips perl-Config-General perl-Tk python-libxml2 python-py python-requests setools-libs python-setools qemu regexp rpm-build sshpass sysstat unixODBC xfsprogs xml-commons-jaxp-1.3-apis zlib-devel git git-core glib2-devel libgcrypt-devel libgpg-error-devel libopenssl-devel libuuid-devel libxml2-devel pam-devel pcre-devel perl-Error python-devel readline-devel subversion xmlstarlet xz-devel libpcrecpp0 libpcreposix0 ca-certificates-cacert p7zip python-iniparse python-gpgme yum keepalived
+zypper install -r suse-13.1-cesarizu apache-maven
+zypper -n install -r suse-13.2-monitoring atop GeoIP-data libGeoIP1 GeoIP
+zypper -n install -r suse-13.2-scalpel4k gradle
+zypper -n install -r suse-13.2-seife sipcalc
+zypper -n install -r suse-13.2-python python-cjson"
+        $Content | Set-Content -Path $Scriptdir\$Scriptname
+        convert-VMXdos2unix -Sourcefile $Scriptdir\$Scriptname -Verbose
+        $NodeClone | copy-VMXfile2guest -Sourcefile $Scriptdir\$Scriptname -targetfile "/root/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword
+        $Scriptblock = "sh /root/$Scriptname &> /tmp/$Scriptname.log"
+        Write-Verbose $Scriptblock
+        Write-Warning "Installation of Packages form $Scriptname may take a While. you may tail -f /tmp/$Scriptname.log"
+        $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
+ 
+## Compiling nginx 
+        $Scriptname = "build_nginx.sh" 
+        $Content ="#!/bin/bash
+mkdir /tmp/nginx
+cd /tmp/nginx
+wget 'http://nginx.org/download/nginx-1.6.2.tar.gz'
+wget 'http://nginx.org/download/nginx-1.6.2.tar.gz'
+wget 'https://github.com/yaoweibin/nginx_upstream_check_module/archive/v0.3.0.tar.gz'
+wget 'https://github.com/openresty/headers-more-nginx-module/archive/v0.25.tar.gz'
+tar -xzvf nginx-1.6.2.tar.gz
+tar -xzvf v0.3.0.tar.gz
+tar -xzvf v0.25.tar.gz
+cd nginx-1.6.2
+patch -p1 < ../nginx_upstream_check_module-0.3.0/check_1.5.12+.patch
+./configure --add-module=../nginx_upstream_check_module-0.3.0 --add-module=../headers-more-nginx-module-0.25 --with-http_ssl_module --prefix=/usr --conf-path=/etc/nginx/nginx.conf
+make
+make install
+"
+
+    $Content | Set-Content -Path $Scriptdir\$Scriptname
+    convert-VMXdos2unix -Sourcefile $Scriptdir\$Scriptname -Verbose
+    $NodeClone | copy-VMXfile2guest -Sourcefile $Scriptdir\$Scriptname -targetfile "/root/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword
+
+    $Scriptblock = "sh /root/$Scriptname &> /tmp/$Scriptname.log"
+    Write-Verbose $Scriptblock
+    Write-Warning "Comiling nginx Server from $Scriptname may take a While. you may tail -f /tmp/$Scriptname.log"
+    $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
+
+        
+}
+    
+    $Scriptname = "ovfenv.properties"
+    $Content = "network_1_ipaddr6=::0
+network_1_ipaddr=$ip
+network_gateway6=::0
+network_gateway=$DefaultGateway
+network_netmask=255.255.255.0
+network_prefix_length=64
+network_vip6=::0
+network_vip=$ip
+node_count=1
+node_id=vipr1"
+
+    $Content | Set-Content -Path $Scriptdir\$Scriptname
+    convert-VMXdos2unix -Sourcefile $Scriptdir\$Scriptname -Verbose
+    $NodeClone | copy-VMXfile2guest -Sourcefile $Scriptdir\$Scriptname -targetfile "/etc/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword
+
+    $Scriptblock = "groupadd storageos"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
+
+    $Scriptblock = "useradd -d /opt/storageos -g storageos storageos"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
+
+    $Scriptblock = "/usr/sbin/update-alternatives --set java /usr/lib64/jvm/jre-1.7.0-openjdk/bin/java"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
+
+    $Scriptname = "build_coprhd.sh"
+$content = "#!/bin/bash
+git clone https://github.com/CoprHD/coprhd-controller.git /root/coprhd-controller
+cd /root/coprhd-controller   
+make clobber BUILD_TYPE=oss rpm"
+
+    $Content | Set-Content -Path $Scriptdir\$Scriptname
+    convert-VMXdos2unix -Sourcefile $Scriptdir\$Scriptname -Verbose
+    $NodeClone | copy-VMXfile2guest -Sourcefile $Scriptdir\$Scriptname -targetfile "/root/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword
+
+    $Scriptblock = "sh /root/$Scriptname &> /tmp/$Scriptname.log"
+    Write-Verbose $Scriptblock
+    Write-Warning "Comiling CoprHDr from $Scriptname may take a While. you may tail -f /tmp/$Scriptname.log"
+    $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
 
 #>
 

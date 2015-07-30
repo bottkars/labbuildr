@@ -44,7 +44,7 @@ Param(
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ipaddress]$subnet = "192.168.2.0",
 [Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
-[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
+[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = "vmnet2",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$False)][switch]$IsGateway,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
@@ -237,7 +237,7 @@ if (!(Test-path "$Sourcedir\Openstack"))
     write-verbose "installing packstack"
     $Scriptblock = "yum install -y openstack-packstack"
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
-### generate user ss keys
+### generate user ssh keys
     $Scriptblock ="/usr/bin/ssh-keygen -t rsa -N '' -f /home/$Guestuser/.ssh/id_rsa"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
@@ -246,9 +246,6 @@ if (!(Test-path "$Sourcedir\Openstack"))
     $Scriptblock = "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys;chmod 0600 ~/.ssh/authorized_keys"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
-
-
-
 #### Start ssh for pwless  root local login
     $Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa"
     Write-Verbose $Scriptblock
@@ -269,13 +266,10 @@ if (!(Test-path "$Sourcedir\Openstack"))
     $Scriptblock = "{ echo -n 'localhost '; cat /etc/ssh/ssh_host_rsa_key.pub; } >> ~/.ssh/known_hosts"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
-
-
-    
-    #### end ssh
+ #### end ssh
     Write-Warning "Installing AllInOne Openstack.... this will take a While !!!
     you might open putty to $ip and run TOP with user stack"
-    # $username = "stack"
+
     $Scriptblock = "/usr/bin/packstack --allinone"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword

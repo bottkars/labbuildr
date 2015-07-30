@@ -73,7 +73,7 @@ $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 $DefaultTimezone = "Europe/Berlin"
 $Guestpassword = "Password123!"
 $Rootuser = "root"
-$Guestpassword  = "Password123!"
+
 
 $Disksize = "100GB"
 $scsi = 0
