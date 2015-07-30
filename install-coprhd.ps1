@@ -18,7 +18,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://community.emc.com/blogs/bottk/
+   https://community.emc.com/blogs/bottk/2015/07/30/labbuildr-goes-coprhd
 .EXAMPLE
 .\install-centos4scaleio.ps1
 This will install 3 Centos Nodes CentOSNode1 -CentOSNode3 from the Default CentOS Master , in the Default 192.168.2.0 network, IP .221 - .223
@@ -27,8 +27,8 @@ This will install 3 Centos Nodes CentOSNode1 -CentOSNode3 from the Default CentO
 [CmdletBinding(DefaultParametersetName = "defaults")]
 Param(
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateRange(1,3)][int32]$Disks = 1,
+#[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+#[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateRange(1,3)][int32]$Disks = 1,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
@@ -101,6 +101,7 @@ if (!(Test-path "$Sourcedir\$Scenarioname"))
         If ($Node -eq 1){$Primary = $NodeClone}
         $Config = Get-VMXConfig -config $NodeClone.config
         Write-Verbose "Tweaking Config"
+        <#
         Write-Verbose "Creating Disks"
         foreach ($LUN in (1..$Disks))
             {
@@ -110,6 +111,7 @@ if (!(Test-path "$Sourcedir\$Scenarioname"))
             Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
             $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
             }
+        #>
         write-verbose "Setting NIC0 to HostOnly"
         Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config | Out-Null
         if ($vmnet)
