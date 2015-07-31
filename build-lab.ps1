@@ -2237,7 +2237,7 @@ if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
         if ($url)
             {
             $FileName = Split-Path -Leaf -Path $Url
-            $FileName = $FileName -replace "$FileName","nw_$nw_ver.zip"
+            $FileName = $FileName -replace "$FileName","$nw_ver.zip"
             if (!(test-path  $Sourcedir\$FileName))
                 {
                 Write-Verbose "$FileName not found, trying Download"
