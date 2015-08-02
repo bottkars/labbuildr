@@ -298,19 +298,20 @@ end {}
 
 function Expand-LABZip
 {
+ [CmdletBinding(DefaultParameterSetName='Parameter Set 1')]
 	param ([string]$zipfilename, [string] $destination)
 	$copyFlag = 16 # overwrite = yes
 	$Origin = $MyInvocation.MyCommand
 	if (test-path($zipfilename))
 	{		
-        Write-Verbose "extracting $zipfilename"
+        Write-Verbose "extracting $zipfilename to $destination"
         if (!(test-path  $destination))
             {
-            New-Item -ItemType Directory -Force -Path $destination | Out-Null
+            New-Item -ItemType Directory -Force -Path $destination #| Out-Null
             }
         $shellApplication = new-object -com shell.application
 		$zipPackage = $shellApplication.NameSpace($zipfilename)
-		$destinationFolder = $shellApplication.NameSpace($destination)
+		$destinationFolder = $shellApplication.NameSpace("$destination")
 		$destinationFolder.CopyHere($zipPackage.Items(), $copyFlag)
 	}
 }

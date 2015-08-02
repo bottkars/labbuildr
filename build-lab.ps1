@@ -2236,17 +2236,20 @@ if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
         }
         if ($url)
             {
-            $FileName = Split-Path -Leaf -Path $Url
-            $FileName = $FileName -replace "$FileName","$nw_ver.zip"
-            if (!(test-path  $Sourcedir\$FileName))
+            # $FileName = Split-Path -Leaf -Path $Url
+            $FileName = "$nw_ver.zip"
+            $Zipfilename = Join-Path $Sourcedir $FileName
+            $Destinationdir = Join-Path $Sourcedir $nw_ver
+            if (!(test-path  $Zipfilename ))
                 {
                 Write-Verbose "$FileName not found, trying Download"
-                if (!( Get-LABFTPFile -Source $URL -Target $Sourcedir\$FileName -verbose -Defaultcredentials))
+                if (!( Get-LABFTPFile -Source $URL -Target $Zipfilename -verbose -Defaultcredentials))
                     { 
                     write-warning "Error Downloading file $Url, Please check connectivity"
                     }
-                } 
-            Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\$nw_ver"
+                }
+            Write-Verbose $Zipfilename     
+            Expand-LABZip -zipfilename "$Zipfilename" -destination "$Destinationdir" -verbose
             }
       }
 }
@@ -2281,6 +2284,9 @@ if ($NMM.IsPresent)
             foreach ($url in $urls)
                 {
                 $FileName = Split-Path -Leaf -Path $Url
+                $Zipfilename = Join-Path $Sourcedir $FileName
+                
+
                 if (!(test-path  $Sourcedir\$FileName))
                     {
                     Write-Verbose "$FileName not found, trying Download"
@@ -2290,12 +2296,14 @@ if ($NMM.IsPresent)
                         }
                     }
                 If ($FileName -match "nmm")
-                    {     
-                    Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\$nmm_ver"
+                    {
+                    $Destinationdir = Join-Path "$Sourcedir" "$nmm_ver"     
+                    Expand-LABZip -zipfilename $Zipfilename -destination $Destinationdir
                     }
                 else
                     {
-                    Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\$($FileName.replace(".zip"," "))"
+                    $Destinationdir = Join-Path "$Sourcedir" "$($FileName.replace(".zip"," "))"
+                    Expand-LABZip -zipfilename $Zipfilename -destination $Destinationdir
                     }
                 }
             }
@@ -2337,29 +2345,35 @@ if ($ScaleIO.IsPresent)
             {
             $FileName = Split-Path -Leaf -Path $Url
             $FileName = $FileName -replace "$FileName","ScaleIO_$ScaleIOVer.zip"
-            if (!(test-path  $Sourcedir\$FileName))
+            $Zipfilename = Join-Path $Sourcedir $FileName
+            $Destinationdir = Join-Path "$Sourcedir" "ScaleIO"
+            if (!(test-path  $ZipFileName))
                 {
                 Write-Verbose "$FileName not found, trying Download"
-                if (!( Get-LABFTPFile -Source $URL -Target $Sourcedir\$FileName -verbose -Defaultcredentials))
+                if (!( Get-LABFTPFile -Source $URL -Target $Zipfilename -verbose -Defaultcredentials))
                     { 
                     write-warning "Error Downloading file $Url, Please check connectivity"
-                    Remove-Item -Path $Sourcedir\$FileName -Verbose
+                    Remove-Item -Path $Zipfilename -Verbose
                     }
                 } 
-            if (Test-Path "$Sourcedir\$FileName")
+            if (Test-Path "$Zipfilename")
                 {
-                Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\ScaleIO\"
+                Expand-LABZip -zipfilename "$Zipfilename" -destination $Destinationdir
                 }
             }
        }
       Write-Verbose "Checking Diskspeed"
       $URL = "https://gallery.technet.microsoft.com/DiskSpd-a-robust-storage-6cd2f223/file/132882/1/Diskspd-v2.0.15.zip"
       $FileName = Split-Path -Leaf -Path $Url
+      $Zipfilename = Join-Path $Sourcedir $FileName
+      $Destinationdir = Join-Path "$Sourcedir" "diskspd"
+
       # $Directory = Split-Path 
-      if (!(test-path  "$Sourcedir\diskspd\amd64fre\diskspd.exe"))
+      if (!(test-path  (join-path "$Sourcedir" "\diskspd\amd64fre\diskspd.exe")))
         {
         ## Test if we already have the ZIP
-        if (!(test-path  "$Sourcedir\$FileName"))
+
+        if (!(test-path  "$Zipfilename"))
             {
             Write-Verbose "Trying Download DiskSpeed"
             if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir"))
@@ -2368,7 +2382,7 @@ if ($ScaleIO.IsPresent)
                         exit
                 }
             }
-        Extract-Zip -zipfilename $Sourcedir\$FileName -destination "$Sourcedir\diskspd"
+        Extract-Zip -zipfilename $Zipfilename -destination $Destination
 
 }
 }
