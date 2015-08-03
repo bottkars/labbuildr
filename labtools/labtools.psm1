@@ -554,7 +554,7 @@ end
     Write-warning "Asking for latest Java"
     Try
         {
-        $javaparse = Invoke-WebRequest https://www.java.com/inc/BrowserRedirect1.jsp?locale=de
+        $javaparse = Invoke-WebRequest https://www.java.com/en/download/manual.jsp
         }
     catch [Exception] 
         {
@@ -562,7 +562,7 @@ end
         Write-Warning $_.Exception
         break
         }
-    
+    write-verbose "Analyzing response Stream"
     $Link = $javaparse.Links | Where-Object outerText -Match "Windows Offline \(64-Bit\)" | Select-Object href
     If ($Link)
         {
