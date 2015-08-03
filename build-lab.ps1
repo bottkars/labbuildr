@@ -3608,68 +3608,10 @@ switch ($PsCmdlet.ParameterSetName)
 
 
     "Isilon" {
-		<#
-		foreach ($Node in (1..$isi_nodes))
-		{
-			###################################################
-			# Setup of a Blank Node
-			# Init
-			$Nodename = "isi_Node$Node"
-			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
-            $MasterVMX = "$Builddir\$isimaster\$isimaster.vmx"
-			# $SourceScriptDir = "$Builddir\$Script_dir\Exchange\"
-			###################################################
-			# we need a DC, so check it is running
-			# test-dcrunning
-		    # Clone Base Machine
-			status $Commentline
-			status "Creating isilon Node $Nodename"
-		
-				$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $MyVMnet -Isilon  -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir "
-			}
-			###################################################
-			If ($CloneOK){
-			
-			}# end Cloneok
-			#>
         Write-Verbose "Calling Isilon Installer"
-        Invoke-Expression -Verbose "$Builddir\install-isi.ps1 -Nodes $isi_nodes -Disks 4 -Disksize 36GB -MasterPath $Builddir\$ISIMaster -vmnet $VMnet -verbose"
+        Invoke-Expression -Verbose "$Builddir\install-isi.ps1 -Nodes $isi_nodes -Disks 4 -Disksize 36GB -defaults "
         status "Isilon Setup done"
-        workorder "In cluster Setup, please spevcify the following Values already propagated in ad:"
-        Progress "Assign internal Addresses from .41 to .56 according to your Subnet"
-        Write-Host -NoNewline -ForegroundColor DarkCyan "Cluster Name  ...........: "
-        Status "isi2go"
-        Workorder -NoNewline -ForegroundColor DarkCyan  "Interface int-a"
-        Write-Host -NoNewline -ForegroundColor DarkCyan "Netmask int-a............: "
-        Status "255.255.255.0"
-        Write-Host -NoNewline -ForegroundColor DarkCyan "Internal Low IP .........: "
-        Status "your vmnet1 .41"
-        Write-Host -NoNewline -ForegroundColor DarkCyan "Intenal High IP .........: "
-        Status "your vmnet1 .56"      
-        Workorder -NoNewline -ForegroundColor DarkCyan  "Interface ext-1"        
-        Write-Host -NoNewline -ForegroundColor DarkCyan "Netmask ext-1............: "
-        Status "255.255.255.0"
-        Write-Host -NoNewline -ForegroundColor DarkCyan "External Low IP .........: "
-        Status "$IPv4Subnet.41"
-        Write-Host -NoNewline -ForegroundColor DarkCyan "External High IP ........: "
-        Status "$IPv4Subnet.56"
-        Write-Host -NoNewline -ForegroundColor DarkCyan "Default Gateway..........: "
-        Status "$IPv4Subnet.$Gatewayhost"
-        Workorder "Configure Smartconnect"
-        Write-Host -NoNewline -ForegroundColor DarkCyan "smartconnect Zone Name...: "
-        Status "onefs.$BuildDomain.local"
-        Write-Host -NoNewline -ForegroundColor DarkCyan "smartconnect Service IP .: "
-        Status "$IPv4Subnet.40"
-        Workorder -NoNewline -ForegroundColor DarkCyan  "Configure DNS Settings"
-        Write-Host -NoNewline -ForegroundColor DarkCyan "DNS Server...............: "
-        Status "$IPv4Subnet.10"
-        Write-Host -NoNewline -ForegroundColor DarkCyan "Search Domain............: "
-        Status "$BuildDomain.local"
-        ######### Setting Master back to Default Master
-		# $MasterVMX = $masterconfig.FullName
-        ###############################################
         } # end isilon
-
 }
 
 
