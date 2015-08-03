@@ -19,7 +19,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://community.emc.com/blogs/bottk/2015/03/30/labbuildrbeta
+   https://github.com/bottkars/labbuildr/wiki
 .EXAMPLE
     build-lab.ps1 -createshortcut
     Creates a Desktop Shortcut for labbuildr
