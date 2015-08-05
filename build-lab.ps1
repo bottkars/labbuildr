@@ -3118,7 +3118,7 @@ switch ($PsCmdlet.ParameterSetName)
                 If ($ScaleIO.IsPresent)
                     {
                     Write-Verbose "Copying DiskSpeed"
-                    $VMX | Copy-VMXDirHost2Guest -Sourcepath "$Sourcedir\diskspd\amd64fre\diskspd.exe" -targetpath "c:\Diskspd" -Verbose -recurse -Guestuser "Administrator" -Guestpassword $Adminpassword
+                    Copy-VMXDirHost2Guest -config $Clonevmx -Sourcepath "$Sourcedir\diskspd\amd64fre\diskspd.exe" -targetpath "c:\Diskspd" -Verbose -recurse -Guestuser "Administrator" -Guestpassword $Adminpassword
 				    }
                 write-verbose "Waiting System Ready"
 				test-user -whois Administrator

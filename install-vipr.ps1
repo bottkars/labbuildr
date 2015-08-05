@@ -34,8 +34,6 @@ Param(
 )
 
 $targetname = "vipr1"
-
-
 # $viprmaster = "vipr-2.2.1.0.1106"
 $Viprver = $viprmaster.Replace("vipr-","")
 Write-Verbose $Viprver
@@ -242,12 +240,14 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     Write-Host -ForegroundColor Yellow $ovfenv
     }
 
-<#
-$ovfenv = Get-Content $PSScriptRoot\scripts\viprmaster\ovf-env.xml
-$ovfenv -replace "192.168.2",$subnet | Set-Content -Path $PSScriptRoot\scripts\viprmaster\cd\ovf-env.xml -Force
-#>
-$ovfenv  | Set-Content -Path $PSScriptRoot\scripts\viprmaster\cd\ovf-env.xml -Force
-convert-VMXdos2unix -Sourcefile $PSScriptRoot\scripts\viprmaster\cd\ovf-env.xml -Verbose
+$ViprcdDir = join-path $PSScriptRoot "scripts\viprmaster\cd\"
+if (!Test-Path $ViprcdDir)
+    {
+    New-Item -ItemType Directory -Path $ViprcdDir
+    }
+$ovffile = (Join-Path $ViprcdDir ovf-env.xml)
+$ovfenv  | Set-Content -Path $ovffile -Force
+convert-VMXdos2unix -Sourcefile $ovffile -Verbose
 & $Global:vmwarepath\mkisofs.exe -J -R -o "$PSScriptRoot\$Targetname\vipr.iso" $PSScriptRoot\scripts\viprmaster\cd 2>&1 | Out-Null
 $config = $vmx | get-vmxconfig
     write-verbose "injecting CDROM"
@@ -260,7 +260,8 @@ $vmx | Start-VMX
 Write-Host -ForegroundColor Yellow "
 Successfully Deployed $viprmaster
 wait a view minutes for storageos to be up and running
-point your browser to https://$subnet.9 and follow the wizard steps
+point your browser to https://$subnet.9 
+Login with root:ChangeMe and follow the wizard steps
 The License File can be found in $masterpath
 "
 }
