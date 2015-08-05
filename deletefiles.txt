@@ -6,3 +6,5 @@
 .\helper
 .\viprmaster
 .\import-viprova.ps1
+.\install-scaleio.ps1
+.\get-*.ps1
