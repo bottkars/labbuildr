@@ -167,7 +167,8 @@ param (
 	<# ScaleIO on hyper-v #>	
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch][alias('sc')]$ScaleIO,
 	<# ScaleIO on hyper-v #>	
-    [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][string][ValidateSet('1.30-426.0','1.31-258.2','1.31-1277.3','1.31-2333.2','1.32-277.0','1.32-402.1')][alias('siover')]$ScaleIOVer,
+    [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][string]
+    [ValidateSet('1.30-426.0','1.31-258.2','1.31-1277.3','1.31-2333.2','1.32-277.0','1.32-402.1','1.32-403.2')][alias('siover')]$ScaleIOVer,
     <# single mode with mdm only on first node ( no secondary, no tb ) #>
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$singlemdm,
     <# Cluster modemdm automatically#>
@@ -554,7 +555,7 @@ $WAIKVER = "WAIK"
 $domainsuffix = ".local"
 $AAGDB = "AWORKS"
 $major = "4.0"
-$latest_ScaleIO = '1.32-402.1'
+$latest_ScaleIO = '1.32-403.2'
 $latest_nmm = 'nmm8212'
 $latest_nw = 'nw8213'
 $latest_e16 = 'Preview1'
@@ -1282,9 +1283,15 @@ if (!$ex_cu) {$ex_cu = $latest_ex}
 if (!$e16_cu) {$e16_cu = $latest_e16}
 if (!$Master) {$Master = $latest_master}
 if (!$vmnet) {$vmnet = "vmnet2"}
+if (!$default.config.DNS1)
+    {
+    $DNS1 = "$IPv4Subnet.10"
+    } 
+else 
+    {
+    $DNS1 = $default.config.DNS1
+    }
 write-verbose "After defaults !!!! "
-Write-Verbose "Noautomount: $($Noautomount.IsPresent)"
-Write-Verbose "Mountroot : $Mountroot"
 Write-Verbose "Sourcedir : $Sourcedir"
 Write-Verbose "NWVER : $nw_ver"
 Write-Verbose "Gateway : $($gateway.IsPresent)"
@@ -1339,8 +1346,9 @@ $config += ("<Gateway>$($Gateway.IsPresent)</Gateway>")
 $config += ("<DefaultGateway>$($DefaultGateway)</DefaultGateway>")
 $config += ("<Sourcedir>$($Sourcedir)</Sourcedir>")
 $config += ("<ScaleIOVer>$($ScaleIOVer)</ScaleIOVer>")
+$config += ("<DNS1>$($DNS1)</DNS1>")
 $config += ("<NMM>$($NMM.IsPresent)</NMM>")
-$config += ("<Masterpath>$($Masterpath)</Masterpath>")
+$config += ("<Masterpath>$Masterpath</Masterpath>")
 $config += ("</config>")
 $config | Set-Content $defaultsfile
 }
@@ -2320,48 +2328,55 @@ if ($ScaleIO.IsPresent)
     {
     ##
     # ScaleIO_1.32_Complete_Windows_SW_Download\ScaleIO_1.32_Windows_Download #
+    Write-Verbose "Now Checking for ScaleIO $ScaleIOVer"
     $ScaleIO_Major = ($ScaleIOVer.Split("-"))[0]
-    if (Test-Path "$Sourcedir/ScaleIO/ScaleIO_$($ScaleIO_Major)_Complete_Windows_SW_Download/ScaleIO_$($ScaleIO_Major)_Windows_Download/*sds*$ScaleIOVer.msi") 
-        {
-        Write-Verbose "ScaleIO $ScaleIOVer found"
-        }
-    else
-        {
-        Write-Warning "We need to get $ScaleIOVer, trying Automated Download"
-        switch ($ScaleIOVer)
-        {
-        "$latest_ScaleIO"
-            {
-            $url = "ftp://ftp.emc.com/Downloads/ScaleIO/ScaleIO_Windows_SW_Download.zip"
-            }
+    $ScaleIORoot = join-path $Sourcedir "Scaleio"
+    $ScaleIOPath = (Get-ChildItem -Path $ScaleIORoot -Recurse -Filter "*mdm-$ScaleIOVer.msi").Directory.FullName
 
-        default
-            {
-            $url = $false
-            Write-Warning "Sorry,no Autodownload for Scaleio $ScaleIOVer available"
-            }
+    try
+        {
+        Test-Path $ScaleIOPath
         }
-        if ($url)
+    catch
+        {
+        write-warning "we did not found ScaleIO $ScaleIOVer, but  we can try to download !"
+                switch ($ScaleIOVer)
             {
-            $FileName = Split-Path -Leaf -Path $Url
-            $FileName = $FileName -replace "$FileName","ScaleIO_$ScaleIOVer.zip"
-            $Zipfilename = Join-Path $Sourcedir $FileName
-            $Destinationdir = Join-Path "$Sourcedir" "ScaleIO"
-            if (!(test-path  $ZipFileName))
+            "$latest_ScaleIO"
                 {
-                Write-Verbose "$FileName not found, trying Download"
-                if (!( Get-LABFTPFile -Source $URL -Target $Zipfilename -verbose -Defaultcredentials))
-                    { 
-                    write-warning "Error Downloading file $Url, Please check connectivity"
-                    Remove-Item -Path $Zipfilename -Verbose
-                    }
-                } 
-            if (Test-Path "$Zipfilename")
+                $url = "ftp://ftp.emc.com/Downloads/ScaleIO/ScaleIO_Windows_SW_Download.zip"
+                }
+
+            default
                 {
-                Expand-LABZip -zipfilename "$Zipfilename" -destination $Destinationdir
+                $url = $false
+                Write-Warning "Sorry,no Autodownload for Scaleio $ScaleIOVer available"
                 }
             }
-       }
+            if ($url)
+                {
+                $FileName = Split-Path -Leaf -Path $Url
+                $FileName = $FileName -replace "$FileName","ScaleIO_$ScaleIOVer.zip"
+                $Zipfilename = Join-Path $Sourcedir $FileName
+                $Destinationdir = Join-Path "$Sourcedir" "ScaleIO"
+                if (!(test-path  $ZipFileName))
+                    {
+                    Write-Verbose "$FileName not found, trying Download"
+                    if (!( Get-LABFTPFile -Source $URL -Target $Zipfilename -verbose -Defaultcredentials))
+                        { 
+                        write-warning "Error Downloading file $Url, Please check connectivity"
+                        Remove-Item -Path $Zipfilename -Verbose
+                        }
+                    } 
+                if (Test-Path "$Zipfilename")
+                    {
+                    Expand-LABZip -zipfilename "$Zipfilename" -destination $Destinationdir
+                    }
+                }
+        }
+
+        
+
       Write-Verbose "Checking Diskspeed"
       $URL = "https://gallery.technet.microsoft.com/DiskSpd-a-robust-storage-6cd2f223/file/132882/1/Diskspd-v2.0.15.zip"
       $FileName = Split-Path -Leaf -Path $Url

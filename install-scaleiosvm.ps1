@@ -40,6 +40,8 @@ If not available, it will be downloaded from http://www.emc.com/scaleio
 The extracte OVA will be dehydrated to a VMware Workstation Master #>
 [Parameter(ParameterSetName = "import",Mandatory=$false)][String]
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir,
+[Parameter(ParameterSetName = "import",Mandatory=$false)][switch]$forcedownload,
+[Parameter(ParameterSetName = "import",Mandatory=$false)][switch]$noextract,
 #### install parameters#
 <# The ScaleIO Master created from -sourcedir  #>
 [Parameter(ParameterSetName = "defaults",Mandatory = $false)]
@@ -121,15 +123,21 @@ switch ($PsCmdlet.ParameterSetName)
                 exit
                 }
             }
-        if (!($OVAPath = Get-ChildItem -Path "$Sourcedir\ScaleIO\" -recurse -Filter "*.ova" -ErrorAction SilentlyContinue))
+        if (!($OVAPath = Get-ChildItem -Path "$Sourcedir\ScaleIO\" -recurse -Filter "*.ova" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
             {
                     write-warning "Checking for Downloaded Package"
-                    $URL = "ftp://ftp.emc.com/Downloads/ScaleIO/ScaleIO_VMware_SW_Download.zip"
-                    $FileName = Split-Path -Leaf -Path $Url
-                    if (!(test-path  $Sourcedir\$FileName))
+                    $Uri = "http://www.emc.com/products-solutions/trial-software-download/scaleio.htm"
+                    $request = Invoke-WebRequest -Uri $Uri -UseBasicParsing
+                    $DownloadLinks = $request.Links | where href -match "zip"
+                    foreach ($Link in $DownloadLinks)
+                        {
+                        $Url = $link.href
+                        # $URL = "ftp://ftp.emc.com/Downloads/ScaleIO/ScaleIO_VMware_SW_Download.zip"
+                        $FileName = Split-Path -Leaf -Path $Url
+                        if (!(test-path  $Sourcedir\$FileName) -or $forcedownload.IsPresent)
                         {
                                     
-                        $ok = Get-labyesnoabort -title "Could no find Master OVA, we need to dowload from ww.emc.com" -message "Should we Download VMware / Scaleio  OVA from ww.emc.com ?" 
+                        $ok = Get-labyesnoabort -title "Could not find $Filename, we need to dowload from ww.emc.com" -message "Should we Download $FileName from ww.emc.com ?" 
                         switch ($ok)
                             {
 
@@ -141,7 +149,9 @@ switch ($PsCmdlet.ParameterSetName)
                                     write-warning "Error Downloading file $Url, Please check connectivity"
                                     Remove-Item -Path $Sourcedir\$FileName -Verbose
                                     }
-                                } 
+                                }
+                             "1"
+                             {}   
                             default
                                 {
                                 Write-Verbose "User requested Abort"
@@ -150,14 +160,19 @@ switch ($PsCmdlet.ParameterSetName)
                             }
                         
                         }
-                        if (Test-Path "$Sourcedir\$FileName")
+
+                        if ((Test-Path "$Sourcedir\$FileName") -and (!($noextract.ispresent)))
                             {
                             Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\ScaleIO\"
                             }
                         else
                             {
-                            exit
+                            if (!$noextract.IsPresent)
+                                {
+                                exit
+                                }
                             }
+                        }
             
 
         }
