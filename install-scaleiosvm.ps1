@@ -1,8 +1,8 @@
 ﻿<#
 .Synopsis
-   .\install-scaleio.ps1 
+   .\install-scaleiosvm.ps1 
 .DESCRIPTION
-  install-scaleio is  the a vmxtoolkit solutionpack for configuring and deploying scaleio svm´s
+  install-scaleiosvm is  the a vmxtoolkit solutionpack for configuring and deploying scaleio svm´s
       
       Copyright 2014 Karsten Bott
 
@@ -18,7 +18,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://community.emc.com/blogs/bottk/2015/05/31/labbuildr-scaleio-132-support-part2-building-scaleio-nodes-from-scaleio-svm
+   https://github.com/bottkars/labbuildr/wiki/SolutionPacks#install-scaleiosvm  
 .EXAMPLE
 .\install-scaleiosvm.ps1 -Sourcedir d:\sources
 .EXAMPLE
@@ -38,14 +38,14 @@ Param(
 Sources are the Root of the Extracted ScaleIO_VMware_SW_Download.zip
 If not available, it will be downloaded from http://www.emc.com/scaleio
 The extracte OVA will be dehydrated to a VMware Workstation Master #>
-[Parameter(ParameterSetName = "import",Mandatory=$true)][String]
+[Parameter(ParameterSetName = "import",Mandatory=$false)][String]
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir,
 #### install parameters#
 <# The ScaleIO Master created from -sourcedir  #>
 [Parameter(ParameterSetName = "defaults",Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "sdsonly",Mandatory=$false)]
-[String]$SCALEIOMaster = ".\ScaleIOVM_1.32.402.1",
+[String]$SCALEIOMaster = ".\ScaleIOVM*",
 <# Number of Nodes, default to 3 #>
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
@@ -101,18 +101,27 @@ If ($Defaults.IsPresent)
      $BuildDomain = $labdefaults.BuildDomain
      $Sourcedir = $labdefaults.Sourcedir
      $DefaultGateway = $labdefaults.DefaultGateway
+     $Sourcedir = $labdefaults.Sourcedir
      }
 
 switch ($PsCmdlet.ParameterSetName)
 {
     "import"
         {
-        if (!(Test-Path $Sourcedir)) 
+        Try 
             {
-            Wite-Warning "We need a Valid Sourcedir"
-            exit
+            test-Path $Sourcedir
+            } 
+        Catch 
+            { 
+            Write-Verbose $_ 
+            Write-Warning "We need a Valid Sourcedir, trying Defaults"
+            if (!($Sourcedir = (Get-labDefaults).Sourcedir))
+                {
+                exit
+                }
             }
-        if (!($OVAPath = Get-ChildItem -Path "$Sourcedir\ScaleIO\ScaleIO_1.32_Complete_VMware_SW_Download\ScaleIO_1.32_ESX_Download\" -Filter "*.ova" -ErrorAction SilentlyContinue))
+        if (!($OVAPath = Get-ChildItem -Path "$Sourcedir\ScaleIO\" -recurse -Filter "*.ova" -ErrorAction SilentlyContinue))
             {
                     write-warning "Checking for Downloaded Package"
                     $URL = "ftp://ftp.emc.com/Downloads/ScaleIO/ScaleIO_VMware_SW_Download.zip"
@@ -153,7 +162,8 @@ switch ($PsCmdlet.ParameterSetName)
 
         }
            
-        $OVAPath = Get-ChildItem -Path "$Sourcedir\ScaleIO\ScaleIO_1.32_Complete_VMware_SW_Download\ScaleIO_1.32_ESX_Download\" -Filter "*.ova"
+        $OVAPath = Get-ChildItem -Path "$Sourcedir\ScaleIO\" -Recurse -Filter "*.ova" |Sort-Object -Descending
+        $OVAPath = $OVApath[0]
         Write-Warning "Creating ScaleIO Master for $($ovaPath.Basename), may take a while"
         & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --name=$($ovaPath.Basename) $ovaPath.FullName $PSScriptRoot  #
         $MasterVMX = get-vmx -path ".\$($ovaPath.Basename)"
@@ -170,7 +180,8 @@ switch ($PsCmdlet.ParameterSetName)
             Write-Warning "please run .\install-scaleiosvm.ps1 -Sourcedir [sourcedir] to download / create Master"
             exit
             }
-        $Mastervmx = get-vmx $SCALEIOMaster    
+        $Mastervmxlist = get-vmx $SCALEIOMaster | Sort-Object -Descending
+        $MasterVMX = $Mastervmxlist[0]   
         [System.Version]$subnet = $Subnet.ToString()
         $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
         $Guestuser = "root"
