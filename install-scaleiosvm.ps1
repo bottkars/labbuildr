@@ -90,6 +90,10 @@ The extracte OVA will be dehydrated to a VMware Workstation Master #>
 #requires -version 3.0
 #requires -module vmxtoolkit
 #requires -module labtools
+If ($singlemdm.IsPresent)
+    {
+    [switch]$configure = $true
+    }
 if ($configure.IsPresent)
     {
     [switch]$sds = $true
@@ -214,7 +218,6 @@ switch ($PsCmdlet.ParameterSetName)
             {
             Write-Warning "Single MDM installations with MemoryTweaking  are only for Test Deployments and Memory Contraints/Manager Laptops :-)"
             $mdm_ip="$subnet.191"
-            $configure = $true
             }
         else
             {
