@@ -82,10 +82,10 @@ The extracte OVA will be dehydrated to a VMware Workstation Master #>
 <# we use SingleMDM parameter with Configure for test and dev to Showcase ScaleIO und LowMem Machines #>
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$False)][switch]$singlemdm,
-<# Path to a Defaults.xml #>
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
 <# Use labbuildr Defaults.xml #>
-[Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults
+[Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
+<# Path to a Defaults.xml #>
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
@@ -214,6 +214,7 @@ switch ($PsCmdlet.ParameterSetName)
             {
             Write-Warning "Single MDM installations with MemoryTweaking  are only for Test Deployments and Memory Contraints/Manager Laptops :-)"
             $mdm_ip="$subnet.191"
+            $configure = $true
             }
         else
             {
@@ -304,7 +305,7 @@ write-host "Installing ScaleIO Components, could take 2 Minutes"
 $Logfile = "/tmp/install_sio.log"
 foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         {
-        write-host "Configuring $Nodeprefix$node"
+        write-host "Installing ScaleIO Components on $Nodeprefix$node"
         $ip="$subnet.19$Node"
         $NodeClone = get-vmx $Nodeprefix$node
         do {
