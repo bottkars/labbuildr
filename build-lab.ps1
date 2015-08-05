@@ -242,6 +242,7 @@ param (
     .103 will be set as default gateway, NWserver will have 2 Nics, NIC2 Pointing to NAT serving as Gateway
     #>
     [Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
+    [Parameter(ParameterSetName = "DConly", Mandatory = $false)]
     [switch][alias('gw')]$IsGateway,
 <# select vmnet, number from 1 to 19#>                                        	
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
@@ -1274,6 +1275,7 @@ if ($defaults.IsPresent)
     }
 
 if (!$MySubnet) {$MySubnet = "192.168.2.0"}
+$IPv4Subnet = convert-iptosubnet $MySubnet
 if (!$BuildDomain) { $BuildDomain = "labbuildr" }
 if (!$ScaleIOVer) {$ScaleIOVer = $latest_ScaleIO}
 if (!$nmm_ver) {$nmm_ver = $latest_nmm}
@@ -1300,7 +1302,7 @@ Write-Verbose "MySubnet : $MySubnet"
 Write-Verbose "ScaleIOVer : $ScaleIOVer"
 Write-Verbose "Masterpath : $Masterpath"
 Write-Verbose "Defaults before Safe:"
-$IPv4Subnet = convert-iptosubnet $MySubnet
+
 
         If ($gateway.ispresent -and (!($DefaultGateway)) -or $IsGateway.IsPresent)
             {
@@ -1352,7 +1354,7 @@ $config += ("<Masterpath>$Masterpath</Masterpath>")
 $config += ("</config>")
 $config | Set-Content $defaultsfile
 }
-if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent -and $savedefaults.IsPresent )
     {
     Write-Verbose  "Defaults after Save"
     Get-Content $Builddir\defaults.xml | Write-Host -ForegroundColor Magenta
@@ -2548,6 +2550,8 @@ else
     Write-Verbose "Domainsuffix : $domainsuffix"
     Write-Verbose "Domain : $BuildDomain"
     Write-Verbose "AddressFamily : $AddressFamily"
+    Write-Verbose "DefaultGateway : $DefaultGateway"
+    Write-Verbose "DNS1 : $DNS1"
     If ($Gateway.IsPresent)
         {
         Write-Verbose "Gateway : $DefaultGateway"
