@@ -110,8 +110,9 @@ if (!$MasterVMX.Template)
         If (!(get-vmx $Nodeprefix$node))
         {
         write-verbose " Creating $Nodeprefix$node"
-        If (!$FullClone.IsPresent)
+        If ($FullClone.IsPresent)
             {
+            Write-Warning "Creating full Clone of $($MasterVMX.vmxname), doing full sync now"
             $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$Node
             }
         else
@@ -186,10 +187,7 @@ foreach ($Node in $machinesBuilt)
     write-verbose "Disabling IPv&"
     $Scriptblock = "echo 'net.ipv6.conf.all.disable_ipv6 = 1' >> /etc/sysctl.conf;sysctl -p"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
-
-
-
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile 
 
     $Scriptblock =  "echo '$ip $($NodeClone.vmxname) $($NodeClone.vmxname).$BuildDomain.local'  >> /etc/hosts"
     Write-Verbose $Scriptblock
@@ -202,7 +200,6 @@ foreach ($Node in $machinesBuilt)
     $Scriptblock = "systemctl stop iptables.service"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
-
 
     write-verbose "Setting Timezone"
     $Scriptblock = "timedatectl set-timezone $DefaultTimezone"
@@ -265,7 +262,7 @@ foreach ($Node in $machinesBuilt)
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword # -logfile $Logfile
     #### end ssh
-  if ($update.IsPresent)
+    if ($update.IsPresent)
         {
         Write-Verbose "Performing yum update, this may take a while"
         $Scriptblock = "yum update -y"
@@ -273,6 +270,7 @@ foreach ($Node in $machinesBuilt)
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
         }
 
+    $Scriptblock = "yum install bind-utils -y"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
@@ -288,7 +286,8 @@ foreach ($Node in $machinesBuilt)
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
     
     Write-Verbose "resolving index.docker.io" 
-    $Scriptblock = "ping -c 3 index.docker.io"
+    # $Scriptblock = "ping -c 3 index.docker.io"
+    $Scriptblock = "nslookup index.docker.io"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
