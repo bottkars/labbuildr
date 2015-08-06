@@ -1,6 +1,6 @@
 ﻿<#
 .Synopsis
-   .\install-rdostack.ps1 
+   .\install-coprhd.ps1 
 .DESCRIPTION
   install-rdostack is  the a vmxtoolkit solutionpack for configuring and deploying centos openstack vm´s
       
@@ -20,9 +20,6 @@
 .LINK
    https://community.emc.com/blogs/bottk/2015/07/30/labbuildr-goes-coprhd
 .EXAMPLE
-.\install-centos4scaleio.ps1
-This will install 3 Centos Nodes CentOSNode1 -CentOSNode3 from the Default CentOS Master , in the Default 192.168.2.0 network, IP .221 - .223
-
 #>
 [CmdletBinding(DefaultParametersetName = "defaults")]
 Param(
@@ -74,8 +71,12 @@ $Scriptdir = "$Sourcedir\$($Scenarioname.ToLower())"
 $Disksize = "100GB"
 $scsi = 0
 $Node = "1"
-
-$MasterVMX = get-vmx -path $MasterPath
+if (!($MasterVMX = get-vmx -path $MasterPath))
+    {
+    Write-Warning "no OpenSuse Master found. Please download from
+    https://github.com/bottkars/labbuildr/wiki/Master"
+    exit
+    }
 if (!$MasterVMX.Template) 
             {
             write-verbose "Templating Master VMX"
@@ -121,6 +122,7 @@ if (!(Test-path "$Sourcedir\$Scenarioname"))
             Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config | Out-Null
             }
         $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.CloneName)@$BuildDomain"
+        $Annotation = $NodeClone | Set-VMXAnnotation -Line1 "rootuser:$Rootuser" -Line2 "rootpasswd:$Guestpassword" -Line3 "Guestuser:$Guestuser" -Line4 "Guestpassword:$Guestpassword" -Line5 "labbuildr by @hyperv_guy" -builddate
         $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname $Nodeprefix -Scenario 6
         $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
         $NodeClone | Set-VMXprocessor -Processorcount 4 | Out-Null
@@ -142,17 +144,11 @@ if (!(Test-path "$Sourcedir\$Scenarioname"))
         Write-Verbose "Setting Shared Folders"
         $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
         Write-verbose "Cleaning Shared Folders"
-        $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources
+        $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | Out-Null
         Write-Verbose "Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
         $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -suse -device eno16777984 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
-        $NodeClone | Invoke-VMXBash -Scriptblock "/sbin/rcnetwork restart" -Guestuser $Rootuser -Guestpassword $Guestpassword
-
-
-
-
-
-
+        # $NodeClone | Invoke-VMXBash -Scriptblock "/sbin/rcnetwork restart" -Guestuser $Rootuser -Guestpassword $Guestpassword
 ### Adding Repos        
         $Scriptname = "add_repos.sh"
         $content = "#!/bin/bash
@@ -234,17 +230,19 @@ EOF
 zypper --gpg-auto-import-keys refresh
 zypper -n rm patterns-openSUSE-minimal_base-conflicts
 zypper -n install gcc make pcre-devel zlib-devel ant apache2-mod_perl createrepo expect gcc-c++ gpgme inst-source-utils java-1_7_0-openjdk java-1_7_0-openjdk-devel kernel-default-devel kernel-source kiwi-desc-isoboot kiwi-desc-oemboot kiwi-desc-vmxboot kiwi-templates libtool openssh-fips perl-Config-General perl-Tk python-libxml2 python-py python-requests setools-libs python-setools qemu regexp rpm-build sshpass sysstat unixODBC xfsprogs xml-commons-jaxp-1.3-apis zlib-devel git git-core glib2-devel libgcrypt-devel libgpg-error-devel libopenssl-devel libuuid-devel libxml2-devel pam-devel pcre-devel perl-Error python-devel readline-devel subversion xmlstarlet xz-devel libpcrecpp0 libpcreposix0 ca-certificates-cacert p7zip python-iniparse python-gpgme yum keepalived
-zypper install -r suse-13.1-cesarizu apache-maven
 zypper -n install -r suse-13.2-monitoring atop GeoIP-data libGeoIP1 GeoIP
 zypper -n install -r suse-13.2-scalpel4k gradle
 zypper -n install -r suse-13.2-seife sipcalc
-zypper -n install -r suse-13.2-python python-cjson"
+zypper -n install -r suse-13.2-python python-cjson
+zypper -n install -r suse-13.1-cesarizu apache-maven
+"
         $Content | Set-Content -Path $Scriptdir\$Scriptname
         convert-VMXdos2unix -Sourcefile $Scriptdir\$Scriptname -Verbose
         $NodeClone | copy-VMXfile2guest -Sourcefile $Scriptdir\$Scriptname -targetfile "/root/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword
         $Scriptblock = "sh /root/$Scriptname &> /tmp/$Scriptname.log"
         Write-Verbose $Scriptblock
-        Write-Warning "Installation of Packages form $Scriptname may take a While. you may tail -f /tmp/$Scriptname.log"
+        Write-Warning "Installation of Packages form $Scriptname may take a While. you may tail -f /tmp/$Scriptname.log
+        If Scriptfailure occurs, press return to retry one time or examine log"
         $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
  
 ## Compiling nginx 
@@ -272,7 +270,7 @@ make install
 
     $Scriptblock = "sh /root/$Scriptname &> /tmp/$Scriptname.log"
     Write-Verbose $Scriptblock
-    Write-Warning "Comiling nginx Server from $Scriptname may take a While. you may tail -f /tmp/$Scriptname.log"
+    Write-Warning "Compiling nginx Server from $Scriptname may take a While. you may tail -f /tmp/$Scriptname.log"
     $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
 
         
@@ -320,6 +318,15 @@ make clobber BUILD_TYPE=oss rpm"
     Write-Verbose $Scriptblock
     Write-Warning "Comiling CoprHDr from $Scriptname may take a While. you may tail -f /tmp/$Scriptname.log"
     $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
+
+    $Scriptblock = "/bin/rpm -Uhv /root/coprhd-controller/build/RPMS/x86_64/storageos*.x86_64.rpm"
+    Write-Verbose $Scriptblock
+    Write-Warning "Installing CoprHD RPM
+    StorageOS may take 5 Minutes to boot
+    please Visit https://$ip for Configuration
+    Login with root:ChangeMe"
+    $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
+
 
 #>
 

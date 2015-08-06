@@ -78,6 +78,8 @@ $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 $DefaultTimezone = "Europe/Berlin"
 $Guestpassword = "Password123!"
 $Rootuser = "root"
+$Rootpassword  = "Password123!"
+
 $Guestuser = "$($Szenarioname.ToLower())user"
 $Guestpassword  = "Password123!"
 
@@ -207,6 +209,7 @@ if (!$MasterVMX.Template)
             Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config | Out-Null
             }
         $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.CloneName)@$BuildDomain"
+        $Annotation = $NodeClone | Set-VMXAnnotation -Line1 "rootuser:$Rootuser" -Line2 "rootpasswd:$Rootpassword" -Line3 "Guestuser:$Guestuser" -Line4 "Guestpassword:$Guestpassword" -Line5 "labbuildr by @hyperv_guy" -builddate
         $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname $Szenarioname -Scenario 7
         $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
         $NodeClone | Set-VMXprocessor -Processorcount 4 | Out-Null
@@ -377,7 +380,9 @@ Pause
 Write-Warning "Starting ECS Install Step 2 for creation of Datacenters and Containers.
 This might take up to 45 Minutes"
 # $Logfile =  "/tmp/ecsinst_Step2.log"
-$Scriptblock = "/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$($BuildDomain)ns1 --ObjectVArray=$($BuildDomain)OVA1 --ObjectVPool=$($BuildDomain)OVP1 --UserName=$Guestuser --DataStoreName=$($BuildDomain)ds1 --VDCName=$($BuildDomain)vdc1 --MethodName= &> /tmp/ecsinst_step2.log" 
+#$Scriptblock = "/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$($BuildDomain)ns1 --ObjectVArray=$($BuildDomain)OVA1 --ObjectVPool=$($BuildDomain)OVP1 --UserName=$Guestuser --DataStoreName=$($BuildDomain)ds1 --VDCName=vdc1 --MethodName= &> /tmp/ecsinst_step2.log" 
+$Scriptblock = "/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=NS1 --ObjectVArray=$($BuildDomain)OVA1 --ObjectVPool=$($BuildDomain)OVP1 --UserName=$Guestuser --DataStoreName=$($BuildDomain)ds1 --VDCName=vdc1 --MethodName= &> /tmp/ecsinst_step2.log" 
+
 Write-verbose $Scriptblock
 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword # -logfile $Logfile
 

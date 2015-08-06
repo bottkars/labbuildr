@@ -264,6 +264,7 @@ $config = $vmx | get-vmxconfig
     $config += 'ide0:0.fileName = "vipr.iso"'
     $config += 'ide0:0.deviceType = "cdrom-image"'
 $Config | set-Content -Path $vmx.config
+$Annotation = $VMX | Set-VMXAnnotation -Line1 "rootuser:root" -Line2 "rootpasswd:" -Line3 "serviceuser:service" -Line4 "servicepassword:$" -Line5 "labbuildr by @hyperv_guy" -builddate
 $vmx | Start-VMX
 Write-Host -ForegroundColor Yellow "
 Successfully Deployed $viprmaster
