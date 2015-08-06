@@ -72,6 +72,20 @@ If ($Defaults.IsPresent)
 If ($configurevdm.IsPresent)
     {
     $configure = $true
+    if (!($Dcnode = get-vmx dcnode))
+        {
+        Write-Warning "we need a dcnode for domain joining"
+        exit
+        }
+        else
+        { 
+        if ($dcnode.State -ne "running")
+            {
+            Write-warning "we need to start dcnode"
+            $Dcnode | start-vmx
+            }
+        }
+       
     }
 
 [System.Version]$subnet = $Subnet.ToString()
@@ -83,7 +97,7 @@ If (!($Masterpath))
     {
     $MasterPath = $Builddir
     }
-$MasterVMX = get-vmx "VNX*"
+$MasterVMX = get-vmx "VNX*" | where VMXname -NotMatch $Nodeprefix
 if (!($MasterVMX))
     {
     Write-Warning "We need to  build a Master from a Valid OVA Template"
@@ -118,7 +132,7 @@ if (!($MasterVMX))
             Write-warning "$deflating VNX Simulator $LatestOVA"
             #& $global:vmwarepath\7za.exe x "-oVNX$LatestOVA" -y "$($vnxova.FullName)" 
             & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck  --name="VNX$LatestOVA" $($vnxova.FullName) $PSScriptRoot
-    $MasterVMX = get-vmx "VNX*"
+    $MasterVMX = get-vmx "VNX*" | where VMXname -NotMatch $Nodeprefix
     }
 if (!($MasterVMX))
     {
