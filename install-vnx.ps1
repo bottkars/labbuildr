@@ -184,21 +184,23 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     Write-Verbose "Setting Timezone"
     $NodeClone | Invoke-VMXBash -Scriptblock "echo 'ZONE=$ZONE' >> /etc/sysconfig/clock" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
     $NodeClone | Invoke-VMXBash -Scriptblock "/bin/ln -sf /usr/share/zoneinfo/$ZONE /etc/localtime" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
-        $NodeClone | Set-VMXLinuxNetwork -ipaddress $eth0ip -device eth0 -network "$subnet.0" -netmask 255.255.255.0 -gateway $Defaultgateway  -Peerdns -DNS1 $DNS1 -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$node" -rootuser $rootuser -rootpassword $rootpassword
-        $NodeClone | Set-VMXLinuxNetwork -ipaddress $eth1ip -device eth1 -network "$subnet.0" -netmask 255.255.255.0 -gateway $Defaultgateway  -Peerdns -DNS1 $DNS1 -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$node" -rootuser $rootuser -rootpassword $rootpassword
-        $Scriptblock = "/etc/init.d/network restart"
-        $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $rootpassword
-        # $NodeClone | Set-VMXLinuxDNS -Nameserver1 $DNS1 -Search1 "$BuildDomain.local" -Domain "$BuildDomain.local" -rootuser $rootuser -rootpassword $rootpassword
 
-
-    
-    Write-Verbose "Waiting for Daemons Startup, this may take a while"
+    Write-warning "Waiting for Daemons Startup, this may take a while"
     do {
         $Processlist = $NodeClone | Get-VMXProcessesInGuest -Guestuser $rootuser -Guestpassword $rootpassword
         sleep 10
         write-verbose "Still Waiting ! "
         }
     until ($Processlist -match 'avahi-daemon')
+
+        $NodeClone | Set-VMXLinuxNetwork -ipaddress $eth0ip -device eth0 -network "$subnet.0" -netmask 255.255.255.0 -gateway $Defaultgateway  -Peerdns -DNS1 $DNS1 -DNS2 $DNS1 -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$node" -rootuser $rootuser -rootpassword $rootpassword
+        $NodeClone | Set-VMXLinuxNetwork -ipaddress $eth1ip -device eth1 -network "$subnet.0" -netmask 255.255.255.0 -gateway $Defaultgateway  -Peerdns -DNS1 $DNS1 -DNS2 $DNS1 -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$node" -rootuser $rootuser -rootpassword $rootpassword
+       #  $NodeClone | Set-VMXLinuxDNS -Nameserver1 $DNS1 -Nameserver2 $DNS1 -Search1 "$BuildDomain.local" -Domain "$BuildDomain.local" -rootuser $rootuser -rootpassword $rootpassword
+        $Scriptblock = "/etc/init.d/network restart"
+        $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $rootpassword
+
+
+    
     <#
     $Scriptblock = "echo 'default "+$subnet+".103 - -' > /etc/sysconfig/network/routes"
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock  -Guestuser $rootuser -Guestpassword $rootpassword
