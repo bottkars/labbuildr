@@ -306,7 +306,7 @@ function Expand-LABZip
         Write-Verbose "extracting $zipfilename to $destination"
         if (!(test-path  $destination))
             {
-            New-Item -ItemType Directory -Force -Path $destination #| Out-Null
+            New-Item -ItemType Directory -Force -Path $destination | Out-Null
             }
         $shellApplication = New-object -com shell.application
 		$zipPackage = $shellApplication.NameSpace($zipfilename)

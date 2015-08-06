@@ -18,7 +18,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://community.emc.com/blogs/bottk/2015/07/28/labbuildrgoes-emc-ecs
+   https://github.com/bottkars/labbuildr/wiki/SolutionPacks#install-ecs
 .EXAMPLE
 
 #>
@@ -84,6 +84,67 @@ $Guestpassword  = "Password123!"
 $Disksize = "512GB"
 $scsi = 0
 
+### checking for license file ###
+try
+    {
+    $ecslicense = Get-ChildItem "$Sourcedir\ecs\" -Recurse -Filter "license*.xml" -ErrorAction Stop
+    }
+    
+catch [System.Management.Automation.ItemNotFoundException]
+    {
+    write-warning "ECS License Package not found, trying to download from EMC"
+    write-warning "Checking for Downloaded Package"
+                    $Uri = "http://www.emc.com/getecs"
+                    $request = Invoke-WebRequest -Uri $Uri -UseBasicParsing
+                    $DownloadLinks = $request.Links | where href -match "zip"
+                    foreach ($Link in $DownloadLinks)
+                        {
+                        $Url = $link.href
+                        $FileName = Split-Path -Leaf -Path $Url
+                        if (!(test-path  $Sourcedir\$FileName) -or $forcedownload.IsPresent)
+                        {
+                                    
+                        $ok = Get-labyesnoabort -title "Could not find $Filename containing license.xml locally" -message "Should we Download $FileName from ww.emc.com ?" 
+                        switch ($ok)
+                            {
+
+                            "0"
+                                {
+                                Write-Verbose "$FileName not found, trying Download"
+                                if (!( Get-LABFTPFile -Source $URL -Target $Sourcedir\$FileName -verbose -Defaultcredentials))
+                                    { 
+                                    write-warning "Error Downloading file $Url, Please check connectivity"
+                                    Remove-Item -Path $Sourcedir\$FileName -Verbose
+                                    }
+                                }
+                             "1"
+                             {}   
+                            default
+                                {
+                                Write-Verbose "User requested Abort"
+                                exit
+                                }
+                            }
+                        
+                        }
+
+                        if ((Test-Path "$Sourcedir\$FileName") -and (!($noextract.ispresent)))
+                            {
+                            Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\ECS\"
+                            $ecslicense = Get-ChildItem "$Sourcedir\ecs\" -Recurse -Filter "license*.xml"
+                            }
+                        else
+                            {
+                            if (!$noextract.IsPresent)
+                                {
+                                exit
+                                }
+                            }
+                        }
+    }
+
+
+$ecslicense = $ecslicense | where Directory -Match single
 
 $MasterVMX = get-vmx -path $MasterPath
 if (!$MasterVMX)
@@ -151,6 +212,7 @@ if (!$MasterVMX.Template)
         $NodeClone | Set-VMXprocessor -Processorcount 4 | Out-Null
         $NodeClone | Set-VMXmemory -MemoryMB $Memory | Out-Null
         $NodeClone | Set-VMXMainMemory -usefile:$false | Out-Null
+        $NodeClone | Set-VMXTemplate -unprotect | Out-Null
         $Config = $Nodeclone | Get-VMXConfig
         $Config = $Config -notmatch "ide1:0.fileName"
         $Config | Set-Content -Path $NodeClone.config 
@@ -161,6 +223,7 @@ if (!$MasterVMX.Template)
     else
         {
         write-Warning "Machine $Nodeprefix$node already Exists"
+        exit
         }
     }
 foreach ($Node in $machinesBuilt)
@@ -306,10 +369,13 @@ foreach ($Node in $machinesBuilt)
 
 Write-Warning "Please wait up to 5 Minutes and Connect to https://$($ip):443
 Use root:ChangeMe for Login
-make sure to add the ecs license file before continuing with Step 2:
+make sure to add the ecs license file before continuing with Step 2
+the license can be found in $($ecslicense[0].FullName)
 
-When Done press any Key to continue with Step2"
+When Done press any Key to continue with Step2, or Ctrl-C for Custom Creation"
 Pause
+Write-Warning "Starting ECS Install Step 2 for creation of Datacenters and Containers.
+This might take up to 45 Minutes"
 # $Logfile =  "/tmp/ecsinst_Step2.log"
 $Scriptblock = "/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$($BuildDomain)ns1 --ObjectVArray=$($BuildDomain)OVA1 --ObjectVPool=$($BuildDomain)OVP1 --UserName=$Guestuser --DataStoreName=$($BuildDomain)ds1 --VDCName=$($BuildDomain)vdc1 --MethodName= &> /tmp/ecsinst_step2.log" 
 Write-verbose $Scriptblock
