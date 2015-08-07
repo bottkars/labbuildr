@@ -36,7 +36,7 @@ Param(
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [int32]$Nodes=1,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateRange(1,1)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateRange(1,5)]
 [int32]$Startnode = 1,
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ipaddress]$subnet = "192.168.2.0",
@@ -46,7 +46,11 @@ Param(
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$Update,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$FullClone
+[Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$FullClone,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$EMC_ca,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$lowmem
 
 )
 #requires -version 3.0
@@ -55,7 +59,14 @@ $Range = "21"
 $Start = "1"
 $Szenarioname = "ECS"
 $Nodeprefix = "$($Szenarioname)Node"
-$Memory = "20240"
+If ($Lowmem.IsPresent)
+    {
+    $Memory = "12288"
+    }
+else
+    {
+    $Memory = "20240"
+    }
 If ($Defaults.IsPresent)
     {
      $labdefaults = Get-labDefaults
@@ -259,6 +270,24 @@ foreach ($Node in $machinesBuilt)
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  #-logfile $Logfile
 
+    write-Warning "Sessing Kernel Parameters"
+    $Scriptblock = "echo 'kernel.pid_max=655360' >> /etc/sysctl.conf;sysctl -w kernel.pid_max=655360"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile 
+
+    if ($EMC_ca.IsPresent)
+        {
+        Write-Warning "Copying EMC CA Certs"
+        $files = Get-ChildItem -Path "$Sourcedir\EMC_ca"
+        foreach ($File in $files)
+            {
+            $NodeClone | copy-VMXfile2guest -Sourcefile $File.FullName -targetfile "/etc/pki/ca-trust/source/anchors/$File.Name" -Guestuser $Rootuser -Guestpassword $Guestpassword
+            }
+        $Scriptblock = "update-ca-trust"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile 
+        }
+ 
     $Scriptblock = "systemctl disable iptables.service"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
