@@ -2554,7 +2554,7 @@ else
     Write-Verbose "DNS1 : $DNS1"
     If ($Gateway.IsPresent)
         {
-        Write-Verbose "Gateway : $DefaultGateway"
+        Write-Verbose "Gateway : $Gateway"
         }
     if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     {
@@ -3662,7 +3662,7 @@ if ($NW.IsPresent -or $NWServer.IsPresent)
         }
 
 	test-dcrunning
-    If ($IsGateway.IsPresent) { $SetGateway = "-Gateway"}
+    If (($IsGateway.IsPresent) -or (($Gateway.IsPresent) -and ($DefaultGateway -match $Nodeip ))){ $SetGateway = "-Gateway"}
 	$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 9 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -NW $SetGateway -size $Size -Sourcedir $Sourcedir $CommonParameter"
 	###################################################
 	If ($CloneOK)
@@ -3716,7 +3716,7 @@ if ($NW.IsPresent -or $NWServer.IsPresent)
 		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script create-nsrdevice.ps1 -interactive -Parameter "-AFTD AFTD1"
 		# write-verbose "Creating Networker Clients, Groups and Saveset resources"
 		# invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script create-nsrres.ps1 -interactive
-        if ($IsGateway.IsPresent){
+        If (($IsGateway.IsPresent) -or (($Gateway.IsPresent) -and ($DefaultGateway -match $Nodeip ))){
                 write-verbose "Opening Firewall on Networker Server for your Client"
                 invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script firewall.ps1 -interactive
         		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script add-rras.ps1 -interactive -Parameter "-IPv4Subnet $IPv4Subnet"
