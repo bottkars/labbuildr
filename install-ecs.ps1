@@ -281,7 +281,7 @@ foreach ($Node in $machinesBuilt)
         $files = Get-ChildItem -Path "$Sourcedir\EMC_ca"
         foreach ($File in $files)
             {
-            $NodeClone | copy-VMXfile2guest -Sourcefile $File.FullName -targetfile "/etc/pki/ca-trust/source/anchors/$File.Name" -Guestuser $Rootuser -Guestpassword $Guestpassword
+            $NodeClone | copy-VMXfile2guest -Sourcefile $File.FullName -targetfile "/etc/pki/ca-trust/source/anchors/$($File.Name)" -Guestuser $Rootuser -Guestpassword $Guestpassword
             }
         $Scriptblock = "update-ca-trust"
         Write-Verbose $Scriptblock
