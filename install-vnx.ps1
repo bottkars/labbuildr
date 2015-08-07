@@ -1,6 +1,6 @@
 ﻿<#
 .Synopsis
-   .\install-vnx.ps1 -MasterPath F:\labbuildr\ave
+   .\install-vnx.ps1 
 .DESCRIPTION
   install-vnx is the a vmxtoolkit solutionpack for configuring and deploying the VNX File Virtual Edition
   per default, we will default parameter from labbuildr ( see get-help -Parameter )
@@ -19,12 +19,12 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://community.emc.com/blogs/bottk/
+   https://github.com/bottkars/labbuildr/wiki/SolutionPacks#install-vnx
 .EXAMPLE
-    .\install-vnx.ps1 -MasterPath F:\labbuildr\vnx
+    .\install-vnx.ps1 -Defaults -configure
     installs a Single Datamover VNX
 .EXAMPLE
-    .\install-vnx.ps1 -MasterPath F:\labbuildr\vnx -DualDM
+    .\install-vnx.ps1 -Defaults -DualDM
     installs a Dual Datamover VNX
 #>
 [CmdletBinding()]
@@ -33,7 +33,6 @@ Param(
 <#Specify Single (4GB) or DualDatamove (6GB) being Used
 #>
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$Defaults,
-# [Parameter(ParameterSetName = "defaults", Mandatory=$false)][ValidateSet("vipr-2.3.0.0.828","vipr-2.2.1.0.1106")]$viprmaster = "vipr-2.3.0.0.828",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$False)][switch]$DualDM,
@@ -93,33 +92,35 @@ $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 
 $Builddir = $PSScriptRoot
 $Nodeprefix = "VNXNode"
+$SimulatorMaster = "VNX-Simulator"
+$SimulatorDir = Join-Path $Sourcedir $SimulatorMaster
 If (!($Masterpath))
     {
     $MasterPath = $Builddir
-    }
-$MasterVMX = get-vmx "VNX*" | where VMXname -NotMatch $Nodeprefix
-if (!($MasterVMX))
-    {
-    Write-Warning "We need to  build a Master from a Valid OVA Template"
-    try
-        {
-            $vnxova = Get-ChildItem "$Sourcedir"  -Filter "8*.ova" -ErrorAction Stop
-        }
     
-    catch [System.Management.Automation.ItemNotFoundException]
+    $MasterVMX = get-vmx "$SimulatorMaster*" | where VMXname -NotMatch $Nodeprefix
+    if (!($MasterVMX))
         {
-        Write-Warning "no vnx ova found, please download from support.emc.com
-        https://download.emc.com/downloads/DL49032_VNX_File_Simulator_(OE_8.1.0.15)_Single/Dual_Data_Mover_(OVA_package).ova"
-        exit
-        }
-    catch [System.Management.Automation.DriveNotFoundException]
-        {
-        Write-Warning "Sourcedrive not found, usb stick connected ? "
-        exit
-        }
-    $vnxova = $vnxova | Sort-Object -Descending
-    $vnxova = $vnxova[0]
-    $LatestOVA = $vnxova.BaseName
+        Write-Warning "We need to  build a Master from a Valid OVA Template"
+        try
+            {
+                $vnxova = Get-ChildItem "$SimulatorDir"  -Filter "8*.ova" -ErrorAction Stop
+            }
+    
+        catch [System.Management.Automation.ItemNotFoundException]
+            {
+            Write-Warning "no vnx ova found, please download from support.emc.com
+            https://download.emc.com/downloads/DL49032_VNX_File_Simulator_(OE_8.1.0.15)_Single/Dual_Data_Mover_(OVA_package).ova"
+            exit
+            }
+        catch [System.Management.Automation.DriveNotFoundException]
+            {
+            Write-Warning "Sourcedrive not found, usb stick connected ? "
+            exit
+            }
+        $vnxova = $vnxova | Sort-Object -Descending
+        $vnxova = $vnxova[0]
+        $LatestOVA = $vnxova.BaseName
     <#
     if (!(Test-Path "$global:vmwarepath\7za.exe"))
                     {
@@ -131,9 +132,16 @@ if (!($MasterVMX))
                     #>
             Write-warning "$deflating VNX Simulator $LatestOVA"
             #& $global:vmwarepath\7za.exe x "-oVNX$LatestOVA" -y "$($vnxova.FullName)" 
-            & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck  --name="VNX$LatestOVA" $($vnxova.FullName) $PSScriptRoot
-    $MasterVMX = get-vmx "VNX*" | where VMXname -NotMatch $Nodeprefix
+            & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck  --name="$SimulatorMaster-$LatestOVA" $($vnxova.FullName) $PSScriptRoot
+        $MasterVMX = get-vmx "$SimulatorMaster*" | where VMXname -NotMatch $Nodeprefix
+        }
     }
+else
+    {
+    $MasterVMX = Get-vmx -Path $MasterVMX
+    }
+############################
+
 if (!($MasterVMX))
     {
     Write-Warning "we had trouble finding a Master"
