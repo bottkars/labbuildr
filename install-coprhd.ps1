@@ -2,7 +2,7 @@
 .Synopsis
    .\install-coprhd.ps1 
 .DESCRIPTION
-  install-rdostack is  the a vmxtoolkit solutionpack for configuring and deploying centos openstack vm´s
+  install-coprhd is  the a labbuildr solutionpack for compiling  and deploying CoprHD Controller
       
       Copyright 2014 Karsten Bott
 
@@ -18,7 +18,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://community.emc.com/blogs/bottk/2015/07/30/labbuildr-goes-coprhd
+   https://github.com/bottkars/labbuildr/wiki/SolutionPacks#install-coprhd
 .EXAMPLE
 #>
 [CmdletBinding(DefaultParametersetName = "defaults")]
@@ -149,6 +149,12 @@ if (!(Test-path "$Sourcedir\$Scenarioname"))
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
         $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -suse -device eno16777984 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
         # $NodeClone | Invoke-VMXBash -Scriptblock "/sbin/rcnetwork restart" -Guestuser $Rootuser -Guestpassword $Guestpassword
+        
+        $Scriptblock = "zypper -n rm patterns-openSUSE-minimal_base-conflicts"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile "/tmp/zypper.log"
+        
+
 ### Adding Repos        
         $Scriptname = "add_repos.sh"
         $content = "#!/bin/bash
@@ -228,7 +234,6 @@ EOF
         $Scriptname = "inst_pre.sh" 
         $Content ="#!/bin/bash
 zypper --gpg-auto-import-keys refresh
-zypper -n rm patterns-openSUSE-minimal_base-conflicts
 zypper -n install gcc make pcre-devel zlib-devel ant apache2-mod_perl createrepo expect gcc-c++ gpgme inst-source-utils java-1_7_0-openjdk java-1_7_0-openjdk-devel kernel-default-devel kernel-source kiwi-desc-isoboot kiwi-desc-oemboot kiwi-desc-vmxboot kiwi-templates libtool openssh-fips perl-Config-General perl-Tk python-libxml2 python-py python-requests setools-libs python-setools qemu regexp rpm-build sshpass sysstat unixODBC xfsprogs xml-commons-jaxp-1.3-apis zlib-devel git git-core glib2-devel libgcrypt-devel libgpg-error-devel libopenssl-devel libuuid-devel libxml2-devel pam-devel pcre-devel perl-Error python-devel readline-devel subversion xmlstarlet xz-devel libpcrecpp0 libpcreposix0 ca-certificates-cacert p7zip python-iniparse python-gpgme yum keepalived
 zypper -n install -r suse-13.2-monitoring atop GeoIP-data libGeoIP1 GeoIP
 zypper -n install -r suse-13.2-scalpel4k gradle

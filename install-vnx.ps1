@@ -81,7 +81,7 @@ If ($configurevdm.IsPresent)
         if ($dcnode.State -ne "running")
             {
             Write-warning "we need to start dcnode"
-            $Dcnode | start-vmx
+            $Dcnode | start-vmx | Out-Null
             }
         }
        
