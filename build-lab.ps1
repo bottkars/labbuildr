@@ -364,7 +364,7 @@ Version Of Networker Modules
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
-	[ValidateSet('nmm8212','nmm821','nmm300', 'nmm301', 'nmm2012', 'nmm3012', 'nmm82','nmm85','nmm85.BR1','nmm85.BR2','nmm85.BR3','nmm85.BR4')]
+	[ValidateSet('nmm8212','nmm8214','nmm8216','nmm821','nmm300', 'nmm301', 'nmm2012', 'nmm3012', 'nmm82','nmm85','nmm85.BR1','nmm85.BR2','nmm85.BR3','nmm85.BR4')]
 $nmm_ver,
 	
 <# Indicates to install Networker Server with Scenario #>
@@ -395,7 +395,7 @@ mus be extracted to [sourcesdir]\[nw_ver], ex. c:\sources\nw82
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
-    [ValidateSet('nw8213','nw8212','nw8211','nw821','nw8205','nw8204','nw8203','nw8202','nw82','nw8116','nw8115','nw8114', 'nw8113','nw8112', 'nw811',  'nw8105','nw8104','nw8102', 'nw81','nw85','nw85.BR1','nw85.BR2','nw85.BR3','nw85.BR4','nwunknown')]
+    [ValidateSet('nw8216','nw8215','nw8214','nw8213','nw8212','nw8211','nw821','nw8205','nw8204','nw8203','nw8202','nw82','nw8116','nw8115','nw8114', 'nw8113','nw8112', 'nw811',  'nw8105','nw8104','nw8102', 'nw81','nw85','nw85.BR1','nw85.BR2','nw85.BR3','nw85.BR4','nwunknown')]
     $nw_ver,
 
 ### network Parameters ######
@@ -489,7 +489,8 @@ Sources should be populated from a bases sources.zip
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
-	[Validatescript({Test-Path -Path $_ })][String]$Sourcedir,
+    [String]$Sourcedir,
+	#[Validatescript({Test-Path -Path $_ })][String]$Sourcedir,
 <# Turn on Logging to Console#>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
@@ -557,8 +558,8 @@ $domainsuffix = ".local"
 $AAGDB = "AWORKS"
 $major = "4.0"
 $latest_ScaleIO = '1.32-403.2'
-$latest_nmm = 'nmm8212'
-$latest_nw = 'nw8213'
+$latest_nmm = 'nmm8216'
+$latest_nw = 'nw8216'
 $latest_e16 = 'Preview1'
 $latest_ex = 'cu9'
 $latest_sql  = 'SQL2014'
@@ -1209,9 +1210,31 @@ if ($defaults.IsPresent)
         $DefaultGateway = $Default.config.DefaultGateway
         if (!$nmm_ver)
             {
-            $nmm_ver = $Default.config.nmm_ver
+            try
+                {
+                $nmm_ver = $Default.config.nmm_ver
+                }
+            catch
+            [System.Management.Automation.ValidationMetadataException]
+                {
+                Write-Warning "defaulting NMM version to $latest_nmm"
+                 $nmm_ver = $latest_nmm
+                }
             } 
-        if (!$nw_ver) {$nw_ver = $Default.config.nw_ver}
+        $scvmm_ver = $nmm_ver -replace "nmm","scvmm"
+        if (!$nw_ver)
+            {
+            try
+                {
+                $nw_ver = $Default.config.nw_ver
+                }
+            catch
+            [System.Management.Automation.ValidationMetadataException]
+                {
+                Write-Warning "defaulting nw version to $latest_nw"
+                 $nw_ver = $latest_nw
+                }
+            } 
         if (!$Masterpath)
             {
             try
@@ -1278,8 +1301,6 @@ if (!$MySubnet) {$MySubnet = "192.168.2.0"}
 $IPv4Subnet = convert-iptosubnet $MySubnet
 if (!$BuildDomain) { $BuildDomain = "labbuildr" }
 if (!$ScaleIOVer) {$ScaleIOVer = $latest_ScaleIO}
-if (!$nmm_ver) {$nmm_ver = $latest_nmm}
-if (!$nw_ver) {$nw_ver = $latest_nw}
 if (!$SQLVER) {$SQLVER = $latest_sql}
 if (!$ex_cu) {$ex_cu = $latest_ex}
 if (!$e16_cu) {$e16_cu = $latest_e16}
@@ -1367,12 +1388,23 @@ if (!$Sourcedir)
     }
 else
     {
-    if (!(Test-Path -Path $Sourcedir))
+    try
         {
-        Write-Warning "Sourcedir $Sourcedir does not exist, should i Create one for you download ?"
-        Write-Warning "Not yet implemented"
+        Get-Item -Path $Sourcedir -ErrorAction Stop | Out-Null 
+        }
+        catch
+        [System.Management.Automation.DriveNotFoundException] 
+        {
+        Write-Warning "Drive not found, make sure to have your Source Stick connected"
         exit
         }
+        catch [System.Management.Automation.ItemNotFoundException]
+        {
+        write-warning "no sources directory found named $Sourcedir"
+        exit
+        }
+
+
      }
 if (!$Master)
 
@@ -1389,7 +1421,7 @@ if (!$Master)
     catch [Exception] 
     {
     Write-Warning "Could not find $Masterpath\$Master"
-    Write-Warning "Please download a Master from https://community.emc.com/blogs/bottk/2015/03/30/labbuildrbeta"
+    Write-Warning "Please download a Master from https://github.com/bottkars/labbuildr/wiki/Master"
     Write-Warning "And extract to $Masterpath"
     # write-verbose $_.Exception
     break
@@ -2232,11 +2264,22 @@ if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
         Write-Warning "We need to get $NW_ver, trying Automated Download"
         # New-Item -ItemType Directory -Path $Sourcedir\$EX_Version$ex_cu | Out-Null
         # }
+        
+        $nwdotver = $nw_ver -replace "nw",""
+        $nwdotver = $nwdotver.insert(1,'.')
+        $nwdotver = $nwdotver.insert(3,'.')
+        $nwdotver = $nwdotver.insert(5,'.')
+        $nwzip = $nw_ver -replace ".$"
+        $nwzip = $nwzip+'_win_x64.zip'
+        $url = "ftp://ftp.legato.com/pub/NetWorker/Cumulative_Hotfixes/$($nwdotver.Substring(0,3))/$nwdotver/$nwzip"
+
+        <#
         switch ($nw_ver)
+        
         {
         "nw8213"
             {
-            $url = "ftp://ftp.legato.com/pub/NetWorker/Cumulative_Hotfixes/8.2/8.2.1.3/nw821_win_x64.zip"
+            $url = "ftp://ftp.legato.com/pub/NetWorker/Cumulative_Hotfixes/$($nwdotver.Substring(0,3))/$nwdotver/$nwzip"
             }
 
         default
@@ -2244,6 +2287,7 @@ if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
             $url = $false
             }
         }
+        #>
         if ($url)
             {
             # $FileName = Split-Path -Leaf -Path $Url
@@ -2255,7 +2299,7 @@ if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
                 Write-Verbose "$FileName not found, trying Download"
                 if (!( Get-LABFTPFile -Source $URL -Target $Zipfilename -verbose -Defaultcredentials))
                     { 
-                    write-warning "Error Downloading file $Url, Please check connectivity"
+                    write-warning "Error Downloading file $Url, Please check connectivity or download manually"
                     }
                 }
             Write-Verbose $Zipfilename     
@@ -2267,7 +2311,7 @@ if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
 if ($NMM.IsPresent)
     {
 
-    if ((Test-Path "$Sourcedir/$nmm_ver/win_x64/networkr/networker.msi") -or (Test-Path "$Sourcedir/$nmm_ver/win_x64/networkr/NWVSS.exe"))
+    if ((Test-Path "$Sourcedir/$nmm_ver/win_x64/networkr/NetWorker Module for Microsoft.msi") -or (Test-Path "$Sourcedir/$nmm_ver/win_x64/networkr/NWVSS.exe"))
         {
         Write-Verbose "Networker NMM $nmm_ver found"
         }
@@ -2283,6 +2327,17 @@ if ($NMM.IsPresent)
             $urls = ("ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.2/nmm821_win_x64.zip",
                     "ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.2/scvmm821_win_x64.zip")
             }
+        "nmm8214"
+            {
+            $urls = ("ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.4/nmm821_win_x64.zip",
+                    "ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.4/scvmm821_win_x64.zip")
+            }
+        
+        "nmm8216"
+            {
+            $urls = ("ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.6/nmm821_win_x64.zip",
+                    "ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.6/scvmm821_win_x64.zip")
+            }
 
         default
             {
@@ -2294,27 +2349,27 @@ if ($NMM.IsPresent)
             foreach ($url in $urls)
                 {
                 $FileName = Split-Path -Leaf -Path $Url
-                $Zipfilename = Join-Path $Sourcedir $FileName
-                
-
-                if (!(test-path  $Sourcedir\$FileName))
+                if ($FileName -match "nmm")
                     {
-                    Write-Verbose "$FileName not found, trying Download"
-                    if (!( Get-LABFTPFile -Source $URL -Target $Sourcedir\$FileName -verbose -Defaultcredentials))
+                    $Zipfilename = "$nmm_ver.zip"
+                    }
+                if ($FileName -match "scvmm")
+                    {
+                    $Zipfilename = "$scvmm_ver.zip"
+                    }
+                $Zipfile = Join-Path $Sourcedir $Zipfilename
+                if (!(test-path  $Zipfile))
+                    {
+                    Write-Verbose "$Zipfilename not found, trying Download"
+                    if (!( Get-LABFTPFile -Source $URL -Target $Zipfile -verbose -Defaultcredentials))
                         { 
                         write-warning "Error Downloading file $Url, Please check connectivity"
                         }
                     }
-                If ($FileName -match "nmm")
-                    {
-                    $Destinationdir = Join-Path "$Sourcedir" "$nmm_ver"     
-                    Expand-LABZip -zipfilename $Zipfilename -destination $Destinationdir
-                    }
-                else
-                    {
-                    $Destinationdir = Join-Path "$Sourcedir" "$($FileName.replace(".zip"," "))"
-                    Expand-LABZip -zipfilename $Zipfilename -destination $Destinationdir
-                    }
+                $Destinationdir =  "$($Zipfile.replace(".zip"," "))"
+                Write-Verbose $Destinationdir
+                Expand-LABZip -zipfilename $Zipfile -destination $Destinationdir
+                pause
                 }
             }
       }
