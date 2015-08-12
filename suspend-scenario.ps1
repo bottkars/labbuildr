@@ -1,6 +1,6 @@
 ﻿[CmdletBinding(DefaultParametersetName = "1")]
 	param (
-	[Parameter(ParameterSetName = "1", Mandatory = $true,Position = 0)][ValidateSet('Exchange','SQL','DPAD','EMCVSA','hyper-V','ScaleIO','ESXi','labbuildr')]$Scenario,
+	[Parameter(ParameterSetName = "1", Mandatory = $true,Position = 0)][ValidateSet('Exchange','SQL','DPAD','EMCVSA','hyper-V','ScaleIO','ESXi','labbuildr','isinode')]$Scenario,
     [switch]$dc
 	)
 begin
