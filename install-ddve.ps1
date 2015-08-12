@@ -104,7 +104,7 @@ switch ($PsCmdlet.ParameterSetName)
         {
         if (!($mastername)) 
             {
-            $mastername = (Split-Path -Leaf $ovf).Replace(".ovf","")+"_master"
+            $mastername = (Split-Path -Leaf $ovf).Replace(".ovf","")
             }
         & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $ovf $PSScriptRoot #
         Write-Output "Use install-ddve -Masterpath .\$Mastername"
