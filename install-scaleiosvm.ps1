@@ -141,7 +141,7 @@ switch ($PsCmdlet.ParameterSetName)
                         if (!(test-path  $Sourcedir\$FileName) -or $forcedownload.IsPresent)
                         {
                                     
-                        $ok = Get-labyesnoabort -title "Could not find $Filename, we need to dowload from ww.emc.com" -message "Should we Download $FileName from ww.emc.com ?" 
+                        $ok = Get-labyesnoabort -title "Could not find $Filename, we need to dowload from www.emc.com" -message "Should we Download $FileName from ww.emc.com ?" 
                         switch ($ok)
                             {
 
@@ -155,7 +155,9 @@ switch ($PsCmdlet.ParameterSetName)
                                     }
                                 }
                              "1"
-                             {}   
+                             {
+                             break
+                             }   
                             default
                                 {
                                 Write-Verbose "User requested Abort"
