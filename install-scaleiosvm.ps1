@@ -155,10 +155,10 @@ switch ($PsCmdlet.ParameterSetName)
                                     }
                                 }
                              "1"
-                             {
+                                {
                              break
-                             }   
-                            default
+                                }   
+                             "2"
                                 {
                                 Write-Verbose "User requested Abort"
                                 exit

@@ -161,13 +161,6 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     Write-Verbose "We are now adding the S[torage] D[ata] S[ervice] Nodes"
     Pause
     }
-<# $Driveletters = (get-volume | where {$_.DriveType -match "fixed" -and $_.Size -le 0 -and  $_.DriveLetter -ne ""}).Driveletter
-# Write-verbose "Configuring SDS´s with $Driveletters[0] as SDS Device"
-$Devicename = "$Location"+"_Disk_$($Driveletters[0])"
-scli --add_sds --sds_ip $PrimaryIP --device_path $Driveletters[0] --device_name $Devicename  --sds_name hvnode1 --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --no_test --mdm_ip $mdm_ip
-scli --add_sds --sds_ip $SecondaryIP --device_path $Driveletters[0] --device_name $Devicename  --sds_name hvnode2 --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --no_test --mdm_ip $mdm_ip
-scli --add_sds --sds_ip $TiebreakerIP --device_path $Driveletters[0] --device_name $Devicename  --sds_name hvnode3 --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --no_test --mdm_ip $mdm_ip
-#>
 $Disks = @()
 $Disks += (Get-ChildItem -Path C:\scaleio_devices\ -Recurse -Filter *.bin ).FullName
 
@@ -186,16 +179,6 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     }
 scli --user --login --username admin --password $Password --mdm_ip $mdm_ip
 
-<#
-foreach ($Driveletter in $Driveletters | where {$_ -NotMatch $Driveletters[0]})
-{
-Write-verbose "Configuring $Driveletter as SDS Device"
-$Devicename = "$Location"+"_Disk_$Driveletter"
-scli --add_sds_device --sds_ip $PrimaryIP --device_path $Driveletter --device_name $Devicename --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --no_test --mdm_ip $mdm_ip
-scli --add_sds_device --sds_ip $SecondaryIP --device_path $Driveletter --device_name $Devicename --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --no_test --mdm_ip $mdm_ip
-scli --add_sds_device --sds_ip $TiebreakerIP --device_path $Driveletter --device_name $Devicename --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --no_test --mdm_ip $mdm_ip
-}
-#>
 
 If ($Disks.Count -gt 1)
 {

@@ -171,8 +171,8 @@ param (
     [ValidateSet('1.30-426.0','1.31-258.2','1.31-1277.3','1.31-2333.2','1.32-277.0','1.32-402.1','1.32-403.2')][alias('siover')]$ScaleIOVer,
     <# single mode with mdm only on first node ( no secondary, no tb ) #>
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$singlemdm,
-    <# Cluster modemdm automatically#>
-    [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$clusteredmdm,
+    # <# Cluster modemdm automatically#>
+    # [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$clusteredmdm,
     <# SCVMM on last Node ? #>	
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$SCVMM,
     <# Starting Node for Blank Nodes#>
@@ -1582,7 +1582,12 @@ if ($HyperV.IsPresent)
 }#end Hyperv.ispresent
 if ($ScaleIO.IsPresent)
 {
-	workorder "We are going to Install ScaleIO on $HyperVNodes Hyper-V  Nodes"
+    If ($HyperVNodes -lt 3)
+                {
+                Write-Warning "Need 3 nodes for ScaleIO, incrementing to 3"
+                $HyperVNodes = 3
+                }	
+workorder "We are going to Install ScaleIO on $HyperVNodes Hyper-V  Nodes"
     if ($Gateway.IsPresent){ workorder "The Gateway will be $DefaultGateway"}
 	# if ($Cluster.IsPresent) { write-verbose "The Nodes will be Clustered ( Single Node Clusters )" }
 }
@@ -2392,11 +2397,11 @@ if ($ScaleIO.IsPresent)
 
     try
         {
-        Test-Path $ScaleIOPath
+        Test-Path $ScaleIOPath | Out-Null
         }
     catch
         {
-        write-warning "we did not found ScaleIO $ScaleIOVer, but  we can try to download !"
+        write-warning "we did not find ScaleIO $ScaleIOVer, we will check local zip/try to download latest version!"
                 switch ($ScaleIOVer)
             {
             "$latest_ScaleIO"
@@ -2413,7 +2418,7 @@ if ($ScaleIO.IsPresent)
             if ($url)
                 {
                 $FileName = Split-Path -Leaf -Path $Url
-                $FileName = $FileName -replace "$FileName","ScaleIO_$ScaleIOVer.zip"
+                # $FileName = $FileName -replace "$FileName","ScaleIO_$ScaleIOVer.zip"
                 $Zipfilename = Join-Path $Sourcedir $FileName
                 $Destinationdir = Join-Path "$Sourcedir" "ScaleIO"
                 if (!(test-path  $ZipFileName))
@@ -3099,11 +3104,6 @@ switch ($PsCmdlet.ParameterSetName)
         $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features, Hyper-V, Hyper-V-Tools, Hyper-V-PowerShell, WindowsStorageManagementService"
 		if ($ScaleIO.IsPresent)
             {
-            If ($HyperVNodes -lt 3)
-                {
-                Write-Warning "Need 3 nodes for ScaleIO, incrementing to 3"
-                $HyperVNodes = 3
-                }
             if (!$Cluster.IsPresent)
                 {
                 Write-Warning "We want a Cluster for Automated SCALEIO Deployment, adjusting"
@@ -3261,12 +3261,13 @@ switch ($PsCmdlet.ParameterSetName)
         
             if ($singlemdm.IsPresent)
                     {
-                    Write-Warning "Configuring MDM"
-                    invoke-vmxpowershell -config $FirstVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script configure-mdm.ps1 -Parameter "-singlemdm" -interactive 
+                    Write-Warning "Configuring Single MDM"
+                    invoke-vmxpowershell -config $FirstVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script configure-mdm.ps1 -Parameter "-singlemdm -CSVnum 3" -interactive 
                     }
-            if ($clusteredmdm.IsPresent)
+            else
+            # if ($clusteredmdm.IsPresent)
                     {
-                    Write-Warning "Configuring MDM"
+                    Write-Warning "Configuring Clustered MDM"
                     invoke-vmxpowershell -config $FirstVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script configure-mdm.ps1 -Parameter "-CSVnum 3" -interactive 
                     }
             }

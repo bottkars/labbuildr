@@ -21,12 +21,29 @@ $Host.UI.RawUI.WindowTitle = "$ScriptName"
 $Builddir = $PSScriptRoot
 $Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
 New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
-$ScaleIORoot = "\\vmware-host\shared folders\sources\Scaleio\"
-$ScaleIO_Major = ($ScaleIOVer.Split("-"))[0]
-$ScaleIOPath = (Get-ChildItem -Path $ScaleIORoot -Recurse -Filter "*mdm-$ScaleIOVer.msi").Directory.FullName
-# $ScaleIOPath = "ScaleIO_$($ScaleIO_Major)_Complete_Windows_SW_Download\ScaleIO_$($ScaleIO_Major)_Windows_Download"
-
 .$Builddir\test-sharedfolders.ps1
+$ScaleIORoot = "\\vmware-host\shared folders\sources\Scaleio\"
+While ((Test-Path $ScaleIORoot) -Ne $true)
+    {
+    Write-Warning "Cannot find $ScaleIORoot
+    Make sure USB Drive Connected to Host
+    Make Sure USB Stick IS NOT connected to VM
+    press any key when done pr Ctrl-C to exit"
+    pause
+    }
+$ScaleIO_Major = ($ScaleIOVer.Split("-"))[0]
+While (!($ScaleIOPath = (Get-ChildItem -Path $ScaleIORoot -Recurse -Filter "*mdm-$ScaleIOVer.msi").Directory.FullName))
+    {
+    Write-Warning "Cannot find ScaleIO $ScaleIOVer in $ScaleIORoot
+    Make sure the Windows Package is downloaded and extracted to $ScaleIORoot
+    or select dufferent version
+    press any key when done pr Ctrl-C to exit"
+    pause
+
+
+    }
+
+$ScaleIORoot = "\\vmware-host\shared folders\sources\Scaleio\"
 $Setuppath = Join-Path $ScaleIOPath "EMC-ScaleIO-$role-$ScaleIOVer.msi"
 .$Builddir\test-setup.ps1 -setup "Saleio$role$ScaleIOVer" -setuppath $Setuppath
 $ScaleIOArgs = '/i "'+$Setuppath+'" /quiet'
@@ -57,6 +74,4 @@ foreach ($Disk in 1..$Disks)
         # sleep 5
         }
     until (Test-Path "c:\scaleio_devices\PhysicalDrive$Disk")
-    # get-Disk  -Number $Disk | Initialize-Disk -PartitionStyle GPT
-    # get-Disk  -Number $Disk | New-Partition -UseMaximumSize -AssignDriveLetter # -DriveLetter $Driveletter
     }

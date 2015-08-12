@@ -91,9 +91,6 @@ _____ __|_________|_____|_________
 [Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
 [Parameter(ParameterSetName = "install", Mandatory = $true)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = "vmnet2"
 
-# [Parameter(Mandatory = $false)][switch]$configure
-
-
 
 )
 #requires -version 3.0
@@ -107,7 +104,7 @@ switch ($PsCmdlet.ParameterSetName)
         {
         if (!($mastername)) 
             {
-            $mastername = (Split-Path -Leaf $ovf).Replace(".ovf","")
+            $mastername = (Split-Path -Leaf $ovf).Replace(".ovf","")+"_master"
             }
         & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $ovf $PSScriptRoot #
         Write-Output "Use install-ddve -Masterpath .\$Mastername"
@@ -134,8 +131,64 @@ switch ($PsCmdlet.ParameterSetName)
 
         $Builddir = $PSScriptRoot
         $Nodeprefix = "DDvENode"
+        if (!$MasterVMX)
+            {
+            $MasterVMX = get-vmx Ddve-5*
+            iF ($MasterVMX)
+                {
+                $MasterVMX = $MasterVMX | Sort-Object -Descending
+                $MasterVMX = $MasterVMX[-1]
+                }
+            }
+        else
+            {        
+            $MasterVMX = get-vmx -path $MasterPath
+            }
 
-        $MasterVMX = get-vmx -path $MasterPath
+        if (!$MasterVMX)
+            {
+            write-warning "Could not find DDVEMaster"
+            if ($Defaults.IsPresent)
+                {
+                Write-Warning "Trying Latest OVF fom $Sourcedir"
+                try
+                    {
+                    $OVFpath =Join-Path $Sourcedir "ddve-*\*.ov*" -ErrorAction Stop
+                    }
+                catch [System.Management.Automation.DriveNotFoundException] 
+                    {
+                    Write-Warning "Drive not found, make sure to have your Source Stick connected"
+                    exit
+                    }
+                
+                    $OVFfile = get-item -Path $OVFpath | Sort-Object -Descending -Property Name
+                    If (!$OVFfile)
+                        {
+                        Write-Verbose "No OVF for DDVE found"
+                        exit
+                        }
+                    else 
+                        {
+                        Write-Warning "testing OVF"
+                        $OVFfile = $OVFfile[0]
+                        $mastername = (Split-Path -Leaf $OVFfile).Replace(".ovf","")
+                        & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $OVFfile.FullName $PSScriptRoot #
+                        if ($LASTEXITCODE -ne 0)
+                            {
+                            Write-Warning "Error Extraxting OVF"
+                            exit
+                            }
+                        $MasterVMX = get-vmx $mastername
+                        }
+                }
+            else
+                {
+                Write-Warning "Please import with -ovf or use -Defaults"
+                exit
+                }
+
+            }
+
 
         if (!$MasterVMX.Template) 
             {
