@@ -198,52 +198,10 @@ add-content -Path $Clone.config $memhook
 if ($HyperV){
 ($Clone | Get-VMXConfig) | foreach-object {$_ -replace 'guestOS = "windows8srv-64"', 'guestOS = "winhyperv"' } | set-content $Clone.config
 }
-
-<#
-if ($Exchange){
-
-copy-item $Builddir\Disks\DB1.vmdk $Builddir\$Nodename\DB1.vmdk
-copy-item $Builddir\Disks\LOG1.vmdk $Builddir\$Nodename\LOG1.vmdk
-copy-item $Builddir\Disks\DB1.vmdk $Builddir\$Nodename\DB2.vmdk
-copy-item $Builddir\Disks\LOG1.vmdk $Builddir\$Nodename\LOG2.vmdk
-copy-item $Builddir\Disks\DB1.vmdk $Builddir\$Nodename\RDB.vmdk
-copy-item $Builddir\Disks\LOG1.vmdk $Builddir\$Nodename\RDBLOG.vmdk
-$AddDrives = @('scsi0:1.present = "TRUE"','scsi0:1.fileName = "DB1.vmdk"','scsi0:2.present = "TRUE"','scsi0:2.fileName = "LOG1.vmdk"','scsi0:3.present = "TRUE"','scsi0:3.fileName = "DB2.vmdk"','scsi0:4.present = "TRUE"','scsi0:4.fileName = "LOG2.vmdk"','scsi0:5.present = "TRUE"','scsi0:5.fileName = "RDB.vmdk"','scsi0:6.present = "TRUE"','scsi0:6.fileName = "RDBLOG.vmdk"')
-$AddDrives | Add-Content -Path $Clone.config
-}
-
-
-if ($AddDisks.IsPresent)
-    {
-    $Content = $Clone | Get-VMXConfig
-
-    
-    foreach ( $Disk in 1..$Disks)
-        {
-        $Diskpath = "$Builddir\$Nodename\0_"+$Disk+"_100GB.vmdk"
-        Write-Verbose "Creating Disk"
-        & $VMWAREpath\vmware-vdiskmanager.exe -c -s 100GB -a lsilogic -t 0 $Diskpath 2>&1 | Out-Null
-        $AddDrives  = @('scsi0:'+$Disk+'.present = "TRUE"')
-        $AddDrives += @('scsi0:'+$Disk+'.deviceType = "disk"')
-        $AddDrives += @('scsi0:'+$Disk+'.fileName = "0_'+$Disk+'_100GB.vmdk"')
-        $AddDrives += @('scsi0:'+$Disk+'.mode = "persistent"')
-        $AddDrives += @('scsi0:'+$Disk+'.writeThrough = "false"')
-        $Content += $AddDrives
-        }
-          $Content | set-Content -Path $Clone.config
-    }
-
-#>
-
+$Clone | Set-VMXAnnotation -builddate -Line1 "This is node $Nodename for domain $Domainname"-Line2 "Adminpasswords: Password123!" -Line3 "Userpasswords: Welcome1"
 ######### next commands will be moved in vmrunfunction soon 
 # KB , 06.10.2013 ##
-$Addcontent = @()
-$Addcontent += 'annotation = "This is node '+$Nodename+' for domain '+$Domainname+'|0D|0A built on '+(Get-Date -Format "MM-dd-yyyy_hh-mm")+'|0D|0A using labbuildr by @Hyperv_Guy|0D|0A Adminpasswords: Password123! |0D|0A Userpasswords: Welcome1"'
-$Addcontent += 'guestinfo.hypervisor = "'+$env:COMPUTERNAME+'"'
-$Addcontent += 'guestinfo.buildDate = "'+$BuildDate+'"'
-$Addcontent += 'guestinfo.powerontime = "'+$BuildDate+'"'
-Add-Content -Path $Clone.config -Value $Addcontent
-
+$Clone | Set-VMXAnnotation -builddate -Line1 "This is node $Nodename for domain $Domainname"-Line2 "Adminpasswords: Password123!" -Line3 "Userpasswords: Welcome1"
 if ($exchange.IsPresent)
     {    
     $Diskname =  "DATA_LUN1.vmdk"
@@ -334,6 +292,7 @@ elseif(!$Isilon.IsPresent)
         Set-VMXVnet -config $Clone.config -Adapter 0 -vnet $vmnet
         }
 
+$Clone | Set-VMXToolsReminder -enabled:$false
 
 
 $Clone | Start-VMX

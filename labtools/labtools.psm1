@@ -44,9 +44,9 @@ return ($result)
 function Set-LABDefaultGateway
 {
 	[CmdletBinding(HelpUri = "https://github.com/bottkars/LABbuildr/wiki/LABtools#Set-LABDefaultGateway")]
-	param (
-	[Parameter(ParameterSetName = "1", Mandatory = $false )][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
-    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 1)][system.net.ipaddress]$DefaultGateway
+	param (    
+    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 1)][system.net.ipaddress]$DefaultGateway,
+    [Parameter(ParameterSetName = "1", Mandatory = $false )][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
     )
     if (!(Test-Path $Defaultsfile))
     {
@@ -103,7 +103,7 @@ function Set-LABGateway
 	[CmdletBinding(HelpUri = "https://github.com/bottkars/LABbuildr/wiki/LABtools#Set-LABGateway")]
 	param (
 	[Parameter(ParameterSetName = "1", Mandatory = $false,Position = 2)]$Defaultsfile=".\defaults.xml",
-    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 1)][switch]$Gateway
+    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 1)][switch]$enabled
     )
 if (!(Test-Path $Defaultsfile))
     {
@@ -111,7 +111,7 @@ if (!(Test-Path $Defaultsfile))
     New-LABdefaults -Defaultsfile $Defaultsfile
     }
     $Defaults = Get-LABdefaults -Defaultsfile $Defaultsfile
-    $Defaults.Gateway = $Gateway.IsPresent
+    $Defaults.Gateway = $enabled.IsPresent
     Write-Verbose "Setting $Gateway"
     Save-LABdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
 }
@@ -180,8 +180,29 @@ function Set-LABSources
 	param (
 	[Parameter(ParameterSetName = "1", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
     [ValidateLength(3,10)]
-    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 1)][ValidateScript({ Test-Path -Path $_ })]$Sourcedir
-    )
+    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 1)][ValidateScript({ 
+    try
+        {
+        Get-Item -Path $_ -ErrorAction Stop | Out-Null 
+        }
+        catch
+        [System.Management.Automation.DriveNotFoundException] 
+        {
+        Write-Warning "Drive not found, make sure to have your Source Stick connected"
+        exit
+        }
+        catch #[System.Management.Automation.ItemNotFoundException]
+        {
+        write-warning "no sources directory found"
+        exit
+        }
+        return $True
+        })]$Sourcedir
+    
+#Test-Path -Path $_ })]$Sourcedir
+    )   
+    if (!(Test-Path $Sourcedir)){exit} 
+
     if (!(Test-Path $Defaultsfile))
     {
         Write-Warning "Creating New defaultsfile"
@@ -189,7 +210,7 @@ function Set-LABSources
     }
     $Defaults = Get-LABdefaults -Defaultsfile $Defaultsfile
     $Defaults.sourcedir = $Sourcedir
-    Write-Verbose "Setting builddomain $Sourcedir"
+    Write-Verbose "Setting Sourcedir $Sourcedir"
     Save-LABdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
 }
 
@@ -227,11 +248,11 @@ process
         $object | Add-Member -MemberType NoteProperty -Name Sourcedir -Value $Default.Config.Sourcedir
         $object | Add-Member -MemberType NoteProperty -Name SQLVer -Value $Default.config.sqlver
         $object | Add-Member -MemberType NoteProperty -Name ex_cu -Value $Default.config.ex_cu
+        $object | Add-Member -MemberType NoteProperty -Name e16_cu -Value $Default.config.e16_cu
         $object | Add-Member -MemberType NoteProperty -Name NMM_Ver -Value $Default.config.nmm_ver
         $object | Add-Member -MemberType NoteProperty -Name NW_Ver -Value $Default.config.nw_ver
         $object | Add-Member -MemberType NoteProperty -Name NMM -Value $Default.config.nmm
         $object | Add-Member -MemberType NoteProperty -Name Masterpath -Value $Default.config.Masterpath
-
         Write-Output $object
         }
     }

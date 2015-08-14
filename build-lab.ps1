@@ -557,12 +557,18 @@ $WAIKVER = "WAIK"
 $domainsuffix = ".local"
 $AAGDB = "AWORKS"
 $major = "4.0"
-$latest_ScaleIO = '1.32-403.2'
+$Default_vmnet = "vmnet2"
+$Default_BuildDomain = "labbuildr"
+$Default_Subnet = "192.168.2.0"
+$Default_IPv6Prefix = "FD00::"
+$Default_IPv6PrefixLength = '8'
+$Default_AddressFamily = "IPv4"
+$latest_ScaleIOVer = '1.32-403.2'
 $latest_nmm = 'nmm8216'
 $latest_nw = 'nw8216'
-$latest_e16 = 'Preview1'
-$latest_ex = 'cu9'
-$latest_sql  = 'SQL2014'
+$latest_e16_cu = 'Preview1'
+$latest_ex_cu = 'cu9'
+$latest_sqlver  = 'SQL2014'
 $latest_master = '2012R2FallUpdate'
 $latest_sql_2012 = 'SQL2012SP2'
 $NW85_requiredJava = "jre-7u61-windows-x64"
@@ -1206,13 +1212,14 @@ if ($defaults.IsPresent)
     if (Test-Path $Builddir\defaults.xml)
         {
         status "Loading defaults from $Builddir\defaults.xml"
-        [xml]$Default = Get-Content -Path $Builddir\defaults.xml
-        $DefaultGateway = $Default.config.DefaultGateway
+        $Default = Get-LABDefaults
+        }
+        $DefaultGateway = $Default.DefaultGateway
         if (!$nmm_ver)
             {
             try
                 {
-                $nmm_ver = $Default.config.nmm_ver
+                $nmm_ver = $Default.nmm_ver
                 }
             catch
             [System.Management.Automation.ValidationMetadataException]
@@ -1226,7 +1233,7 @@ if ($defaults.IsPresent)
             {
             try
                 {
-                $nw_ver = $Default.config.nw_ver
+                $nw_ver = $Default.nw_ver
                 }
             catch
             [System.Management.Automation.ValidationMetadataException]
@@ -1239,9 +1246,9 @@ if ($defaults.IsPresent)
             {
             try
                 {
-                $Masterpath = $Default.Config.Masterpath
+                $Masterpath = $Default.Masterpath
                 }
-            catch [System.Management.Automation.ParameterBindingException]
+            catch
                 {
                 Write-Warning "No Masterpath specified, trying default"
                 $Masterpath = $Builddir
@@ -1252,7 +1259,7 @@ if ($defaults.IsPresent)
             {
             try
                 {
-                $Sourcedir = $Default.Config.Sourcedir
+                $Sourcedir = $Default.Sourcedir
                 }
             catch [System.Management.Automation.ParameterBindingException]
                 {
@@ -1261,22 +1268,155 @@ if ($defaults.IsPresent)
                 }
             }
 
-        if (!$Master) {$master = $Default.config.master}
-        if (!$SQLVER) {$sqlver = $Default.config.sqlver }
-        if (!$ex_cu | Out-Null) {$ex_cu = $Default.config.ex_cu}
-        if (!$e16_cu | Out-Null) {$e16_cu = $Default.config.ex_cu}
-        if (!$ScaleIOVer | Out-Null) {$ScaleIOVer = $Default.config.scaleiover}
-        if (!$vmnet) {$vmnet = $Default.config.vmnet}
-        # $NW = $Default.config.nw
-        if (!$BuildDomain) {$BuildDomain = $Default.config.Builddomain}
-        if (!$MySubnet) {$MySubnet = $Default.config.MySubnet} 
-        if (!$AddressFamily) {$AddressFamily = $Default.config.AddressFamily}
-        if (!$IPv6Prefix) {$IPV6Prefix = $Default.Config.IPV6Prefix}
-        if (!$IPv6PrefixLength) {$IPv6PrefixLength = $Default.Config.IPV6PrefixLength}
+        if (!$Master) 
+            {
+            try
+                {
+                $master = $Default.master
+                }
+            catch 
+                {
+                Write-Warning "No Master specified, trying default"
+                $Master = $latest_master
+                }
+            }
+        if (!$SQLVER)
+            {   
+            try
+                {
+                $sqlver = $Default.sqlver
+                }
+            catch 
+                {
+                Write-Warning "No sqlver specified, trying default"
+                $sqlver = $latest_sqlver
+                }
+            }
+        if (!$ex_cu) 
+            {
+            try
+                {
+                $ex_cu = $Default.ex_cu
+                }
+            catch 
+                {
+                Write-Warning "No Master specified, trying default"
+                $ex_cu = $latest_ex_cu
+                }
+            }
+        if (!$e16_cu) 
+            {
+            try
+                {
+                $e16_cu = $Default.e16_cu
+                }
+            catch 
+                {
+                Write-Warning "No e16_cu specified, trying default"
+                $e16_cu = $latest_e16_cu
+                }
+            }
+        if (!$ScaleIOVer) 
+            {
+            try
+                {
+                $ScaleIOVer = $Default.ScaleIOVer
+                }
+            catch 
+                {
+                Write-Warning "No ScaleIOVer specified, trying default"
+                $ScaleIOVer = $latest_ScaleIOVer
+                }
+            }
+        if (!$vmnet) 
+            {
+            try
+                {
+                $vmnet = $Default.vmnet
+                }
+            catch 
+                {
+                Write-Warning "No vmnet specified, trying default"
+                $vmnet = $Default_vmnet
+                }
+            }
+        if (!$BuildDomain) 
+            {
+            try
+                {
+                $BuildDomain = $Default.BuildDomain
+                }
+            catch 
+                {
+                Write-Warning "No BuildDomain specified, trying default"
+                $BuildDomain = $Default_BuildDomain
+                }
+            } 
+        if  (!$MySubnet) 
+            {
+            try
+                {
+                $MySubnet = $Default.mysubnet
+                }
+            catch 
+                {
+                Write-Warning "No mysubnet specified, trying default"
+                $MySubnet = $Default_Subnet
+                }
+            }
+       if (!$vmnet) 
+            {
+            try
+                {
+                $vmnet = $Default.vmnet
+                }
+            catch 
+                {
+                Write-Warning "No vmnet specified, trying default"
+                $vmnet = $Default_vmnet
+                }
+            }
+       if (!$AddressFamily) 
+            {
+            try
+                {
+                $AddressFamily = $Default.AddressFamily
+                }
+            catch 
+                {
+                Write-Warning "No AddressFamily specified, trying default"
+                $AddressFamily = $Default_AddressFamily
+                }
+            }
+       if (!$IPv6Prefix) 
+            {
+            try
+                {
+                $IPv6Prefix = $Default.IPv6Prefix
+                }
+            catch 
+                {
+                Write-Warning "No IPv6Prefix specified, trying default"
+                $IPv6Prefix = $Default_IPv6Prefix
+                }
+            }
+       if (!$IPv6PrefixLength) 
+            {
+            try
+                {
+                $IPv6PrefixLength = $Default.IPv6PrefixLength
+                }
+            catch 
+                {
+                Write-Warning "No IPv6PrefixLength specified, trying default"
+                $IPv6PrefixLength = $Default_IPv6PrefixLength
+                }
+            }
+
         if (!($MyInvocation.BoundParameters.Keys.Contains("Gateway")))
             {
             
-            If ($Default.Config.Gateway -eq "true" -or $IsGateway.IsPresent)
+            If ($Default.Gateway -eq "true" -or $IsGateway.IsPresent)
                 {
                 [switch]$Gateway = $True
                 }
@@ -1284,35 +1424,31 @@ if ($defaults.IsPresent)
 
         if (!($MyInvocation.BoundParameters.Keys.Contains("NMM")))
             {
-            if ($Default.Config.NMM -eq "true")
+            if ($Default.NMM -eq "true")
                 {
                 $nmm = $true
                 }
             }
         
-
-        }
-   
-    else 
-        { Write-Warning "no defaults.xml found, using labbuildr defaults" }
     }
 
 if (!$MySubnet) {$MySubnet = "192.168.2.0"}
 $IPv4Subnet = convert-iptosubnet $MySubnet
-if (!$BuildDomain) { $BuildDomain = "labbuildr" }
-if (!$ScaleIOVer) {$ScaleIOVer = $latest_ScaleIO}
-if (!$SQLVER) {$SQLVER = $latest_sql}
-if (!$ex_cu) {$ex_cu = $latest_ex}
-if (!$e16_cu) {$e16_cu = $latest_e16}
+if (!$BuildDomain) { $BuildDomain = $Default_BuildDomain }
+if (!$ScaleIOVer) {$ScaleIOVer = $latest_ScaleIOVer}
+if (!$SQLVER) {$SQLVER = $latest_sqlver}
+if (!$ex_cu) {$ex_cu = $latest_ex_cu}
+if (!$e16_cu) {$e16_cu = $latest_e16_cu}
 if (!$Master) {$Master = $latest_master}
-if (!$vmnet) {$vmnet = "vmnet2"}
-if (!$default.config.DNS1)
+if (!$vmnet) {$vmnet = $Default_vmnet}
+if (!$IPv6PrefixLength){$IPv6PrefixLength = $Default_IPv6PrefixLength}
+if (!$Default.DNS1)
     {
     $DNS1 = "$IPv4Subnet.10"
     } 
 else 
     {
-    $DNS1 = $default.config.DNS1
+    $DNS1 = $Default.DNS1
     }
 write-verbose "After defaults !!!! "
 Write-Verbose "Sourcedir : $Sourcedir"
@@ -1338,11 +1474,6 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     }
 
 #### do we have unset parameters ?
-if (!$IPV6Prefix) 
-    {
-    $IPV6Prefix = 'FD00::'
-    $IPv6PrefixLength = '8'
-    }
 if (!$AddressFamily){$AddressFamily = "IPv4" }
 
 ###################################################
@@ -1565,14 +1696,14 @@ workorder "Building Proposed Workorder"
 if ($Blanknode.IsPresent)
 {
 	workorder "We are going to Install $BlankNodes Blank Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
-    if ($Gateway.IsPresent){ workorder "The Gateway will be $DefaultGateway"}
+    if ($DefaultGateway.IsPresent){ workorder "The Gateway will be $DefaultGateway"}
 	if ($VTbit) { write-verbose "Virtualization will be enabled in the Nodes" }
 	if ($Cluster.IsPresent) { write-verbose "The Nodes will be Clustered" }
 }
 if ($SOFS.IsPresent)
 {
 	workorder "We are going to Install $SOFSNODES SOFS Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
-    if ($Gateway.IsPresent){ workorder "The Gateway will be $DefaultGateway"}
+    if ($DefaultGateway.IsPresent){ workorder "The Gateway will be $DefaultGateway"}
 	if ($Cluster.IsPresent) { write-verbose "The Nodes will be Clustered ( Single Node Clusters )" }
 }
 if ($HyperV.IsPresent)
@@ -1588,7 +1719,7 @@ if ($ScaleIO.IsPresent)
                 $HyperVNodes = 3
                 }	
 workorder "We are going to Install ScaleIO on $HyperVNodes Hyper-V  Nodes"
-    if ($Gateway.IsPresent){ workorder "The Gateway will be $DefaultGateway"}
+    if ($DefaultGateway.IsPresent){ workorder "The Gateway will be $DefaultGateway"}
 	# if ($Cluster.IsPresent) { write-verbose "The Nodes will be Clustered ( Single Node Clusters )" }
 }
 
@@ -2559,7 +2690,7 @@ if (!($SourceOK = test-source -SourceVer $Sourcever -SourceDir $Sourcedir))
 	Write-Verbose "Sourcecomlete: $SourceOK"
 	break
 }
-if ($Gateway.IsPresent) {$AddGateway  = "-DefaultGateway $DefaultGateway"}
+if ($DefaultGateway.IsPresent) {$AddGateway  = "-DefaultGateway $DefaultGateway"}
 If ($VMnet -ne "VMnet2") { debug "Setting different Network is untested and own Risk !" }
 
 if (!$NoDomainCheck.IsPresent){
@@ -2579,13 +2710,13 @@ if (test-vmx $DCNODE)
 	    $BuildDomain, $RunningIP, $VMnet, $MyGateway = test-domainsetup
 	    $IPv4Subnet = convert-iptosubnet $RunningIP
 	    workorder "We will Use Domain $BuildDomain and Subnet $IPv4Subnet.0 for on $VMnet the Running Workorder"
-	    If ($MyGateway) {$Gateway = $True 
-        workorder "We will configure Default Gateway at $DefaultGateway"
-        Write-Verbose -Message $Gateway.IsPresent
-        if ($Gateway.IsPresent) {$AddGateway  = "-DefaultGateway $DefaultGateway"}
-        else {$AddGateway = ""}
-        Write-Verbose -Message $AddGateway
-        }
+	    
+        If ($MyGateway) 
+            {
+            workorder "We will configure Default Gateway at $MyGateway"
+            $AddGateway  = "-DefaultGateway $MyGateway"
+            Write-Verbose -Message "we will add a Gateway with $AddGateway"
+            }
     else
         {
         write-verbose " no domain check on IPv6only"
