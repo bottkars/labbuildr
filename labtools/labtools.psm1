@@ -296,6 +296,7 @@ process {
         $xmlcontent += ("<master>$($Defaults.Master)</master>")
         $xmlcontent += ("<sqlver>$($Defaults.SQLVER)</sqlver>")
         $xmlcontent += ("<ex_cu>$($Defaults.ex_cu)</ex_cu>")
+        $xmlcontent += ("<e16_cu>$($Defaults.e16_cu)</e16_cu>")
         $xmlcontent += ("<vmnet>$($Defaults.VMnet)</vmnet>")
         $xmlcontent += ("<BuildDomain>$($Defaults.BuildDomain)</BuildDomain>")
         $xmlcontent += ("<MySubnet>$($Defaults.MySubnet)</MySubnet>")
@@ -307,7 +308,7 @@ process {
         $xmlcontent += ("<DNS1>$($Defaults.DNS1)</DNS1>")
         $xmlcontent += ("<Sourcedir>$($Defaults.Sourcedir)</Sourcedir>")
         $xmlcontent += ("<ScaleIOVer>$($Defaults.ScaleIOVer)</ScaleIOVer>")
-        $xmlcontent += ("<Masterpath>$($Masterpath)</Masterpath>")
+        $xmlcontent += ("<Masterpath>$($Defaults.Masterpath)</Masterpath>")
         $xmlcontent += ("</config>")
         $xmlcontent | Set-Content $defaultsfile
         }

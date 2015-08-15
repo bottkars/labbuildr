@@ -243,7 +243,7 @@ param (
     #>
     [Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
     [Parameter(ParameterSetName = "DConly", Mandatory = $false)]
-    [switch][alias('gw')]$IsGateway,
+    [switch][alias('gw')]$Gateway,
 <# select vmnet, number from 1 to 19#>                                        	
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
@@ -607,10 +607,6 @@ $Gatewayhost = "103"
 ### VMrun Error Condition help to tune the Bug wher the VMRUN Command can not communicate with the Host !
 $VMrunErrorCondition = @("Waiting for Command execution Available", "Error", "Unable to connect to host.", "Error: The operation is not supported for the specified parameters", "Unable to connect to host. Error: The operation is not supported for the specified parameters", "Error: vmrun was unable to start. Please make sure that vmrun is installed correctly and that you have enough resources available on your system.", "Error: The specified guest user must be logged in interactively to perform this operation")
 $Host.UI.RawUI.WindowTitle = "$Buildname"
-
-[switch]$Gateway = $False
-
-
 ###################################################
 # main function go here
 ###################################################
@@ -1412,15 +1408,18 @@ if ($defaults.IsPresent)
                 $IPv6PrefixLength = $Default_IPv6PrefixLength
                 }
             }
-
         if (!($MyInvocation.BoundParameters.Keys.Contains("Gateway")))
             {
-            
-            If ($Default.Gateway -eq "true" -or $IsGateway.IsPresent)
+            if ($Default.Gateway -eq "true")
                 {
-                [switch]$Gateway = $True
+                $Gateway = $true
+                $NW = $True
+                $DefaultGateway = "$IPv4Subnet.$Gatewayhost"
                 }
+            
+            
             }
+            
 
         if (!($MyInvocation.BoundParameters.Keys.Contains("NMM")))
             {
@@ -1453,15 +1452,18 @@ else
 write-verbose "After defaults !!!! "
 Write-Verbose "Sourcedir : $Sourcedir"
 Write-Verbose "NWVER : $nw_ver"
-Write-Verbose "Gateway : $($gateway.IsPresent)"
+Write-Verbose "Gateway : $($Gateway.IsPresent)"
 Write-Verbose "NMM : $($nmm.IsPresent)"
 Write-Verbose "MySubnet : $MySubnet"
 Write-Verbose "ScaleIOVer : $ScaleIOVer"
 Write-Verbose "Masterpath : $Masterpath"
 Write-Verbose "Defaults before Safe:"
 
-
-        If ($gateway.ispresent -and (!($DefaultGateway)) -or $IsGateway.IsPresent)
+If ($DefaultGateway -match "$IPv4Subnet.$Gatewayhost")
+    {
+    $gateway = $true
+    }
+If ($Gateway.IsPresent)
             {
             $DefaultGateway = "$IPv4Subnet.$Gatewayhost"
             }
@@ -2505,7 +2507,6 @@ if ($NMM.IsPresent)
                 $Destinationdir =  "$($Zipfile.replace(".zip"," "))"
                 Write-Verbose $Destinationdir
                 Expand-LABZip -zipfilename $Zipfile -destination $Destinationdir
-                pause
                 }
             }
       }
@@ -2690,7 +2691,7 @@ if (!($SourceOK = test-source -SourceVer $Sourcever -SourceDir $Sourcedir))
 	Write-Verbose "Sourcecomlete: $SourceOK"
 	break
 }
-if ($DefaultGateway.IsPresent) {$AddGateway  = "-DefaultGateway $DefaultGateway"}
+if ($DefaultGateway) {$AddGateway  = "-DefaultGateway $DefaultGateway"}
 If ($VMnet -ne "VMnet2") { debug "Setting different Network is untested and own Risk !" }
 
 if (!$NoDomainCheck.IsPresent){
@@ -2743,18 +2744,18 @@ else
     Write-Verbose "AddressFamily : $AddressFamily"
     Write-Verbose "DefaultGateway : $DefaultGateway"
     Write-Verbose "DNS1 : $DNS1"
-    If ($Gateway.IsPresent)
+    If ($DefaultGateway.IsPresent)
         {
-        Write-Verbose "Gateway : $Gateway"
+        Write-Verbose "Gateway : $DefaultGateway"
         }
-    if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
-    {
-    Write-Verbose "Press any key to Continue Cloning"
-    Pause
-    }
 	workorder "We will Build Domain $BuildDomain and Subnet $IPv4subnet.0  on $VMnet for the Running Workorder"
-    if ($Gateway.IsPresent){ workorder "The Gateway will be $DefaultGateway"}
-	
+    if ($DefaultGateway){ workorder "The Gateway will be $DefaultGateway"}
+	if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+        {
+        Write-Verbose "Press any key to Continue Cloning"
+        Pause
+        }
+
 	$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 0 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Size 'L' -Sourcedir $Sourcedir"
 	
 	###################################################
@@ -3849,7 +3850,7 @@ if ($NW.IsPresent -or $NWServer.IsPresent)
         }
 
 	test-dcrunning
-    If (($IsGateway.IsPresent) -or (($Gateway.IsPresent) -and ($DefaultGateway -match $Nodeip ))){ $SetGateway = "-Gateway"}
+    If ($DefaultGateway -match $Nodeip){$SetGateway = "-Gateway"}
 	$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 9 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -NW $SetGateway -size $Size -Sourcedir $Sourcedir $CommonParameter"
 	###################################################
 	If ($CloneOK)
@@ -3891,7 +3892,7 @@ if ($NW.IsPresent -or $NWServer.IsPresent)
 		
 		write-verbose "installing Networker Server"
 		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-nwserver.ps1 -Parameter $nw_ver -interactive
-		if (!$IsGateway.IsPresent)
+		if (!$Gateway.IsPresent)
             {
             checkpoint-progress -step networker -reboot
             }
@@ -3903,7 +3904,7 @@ if ($NW.IsPresent -or $NWServer.IsPresent)
 		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script create-nsrdevice.ps1 -interactive -Parameter "-AFTD AFTD1"
 		# write-verbose "Creating Networker Clients, Groups and Saveset resources"
 		# invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script create-nsrres.ps1 -interactive
-        If (($IsGateway.IsPresent) -or (($Gateway.IsPresent) -and ($DefaultGateway -match $Nodeip ))){
+        If ($DefaultGateway -match $Nodeip){
                 write-verbose "Opening Firewall on Networker Server for your Client"
                 invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script firewall.ps1 -interactive
         		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script add-rras.ps1 -interactive -Parameter "-IPv4Subnet $IPv4Subnet"
