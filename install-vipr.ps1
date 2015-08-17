@@ -27,8 +27,8 @@
 [CmdletBinding()]
 Param(
 
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$Defaults,
-[Parameter(ParameterSetName = "defaults", Mandatory=$false)][ValidateSet("vipr-2.3.0.0.828","vipr-2.2.1.0.1106")]$viprmaster = "vipr-2.3.0.0.828",
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$Defaults = $true,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateSet("vipr-2.3.0.0.828","vipr-2.2.1.0.1106")]$viprmaster = "vipr-2.3.0.0.828",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
 
 )
@@ -264,7 +264,7 @@ $config = $vmx | get-vmxconfig
     $config += 'ide0:0.fileName = "vipr.iso"'
     $config += 'ide0:0.deviceType = "cdrom-image"'
 $Config | set-Content -Path $vmx.config
-$Annotation = $VMX | Set-VMXAnnotation -Line1 "rootuser:root" -Line2 "rootpasswd:" -Line3 "serviceuser:service" -Line4 "servicepassword:$" -Line5 "labbuildr by @hyperv_guy" -builddate
+$Annotation = $VMX | Set-VMXAnnotation -Line1 "https://$subnet.9" -Line2 "user:root" -Line3 "password:ChangeMe" -Line4 "add license from $masterpath" -Line5 "labbuildr by @hyperv_guy" -builddate
 $vmx | Start-VMX
 Write-Host -ForegroundColor Yellow "
 Successfully Deployed $viprmaster

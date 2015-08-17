@@ -944,7 +944,7 @@ function test-source
 			if (!($SourceFiles -contains $Version))
 			{
 				write-Host "$Sourcedir does not contain $Version"
-				debug "Please Download and extraxct $Version to $Sourcedir"
+				debug "Please Download and extraxt $Version to $Sourcedir\$Version"
 				$Sourceerror = $true
 			}
 			else { write-verbose "found $Version, good..." }
@@ -1622,7 +1622,7 @@ If ($NumLogCPU -gt 4 -and $Computersize -gt 2)
 {
 	Status "Excellent, Running $mySelf on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logical CPU and $Totalmemory GB Memory"
 }
-get-vmwareversion
+# get-vmwareversion
 
 
 ####### Building required Software Versions Tabs
@@ -2397,8 +2397,9 @@ if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
         {
         Write-Verbose "Networker $nw_ver found"
         }
-    else
+    elseif ($nw_ver -lt "nw84")
         {
+
         Write-Warning "We need to get $NW_ver, trying Automated Download"
         # New-Item -ItemType Directory -Path $Sourcedir\$EX_Version$ex_cu | Out-Null
         # }
@@ -2511,12 +2512,6 @@ if ($NMM.IsPresent)
             }
       }
 }
-
-
-
-
-
-
 ####SACELIO Downloader #####
 if ($ScaleIO.IsPresent)
     {
@@ -2618,7 +2613,7 @@ if ($NW.IsPresent -or $NWServer.IsPresent)
 	    }
 	
 	##### Check Java
-	if (!($Java7 = Get-ChildItem -Path $Sourcedir -Filter 'jre-7*x64*'))
+	if (!($Java7 = Get-ChildItem -Path $Sourcedir -Filter 'jre-7*x64*') -and ($nw_ver -lt "nw84"))
 	    {
 		write-warning "Java7 not found, please download from www.java.com"
 	    }
@@ -2628,24 +2623,28 @@ if ($NW.IsPresent -or $NWServer.IsPresent)
 	    $LatestJava7 = $Java7[0].Name
         }
 
-    Write-Verbose "Asking for latest Java8"
-    get-labJava64 -DownloadDir $Sourcedir
- 
-	if (!($Java8 = Get-ChildItem -Path $Sourcedir -Filter 'jre-8*x64*'))
-	    {
-		Write-Warning "Java8 not found, please try manual download"
-        break
-	    }
-    else
-        {
-        $Java8 = $Java8 | Sort-Object -Property Name -Descending
-	    $LatestJava8 = $Java8[0].Name
-        Write-Verbose "Got $LatestJava8"
-        }
+    
+    
         
          
 If ($nw_ver -gt "nw85.BR1")
             {
+	        if (!($Java8 = Get-ChildItem -Path $Sourcedir -Filter 'jre-8*x64*'))
+	            {
+		        Write-Warning "Java8 not found, trying download"
+                Write-Verbose "Asking for latest Java8"
+                $LatestJava8 = (get-labJava64 -DownloadDir $Sourcedir).LatestJava8
+                if (!$LatestJava8)
+                    {
+                    break
+                    }
+	            }
+            else
+                {
+                $Java8 = $Java8 | Sort-Object -Property Name -Descending
+	            $LatestJava8 = $Java8[0].Name
+                Write-Verbose "Got $LatestJava8"
+                }
             if ($LatestJava7)
                 {
                 $LatestJava = $LatestJava7
@@ -2682,7 +2681,7 @@ if (!$LatestJava)
     Write-Warning "No Java was found. Please download required Java Version to $Sources"
     break
     }    
-Write-Warning "we will use $LatestJava for Netwoker $nw_ver. Please make sure the Versions Match"
+Write-Warning "we will use $LatestJava for Netwoker $nw_ver. Please make sure the Versions match Supportmatrix"
 
 } 
 #end $nw

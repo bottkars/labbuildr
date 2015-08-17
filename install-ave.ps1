@@ -27,7 +27,7 @@
     installs a AVE with labbuildrdefaults
 
 #>
-[CmdletBinding()]
+[CmdletBinding(DefaultParametersetName = "default")]
 Param(
 
 <### import parameters##>
@@ -35,9 +35,9 @@ Param(
 [ValidateScript({ Test-Path -Path $_ -Filter *.ov* -PathType Leaf -ErrorAction SilentlyContinue })]$ovf,
 [Parameter(ParameterSetName = "import",Mandatory=$false)][String]$mastername,
 
-[Parameter(ParameterSetName = "configure", Mandatory = $true)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $true)]
-[Parameter(ParameterSetName = "install",Mandatory=$true)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath,
+[Parameter(ParameterSetName = "configure", Mandatory = $false)]
+[Parameter(ParameterSetName = "default", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath,
 <# specify your desireed AVE Size 
 Valid Parameters: 0.5TB,1TB,2TB,4TB
 This will result in the following
@@ -51,19 +51,19 @@ _______|_________|_____|_________
   4TB   |  36GB   |  4  | 6*1000GB
 #>
 [Parameter(ParameterSetName = "configure", Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "default", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateSet('0.5TB','1TB','2TB','4TB')][string]$AVESize = "0.5TB",
 
-[Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+[Parameter(ParameterSetName = "default", Mandatory = $false)][switch]$Defaults = $true,
+[Parameter(ParameterSetName = "default", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
 
 
 [Parameter(ParameterSetName = "configure", Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "default", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][int32]$Nodes=1,
 
 [Parameter(ParameterSetName = "configure", Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "default", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][int32]$Startnode = 1,
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 [Parameter(ParameterSetName = "configure",Mandatory=$true)][ipaddress]$subnet = "192.168.2.0",
@@ -71,7 +71,7 @@ _______|_________|_____|_________
 
 [Parameter(ParameterSetName = "configure", Mandatory = $true)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = "vmnet2",
 
-[Parameter(ParameterSetName = "defaults",Mandatory = $false)]
+[Parameter(ParameterSetName = "default",Mandatory = $false)]
 [Parameter(ParameterSetName = "configure", Mandatory = $true)][switch]$configure
 )
 #requires -version 3.0
@@ -110,11 +110,67 @@ switch ($PsCmdlet.ParameterSetName)
             }
 
 
-        if (!($MasterVMX = get-vmx -path $MasterPath))
+        if (!$MasterVMX)
             {
-            Write-Warning "No Valid Base Machine could be found $Masterpath
-            was the ovf Template expanded with install-ave.ps1 -ovf ?"
-            exit
+            $MasterVMX = get-vmx -Path AVE-7*
+            iF ($MasterVMX)
+                {
+                $MasterVMX = $MasterVMX | Sort-Object -Descending
+                $MasterVMX = $MasterVMX[-1]
+                }
+            }
+        else
+            {
+            if ($MasterPath)        
+                {
+                $MasterVMX = get-vmx -path $MasterPath
+                }
+            }
+
+        if (!$MasterVMX)
+            {
+            write-warning "Could not find AVEMaster"
+            if ($Defaults.IsPresent)
+                {
+                Write-Warning "Trying Latest OVF fom $Sourcedir"
+                try
+                    {
+                    $OVFpath =Join-Path $Sourcedir "AVE-7*\" -ErrorAction Stop
+                    }
+                catch [System.Management.Automation.DriveNotFoundException] 
+                    {
+                    Write-Warning "Drive not found, make sure to have your Source Stick connected"
+                    exit
+                    }
+                
+                    $OVFfile = Get-ChildItem -Path $OVFpath -Filter "*.ovf" -Recurse | Sort-Object -Descending -Property Name
+                    If (!$OVFfile)
+                        {
+                        Write-Warning "No OVF for AVE found"
+                        exit
+                        }
+                    else 
+                        {
+                        Write-Warning "testing OVF"
+                        $OVFfile = $OVFfile[0]
+                        $mastername = (Split-Path -Leaf $OVFfile).Replace(".ovf","")
+                        $mastername
+                        $OVFfile.FullName
+                        & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $OVFfile.FullName $PSScriptRoot #
+                        if ($LASTEXITCODE -ne 0)
+                            {
+                            Write-Warning "Error Extraxting OVF"
+                            exit
+                            }
+                        $MasterVMX = get-vmx $mastername
+                        }
+                }
+            else
+                {
+                Write-Warning "Please import with -ovf or use -Defaults"
+                exit
+                }
+
             }
 
 
@@ -198,6 +254,16 @@ switch ($PsCmdlet.ParameterSetName)
     Write-Verbose "Disabling IDE0"
     $NodeClone | Set-VMXDisconnectIDE | Out-Null
     $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
+    $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
+    if ($mastervmx.VMXName -match "AVE-7.2")
+        {
+        $Annotation = $NodeClone | Set-VMXAnnotation -builddate -Line1 "connect to https://$subnet.3$($Node):7543/avi/avigui.html to complete the Installation" -Line2 "root:$rootuser" -Line3 "password:$rootpassword" -Line4 "SupportUser = Supp0rtHarV1"
+        }
+    elseif ($mastervmx.VMXName -match "AVE-7.1")
+        {
+        $Annotation = $NodeClone | Set-VMXAnnotation -builddate -Line1 "connect to https://$subnet.3$($Node):8543/avi/avigui.html to complete the Installation" -Line2 "root:$rootuser" -Line3 "password:$rootpassword" -Line4 "SupportUser = Supp0rtInd1"
+        }
+
     Write-Verbose "Configuring Memory to $memsize"
     $Memory = $NodeClone | Set-VMXmemory -MemoryMB $memsize
     Write-Verbose "Configuring $Numcpu CPUs"
@@ -214,18 +280,29 @@ switch ($PsCmdlet.ParameterSetName)
         sleep 10
         }
     until ($ToolState.state -match "running")
-    <#
+    if ($mastervmx.VMXName -notmatch "AVE-7.2")
+    {
     do {
         Write-Warning "Waiting for Avamar to come up"
         $Process = Get-VMXProcessesInGuest -config $NodeClone.config -Guestuser $rootuser -Guestpassword $rootpassword
         sleep 10
         }
     until ($process -match "mingetty")
-
-
     Write-Verbose "Configuring Disks"
     $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/perl /usr/local/avamar/bin/ave-part.pl" -Guestuser $rootuser -Guestpassword changeme -Verbose | Out-Null
-    #>
+    Write-Verbose "rebooting VM $($NodeClone.Clonename)"
+    we do not use shutdown since toolstate does not reset
+    $NodeClone | Stop-VMX | Out-Null
+    $NodeClone | start-vmx | Out-Null
+    do {
+        $ToolState = Get-VMXToolsState -config $NodeClone.config 
+        Write-Verbose "VMware tools are in $($ToolState.State) state"
+        sleep 10
+        }
+    until ($ToolState.state -match "running")
+
+    
+    }
     $NodeClone | Invoke-VMXBash -Scriptblock "yast2 lan edit id=0 ip=$IP netmask=255.255.255.0 prefix=24 verbose" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
     $NodeClone | Invoke-VMXBash -Scriptblock "hostname $($NodeClone.CloneName)" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
     $Scriptblock = "echo 'default "+$subnet+".103 - -' > /etc/sysconfig/network/routes"
@@ -238,25 +315,20 @@ switch ($PsCmdlet.ParameterSetName)
     $Scriptblock = "echo '"+$Nodeprefix+$Node+"."+$BuildDomain+".local'  > /etc/HOSTNAME"
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
     $NodeClone | Invoke-VMXBash -Scriptblock "/etc/init.d/network restart" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
-    # $NodeClone | Invoke-VMXBash -Scriptblock "shutdown -r now" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose -nowait
-    Write-Verbose "rebooting VM $($NodeClone.Clonename)"
-    # we do not use shutdown since toolstate does not reset
-    # $NodeClone | Stop-VMX | Out-Null
-    # $NodeClone | start-vmx | Out-Null
     do {
         $ToolState = Get-VMXToolsState -config $NodeClone.config 
         Write-Verbose "VMware tools are in $($ToolState.State) state"
         sleep 10
         }
     until ($ToolState.state -match "running")
-
     # Write-Verbose "Starting Avamar Installer, this may take a while"
     # $NodeClone | Invoke-VMXBash -Scriptblock "/bin/sh /usr/local/avamar/src/avinstaller-bootstrap-7.1.1-141.sles11_64.x86_64.run" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
     Write-Host "Trying to connect to https://$subnet.3$($Node):7543/avi/avigui.html to complete the Installation"
     # Start-Process "https://$subnet.3$($Node):8543/avi/avigui.html"
     
+
     } # end configure
-    $NodeClone
+    Write-Host $Annotation
     }
     else
         {

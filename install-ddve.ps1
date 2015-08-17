@@ -56,7 +56,7 @@
     to create a 2TB Node DDvENde2 run
     .\install-ddve.ps1 -MasterPath .\ddve-5.5.1.4-464376  -Defaults -DDVESize 2TB -Verbose -Startnode 2 -Nodes 1
 #>
-[CmdletBinding()]
+[CmdletBinding(DefaultParametersetName = "default")]
 Param(
 [Parameter(ParameterSetName = "import",Mandatory=$true)][String]
 [ValidateScript({ Test-Path -Path $_ -Filter *.ov* -PathType Leaf -ErrorAction SilentlyContinue })]$ovf,
@@ -80,7 +80,7 @@ _____ __|_________|_____|_________
 #>
 [Parameter(ParameterSetName = "defaults",Mandatory=$False)]
 [Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateSet('0.5TB','2TB','4TB','8TB')][string]$DDVESize = "2TB",
-[Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$Defaults = $true,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][int32]$Nodes=1,
@@ -141,8 +141,11 @@ switch ($PsCmdlet.ParameterSetName)
                 }
             }
         else
-            {        
-            $MasterVMX = get-vmx -path $MasterPath
+            {
+            if ($MasterPath)        
+                {
+                $MasterVMX = get-vmx -path $MasterPath
+                }
             }
 
         if (!$MasterVMX)
@@ -164,7 +167,7 @@ switch ($PsCmdlet.ParameterSetName)
                     $OVFfile = get-item -Path $OVFpath | Sort-Object -Descending -Property Name
                     If (!$OVFfile)
                         {
-                        Write-Verbose "No OVF for DDVE found"
+                        Write-Warning "No OVF for DDVE found, please conntact feedbackcentral"
                         exit
                         }
                     else 
@@ -298,6 +301,7 @@ switch ($PsCmdlet.ParameterSetName)
             $Netadater1 = $NodeClone | Set-VMXNetworkAdapter -Adapter 1 -ConnectionType nat -AdapterType vmxnet3
             $Netadater1connected = $NodeClone | Connect-VMXNetworkAdapter -Adapter 1
             $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
+                $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
             Write-Verbose "Configuring Memory to $memsize"
             $Memory = $NodeClone | Set-VMXmemory -MemoryMB $memsize
             Write-Verbose "Configuring $Numcpu CPUs"

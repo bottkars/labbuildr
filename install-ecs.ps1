@@ -477,8 +477,6 @@ foreach ( $Method in $Methods )
     Write-verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/$Method.log"
     }
-
-
 $Method = 'CreateUser'
 Write-Warning "running Method $Method"
 $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=NS1 --ObjectVArray=OVA1 --ObjectVPool=OVP1 --UserName=$Guestuser --DataStoreName=ds1 --VDCName=vdc1 --MethodName=$Method;exit 0" 

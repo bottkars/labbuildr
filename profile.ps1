@@ -10,7 +10,7 @@ $size.height=5000
 $Userinterface.BufferSize = $size
 $size = $Userinterface.WindowSize
 $size.width=120
-$size.height=48
+$size.height=36
 $Userinterface.WindowSize = $size
 clear-host
 import-module .\vmxtoolkit -Force
@@ -22,7 +22,7 @@ write-host
 write-host -ForegroundColor Yellow "Running VMware $vmwareversion"
 if (!(Test-Connection community.emc.com -Quiet -Count 2 -ErrorAction SilentlyContinue))
     {
-    Write-Warning "no Internet Connection detected, Download of Sources may not work"
+    Write-Warning "no Internet Connection detected or on EMC Net, Download of Sources may not work"
     }
 else
     {

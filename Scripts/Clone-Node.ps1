@@ -59,19 +59,12 @@ Start-Sleep 5
 until (($cmdresult -match $whois) -and ($VMrunErrorCondition -notcontains $cmdresult))
 write-log "$origin $UserLoggedOn"
 }
-
-
 if (!(Get-ChildItem $MasterVMX -ErrorAction SilentlyContinue)) { write-host "Panic, $MasterVMX not installed"!; Break}
-########################################
-###########
 # Setting Base Snapshot upon First Run
-
-
 if (!($Master = get-vmx  -Path $MasterVMX))
     { Write-Error "where is our master ?! "
     break 
     }
-
 write-verbose "Checking template"
 if (!($Master.Template))
     {
@@ -85,35 +78,6 @@ Write-verbose "Checking Snapshot"
     $Snapshot = $Master | New-VMXSnapshot -SnapshotName "Base"
     }
 
-
-<# old snapshot pre 3.61
-
-do {($Snapshots = &$vmrun listSnapshots $MasterVMX ) 2>&1 | Out-Null 
-write-log "$origin listSnapshots $MasterVMX $Snapshots"
-}
-until ($VMrunErrorCondition -notcontains $Snapshots)
-write-log "$origin listSnapshots $MasterVMX $Snapshots"
-
-if ($Snapshots -eq "Total snapshots: 0") 
-{
-do {($cmdresult = &$vmrun snapshot $MasterVMX Base ) 2>&1 | Out-Null 
-write-log "$origin snapshot $MasterVMXX $cmdresult"
-}
-until ($VMrunErrorCondition -notcontains $cmdresult)
-}
-write-log "$origin snapshot $MasterVMX $cmdresult"
-
-
-#>
-
-
-<# pre 1.6
-if (Get-ChildItem $CloneVMX -ErrorAction SilentlyContinue ) 
-{write-host "VM $Nodename Already exists, nothing to do here"
-return $false
-}
-#>
-
 if (get-vmx $Nodename)
 {
 Write-Warning "$Nodename already exists"
@@ -121,20 +85,13 @@ return $false
 }
 else
 {
-$Displayname = 'displayname = "'+$Nodename+'@'+$Domainname+'"'
+$Displayname = "$Nodename@$Domainname"
 Write-Host -ForegroundColor Gray "Creating Linked Clone $Nodename from $MasterVMX, VMsize is $Size"
 Write-verbose "Creating linked $Nodename of $MasterVMX"
 # while (!(Get-ChildItem $MasterVMX)) {
 # write-Host "Try Snapshot"
 
 $Clone = $Snapshot | New-VMXLinkedClone -CloneName $Nodename -clonepath $Builddir
-<# pre 3.61
-do {($cmdresult = &$vmrun clone $MasterVMX $CloneVMX linked Base )
-write-log "$origin clone $MasterVMX $CloneVMX linked Base $cmdresult"
-}
-until ($VMrunErrorCondition -notcontains $cmdresult)
-write-log "$origin clone $MasterVMX $CloneVMX linked Base $cmdresult"
-#>
 write-verbose "starting customization of $($Clone.config)"
 $Content = $Clone | Get-VMXConfig
 $Content = $Content | where {$_ -NotMatch "memsize"}
@@ -185,16 +142,10 @@ $Content += 'numvcpus = "4"'
 }
 }
 
-$Content = $content | where { $_ -NotMatch "DisplayName" }
-$content += $Displayname
 Set-Content -Path $Clone.config -Value $content -Force
-$vmnetname =  'ethernet0.vnet = "'+$vmnet+'"'
-# (get-content $CloneVMX) | foreach-object {$_ -replace 'displayName = "Clone of Master"', $Displayname } | set-content $CloneVMX
 (get-content $Clone.config) | foreach-object {$_ -replace 'gui.exitAtPowerOff = "FALSE"','gui.exitAtPowerOff = "TRUE"'} | set-content $Clone.Config
-(get-content $Clone.config) | foreach-object {$_ -replace 'mainMem.useNamedFile = "true"','' }| set-content $Clone.config 
-$memhook =  'mainMem.useNamedFile = "FALSE"'
-add-content -Path $Clone.config $memhook
-
+$Clone | Set-VMXMainMemory -usefile:$false
+$Clone | Set-VMXDisplayName -DisplayName $Displayname
 if ($HyperV){
 ($Clone | Get-VMXConfig) | foreach-object {$_ -replace 'guestOS = "windows8srv-64"', 'guestOS = "winhyperv"' } | set-content $Clone.config
 }
@@ -304,18 +255,7 @@ write-verbose "Enabling Shared Folders"
 
 
 $Clone | Set-VMXSharedFolderState -enabled
-
-<#
-    do 
-    { 
-        $cmdresult = &$vmrun addSharedFolder $CloneVMX $SharedFolder $Mountdrive\$SharedFolder
-        write-log "$Origin addSharedFolder $CloneVMX $SharedFolder $Mountdrive\$SharedFolder $cmdresult"
-    }
-    until ($VMrunErrorCondition -notcontains $cmdresult)
-    write-log "$Origin addSharedFolder $CloneVMX $SharedFolder $Mountdrive\$SharedFolder $cmdresult"
-#>
-#############
-$Clone | Write-Host -ForegroundColor Gray
+# $Clone | Write-Host -ForegroundColor Gray
 
 Write-verbose "Waiting for Pass 1 (sysprep Finished)"
 test-user -whois Administrator

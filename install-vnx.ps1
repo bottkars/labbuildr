@@ -181,6 +181,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     Write-Verbose "Disabling IDE0"
     $NodeClone | Set-VMXDisconnectIDE | Out-Null
     $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
+        $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
     $Annotation = $NodeClone | Set-VMXAnnotation -Line1 "rootuser:$rootuser" -Line2 "rootpasswd:$rootpassword"  -Line5 "labbuildr by @hyperv_guy" -builddate
 
     if ($DualDM.IsPresent)

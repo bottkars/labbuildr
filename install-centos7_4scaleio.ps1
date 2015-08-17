@@ -33,7 +33,7 @@ Param(
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath = '.\CentOS 64-bit',
+[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath = '.\CentOS7 Master',
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [int32]$Nodes=3,
@@ -46,10 +46,11 @@ Param(
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
 [Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
 [Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
-
-
-
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+[Parameter(ParameterSetName = "install",Mandatory = $false)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$forcedownload,
+[Parameter(ParameterSetName = "install",Mandatory = $false)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$SIOGateway
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
@@ -60,53 +61,78 @@ If ($Defaults.IsPresent)
      $subnet = $labdefaults.MySubnet
      $BuildDomain = $labdefaults.BuildDomain
      $Sourcedir = $labdefaults.Sourcedir
+     $DefaultGateway = $labdefaults.DefaultGateway
+     $DNS1 = $labdefaults.DNS1
      }
 
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
-$Guestuser = "root"
+$rootuser = "root"
 $Guestpassword = "Password123!"
 $Disksize = "100GB"
 $scsi = 0
-$Nodeprefix = "CentOSNode"
+$Nodeprefix = "CentOS7Node"
 ##### cecking for linux binaries
 $url = "ftp://ftp.emc.com/Downloads/ScaleIO/ScaleIO_RHEL6_Download.zip"
 write-warning "Checking for Downloaded RPM Packages"
-if (!($rpmpath  = Get-ChildItem -Path "$Sourcedir\ScaleIO\ScaleIO_1.32_RHEL6_FnF\ScaleIO_1.32_RHEL6_Download" -Filter "*.rpm" -ErrorAction SilentlyContinue))
+if (!($rpmpath  = Get-ChildItem -Path "$Sourcedir\ScaleIO\" -Recurse -Filter "*.el7.x86_64.rpm" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
     {
-    $FileName = Split-Path -Leaf -Path $Url
-    if (!(test-path  $Sourcedir\$FileName))
+    write-warning "Checking for Downloaded Package"
+    $Uri = "http://www.emc.com/products-solutions/trial-software-download/scaleio.htm"
+    $request = Invoke-WebRequest -Uri $Uri -UseBasicParsing
+    $DownloadLinks = $request.Links | where href -match "linux"
+    foreach ($Link in $DownloadLinks)
         {
-        $ok = Get-labyesnoabort -title "Could no find ScaleIO Linux Binaries, we need to dowload from ww.emc.com" -message "Should we start Download from ww.emc.com ?" 
-        switch ($ok)
-        {
-         "0"
+        $Url = $link.href
+        $FileName = Split-Path -Leaf -Path $Url
+        if (!(test-path  $Sourcedir\$FileName) -or $forcedownload.IsPresent)
             {
-            Write-Verbose "$FileName not found, trying Download"
-            if (!( Get-LABFTPFile -Source $URL -Target $Sourcedir\$FileName -verbose -Defaultcredentials))
-                { 
-                write-warning "Error Downloading file $Url, Please check connectivity"
-                Remove-Item -Path $Sourcedir\$FileName -Verbose
-                }
-                else {$Downloadok = $true}
-            } 
-         "2"
-            {
-            Write-Verbose "User requested Abort"
-            exit
-            }
-         default
-            {}
-        }
+                        $ok = Get-labyesnoabort -title "Could not find $Filename, we need to dowload from www.emc.com" -message "Should we Download $FileName from ww.emc.com ?" 
+                        switch ($ok)
+                            {
+
+                            "0"
+                                {
+                                Write-Verbose "$FileName not found, trying Download"
+                                if (!( Get-LABFTPFile -Source $URL -Target $Sourcedir\$FileName -verbose -Defaultcredentials))
+                                    { 
+                                    write-warning "Error Downloading file $Url, Please check connectivity"
+                                    Remove-Item -Path $Sourcedir\$FileName -Verbose
+                                    }
+                                }
+                             "1"
+                                {
+                             break
+                                }   
+                             "2"
+                                {
+                                Write-Verbose "User requested Abort"
+                                exit
+                                }
+                            }
                         
+                        }
+        Else
+            {
+            Write-Warning "Found $Sourcedir\$FileName, using this one unless -forcedownload is specified ! "
+            }
         }
     if (Test-Path "$Sourcedir\$FileName")
         {
             Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\ScaleIO\"
         }
 }
-pause
-$MasterVMX = get-vmx -path $MasterPath
+$SIOGatewayrpm = Get-ChildItem -Path "$Sourcedir\ScaleIO\" -Recurse -Filter "EMC-ScaleIO-gateway-*noarch.rpm" -ErrorAction SilentlyContinue
+$SIOGatewayrpm = $SIOGatewayrpm[-1].FullName
+$SIOGatewayrpm = $SIOGatewayrpm.Replace($Sourcedir,"/mnt/hgfs/Sources")
+$SIOGatewayrpm = $SIOGatewayrpm.Replace("\","/")
+
+if (!($MasterVMX = get-vmx -path $MasterPath))
+    {
+    Write-Warning "no centos Master found
+    please download Centos7 Master to $Sourcedir\Centos7"
+    exit
+    }
 if (!$MasterVMX.Template) 
             {
             write-verbose "Templating Master VMX"
@@ -139,12 +165,12 @@ if (!$MasterVMX.Template)
             $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
             }
         write-verbose "Setting NIC0 to HostOnly"
-        Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config
+        $Netadapter = Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config
         if ($vmnet)
             {
             Write-Verbose "Configuring NIC 0 for $vmnet"
-            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config 
-            Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config 
+            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config  | Out-Null
+            Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config   | Out-Null
             }
         $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.CloneName)@$BuildDomain"
             $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
@@ -171,9 +197,41 @@ if (!$MasterVMX.Template)
         until ($ToolState.state -match "running")
         Write-Verbose "Setting Shared Folders"
         $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
+        $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | Out-Null
         Write-Verbose "Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
-        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway "$subnet.103" -device eth0 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $Guestuser -rootpassword $Guestpassword
+        $Scriptblock = "systemctl disable iptables.service"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+    
+        $Scriptblock = "systemctl stop iptables.service"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+
+
+        If ($DefaultGateway)
+            {
+            $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device eno16777984 -Peerdns -DNS1 $DNS1 -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $rootuser -rootpassword $Guestpassword | Out-Null
+            }
+        else
+            {
+            $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $ip -device eno16777984 -Peerdns -DNS1 $DNS1 -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $rootuser -rootpassword $Guestpassword | Out-Null
+            }
+    
+    
+        if ($node[-1] -eq "3" -and $SIOGateway.ispresent)
+            {
+            $Scriptblock = "yum install jre -y"
+            Write-Verbose $Scriptblock
+            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/yum-jre.log
+            
+            $Scriptblock = "export GATEWAY_ADMIN_PASSWORD='Password123!';rpm -Uhv --nodeps $SIOGatewayrpm"
+            Write-Verbose $Scriptblock
+            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile /tmp/SIOGateway.log
+            } 
+
+    
+    
     }
     write-Warning "Login to the VM´s with root/Password123!"
     
