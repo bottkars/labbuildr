@@ -156,7 +156,7 @@ switch ($PsCmdlet.ParameterSetName)
                                 }
                              "1"
                                 {
-                             break
+                                break
                                 }   
                              "2"
                                 {

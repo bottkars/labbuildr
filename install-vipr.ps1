@@ -211,7 +211,7 @@ Copy-Item $PSScriptRoot\scripts\viprmaster\viprmaster.vmx $targetname\$targetnam
 $vmx = get-vmx $targetname
 $vmx | Set-VMXTemplate -unprotect
 $vmx | Set-VMXNetworkAdapter -Adapter 0 -AdapterType vmxnet3 -ConnectionType custom
-$vmx | Set-VMXVnet -Adapter 0 -vnet vmnet2
+$vmx | Set-VMXVnet -Adapter 0 -vnet $vmnet
 $vmx | Set-VMXDisplayName -DisplayName $targetname
 Write-Verbose "Generating CDROM"
 

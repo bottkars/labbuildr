@@ -23,7 +23,7 @@ $Domain = $env:USERDOMAIN
 Write-Verbose $Domain
 
 .$Builddir\test-sharedfolders.ps1
-$Setuppath = "\\vmware-host\Shared Folders\Sources\$nmm_ver\win_x64\networkr\" 
+$Setuppath = "\\vmware-host\Shared Folders\Sources\$nmm_ver\win_x64\networkr\setup.exe" 
 .$Builddir\test-setup -setup NMM -setuppath $Setuppath
 if ($Nmm_ver -lt 'nmm85')
     {
