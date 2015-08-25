@@ -1419,13 +1419,12 @@ if ($defaults.IsPresent)
             
             
             }
-            
-
         if (!($MyInvocation.BoundParameters.Keys.Contains("NMM")))
             {
             if ($Default.NMM -eq "true")
                 {
                 $nmm = $true
+                $nw = $true
                 }
             }
         
@@ -2770,6 +2769,7 @@ else
 		Write-Host
         copy-tovmx -Sourcedir $NodeScriptDir
 		copy-tovmx -Sourcedir $SourceScriptDir
+        Write-Warning "Building DC for Domain $BuildDomain, this may take a while"
         invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script new-dc.ps1 -Parameter "-dcname $DCName -Domain $BuildDomain -IPv4subnet $IPv4subnet -IPv4Prefixlength $IPv4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -IPv6Prefix $IPv6Prefix  -AddressFamily $AddressFamily $AddGateway $CommonParameter" -interactive -nowait
    
         status "Preparing Domain"
@@ -3228,9 +3228,10 @@ switch ($PsCmdlet.ParameterSetName)
 
 ##### Hyper-V Block #####	
 	"HyperV" {
-        $Firstnode = 1 #for later use
-        $Clusternum = 1 # for later use
-        $FirstVMX =  "$Builddir\HVNODE$Firstnode\HVNODE$Firstnode.vmx"
+        $Firstnode = "1" #for later use
+        $Clusternum = "1" # for later use
+        $LASTVMX = "HVNODE$HyperVNodes"
+        $FirstVMX =  "HVNODE$Firstnode"
 		$HVLIST = @()
         $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features, Hyper-V, Hyper-V-Tools, Hyper-V-PowerShell, WindowsStorageManagementService"
 		if ($ScaleIO.IsPresent)
@@ -3259,7 +3260,16 @@ switch ($PsCmdlet.ParameterSetName)
             
             }
         if ($Cluster.IsPresent) {$AddonFeatures = "$AddonFeatures, Failover-Clustering, RSAT-Clustering, WVR"}
+        If (!(get-vmx HVNODE))
+            {
+            $newdeploy = $true
+            }
+        else
+            {
+            Write-Warning "Node1 Already Deployed, no autoconfig is done"
+            }
 
+ 
         foreach ($HVNODE in ($Firstnode..$HyperVNodes))
 		{
 			if ($HVNODE -eq $HyperVNodes -and $SCVMM.IsPresent) 
@@ -3379,6 +3389,9 @@ switch ($PsCmdlet.ParameterSetName)
 
 		} # end HV foreach
 		########### leaving NMM Section ###################
+    If ($newdeploy)
+        {
+        Write-Warning " Trying New Cluster Deployment !! "
 		if ($Cluster.IsPresent)
 		{
 			write-host
@@ -3393,13 +3406,13 @@ switch ($PsCmdlet.ParameterSetName)
             if ($singlemdm.IsPresent)
                     {
                     Write-Warning "Configuring Single MDM"
-                    invoke-vmxpowershell -config $FirstVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script configure-mdm.ps1 -Parameter "-singlemdm -CSVnum 3" -interactive 
+                    get-vmx $FirstVMX | invoke-vmxpowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script configure-mdm.ps1 -Parameter "-singlemdm -CSVnum 3" -interactive 
                     }
             else
             # if ($clusteredmdm.IsPresent)
                     {
                     Write-Warning "Configuring Clustered MDM"
-                    invoke-vmxpowershell -config $FirstVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script configure-mdm.ps1 -Parameter "-CSVnum 3" -interactive 
+                    get-vmx $FirstVMX | invoke-vmxpowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script configure-mdm.ps1 -Parameter "-CSVnum 3" -interactive 
                     }
             }
 		if ($SCVMM.IsPresent)
@@ -3431,6 +3444,7 @@ switch ($PsCmdlet.ParameterSetName)
                 invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $Targetscriptdir -Script install-vmm.ps1 -interactive -nowait
 		        }
             } #end SCVMM
+        }#end newdeploy
 	} # End Switchblock hyperv
 ###### new SOFS Block
 	"SOFS" {

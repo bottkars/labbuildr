@@ -223,42 +223,6 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $rootpassword
 
 
-    
-    <#
-    $Scriptblock = "echo 'default "+$subnet+".103 - -' > /etc/sysconfig/network/routes"
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock  -Guestuser $rootuser -Guestpassword $rootpassword
-    $scriptblock = "sed -i -- 's/HOSTNAME=localhost.localdomain/HOSTNAME=$Nodeprefix$node.$BuildDomain.local/g' /etc/sysconfig/network"
-    $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $rootpassword
-    Write-Verbose "Configuring Datamover NICS"
-        $Scriptblock = "echo  'IPADDR=$eth1ip' >> /etc/sysconfig/network-scripts/ifcfg-eth0"
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
-        $Scriptblock = "echo  'IPADDR=$eth2ip' >> /etc/sysconfig/network-scripts/ifcfg-eth1"
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $rootpassword  | Out-Null
-    foreach ($eth in ("eth0","eth1"))
-        {
-    
-        Write-Verbose "Configuring $eth"
-        $Scriptblock = "echo  'NETMASK=255.255.255.0' >> /etc/sysconfig/network-scripts/ifcfg-$eth"
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $rootpassword 
-        $Scriptblock = "echo  'GATEWAY=$subnet.103' >> /etc/sysconfig/network-scripts/ifcfg-$eth"
-        $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $rootpassword 
-        $Scriptblock = "sed -i -- '/BOOTPROTO/c\BOOTPROTO=static' /etc/sysconfig/network-scripts/ifcfg-$eth"
-        $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $rootpassword 
-        $scriptblock = "sed -i -- 's/PEERDNS=no/d' /etc/sysconfig/network-scripts/ifcfg-$eth"
-        $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $rootpassword 
-        }
-
-        $Scriptblock = "sed -i -- '/nameserver/c\nameserver $subnet.10' /etc/resolv.conf"
-        $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $rootpassword 
-       
-        $Scriptblock = "sed -i -- '/domain/c\domain $BuildDomain.local' /etc/resolv.conf"
-        $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $rootpassword 
- 
-        $Scriptblock = "sed -i -- '/search/c\search $BuildDomain.local' /etc/resolv.conf"
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $rootpassword
-
-        $NodeClone | Invoke-VMXBash -Scriptblock "/sbin/service network restart" -Guestuser $rootuser -Guestpassword $Rootpassword -Verbose | Out-Null
-        #>
  # Starting NAS Config
         Write-Verbose "Configuring Datamover DNS Settings"
         $Scriptblock = "export NAS_DB=/nas;/nas/bin/server_dns server_2 -protocol tcp $BuildDomain.local $subnet.10"
@@ -277,13 +241,13 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         Write-Verbose "Creating CIFS Mountpoint"
         $Scriptblock = "export NAS_DB=/nas;/nas/bin/server_mountpoint VDM_$Builddomain -create /vm"
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Nasuser -Guestpassword $rootpassword 
-        write-Verbose "Creating CIFS Fislesystem"
+        write-Verbose "Creating CIFS Filesystem"
         $Scriptblock = "export NAS_DB=/nas;/nas/bin/nas_fs -name virtualmachinesfs -create size=88G pool=clar_r5_performance -thin yes -auto_extend yes -max_size 1T"
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Nasuser -Guestpassword $rootpassword 
         Write-Verbose "Mounting Filesystem with SMBCA"       
         $Scriptblock = "export NAS_DB=/nas;/nas/bin/server_mount VDM_$Builddomain -o smbca virtualmachinesfs /vm"
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Nasuser -Guestpassword $rootpassword
-        Write-Verbose "Exporting Share with Contious Access"       
+        Write-Verbose "Exporting Share with Continuous Access"       
         $Scriptblock = "export NAS_DB=/nas;/nas/bin/server_export VDM_$BuildDomain -Protocol cifs -name VMShare -option type=CA /vm" 
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Nasuser -Guestpassword $rootpassword
         Write-Verbose "Starting CIFS Service"       
