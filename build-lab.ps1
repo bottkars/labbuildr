@@ -1169,6 +1169,7 @@ switch ($PsCmdlet.ParameterSetName)
                 } # end foreach
                 if ($Isnew)
                     {
+                    Remove-Item .\Update -Recurse -Confirm:$false
 				    status "Update Done"
                     status "press any key for reloading vmxtoolkit Modules"
                     pause
@@ -1257,6 +1258,7 @@ switch ($PsCmdlet.ParameterSetName)
 
                 if ($Isnew)
                     {
+                    Remove-Item .\Update -Recurse -Confirm:$false
 				    status "Update Done"
                     status "press any key for reloading Modules"
                     pause
