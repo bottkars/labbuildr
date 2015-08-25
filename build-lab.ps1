@@ -52,6 +52,10 @@ param (
     <#
     run build-lab update    #>
 	[Parameter(ParameterSetName = "update",Mandatory = $false, HelpMessage = "this will update labbuildr")][switch]$Update,
+    <#
+    run build-lab update    #>
+	[Parameter(ParameterSetName = "updatefromgit",Mandatory = $false, HelpMessage = "this will update labbuildr from latest git commit")][switch]$UpdatefromGit,
+
     <# 
     create deskop shortcut
     #>	
@@ -552,6 +556,8 @@ if (!(Test-Path ($Builddir+"\vmxtoolkit.version")))
 
 $verlabbuildr = New-Object System.Version (Get-Content  ($Builddir + "\labbuildr4.version") -ErrorAction SilentlyContinue).Replace("-",".")
 $vervmxtoolkit = New-Object System.Version (Get-Content  ($Builddir + "\vmxtoolkit.version") -ErrorAction SilentlyContinue).Replace("-",".")
+$Latest_labbuildr_git = Get-Content  ($Builddir + "\labbuildr.gitver") -ErrorAction SilentlyContinue
+$Latest_vmxtoolkit_git = Get-Content  ($Builddir + "\vmxtoolkit.gitver") -ErrorAction SilentlyContinue
 $LogFile = "$Builddir\$(Get-Content env:computername).log"
 $WAIKVER = "WAIK"
 $domainsuffix = ".local"
@@ -571,6 +577,8 @@ $latest_ex_cu = 'cu9'
 $latest_sqlver  = 'SQL2014'
 $latest_master = '2012R2FallUpdate'
 $latest_sql_2012 = 'SQL2012SP2'
+$labbuildr_branch = "harmony"
+$vmxtoolkit_branch = "master"
 $NW85_requiredJava = "jre-7u61-windows-x64"
 $latest_java8 = "jre-8u51-windows-x64.exe"
 $latest_java8uri = "http://javadl.sun.com/webapps/download/AutoDL?BundleId=107944"
@@ -1167,7 +1175,95 @@ switch ($PsCmdlet.ParameterSetName)
                     ./profile.ps1
                     }
 	return		
-    } # end Update
+    }
+    			"updatefromgit" 
+    {
+        $Uri = "https://api.github.com/repos/bottkars/labbuildr/commits/$Labbuildr_Branch"
+        $Zip = ("https://github.com/bottkars/labbuildr/archive/$Labbuildr_Branch.zip").ToLower()
+        $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
+                if ($Latest_labbuildr_git -lt $request.Headers.'Last-Modified')
+                    {
+                    $Updatepath = "$Builddir\Update"
+					if (!(Get-Item -Path $Updatepath -ErrorAction SilentlyContinue))
+					        {
+						    $newDir = New-Item -ItemType Directory -Path "$Updatepath"
+                            }
+                    Write-Output "We found a newer Version for labbuildr on Git Dated $($request.Headers.'Last-Modified')"
+                    Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\$labbuildr_branch.zip"
+                    Expand-LABZip -zipfilename "$Builddir\update\$labbuildr_branch.zip" -destination $Builddir\test -Folder labbuildr-$labbuildr_branch
+                    $Isnew = $true
+                    $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\labbuildr.gitver") 
+				    if (Test-Path "$Builddir\deletefiles.txt")
+					    {
+						$deletefiles = get-content "$Builddir\deletefiles.txt"
+						foreach ($deletefile in $deletefiles)
+						    {
+							if (Get-Item $Builddir\$deletefile -ErrorAction SilentlyContinue)
+							    {
+								Remove-Item -Path $Builddir\$deletefile -Recurse -ErrorAction SilentlyContinue
+								status "deleted $deletefile"
+								write-log "deleted $deletefile"
+							    }
+						    }
+                        }
+                    else 
+                        {
+                        Write-Host "No Deletions required"
+                        }
+                    }
+                else 
+                    {
+                    Status "No update required for labbuildr, already newest version "
+                    }
+###
+        $Uri = "https://api.github.com/repos/bottkars/vmxtoolkit/commits/$vmxtoolkit_Branch"
+        $Zip = ("https://github.com/bottkars/vmxtoolkit/archive/$vmxtoolkit_Branch.zip").ToLower()
+        $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
+                if ($Latest_vmxtoolkit_git -lt $request.Headers.'Last-Modified')
+                    {
+                    $Updatepath = "$Builddir\Update"
+					if (!(Get-Item -Path $Updatepath -ErrorAction SilentlyContinue))
+					        {
+						    $newDir = New-Item -ItemType Directory -Path "$Updatepath"
+                            }
+                    Write-Output "We found a newer Version for vmxtoolkit on Git Dated $($request.Headers.'Last-Modified')"
+                    Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\$vmxtoolkit_branch.zip"
+                    Expand-LABZip -zipfilename "$Builddir\update\$vmxtoolkit_branch.zip" -destination $Builddir\test -Folder vmxtoolkit-$vmxtoolkit_branch
+                    $Isnew = $true
+                    $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\vmxtoolkit.gitver") 
+				    if (Test-Path "$Builddir\deletefiles.txt")
+					    {
+						$deletefiles = get-content "$Builddir\deletefiles.txt"
+						foreach ($deletefile in $deletefiles)
+						    {
+							if (Get-Item $Builddir\$deletefile -ErrorAction SilentlyContinue)
+							    {
+								Remove-Item -Path $Builddir\$deletefile -Recurse -ErrorAction SilentlyContinue
+								status "deleted $deletefile"
+								write-log "deleted $deletefile"
+							    }
+						    }
+                        }
+                    else 
+                        {
+                        Write-Host "No Deletions required"
+                        }
+                    }
+                else 
+                    {
+                    Status "No update required for vmxtoolkit, already newest version "
+                    }
+###
+
+                if ($Isnew)
+                    {
+				    status "Update Done"
+                    status "press any key for reloading Modules"
+                    pause
+                    ./profile.ps1
+                    }
+    return
+    }# end Updatefromgit
 			
 			"Shortcut"{
 				status "Creating Desktop Shortcut for $Buildname"
@@ -1178,7 +1274,15 @@ switch ($PsCmdlet.ParameterSetName)
 
 			"Version" {
 				Status "labbuildr version $major-$verlabbuildr $Edition"
+                if ($Latest_labbuildr_git)
+                    {
+                    Status "Git Release $Latest_labbuildr_git"
+                    }
                 Status "vmxtoolkit version $major-$vervmxtoolkit $Edition"
+                if ($Latest_vmxtoolkit_git)
+                    {
+                    Status "Git Release $Latest_vmxtoolkit_git"
+                    }
                 Write-Output '   Copyright 2014 Karsten Bott
 
    Licensed under the Apache License, Version 2.0 (the "License");

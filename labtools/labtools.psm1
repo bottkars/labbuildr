@@ -320,11 +320,19 @@ function Expand-LABZip
 {
  [CmdletBinding(DefaultParameterSetName='Parameter Set 1',
     HelpUri = "https://github.com/bottkars/LABbuildr/wiki/LABtools#Expand-LABZip")]
-	param ([string]$zipfilename, [string] $destination)
+	param (
+        [string]$zipfilename,
+        [string] $destination,
+        [String]$Folder)
 	$copyFlag = 16 # overwrite = yes
 	$Origin = $MyInvocation.MyCommand
 	if (test-path($zipfilename))
-	{		
+	{
+    If ($Folder)
+        {
+        $zipfilename = Join-Path $zipfilename $Folder
+        }
+    		
         Write-Verbose "extracting $zipfilename to $destination"
         if (!(test-path  $destination))
             {
