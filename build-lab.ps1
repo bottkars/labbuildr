@@ -51,10 +51,10 @@ param (
 
     <#
     run build-lab update    #>
-	[Parameter(ParameterSetName = "update",Mandatory = $false, HelpMessage = "this will update labbuildr")][switch]$Update,
+	[Parameter(ParameterSetName = "updateold",Mandatory = $false, HelpMessage = "this will update labbuildr")][switch]$Updateold,
     <#
     run build-lab update    #>
-	[Parameter(ParameterSetName = "updatefromgit",Mandatory = $false, HelpMessage = "this will update labbuildr from latest git commit")][switch]$UpdatefromGit,
+	[Parameter(ParameterSetName = "updatefromgit",Mandatory = $false, HelpMessage = "this will update labbuildr from latest git commit")][alias('Update')][switch]$UpdatefromGit,
 
     <# 
     create deskop shortcut
@@ -1084,7 +1084,7 @@ Import-Module "$Builddir\$Module" -Force
 ###################################################
 switch ($PsCmdlet.ParameterSetName)
 {
-			"update" {
+    "updateold" {
                 $Webrequest = Invoke-WebRequest -Uri $UpdateUri
                 foreach ($Updatefile in $Updatefiles)
                 {
@@ -1176,7 +1176,7 @@ switch ($PsCmdlet.ParameterSetName)
                     }
 	return		
     }
-    			"updatefromgit" 
+    "updatefromgit" 
     {
         $Uri = "https://api.github.com/repos/bottkars/labbuildr/commits/$Labbuildr_Branch"
         $Zip = ("https://github.com/bottkars/labbuildr/archive/$Labbuildr_Branch.zip").ToLower()
@@ -1190,7 +1190,7 @@ switch ($PsCmdlet.ParameterSetName)
                             }
                     Write-Output "We found a newer Version for labbuildr on Git Dated $($request.Headers.'Last-Modified')"
                     Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\$labbuildr_branch.zip"
-                    Expand-LABZip -zipfilename "$Builddir\update\$labbuildr_branch.zip" -destination $Builddir\test -Folder labbuildr-$labbuildr_branch
+                    Expand-LABZip -zipfilename "$Builddir\update\$labbuildr_branch.zip" -destination $Builddir -Folder labbuildr-$labbuildr_branch
                     $Isnew = $true
                     $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\labbuildr.gitver") 
 				    if (Test-Path "$Builddir\deletefiles.txt")
@@ -1228,7 +1228,7 @@ switch ($PsCmdlet.ParameterSetName)
                             }
                     Write-Output "We found a newer Version for vmxtoolkit on Git Dated $($request.Headers.'Last-Modified')"
                     Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\$vmxtoolkit_branch.zip"
-                    Expand-LABZip -zipfilename "$Builddir\update\$vmxtoolkit_branch.zip" -destination $Builddir\test -Folder vmxtoolkit-$vmxtoolkit_branch
+                    Expand-LABZip -zipfilename "$Builddir\update\$vmxtoolkit_branch.zip" -destination $Builddir\vmxtoolkit -Folder vmxtoolkit-$vmxtoolkit_branch
                     $Isnew = $true
                     $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\vmxtoolkit.gitver") 
 				    if (Test-Path "$Builddir\deletefiles.txt")
