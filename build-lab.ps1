@@ -48,14 +48,8 @@ param (
     run build-lab version    #>
 	[Parameter(ParameterSetName = "version",Mandatory = $false, HelpMessage = "this will update labbuildr")][switch]$version,
     <# 
-
-    <#
-    run build-lab update    #>
-	[Parameter(ParameterSetName = "updateold",Mandatory = $false, HelpMessage = "this will update labbuildr")][switch]$Updateold,
-    <#
     run build-lab update    #>
 	[Parameter(ParameterSetName = "updatefromgit",Mandatory = $false, HelpMessage = "this will update labbuildr from latest git commit")][alias('Update')][switch]$UpdatefromGit,
-
     <# 
     create deskop shortcut
     #>	
@@ -495,6 +489,12 @@ Sources should be populated from a bases sources.zip
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
     [String]$Sourcedir,
 	#[Validatescript({Test-Path -Path $_ })][String]$Sourcedir,
+
+    <#
+    run build-lab update old for old update methos    #>
+	[Parameter(ParameterSetName = "updateold",Mandatory = $false, HelpMessage = "this will update labbuildr")][switch]$Updateold,
+    <#
+
 <# Turn on Logging to Console#>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
