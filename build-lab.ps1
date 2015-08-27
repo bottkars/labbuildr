@@ -556,8 +556,23 @@ if (!(Test-Path ($Builddir+"\vmxtoolkit.version")))
 
 $verlabbuildr = New-Object System.Version (Get-Content  ($Builddir + "\labbuildr4.version") -ErrorAction SilentlyContinue).Replace("-",".")
 $vervmxtoolkit = New-Object System.Version (Get-Content  ($Builddir + "\vmxtoolkit.version") -ErrorAction SilentlyContinue).Replace("-",".")
-[datetime]$Latest_labbuildr_git = Get-Content  ($Builddir + "\labbuildr.gitver") -ErrorAction SilentlyContinue | Out-Null
-[datetime]$Latest_vmxtoolkit_git = Get-Content  ($Builddir + "\vmxtoolkit.gitver") -ErrorAction SilentlyContinue | Out-Null
+try
+    {
+    [datetime]$Latest_labbuildr_git = Get-Content  ($Builddir + "\labbuildr.gitver") -ErrorAction Stop
+    }
+    catch
+    {
+    [datetime]$Latest_labbuildr_git = "07/01/2015"
+    }
+
+try
+    {
+    [datetime]$Latest_vmxtoolkit_git = Get-Content  ($Builddir + "\vmxtoolkit.gitver") -ErrorAction Stop
+    }
+catch
+    {
+    [datetime]$Latest_vmxtoolkit_git = "07/01/2015"
+    }
 $LogFile = "$Builddir\$(Get-Content env:computername).log"
 $WAIKVER = "WAIK"
 $domainsuffix = ".local"
