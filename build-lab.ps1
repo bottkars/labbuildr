@@ -1193,7 +1193,7 @@ switch ($PsCmdlet.ParameterSetName)
 						    $newDir = New-Item -ItemType Directory -Path "$Updatepath"
                             }
                     Write-Output "We found a newer Version for labbuildr on Git Dated $($request.Headers.'Last-Modified')"
-                    Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\labbuildr-$labbuildr_branch.zip"
+                    Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\labbuildr-$labbuildr_branch.zip" -ignoresize
                     Expand-LABZip -zipfilename "$Builddir\update\labbuildr-$labbuildr_branch.zip" -destination $Builddir -Folder labbuildr-$labbuildr_branch
                     $Isnew = $true
                     $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\labbuildr.gitver") 
@@ -1233,7 +1233,7 @@ switch ($PsCmdlet.ParameterSetName)
 						    $newDir = New-Item -ItemType Directory -Path "$Updatepath"
                             }
                     Write-Output "We found a newer Version for vmxtoolkit on Git Dated $($request.Headers.'Last-Modified')"
-                    Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\vmxoolkit-$vmxtoolkit_branch.zip"
+                    Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\vmxoolkit-$vmxtoolkit_branch.zip" -ignoresize
                     Expand-LABZip -zipfilename "$Builddir\update\vmxoolkit-$vmxtoolkit_branch.zip" -destination $Builddir\vmxtoolkit -Folder vmxtoolkit-$vmxtoolkit_branch
                     $Isnew = $true
                     $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\vmxtoolkit.gitver") 

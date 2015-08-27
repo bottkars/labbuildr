@@ -521,7 +521,8 @@ function Get-LABHttpFile
     HelpUri = "https://github.com/bottkars/LABbuildr/wiki/LABtools#GET-LABHttpFile")]
 	param (
 	[Parameter(ParameterSetName = "1", Mandatory = $true,Position = 0)]$SourceURL,
-    [Parameter(ParameterSetName = "1", Mandatory = $false)]$TarGetFile
+    [Parameter(ParameterSetName = "1", Mandatory = $false)]$TarGetFile,
+    [Parameter(ParameterSetName = "1", Mandatory = $false)][switch]$ignoresize
     )
 
 
@@ -560,7 +561,7 @@ try
                     Write-Warning $_.Exception
                     break
                     }
-                if ( (Get-ChildItem  $TarGetFile).length -ne $Length)
+                if ( (Get-ChildItem  $TarGetFile).length -ne $Length -and !$ignoresize)
                     {
                     Write-Warning "File size does not match"
                     Remove-Item $TarGetFile -Force
