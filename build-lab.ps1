@@ -556,8 +556,8 @@ if (!(Test-Path ($Builddir+"\vmxtoolkit.version")))
 
 $verlabbuildr = New-Object System.Version (Get-Content  ($Builddir + "\labbuildr4.version") -ErrorAction SilentlyContinue).Replace("-",".")
 $vervmxtoolkit = New-Object System.Version (Get-Content  ($Builddir + "\vmxtoolkit.version") -ErrorAction SilentlyContinue).Replace("-",".")
-$Latest_labbuildr_git = Get-Content  ($Builddir + "\labbuildr.gitver") -ErrorAction SilentlyContinue
-$Latest_vmxtoolkit_git = Get-Content  ($Builddir + "\vmxtoolkit.gitver") -ErrorAction SilentlyContinue
+[datetime]$Latest_labbuildr_git = Get-Content  ($Builddir + "\labbuildr.gitver") -ErrorAction SilentlyContinue
+[datetime]$Latest_vmxtoolkit_git = Get-Content  ($Builddir + "\vmxtoolkit.gitver") -ErrorAction SilentlyContinue
 $LogFile = "$Builddir\$(Get-Content env:computername).log"
 $WAIKVER = "WAIK"
 $domainsuffix = ".local"
@@ -1183,8 +1183,9 @@ switch ($PsCmdlet.ParameterSetName)
         $Uri = "https://api.github.com/repos/bottkars/labbuildr/commits/$Labbuildr_Branch"
         $Zip = ("https://github.com/bottkars/labbuildr/archive/$Labbuildr_Branch.zip").ToLower()
         $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
-                Write-Verbose "We have version $Latest_labbuildr_git, $($request.Headers.'Last-Modified') is online !"
-                if ($Latest_labbuildr_git -lt $request.Headers.'Last-Modified')
+        [datetime]$latest_Labuildr_OnGit = $request.Headers.'Last-Modified'
+                Write-Verbose "We have labbuildr version $Latest_labbuildr_git, $latest_Labuildr_OnGit is online !"
+                if ($Latest_labbuildr_git -lt $latest_Labuildr_OnGit )
                     {
                     $Updatepath = "$Builddir\Update"
 					if (!(Get-Item -Path $Updatepath -ErrorAction SilentlyContinue))
@@ -1192,8 +1193,8 @@ switch ($PsCmdlet.ParameterSetName)
 						    $newDir = New-Item -ItemType Directory -Path "$Updatepath"
                             }
                     Write-Output "We found a newer Version for labbuildr on Git Dated $($request.Headers.'Last-Modified')"
-                    Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\$labbuildr_branch.zip"
-                    Expand-LABZip -zipfilename "$Builddir\update\$labbuildr_branch.zip" -destination $Builddir -Folder labbuildr-$labbuildr_branch
+                    Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\labbuildr-$labbuildr_branch.zip"
+                    Expand-LABZip -zipfilename "$Builddir\update\labbuildr-$labbuildr_branch.zip" -destination $Builddir -Folder labbuildr-$labbuildr_branch
                     $Isnew = $true
                     $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\labbuildr.gitver") 
 				    if (Test-Path "$Builddir\deletefiles.txt")
@@ -1222,7 +1223,9 @@ switch ($PsCmdlet.ParameterSetName)
         $Uri = "https://api.github.com/repos/bottkars/vmxtoolkit/commits/$vmxtoolkit_Branch"
         $Zip = ("https://github.com/bottkars/vmxtoolkit/archive/$vmxtoolkit_Branch.zip").ToLower()
         $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
-                if ($Latest_vmxtoolkit_git -lt $request.Headers.'Last-Modified')
+        [datetime]$latest_vmxtoolkit_OnGit = $request.Headers.'Last-Modified'
+        Write-Verbose "We have labbuildr version $Latest_vmxtoolkit_git, $latest_vmxtoolkit_OnGit is online !"
+                if ($Latest_vmxtoolkit_git -lt $latest_vmxtoolkit_OnGit)
                     {
                     $Updatepath = "$Builddir\Update"
 					if (!(Get-Item -Path $Updatepath -ErrorAction SilentlyContinue))
@@ -1230,8 +1233,8 @@ switch ($PsCmdlet.ParameterSetName)
 						    $newDir = New-Item -ItemType Directory -Path "$Updatepath"
                             }
                     Write-Output "We found a newer Version for vmxtoolkit on Git Dated $($request.Headers.'Last-Modified')"
-                    Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\$vmxtoolkit_branch.zip"
-                    Expand-LABZip -zipfilename "$Builddir\update\$vmxtoolkit_branch.zip" -destination $Builddir\vmxtoolkit -Folder vmxtoolkit-$vmxtoolkit_branch
+                    Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\vmxoolkit-$vmxtoolkit_branch.zip"
+                    Expand-LABZip -zipfilename "$Builddir\update\vmxoolkit-$vmxtoolkit_branch.zip" -destination $Builddir\vmxtoolkit -Folder vmxtoolkit-$vmxtoolkit_branch
                     $Isnew = $true
                     $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\vmxtoolkit.gitver") 
 				    if (Test-Path "$Builddir\deletefiles.txt")
