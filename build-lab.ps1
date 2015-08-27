@@ -1183,6 +1183,7 @@ switch ($PsCmdlet.ParameterSetName)
         $Uri = "https://api.github.com/repos/bottkars/labbuildr/commits/$Labbuildr_Branch"
         $Zip = ("https://github.com/bottkars/labbuildr/archive/$Labbuildr_Branch.zip").ToLower()
         $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
+                Write-Verbose "We have version $Latest_labbuildr_git, $($request.Headers.'Last-Modified') is online !"
                 if ($Latest_labbuildr_git -lt $request.Headers.'Last-Modified')
                     {
                     $Updatepath = "$Builddir\Update"
