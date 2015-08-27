@@ -492,7 +492,7 @@ Sources should be populated from a bases sources.zip
 
     <#
     run build-lab update old for old update methos    #>
-	[Parameter(ParameterSetName = "updateold",Mandatory = $false, HelpMessage = "this will update labbuildr")][alias('Update')][switch]$UpdatefromBlog,
+	[Parameter(ParameterSetName = "updatefromBlog",Mandatory = $false, HelpMessage = "this will update labbuildr")][alias('Update')][switch]$UpdatefromBlog,
     <#
 
 <# Turn on Logging to Console#>
