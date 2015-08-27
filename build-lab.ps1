@@ -1084,7 +1084,8 @@ Import-Module "$Builddir\$Module" -Force
 ###################################################
 switch ($PsCmdlet.ParameterSetName)
 {
-    "updatefromblog" {
+    "UpdatefromBlog,Update" 
+        {
                 $Webrequest = Invoke-WebRequest -Uri $UpdateUri
                 foreach ($Updatefile in $Updatefiles)
                 {
@@ -1177,8 +1178,8 @@ switch ($PsCmdlet.ParameterSetName)
                     }
 	return		
     }
-    "updatefromgit" 
-    {
+    "UpdatefromGit" 
+        {
         $Uri = "https://api.github.com/repos/bottkars/labbuildr/commits/$Labbuildr_Branch"
         $Zip = ("https://github.com/bottkars/labbuildr/archive/$Labbuildr_Branch.zip").ToLower()
         $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
@@ -1267,14 +1268,14 @@ switch ($PsCmdlet.ParameterSetName)
     return
     }# end Updatefromgit
 			
-			"Shortcut"{
+    "Shortcut"
+        {
 				status "Creating Desktop Shortcut for $Buildname"
 				createshortcut
                 return
-			}# end shortcut
-
-
-			"Version" {
+    }# end shortcut
+    "Version"
+        {
 				Status "labbuildr version $major-$verlabbuildr $Edition"
                 if ($Latest_labbuildr_git)
                     {
@@ -1301,7 +1302,13 @@ switch ($PsCmdlet.ParameterSetName)
                  
 				return
 			} #end Version
+    
 }
+
+
+
+
+
 write-verbose "Config pre defaults"
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     {
