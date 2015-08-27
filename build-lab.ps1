@@ -1104,7 +1104,7 @@ Import-Module "$Builddir\$Module" -Force
 ###################################################
 switch ($PsCmdlet.ParameterSetName)
 {
-    {($_ -eq "UpdatefromBlog") -or ($_ -eq "Update")} 
+    "UpdatefromBlog" 
         {
                 $Webrequest = Invoke-WebRequest -Uri $UpdateUri
                 foreach ($Updatefile in $Updatefiles)
