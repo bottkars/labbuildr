@@ -46,10 +46,10 @@
 param (
     <#
     run build-lab version    #>
-	[Parameter(ParameterSetName = "version",Mandatory = $false, HelpMessage = "this will update labbuildr")][switch]$version,
+	[Parameter(ParameterSetName = "version",Mandatory = $false, HelpMessage = "this will display the current version")][switch]$version,
     <# 
     run build-lab update    #>
-	[Parameter(ParameterSetName = "updatefromgit",Mandatory = $false, HelpMessage = "this will update labbuildr from latest git commit")][alias('Update')][switch]$UpdatefromGit,
+	[Parameter(ParameterSetName = "updatefromgit",Mandatory = $false, HelpMessage = "this will update labbuildr from latest git commit")][switch]$UpdatefromGit,
     <# 
     create deskop shortcut
     #>	
@@ -492,7 +492,7 @@ Sources should be populated from a bases sources.zip
 
     <#
     run build-lab update old for old update methos    #>
-	[Parameter(ParameterSetName = "updateold",Mandatory = $false, HelpMessage = "this will update labbuildr")][switch]$Updateold,
+	[Parameter(ParameterSetName = "updateold",Mandatory = $false, HelpMessage = "this will update labbuildr")][alias('Update')][switch]$UpdatefromBlog,
     <#
 
 <# Turn on Logging to Console#>
@@ -1084,7 +1084,7 @@ Import-Module "$Builddir\$Module" -Force
 ###################################################
 switch ($PsCmdlet.ParameterSetName)
 {
-    "updateold" {
+    "updatefromblog" {
                 $Webrequest = Invoke-WebRequest -Uri $UpdateUri
                 foreach ($Updatefile in $Updatefiles)
                 {
