@@ -494,8 +494,13 @@ Sources should be populated from a bases sources.zip
     run build-lab update old for old update methos    #>
 	[Parameter(ParameterSetName = "updatefromBlog",Mandatory = $false, HelpMessage = "this will update labbuildr")][alias('Update')][switch]$UpdatefromBlog,
     <#
+     run build-lab -update -force to force an update
+    #>
+    [Parameter(ParameterSetName = "updatefromGit",Mandatory = $false, HelpMessage = "this will force update labbuildr")]
+    [Parameter(ParameterSetName = "updatefromBlog",Mandatory = $false, HelpMessage = "this will force update labbuildr")][alias('Update')][switch]$force,
 
-<# Turn on Logging to Console#>
+
+    <# Turn on Logging to Console#>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
@@ -1135,7 +1140,7 @@ switch ($PsCmdlet.ParameterSetName)
 				    Write-Verbose "installed $Currentver"
 				    Write-Verbose "comparing Versions"
                     write-verbose "Building version"
-                    if ($Currentver -lt $Updatever)
+                    if ($Currentver -lt $Updatever -or $force.IsPresent )
 				        {
                         $Isnew = $true
 					    status "Downloading Update for $Updatefile, please be patient ....."
@@ -1205,7 +1210,7 @@ switch ($PsCmdlet.ParameterSetName)
         $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
         [datetime]$latest_Labuildr_OnGit = $request.Headers.'Last-Modified'
                 Write-Verbose "We have labbuildr version $Latest_labbuildr_git, $latest_Labuildr_OnGit is online !"
-                if ($Latest_labbuildr_git -lt $latest_Labuildr_OnGit )
+                if ($Latest_labbuildr_git -lt $latest_Labuildr_OnGit -or $force.IsPresent )
                     {
                     $Updatepath = "$Builddir\Update"
 					if (!(Get-Item -Path $Updatepath -ErrorAction SilentlyContinue))
@@ -1245,7 +1250,7 @@ switch ($PsCmdlet.ParameterSetName)
         $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
         [datetime]$latest_vmxtoolkit_OnGit = $request.Headers.'Last-Modified'
         Write-Verbose "We have labbuildr version $Latest_vmxtoolkit_git, $latest_vmxtoolkit_OnGit is online !"
-                if ($Latest_vmxtoolkit_git -lt $latest_vmxtoolkit_OnGit)
+                if ($Latest_vmxtoolkit_git -lt $latest_vmxtoolkit_OnGit -or $force.IsPresent)
                     {
                     $Updatepath = "$Builddir\Update"
 					if (!(Get-Item -Path $Updatepath -ErrorAction SilentlyContinue))
