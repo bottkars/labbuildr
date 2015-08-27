@@ -49,7 +49,7 @@ param (
 	[Parameter(ParameterSetName = "version",Mandatory = $false, HelpMessage = "this will display the current version")][switch]$version,
     <# 
     run build-lab update    #>
-	[Parameter(ParameterSetName = "updatefromgit",Mandatory = $false, HelpMessage = "this will update labbuildr from latest git commit")][switch]$UpdatefromGit,
+	[Parameter(ParameterSetName = "updatefromGit",Mandatory = $false, HelpMessage = "this will update labbuildr from latest git commit")][switch]$UpdatefromGit,
     <# 
     create deskop shortcut
     #>	
@@ -497,7 +497,8 @@ Sources should be populated from a bases sources.zip
      run build-lab -update -force to force an update
     #>
     [Parameter(ParameterSetName = "updatefromGit",Mandatory = $false, HelpMessage = "this will force update labbuildr")]
-    [Parameter(ParameterSetName = "updatefromBlog",Mandatory = $false, HelpMessage = "this will force update labbuildr")][switch]$force,
+    [Parameter(ParameterSetName = "updatefromBlog",Mandatory = $false, HelpMessage = "this will force update labbuildr")]
+    [switch]$force,
 
 
     <# Turn on Logging to Console#>
@@ -1203,7 +1204,7 @@ switch ($PsCmdlet.ParameterSetName)
                     }
 	return		
     }
-    "UpdatefromGit" 
+    "updatefromGit" 
         {
         $Uri = "https://api.github.com/repos/bottkars/labbuildr/commits/$Labbuildr_Branch"
         $Zip = ("https://github.com/bottkars/labbuildr/archive/$Labbuildr_Branch.zip").ToLower()
