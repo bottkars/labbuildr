@@ -545,17 +545,22 @@ $IPv4PrefixLength = '24'
 $myself = $Myself.TrimEnd(".ps1")
 $Starttime = Get-Date
 $Builddir = $PSScriptRoot
-if (!(Test-Path ($Builddir+"\labbuildr4.version")))
+try
     {
-    Set-Content -Value "00.0000" -Path ($Builddir+"\labbuildr4.version")
+    $verlabbuildr = New-Object System.Version (Get-Content  ($Builddir + "\labbuildr4.version") -ErrorAction Stop).Replace("-",".")
     }
-if (!(Test-Path ($Builddir+"\vmxtoolkit.version")))
+catch
     {
-    Set-Content -Value "00.0000" -Path ($Builddir+"\vmxtoolkit.version")
+    $verlabbuildr = "00.0000"
     }
-
-$verlabbuildr = New-Object System.Version (Get-Content  ($Builddir + "\labbuildr4.version") -ErrorAction SilentlyContinue).Replace("-",".")
-$vervmxtoolkit = New-Object System.Version (Get-Content  ($Builddir + "\vmxtoolkit.version") -ErrorAction SilentlyContinue).Replace("-",".")
+try
+    {
+    $vervmxtoolkit = New-Object System.Version (Get-Content  ($Builddir + "\vmxtoolkit.version") -ErrorAction Stop).Replace("-",".")
+    }
+catch
+    {
+    $vervmxtoolkit = "00.0000"
+    }
 try
     {
     [datetime]$Latest_labbuildr_git = Get-Content  ($Builddir + "\labbuildr.gitver") -ErrorAction Stop
