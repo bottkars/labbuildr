@@ -497,7 +497,7 @@ Sources should be populated from a bases sources.zip
      run build-lab -update -force to force an update
     #>
     [Parameter(ParameterSetName = "updatefromGit",Mandatory = $false, HelpMessage = "this will force update labbuildr")]
-    [Parameter(ParameterSetName = "updatefromBlog",Mandatory = $false, HelpMessage = "this will force update labbuildr")][alias('Update')][switch]$force,
+    [Parameter(ParameterSetName = "updatefromBlog",Mandatory = $false, HelpMessage = "this will force update labbuildr")][switch]$force,
 
 
     <# Turn on Logging to Console#>
