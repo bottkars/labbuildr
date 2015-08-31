@@ -604,7 +604,7 @@ $latest_sqlver  = 'SQL2014'
 $latest_master = '2012R2FallUpdate'
 $latest_sql_2012 = 'SQL2012SP2'
 $labbuildr_branch = "harmony"
-$vmxtoolkit_branch = "master"
+$vmxtoolkit_branch = "harmony"
 $NW85_requiredJava = "jre-7u61-windows-x64"
 $latest_java8 = "jre-8u51-windows-x64.exe"
 $latest_java8uri = "http://javadl.sun.com/webapps/download/AutoDL?BundleId=107944"

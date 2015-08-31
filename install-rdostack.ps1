@@ -79,7 +79,7 @@ $Rootuser = "root"
 $Guestuser = "stack"
 $Guestpassword  = "Password123!"
 
-$Disksize = "100GB"
+[uint64]$Disksize = 100GB
 $scsi = 0
 
 
@@ -128,7 +128,7 @@ if (!(Test-path "$Sourcedir\Openstack"))
         Write-Verbose "Creating Disks"
         foreach ($LUN in (1..$Disks))
             {
-            $Diskname =  "SCSI$SCSI"+"_LUN$LUN"+"_$Disksize.vmdk"
+            $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
             Write-Verbose "Building new Disk $Diskname"
             $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
             Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"

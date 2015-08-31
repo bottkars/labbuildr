@@ -32,7 +32,7 @@ Param(
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install", Mandatory=$False)][ValidateRange(3,6)][int32]$Disks = 5,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install", Mandatory=$False)][ValidateSet('36GB','72GB','146GB')][string]$Disksize = "36GB",
+[Parameter(ParameterSetName = "install", Mandatory=$False)][ValidateSet(36GB,72GB,146GB)][uint64]$Disksize = 36GB,
 [Parameter(ParameterSetName = "install", Mandatory=$False)]$Subnet = "10.10.0",
 [Parameter(ParameterSetName = "install", Mandatory=$False)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
@@ -184,7 +184,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     $SCSI = 0
     foreach ($LUN in (1..$Disks))
             {
-            $Diskname =  "SCSI$SCSI"+"_LUN$LUN"+"_$Disksize.vmdk"
+            $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
             Write-Verbose "Building new Disk $Diskname"
             $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
             Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"

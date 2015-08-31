@@ -75,7 +75,7 @@ $Guestpassword = "Password123!"
 $Rootuser = "root"
 
 
-$Disksize = "100GB"
+[uint64]$Disksize = 100GB
 $scsi = 0
 
 
@@ -135,7 +135,7 @@ if (!(Test-Path "$Sourcedir\$Scenarioname\$release.tar.gz"))
         Write-Verbose "Creating Disks"
         foreach ($LUN in (1..$Disks))
             {
-            $Diskname =  "SCSI$SCSI"+"_LUN$LUN"+"_$Disksize.vmdk"
+            $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
             Write-Verbose "Building new Disk $Diskname"
             $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
             Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"

@@ -112,7 +112,7 @@ $Rootpassword  = "Password123!"
 $Guestuser = "$($Szenarioname.ToLower())user"
 $Guestpassword  = "Password123!"
 
-$Disksize = "512GB"
+[uint]$Disksize = 512GB
 $scsi = 0
 $yumcachedir = join-path -Path $Sourcedir "ECS\yum"
 ### checking for license file ###
@@ -233,7 +233,7 @@ if (!$MasterVMX.Template)
         Write-Verbose "Creating Disks"
         foreach ($LUN in (1..$Disks))
             {
-            $Diskname =  "SCSI$SCSI"+"_LUN$LUN"+"_$Disksize.vmdk"
+            $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
             Write-Verbose "Building new Disk $Diskname"
             $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
             Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"

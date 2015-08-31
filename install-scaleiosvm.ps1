@@ -208,7 +208,7 @@ switch ($PsCmdlet.ParameterSetName)
         $rootuser = "root"
         $rootpassword = "admin"
         $MDMPassword = "Password123!"
-        $Disksize = "100GB"
+        [uint64]$Disksize = 100GB
         $scsi = 0
         $Nodeprefix = "ScaleIONode"
         If ($configure.IsPresent -and $Nodes -lt 3)
@@ -258,7 +258,7 @@ switch ($PsCmdlet.ParameterSetName)
             Write-Verbose "Creating Disks"
             foreach ($LUN in (1..$Disks))
                 {
-                $Diskname =  "SCSI$SCSI"+"_LUN$LUN"+"_$Disksize.vmdk"
+                $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
                 Write-Verbose "Building new Disk $Diskname"
                 $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
                 Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"

@@ -205,11 +205,11 @@ if ($sql.IsPresent)
 
 if ($AddDisks.IsPresent)
     {
-    $Disksize = "100GB"
+    [uint64]$Disksize = 100GB
     $SCSI = "0"
     foreach ($LUN in (1..$Disks))
         {
-        $Diskname =  "SCSI$SCSI"+"_LUN$LUN"+"_$Disksize.vmdk"
+        $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
         Write-Verbose "Building new Disk $Diskname"
         $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $Clone.VMXname -Path $Clone.Path 
         Write-Verbose "Adding Disk $Diskname to $($Clone.VMXname)"

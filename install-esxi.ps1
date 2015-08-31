@@ -36,7 +36,7 @@ Param(
 [Parameter(Mandatory=$false)][int32]$Nodes =1,
 [Parameter(Mandatory=$false)][int32]$Startnode = 1,
 [Parameter(Mandatory=$False)][int32]$Disks = 1,
-[Parameter(Mandatory=$False)][ValidateSet('36GB','72GB','146GB')][string]$Disksize = "146GB",
+[Parameter(Mandatory=$False)][ValidateSet(36GB,72GB,146GB)][uint64]$Disksize = 146GB,
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 [Parameter(Mandatory=$true)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet,
 <# If not using standard labbuildr, specigy the driveletter for your sources directory#>
@@ -256,9 +256,9 @@ if ($nfs.IsPresent)
         }
 
         Write-Verbose "SCSI$($Scsi):$lun"
-        $Diskname = "SCSI$SCSI"+"_LUN$LUN"+"_$Disksize.vmdk"
+        $Diskname = "SCSI$SCSI"+"_LUN$LUN.vmdk"
         $Diskpath = "$($NodeClone.Path)\$Diskname"
-        Write-Verbose "Creating Disk #$Disk with $Diskname and a size of $Disksize"
+        Write-Verbose "Creating Disk #$Disk with $Diskname and a size of $($Disksize/1GB) GB"
         & $VMWAREpath\vmware-vdiskmanager.exe -c -s $Disksize -a lsilogic -t 0 $Diskpath 2>> error.txt | Out-Null
         $AddDrives  = @('scsi'+$scsi+':'+$LUN+'.present = "TRUE"')
         $AddDrives += @('scsi'+$scsi+':'+$LUN+'.deviceType = "disk"')

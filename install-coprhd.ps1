@@ -68,7 +68,7 @@ $Guestuser = $Scenarioname.ToLower()
 $Scriptdir = "$Sourcedir\$($Scenarioname.ToLower())"
 
 
-$Disksize = "100GB"
+[uint64]$Disksize = 100GB
 $scsi = 0
 $Node = "1"
 if (!($MasterVMX = get-vmx -path $MasterPath))
@@ -102,17 +102,6 @@ if (!(Test-path "$Sourcedir\$Scenarioname"))
         If ($Node -eq 1){$Primary = $NodeClone}
         $Config = Get-VMXConfig -config $NodeClone.config
         Write-Verbose "Tweaking Config"
-        <#
-        Write-Verbose "Creating Disks"
-        foreach ($LUN in (1..$Disks))
-            {
-            $Diskname =  "SCSI$SCSI"+"_LUN$LUN"+"_$Disksize.vmdk"
-            Write-Verbose "Building new Disk $Diskname"
-            $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-            Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
-            $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
-            }
-        #>
         write-verbose "Setting NIC0 to HostOnly"
         Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config | Out-Null
         if ($vmnet)

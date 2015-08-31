@@ -209,7 +209,7 @@ switch ($PsCmdlet.ParameterSetName)
                            {
                          Write-Verbose "SMALL AVE Selected"
                          $NumDisks = 3
-                         $Disksize = "250GB"
+                         [uint64]$Disksize = 250GB
                          $memsize = 6144
                                $Numcpu = 2
                             }
@@ -217,7 +217,7 @@ switch ($PsCmdlet.ParameterSetName)
                             {
                             Write-Verbose "Medium AVE Selected"
                             $NumDisks = 6
-                            $Disksize = "250GB"
+                            [uint64]$Disksize = 250GB
                           $memsize = 8192
                           $Numcpu = 2
                            }
@@ -225,7 +225,7 @@ switch ($PsCmdlet.ParameterSetName)
                            {
                            Write-Verbose "Large AVE Selected"
                            $NumDisks = 3
-                           $Disksize = "1000GB"
+                           [uint64]$Disksize = 1000GB
                             $memsize = 16384
                             $Numcpu = 2
                            }
@@ -233,7 +233,7 @@ switch ($PsCmdlet.ParameterSetName)
                            {
                            Write-Verbose "XtraLarge AVE Selected"
                           $NumDisks = 6
-                          $Disksize = "1000GB"
+                          [uint64]$Disksize = 1000GB
                           $memsize = 36864
                     $Numcpu = 4
                           }
@@ -242,7 +242,7 @@ switch ($PsCmdlet.ParameterSetName)
             
                  foreach ($LUN in (1..$NumDisks))
                   {
-                   $Diskname =  "SCSI$SCSI"+"_LUN$LUN"+"_$Disksize.vmdk"
+                   $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
                    Write-Verbose "Building new Disk $Diskname"
                     $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
                  Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"

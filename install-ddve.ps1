@@ -236,7 +236,7 @@ switch ($PsCmdlet.ParameterSetName)
                     Write-Verbose "0.5TB DDvE Selected"
                     $NumDisks = 1
                     $NumCrtl = 1
-                    $Disksize = "500GB"
+                    [uint64]$Disksize = 500GB
                     $memsize = 6044
                     $Numcpu = 2
                     }
@@ -245,7 +245,7 @@ switch ($PsCmdlet.ParameterSetName)
                     Write-Verbose "2TB DDvE Selected"
                     $NumDisks = 1
                     $NumCrtl = 4
-                    $Disksize = "500GB"
+                    [uint64]$Disksize = 500GB
                     $memsize = 6044
                     $Numcpu = 2
                     }
@@ -254,7 +254,7 @@ switch ($PsCmdlet.ParameterSetName)
                     Write-Verbose "4TB DDvE Selected"
                     $NumDisks = 2
                     $NumCrtl = 4
-                    $Disksize = "500GB"
+                    [uint64]$Disksize = 500GB
                     $memsize = 8192
                     $Numcpu = 2
                     }
@@ -263,7 +263,7 @@ switch ($PsCmdlet.ParameterSetName)
                     Write-Verbose "8TB DDvE Selected"
                     $NumDisks = 4
                     $NumCrtl = 4
-                    $Disksize = "500GB"
+                    [uint64]$Disksize = 500GB
                     $memsize = 8192
                     $Numcpu = 2
                     }
@@ -272,7 +272,7 @@ switch ($PsCmdlet.ParameterSetName)
             $scsi = 0
             foreach ($LUN in (2..($NumDisks+1)))
                     {
-                    $Diskname =  "SCSI$SCSI"+"_LUN$LUN"+"_$Disksize.vmdk"
+                    $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
                     Write-Verbose "Building new Disk $Diskname"
                     $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
                     Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
@@ -285,7 +285,7 @@ switch ($PsCmdlet.ParameterSetName)
                     {
                     foreach ($LUN in (0..($NumDisks-1)))
                         {
-                        $Diskname =  "SCSI$SCSI"+"_LUN$LUN"+"_$Disksize.vmdk"
+                        $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
                         Write-Verbose "Building new Disk $Diskname"
                         $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
                         Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
