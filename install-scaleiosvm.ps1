@@ -336,16 +336,21 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
             
             if ($Node -eq 3)
                 {
+                Write-Verbose "trying Gateway Install"
+                $NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/jre-*-linux-x64.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
+                $NodeClone | Invoke-VMXBash -Scriptblock "export SIO_GW_KEYTOOL=/usr/java/default/bin/;export GATEWAY_ADMIN_PASSWORD='Password123!';rpm -Uhv --nodeps  /root/install/EMC-ScaleIO-gateway*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
                 if (!$singlemdm)
                     {
                     Write-Verbose "trying TB Install"
                     $NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-tb*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
+                    Write-Verbose "Adding MDM to Gateway Server Config File"
+                    $sed = "sed -i 's\mdm.ip.addresses=.*\mdm.ip.addresses=$subnet.191;$Subnet.192\' /opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classes/gatewayUser.properties" 
                     }
-                Write-Verbose "trying Gateway Install"
-                $NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/jre-*-linux-x64.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
-                $NodeClone | Invoke-VMXBash -Scriptblock "export SIO_GW_KEYTOOL=/usr/java/default/bin/;export GATEWAY_ADMIN_PASSWORD='Password123!';rpm -Uhv --nodeps  /root/install/EMC-ScaleIO-gateway*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
-                Write-Verbose "Adding MDM to Gateway Server Config File"
-                $sed = "sed -i -- 's/mdm.ip.addresses=\`"\`"/mdm.ip.addresses=$subnet.191,$Subnet.192\`"/g' /opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classes/gatewayUser.properties" 
+                else
+                    {
+                    Write-Verbose "Adding MDM to Gateway Server Config File"
+                    $sed = "sed -i 's\mdm.ip.addresses=.*\mdm.ip.addresses=$subnet.191;$Subnet.191\' /opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classes/gatewayUser.properties" 
+                    }
                 Write-Verbose $sed
                 $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
                 $NodeClone | Invoke-VMXBash -Scriptblock "/etc/init.d/scaleio-gateway restart" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
