@@ -111,7 +111,7 @@ if (!(Test-path "$Sourcedir\$Scenarioname"))
             Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config | Out-Null
             }
         $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.CloneName)@$BuildDomain"
-            $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
+        $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
         $Annotation = $NodeClone | Set-VMXAnnotation -Line1 "rootuser:$Rootuser" -Line2 "rootpasswd:$Guestpassword" -Line3 "Guestuser:$Guestuser" -Line4 "Guestpassword:$Guestpassword" -Line5 "labbuildr by @hyperv_guy" -builddate
         $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname $Nodeprefix -Scenario 6
         $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
@@ -120,7 +120,7 @@ if (!(Test-path "$Sourcedir\$Scenarioname"))
         $Config = $Nodeclone | Get-VMXConfig
         $Config = $Config -notmatch "ide1:0.fileName"
         $Config | Set-Content -Path $NodeClone.config 
-        Write-Verbose "Starting CentosNode$Node"
+        Write-Verbose "Starting $($NodeClone.CloneName)"
         start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
         $machinesBuilt += $($NodeClone.cloneName)
 
@@ -321,7 +321,5 @@ make clobber BUILD_TYPE=oss rpm"
     please Visit https://$ip for Configuration
     Login with root:ChangeMe"
     $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
-
-
 #>
 
