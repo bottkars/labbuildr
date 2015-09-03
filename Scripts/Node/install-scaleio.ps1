@@ -9,12 +9,12 @@
 #requires -version 3
 [CmdletBinding()]
 param (
-
 [Parameter(Mandatory=$true)]
-[ValidateSet('MDM','TB','SDS','SDC')]$role,
+[ValidateSet('MDM','TB','SDS','SDC','gateway')]$role,
 [Parameter(Mandatory=$true)]$Disks,
 [Parameter(Mandatory=$true)]
-[ValidateSet('1.30-426.0','1.31-258.2','1.31-1277.3','1.31-2333.2','1.32-277.0','1.32-402.1','1.32-403.2')][alias('siover')]$ScaleIOVer
+[ValidateSet('1.30-426.0','1.31-258.2','1.31-1277.3','1.31-2333.2','1.32-277.0','1.32-402.1','1.32-403.2')][alias('siover')]$ScaleIOVer,
+[Parameter(Mandatory=$false)]$mdmip
 )
 $ScriptName = $MyInvocation.MyCommand.Name
 $Host.UI.RawUI.WindowTitle = "$ScriptName"
@@ -32,42 +32,67 @@ While ((Test-Path $ScaleIORoot) -Ne $true)
     pause
     }
 $ScaleIO_Major = ($ScaleIOVer.Split("-"))[0]
-While (!($ScaleIOPath = (Get-ChildItem -Path $ScaleIORoot -Recurse -Filter "*mdm-$ScaleIOVer.msi").Directory.FullName))
-    {
-    Write-Warning "Cannot find ScaleIO $ScaleIOVer in $ScaleIORoot
-    Make sure the Windows Package is downloaded and extracted to $ScaleIORoot
-    or select dufferent version
-    press any key when done pr Ctrl-C to exit"
-    pause
-
-
-    }
-
+<#
 $ScaleIORoot = "\\vmware-host\shared folders\sources\Scaleio\"
 $Setuppath = Join-Path $ScaleIOPath "EMC-ScaleIO-$role-$ScaleIOVer.msi"
 .$Builddir\test-setup.ps1 -setup "Saleio$role$ScaleIOVer" -setuppath $Setuppath
 $ScaleIOArgs = '/i "'+$Setuppath+'" /quiet'
-Start-Process -FilePath "msiexec.exe" -ArgumentList $ScaleIOArgs -PassThru -Wait
-
-foreach ($role in("sds","sdc"))
+#>
+if ($role -eq 'gateway')
     {
-    $Setuppath = Join-Path $ScaleIOPath "EMC-ScaleIO-$role-$ScaleIOVer.msi"
-    .$Builddir\test-setup -setup "Saleio$role$ScaleIOVer" -setuppath $Setuppath
-    $ScaleIOArgs = '/i "'+$Setuppath+'" /quiet'
+    While (!($Setuppath = (Get-ChildItem -Path $ScaleIORoot -Recurse -Filter "*-$role-$ScaleIOVer-x64.msi").FullName))
+        {
+        Write-Warning "Cannot find ScaleIO $ScaleIOVer in $ScaleIORoot
+        Make sure the Windows Package is downloaded and extracted to $ScaleIORoot
+        or select different version
+        press any key when done pr Ctrl-C to exit"
+        pause
+        }
+    $ScaleIOArgs = 'GATEWAY_ADMIN_PASSWORD=Password123! /i "'+$Setuppath+'"   /quiet'
     Start-Process -FilePath "msiexec.exe" -ArgumentList $ScaleIOArgs -PassThru -Wait
+    $Content = get-content -Path "C:\Program Files\EMC\scaleio\Gateway\webapps\ROOT\WEB-INF\classes\gatewayUser.properties"
+    $Content = $Content -notmatch "mdm.ip.addresses="
+    $Content += "mdm.ip.addresses=$mdmip"
+    $Content | set-content -Path "C:\Program Files\EMC\scaleio\Gateway\webapps\ROOT\WEB-INF\classes\gatewayUser.properties"
+    Restart-Service 'EMC ScaleIO Gateway'
     }
-####sdc checkup
-
-Write-Verbose "Preparing Disks"
-# $Disks = (get-disk).count-1
-Write-Host $Disks
-# Stop-Service ShellHWDetection
-$PrepareDisk = "'C:\Program Files\EMC\scaleio\sds\bin\prepare_disk.exe'" 
-foreach ($Disk in 1..$Disks)
+else
     {
-    Write-Output $Disk
-    $Drive = "\\?\PhysicalDrive$Disk"
-    Write-Output $Drive
+    While (!($ScaleIOPath = (Get-ChildItem -Path $ScaleIORoot -Recurse -Filter "*$Role-$ScaleIOVer.msi").Directory.FullName))
+    {
+    Write-Warning "Cannot find ScaleIO $ScaleIOVer in $ScaleIORoot
+    Make sure the Windows Package is downloaded and extracted to $ScaleIORoot
+    or select different version
+    press any key when done pr Ctrl-C to exit"
+    pause
+    }
+
+    if ($role -ne "SDS")
+        {
+        $Setuppath = Join-Path $ScaleIOPath "EMC-ScaleIO-$role-$ScaleIOVer.msi"
+        .$Builddir\test-setup.ps1 -setup "Saleio$role$ScaleIOVer" -setuppath $Setuppath
+        $ScaleIOArgs = '/i "'+$Setuppath+'" /quiet'
+        Start-Process -FilePath "msiexec.exe" -ArgumentList $ScaleIOArgs -PassThru -Wait
+        }
+    foreach ($role in("sds","sdc"))
+        {
+        $Setuppath = Join-Path $ScaleIOPath "EMC-ScaleIO-$role-$ScaleIOVer.msi"
+        .$Builddir\test-setup -setup "Saleio$role$ScaleIOVer" -setuppath $Setuppath
+        $ScaleIOArgs = '/i "'+$Setuppath+'" /quiet'
+        Start-Process -FilePath "msiexec.exe" -ArgumentList $ScaleIOArgs -PassThru -Wait
+        }
+    ####sdc checkup
+
+    Write-Verbose "Preparing Disks"
+    # $Disks = (get-disk).count-1
+    Write-Host $Disks
+    # Stop-Service ShellHWDetection
+    $PrepareDisk = "'C:\Program Files\EMC\scaleio\sds\bin\prepare_disk.exe'" 
+    foreach ($Disk in 1..$Disks)
+        {
+        Write-Output $Disk
+        $Drive = "\\?\PhysicalDrive$Disk"
+     Write-Output $Drive
     do {
         Write-Output "Testing ScaleIO Device"
         Start-Process -FilePath "C:\Program Files\EMC\scaleio\sds\bin\prepare_disk.exe" -ArgumentList "$Drive" -Wait
@@ -75,3 +100,7 @@ foreach ($Disk in 1..$Disks)
         }
     until (Test-Path "c:\scaleio_devices\PhysicalDrive$Disk")
     }
+
+
+
+}

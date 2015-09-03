@@ -2657,6 +2657,7 @@ if ($NMM.IsPresent)
 ####SACELIO Downloader #####
 if ($ScaleIO.IsPresent)
     {
+    $Java8_required = $true
     ##
     # ScaleIO_1.32_Complete_Windows_SW_Download\ScaleIO_1.32_Windows_Download #
     Write-Verbose "Now Checking for ScaleIO $ScaleIOVer"
@@ -2754,39 +2755,13 @@ if ($NW.IsPresent -or $NWServer.IsPresent)
 		write-verbose "Found Adobe $LatestReader"
 	    }
 	
-	##### Check Java
-	if (!($Java7 = Get-ChildItem -Path $Sourcedir -Filter 'jre-7*x64*') -and ($nw_ver -lt "nw84"))
-	    {
-		write-warning "Java7 not found, please download from www.java.com"
-	    }
-    else
-        {
-	    $Java7 = $Java7 | Sort-Object -Property Name -Descending
-	    $LatestJava7 = $Java7[0].Name
-        }
-
-    
-    
-        
-         
+	##### 
+    $Java7_required = $True
+    #####
 If ($nw_ver -gt "nw85.BR1")
             {
-	        if (!($Java8 = Get-ChildItem -Path $Sourcedir -Filter 'jre-8*x64*'))
-	            {
-		        Write-Warning "Java8 not found, trying download"
-                Write-Verbose "Asking for latest Java8"
-                $LatestJava8 = (get-labJava64 -DownloadDir $Sourcedir).LatestJava8
-                if (!$LatestJava8)
-                    {
-                    break
-                    }
-	            }
-            else
-                {
-                $Java8 = $Java8 | Sort-Object -Property Name -Descending
-	            $LatestJava8 = $Java8[0].Name
-                Write-Verbose "Got $LatestJava8"
-                }
+            $Java8_required = $true
+            $Java7_required = $false
             if ($LatestJava7)
                 {
                 $LatestJava = $LatestJava7
@@ -2797,36 +2772,50 @@ If ($nw_ver -gt "nw85.BR1")
                 $LatestJava = $LatestJava8
                 }
             }
-elseif ($nw_ver -gt "nw84")
-            {
-            if ($LatestJava7 -and $LatestJava7 -ge $NW85_requiredJava)
-                {
-                $LatestJava = $LatestJava7
-                }
-            else 
-                {
-                Write-warning "Currently you need at least $NW85_requiredJava for $nw_ver
-                we only found $LatestJava7"
-                exit
-                }
-            }
-else
-            {
-            if ($LatestJava7)
-                {
-                $LatestJava = $LatestJava7
-                }
-                
-            }
-if (!$LatestJava)
-    {
-    Write-Warning "No Java was found. Please download required Java Version to $Sources"
-    break
-    }    
-Write-Warning "we will use $LatestJava for Netwoker $nw_ver. Please make sure the Versions match Supportmatrix"
+}
 
-} 
 #end $nw
+
+
+if ($Java7_required)
+    {
+    Write-Verbose "Checking for Java 7"
+    if (!($Java7 = Get-ChildItem -Path $Sourcedir -Filter 'jre-7*x64*'))
+	    {
+		write-warning "Java7 not found, please download from www.java.com"
+	    break
+        }
+    else
+        {
+	    $Java7 = $Java7 | Sort-Object -Property Name -Descending
+	    $LatestJava = $Java7[0].Name
+        }
+    }
+
+
+If ($Java8_required)
+    {
+    Write-Verbose "Checking for Java 8"
+    if (!($Java8 = Get-ChildItem -Path $Sourcedir -Filter 'jre-8*x64*'))
+        {
+	    Write-Warning "Java8 not found, trying download"
+        Write-Verbose "Asking for latest Java8"
+        $LatestJava = (get-labJava64 -DownloadDir $Sourcedir).LatestJava8
+        if (!$LatestJava)
+            {
+            break
+            }
+	    }
+    else
+        {
+        $Java8 = $Java8 | Sort-Object -Property Name -Descending
+	    $LatestJava = $Java8[0].Name
+        Write-Verbose "Got $LatestJava"
+        }
+    }
+
+
+
 if (!($SourceOK = test-source -SourceVer $Sourcever -SourceDir $Sourcedir))
 {
 	Write-Verbose "Sourcecomlete: $SourceOK"
@@ -3468,8 +3457,8 @@ switch ($PsCmdlet.ParameterSetName)
 				write-Verbose "Starting Customization"
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
 				test-user Administrator
-				write-verbose "Setting up Virtual Machine"
-				# invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script createvm.ps1 -interactive
+				write-verbose "Setting up WINRM"
+				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script set-winrm.ps1 -interactive
                 if ($ScaleIO.IsPresent)
                     {
                     switch ($HVNODE){
@@ -3494,16 +3483,37 @@ switch ($PsCmdlet.ParameterSetName)
                     }
                 3
                     {
+		            do
+		                {
+			            ($cmdresult = &$vmrun -gu Administrator -gp Password123! runPrograminGuest  $CloneVMX -activeWindow  $Execute $Parm) 2>&1 | Out-Null
+			            write-log "$origin $cmdresult"
+		                }
+		            until ($VMrunErrorCondition -notcontains $cmdresult)
+		            write-log "$origin $cmdresult"
                     if (!$singlemdm.IsPresent)
                         {                                        
                         Write-Output " Installing TB"
                         Invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-scaleio.ps1 -Parameter "-Role TB -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
+                        $mdmip = "$IPv4Subnet.151;$IPv4Subnet.152"
                         }
                     else
                         {
                         Write-Output " Installing single MDM"
                         invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
+                        $mdmip = "$IPv4Subnet.151;$IPv4Subnet.151"
                         }
+                    write-verbose "installing JAVA"
+		            $Parm = "/s"
+		            $Execute = "\\vmware-host\Shared Folders\Sources\$LatestJava"
+		            do
+		                {
+			            ($cmdresult = &$vmrun -gu Administrator -gp Password123! runPrograminGuest  $CloneVMX -activeWindow  $Execute $Parm) 2>&1 | Out-Null
+			            write-log "$origin $cmdresult"
+		                }
+		            until ($VMrunErrorCondition -notcontains $cmdresult)
+		            write-log "$origin $cmdresult"
+                    Invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-scaleio.ps1 -Parameter "-Role gateway -disks $Disks -ScaleIOVer $ScaleIOVer -mdmip $mdmip" -interactive 
+
 
                     }
                 default
