@@ -61,7 +61,7 @@ $Range = "21"
 $Start = "1"
 $Szenarioname = "ECS"
 $Nodeprefix = "$($Szenarioname)Node"
-[uint]$Disksize = 100GB
+[uint]$Disksize = 520GB
 $scsi = 0
 If ($Defaults.IsPresent)
     {

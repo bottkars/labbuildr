@@ -1,7 +1,7 @@
 FirstName,LastName,SamAccountName,Manager,Description,Title,OU,SecurityGroup
-,,SVC_SQLADM,,Administrator used for SQL Server installation.,Admin Account,,Domain Admins
-,,SVC_WINRM,,User for remote WMI.,Service Account,ServiceAccounts,Domain Users
-,,SVC_SQL,,User running the SQL server instances.,Service Account,ServiceAccounts,SQL_ADMINS
+,,SVC_SQLADM,,Administrator used for SQL Server installation,Admin Account,,Domain Admins
+,,SVC_WINRM,,User for remote WMI.,Service Account,,Domain Users
+,,SVC_SQL,,User running the SQL server instances.,Service Account,,SQL_ADMINS
 ,,SVC_SCVMM,,Administrator used for SCVMM installation.,Admin Account,,SQL_ADMINS
 ,,OneFS,,Administrator used for OneFS.,Admin Account,,Domain Admins
 ,,Panorama,,Query User for panorama.,Admin Account,,Domain Users

@@ -19,7 +19,7 @@ $Builddir = $PSScriptRoot
 $Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
 New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
 .$Builddir\test-sharedfolders.ps1
-$ScaleIORoot = "\\vmware-host\shared folders\sources\Scaleio\"
+$ScaleIORoot = "\\vmware-host\shared folders\Sources\Scaleio\"
 While ((Test-Path $ScaleIORoot) -Ne $true)
     {
     Write-Warning "Cannot find $ScaleIORoot
@@ -33,11 +33,9 @@ While (!($ScaleIOPath = (Get-ChildItem -Path $ScaleIORoot -Recurse -Filter "*mdm
     {
     Write-Warning "Cannot find ScaleIO $ScaleIOVer in $ScaleIORoot
     Make sure the Windows Package is downloaded and extracted to $ScaleIORoot
-    or select dufferent version
+    or select different version
     press any key when done pr Ctrl-C to exit"
     pause
-
-
     }
 $role = "sdc"
 $Setuppath = Join-Path $ScaleIOPath "EMC-ScaleIO-$role-$ScaleIOVer.msi"
