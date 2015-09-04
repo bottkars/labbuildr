@@ -51,7 +51,7 @@ $Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$EMC_ca,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$lowmem,
+[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('12288','20480','51200','65536')]$Memory = "20480",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$uiconfig
 )
@@ -61,14 +61,8 @@ $Range = "21"
 $Start = "1"
 $Szenarioname = "ECS"
 $Nodeprefix = "$($Szenarioname)Node"
-If ($Lowmem.IsPresent)
-    {
-    $Memory = "12288"
-    }
-else
-    {
-    $Memory = "16384"
-    }
+[uint]$Disksize = 100GB
+$scsi = 0
 If ($Defaults.IsPresent)
     {
      $labdefaults = Get-labDefaults
@@ -112,20 +106,20 @@ $Rootpassword  = "Password123!"
 $Guestuser = "$($Szenarioname.ToLower())user"
 $Guestpassword  = "Password123!"
 
-[uint]$Disksize = 512GB
-$scsi = 0
+
 $yumcachedir = join-path -Path $Sourcedir "ECS\yum"
 ### checking for license file ###
 try
     {
-    $ecslicense = Get-ChildItem "$Sourcedir\ecs\" -Recurse -Filter "license*.xml" -ErrorAction Stop |out-null
+    $ecslicense = Get-ChildItem "$Sourcedir\ecs\ECS-CommunityEdition\" -Recurse -Filter "license*.xml" -ErrorAction Stop | out-null
     }
 catch [System.Management.Automation.ItemNotFoundException]
     {
     write-warning "ECS License Package not found, trying to download from EMC"
     write-warning "Checking for Downloaded Package"
                     $Uri = "http://www.emc.com/getecs"
-                    $request = Invoke-WebRequest -Uri $Uri -UseBasicParsing
+                    #$Uri = "http://www.emc.com/products-solutions/trial-software-download/ecs.htm"
+                    $request = Invoke-WebRequest -Uri $Uri # -UseBasicParsing 
                     $DownloadLinks = $request.Links | where href -match "zip"
                     foreach ($Link in $DownloadLinks)
                         {
@@ -175,7 +169,6 @@ catch [System.Management.Automation.ItemNotFoundException]
 
 
 $ecslicense = $ecslicense | where Directory -Match single
-
 # "checkin for yum cache basdir"
 try
     {
@@ -255,9 +248,7 @@ if (!$MasterVMX.Template)
         $NodeClone | Set-VMXmemory -MemoryMB $Memory | Out-Null
         $NodeClone | Set-VMXMainMemory -usefile:$false | Out-Null
         $NodeClone | Set-VMXTemplate -unprotect | Out-Null
-        $Config = $Nodeclone | Get-VMXConfig
-        $Config = $Config -notmatch "ide1:0.fileName"
-        $Config | Set-Content -Path $NodeClone.config 
+        $NodeClone |Connect-VMXcdromImage -connect:$false -Contoller IDE -Port 1:0 | out-null
         Write-Verbose "Starting $Nodeprefix$Node"
         start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
         $machinesBuilt += $($NodeClone.cloneName)
@@ -468,6 +459,22 @@ Write-Warning "waiting for Webserver to accept logins"
 $Scriptblock = "curl -i -k https://$($ip):4443/login -u root:ChangeMe"
 Write-verbose $Scriptblock
 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/curl.log" -Confirm:$false -SleepSec 60
+##  we need to edit the retry count for lowmem / ws machines !!!!!
+<#
+
+"sed -i -e 's/retry(30, 60, InsertVDC, [ECSNode, objectVpoolName])/retry(300, 60, InsertVDC, [ECSNode, objectVpoolName])/g' /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py"
+
+def CreateObjectVarrayWithRetry(ECSNode, objectVArrayName):
+     retry(30, 60, CreateObjectVArray, [ECSNode, objectVArrayName])
+    retry(200, 60, CreateObjectVArray, [ECSNode, objectVArrayName])
+in /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py
+
+#>
+
+Write-Warning "Adjusting Timeouts"
+$Scriptblock = "/usr/bin/sudo -s sed -i -e 's\30, 60, InsertVDC\300, 300, InsertVDC\g' /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py"
+Write-verbose $Scriptblock
+$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/SED.log" # -Confirm:$false -SleepSec 60
 
 $Methods = ('UploadLicense','CreateObjectVarray','CreateDataStore','InsertVDC','CreateObjectVpool','CreateNamespace')
 foreach ( $Method in $Methods )

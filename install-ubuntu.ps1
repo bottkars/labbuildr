@@ -174,9 +174,10 @@ if (!$MasterVMX.Template)
             Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config   | Out-Null
             }
         $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.CloneName)@$BuildDomain"
-            $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
+        $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
         $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname Ubuntu -Scenario 7
         $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
+        $CDDisconnect = $NodeClone | Connect-VMXcdromImage -Contoller SATA -connect:$False
         Write-Verbose "Starting UbuntuNode$Node"
         start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
         $machinesBuilt += $($NodeClone.cloneName)
@@ -215,7 +216,18 @@ if (!$MasterVMX.Template)
 
         #>
 
-        $Scriptblock = "echo 'auto eth0' > /etc/network/interfaces"
+
+        $Scriptblock = "echo 'auto lo' > /etc/network/interfaces"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+
+
+        $Scriptblock = "echo 'iface lo inet loopback' >> /etc/network/interfaces"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+
+
+        $Scriptblock = "echo 'auto eth0' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
 
@@ -239,7 +251,7 @@ if (!$MasterVMX.Template)
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
 
-        $Scriptblock = "echo 'broadcast = $subnet.255' >> /etc/network/interfaces"
+        $Scriptblock = "echo 'broadcast $subnet.255' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
 
@@ -247,37 +259,6 @@ if (!$MasterVMX.Template)
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
 
-
-
-        pause
-
-        <####################
-
-        ## Or configure a static IP
-        auto eth0
-        iface eth0 inet static
-        
-        gateway 192.168.1.1
-        netmask 255.255.255.0
-        network 192.168.1.0
-        broadcast 192.168.1.255
-
-        #####################>
-
-
-
-        <#
-        If ($DefaultGateway)
-            {
-            $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device eno16777984 -Peerdns -DNS1 $DNS1 -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $rootuser -rootpassword $Guestpassword | Out-Null
-            }
-        else
-            {
-            $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $ip -device eno16777984 -Peerdns -DNS1 $DNS1 -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $rootuser -rootpassword $Guestpassword | Out-Null
-            }
-        #>
-        Pause
-    
         if ($node[-1] -eq "3" -and $SIOGateway.ispresent)
             {
             $Scriptblock = "yum install jre -y"

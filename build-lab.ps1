@@ -2247,6 +2247,10 @@ if ($Sharepoint.IsPresent)
     workorder "We are going to Install Sharepoint 2013 in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet and SQL"
     }# end SPPREREQ
 
+if ($ConfigureVMM.IsPresent)
+    {
+    [switch]$SCVMM = $true
+    }
 
 if ($scvmm.IsPresent)
   {
@@ -3554,15 +3558,12 @@ switch ($PsCmdlet.ParameterSetName)
 	    if ($ScaleIO.IsPresent)
             {
             write-verbose "configuring mdm"
-		    # invoke-vmxpowershell -config $FirstVMX -ScriptPath $Targetscriptdir -Script configure-mdm.ps1 -interactive -Parameter $CommonParameter -Guestuser $Adminuser -Guestpassword $Adminpassword
-        
             if ($singlemdm.IsPresent)
                     {
                     Write-Warning "Configuring Single MDM"
                     get-vmx $FirstVMX | invoke-vmxpowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script configure-mdm.ps1 -Parameter "-singlemdm -CSVnum 3" -interactive 
                     }
             else
-            # if ($clusteredmdm.IsPresent)
                     {
                     Write-Warning "Configuring Clustered MDM"
                     get-vmx $FirstVMX | invoke-vmxpowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script configure-mdm.ps1 -Parameter "-CSVnum 3" -interactive 
