@@ -14,7 +14,9 @@ param (
 [Parameter(Mandatory=$true)]$Disks,
 [Parameter(Mandatory=$true)]
 [ValidateSet('1.30-426.0','1.31-258.2','1.31-1277.3','1.31-2333.2','1.32-277.0','1.32-402.1','1.32-403.2')][alias('siover')]$ScaleIOVer,
-[Parameter(Mandatory=$false)]$mdmip
+[Parameter(Mandatory=$false)]$mdmipa,
+[Parameter(Mandatory=$false)]$mdmipb
+
 )
 $ScriptName = $MyInvocation.MyCommand.Name
 $Host.UI.RawUI.WindowTitle = "$ScriptName"
@@ -52,7 +54,7 @@ if ($role -eq 'gateway')
     Start-Process -FilePath "msiexec.exe" -ArgumentList $ScaleIOArgs -PassThru -Wait
     $Content = get-content -Path "C:\Program Files\EMC\scaleio\Gateway\webapps\ROOT\WEB-INF\classes\gatewayUser.properties"
     $Content = $Content -notmatch "mdm.ip.addresses="
-    $Content += "mdm.ip.addresses=$mdmip"
+    $Content += "mdm.ip.addresses=$mdmipa`;$mdmipb"
     $Content | set-content -Path "C:\Program Files\EMC\scaleio\Gateway\webapps\ROOT\WEB-INF\classes\gatewayUser.properties"
     Restart-Service 'EMC ScaleIO Gateway'
     }

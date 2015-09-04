@@ -21,7 +21,9 @@
    https://github.com/bottkars/labbuildr/wiki/SolutionPacks#install-coprhd
 .EXAMPLE
 #>
-[CmdletBinding(DefaultParametersetName = "defaults")]
+[CmdletBinding(DefaultParametersetName = "defaults",
+SupportsShouldProcess=$true,
+    ConfirmImpact="Medium")]
 Param(
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
 #[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
@@ -311,7 +313,7 @@ make clobber BUILD_TYPE=oss rpm"
 
     $Scriptblock = "sh /root/$Scriptname &> /tmp/$Scriptname.log"
     Write-Verbose $Scriptblock
-    Write-Warning "Comiling CoprHDr from $Scriptname may take a While. you may tail -f /tmp/$Scriptname.log"
+    Write-Warning "Comiling CoprHD from $Scriptname may take a While. you may tail -f /tmp/$Scriptname.log"
     $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
 
     $Scriptblock = "/bin/rpm -Uhv /root/coprhd-controller/build/RPMS/x86_64/storageos*.x86_64.rpm"

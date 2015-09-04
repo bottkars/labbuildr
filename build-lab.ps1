@@ -2930,6 +2930,7 @@ else
 		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script add_serviceuser.ps1 -interactive
 	    write-verbose "Setting Password Policies"
 		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir  -Script pwpolicy.ps1 -interactive
+        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script set-winrm.ps1 -interactive
         if ($NW.IsPresent)
             {
             write-verbose "Install NWClient"
@@ -3498,14 +3499,15 @@ switch ($PsCmdlet.ParameterSetName)
                         {                                        
                         Write-Output " Installing TB"
                         Invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-scaleio.ps1 -Parameter "-Role TB -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
-                        $mdmip = "$IPv4Subnet.151;$IPv4Subnet.152"
+                        $mdmipa = "$IPv4Subnet.151"
+                        $mdmipb = "$IPv4Subnet.152"
                         }
                     else
                         {
                         Write-Output " Installing single MDM"
                         invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
-                        $mdmip = "$IPv4Subnet.151;$IPv4Subnet.151"
-                        }
+                        $mdmipa = "$IPv4Subnet.151"
+                        $mdmipb = "$IPv4Subnet.151"                        }
                     write-verbose "installing JAVA"
 		            $Parm = "/s"
 		            $Execute = "\\vmware-host\Shared Folders\Sources\$LatestJava"
@@ -3516,7 +3518,7 @@ switch ($PsCmdlet.ParameterSetName)
 		                }
 		            until ($VMrunErrorCondition -notcontains $cmdresult)
 		            write-log "$origin $cmdresult"
-                    Invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-scaleio.ps1 -Parameter "-Role gateway -disks $Disks -ScaleIOVer $ScaleIOVer -mdmip $mdmip" -interactive 
+                    Invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-scaleio.ps1 -Parameter "-Role gateway -disks $Disks -ScaleIOVer $ScaleIOVer -mdmipa $mdmipa -mdmipb $mdmipb" -interactive 
 
 
                     }

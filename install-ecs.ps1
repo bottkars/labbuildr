@@ -22,7 +22,9 @@
 .EXAMPLE
 
 #>
-[CmdletBinding(DefaultParametersetName = "defaults")]
+[CmdletBinding(DefaultParametersetName = "defaults",
+    SupportsShouldProcess=$true,
+    ConfirmImpact="Medium")]
 Param(
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
