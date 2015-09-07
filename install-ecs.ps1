@@ -55,7 +55,10 @@ $Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('12288','20480','51200','65536')]$Memory = "20480",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$uiconfig
+[Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$uiconfig,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[ValidateSet(100GB,520GB)][uint64]$Disksize = 520GB
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
@@ -63,7 +66,6 @@ $Range = "21"
 $Start = "1"
 $Szenarioname = "ECS"
 $Nodeprefix = "$($Szenarioname)Node"
-[uint]$Disksize = 520GB
 $scsi = 0
 If ($Defaults.IsPresent)
     {
@@ -455,7 +457,7 @@ you may chek the opject count with your bowser at http://$($IP):9101/stats/dt/DT
 # $Logfile =  "/tmp/ecsinst_Step2.log"
 #$Scriptblock = "/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$($BuildDomain)ns1 --ObjectVArray=$($BuildDomain)OVA1 --ObjectVPool=$($BuildDomain)OVP1 --UserName=$Guestuser --DataStoreName=$($BuildDomain)ds1 --VDCName=vdc1 --MethodName= &> /tmp/ecsinst_step2.log" 
 # curl --insecure https://192.168.2.211:443
-    }
+    
 Write-Warning "waiting for Webserver to accept logins"
 
 $Scriptblock = "curl -i -k https://$($ip):4443/login -u root:ChangeMe"
@@ -497,6 +499,6 @@ Write-Warning "running Method $Method"
 $Scriptblock = "/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=NS1 --ObjectVArray=OVA1 --ObjectVPool=OVP1 --UserName=$Guestuser --DataStoreName=ds1 --VDCName=vdc1 --MethodName=$Method" 
 Write-verbose $Scriptblock
 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/$Method.log"
-
+}
 Write-Warning "Success !?"
 
