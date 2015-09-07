@@ -53,12 +53,16 @@ $Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$EMC_ca,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('12288','20480','51200','65536')]$Memory = "20480",
+[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('12288','20480','30720','51200','65536')]$Memory = "20480",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$uiconfig,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateSet(100GB,520GB)][uint64]$Disksize = 520GB
+[ValidateSet(100GB,520GB)][uint64]$Disksize = 520GB,
+<#fixes the Docker -i issue from GiT#>
+[switch]$bugfix,
+<#Adjusts some Timeouts#>
+[switch]$AdjustTimeouts
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
@@ -115,7 +119,7 @@ $yumcachedir = join-path -Path $Sourcedir "ECS\yum"
 ### checking for license file ###
 try
     {
-    $ecslicense = Get-ChildItem "$Sourcedir\ecs\ECS-CommunityEdition\" -Recurse -Filter "license*.xml" -ErrorAction Stop | out-null
+    $ecslicense = Get-ChildItem "$Sourcedir\ecs\" -Recurse -Filter "license*.xml" -ErrorAction Stop | out-null
     }
 catch [System.Management.Automation.ItemNotFoundException]
     {
@@ -293,7 +297,7 @@ foreach ($Node in $machinesBuilt)
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  #-logfile $Logfile
 
-    write-Warning "Sessing Kernel Parameters"
+    write-Warning "Setting Kernel Parameters"
     $Scriptblock = "echo 'kernel.pid_max=655360' >> /etc/sysctl.conf;sysctl -w kernel.pid_max=655360"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile 
@@ -439,13 +443,40 @@ foreach ($Node in $machinesBuilt)
 
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
+
+    if ($bugfix.IsPresent)
+        {
+        Write-Warning "Now adjusting some settings......"
+
+        $DockerScripblock = ("/usr/bin/sudo -s docker exec -t  ecsstandalone cp /opt/storageos/conf/cm.object.properties /opt/storageos/conf/cm.object.properties.old",
+        "docker exec -t ecsstandalone cp /opt/storageos/ecsportal/conf/application.conf /opt/storageos/ecsportal/conf/application.conf.old",
+        "docker exec -t ecsstandalone cp /opt/storageos/conf/cm.object.properties /host/cm.object.properties",
+        "docker exec -t ecsstandalone cp /opt/storageos/ecsportal/conf/application.conf /host/application.conf",
+        "sed -i 's/object.MustHaveEnoughResources=true/object.MustHaveEnoughResources=false/' /host/cm.object.properties",
+        "echo ecs.minimum.node.requirement=1 `>> /host/application.conf",
+        "docker exec -t ecsstandalone cp /host/cm.object.properties /opt/storageos/conf/cm.object.properties",
+        "docker exec -t ecsstandalone cp /host/application.conf /opt/storageos/ecsportal/conf/application.conf",
+        "docker stop ecsstandalone",
+        "docker start ecsstandalone",
+        "rm -rf /host/cm.object.properties*",
+        "rm -rf /host/application.conf"
+        )
+
+
+        foreach ($Scriptblock in $DockerScripblock)
+            {    
+            Write-Output $Scriptblock
+            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Rootpassword -Verbose
+            }
+
+        }
 }
 if ($uiconfig.ispresent)
     {
 
     Write-Warning "Please wait up to 5 Minutes and Connect to https://$($ip):443
 Use root:ChangeMe for Login
-the license can be found in $($ecslicense[0].FullName)
+the license can be found in $($ecslicense.fullname)
 "
     }
 else
@@ -474,12 +505,13 @@ def CreateObjectVarrayWithRetry(ECSNode, objectVArrayName):
 in /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py
 
 #>
-
-Write-Warning "Adjusting Timeouts"
-$Scriptblock = "/usr/bin/sudo -s sed -i -e 's\30, 60, InsertVDC\300, 300, InsertVDC\g' /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py"
-Write-verbose $Scriptblock
-$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/SED.log" # -Confirm:$false -SleepSec 60
-
+if ($AdjustTimeouts.isPresent)
+    {
+    Write-Warning "Adjusting Timeouts"
+    $Scriptblock = "/usr/bin/sudo -s sed -i -e 's\30, 60, InsertVDC\300, 300, InsertVDC\g' /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py"
+    Write-verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/SED.log" # -Confirm:$false -SleepSec 60
+    }
 $Methods = ('UploadLicense','CreateObjectVarray','CreateDataStore','InsertVDC','CreateObjectVpool','CreateNamespace')
 foreach ( $Method in $Methods )
     {
