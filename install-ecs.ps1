@@ -58,7 +58,7 @@ $Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$uiconfig,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateSet(100GB,520GB)][uint64]$Disksize = 520GB,
+[ValidateSet(100GB,500GB,520GB)][uint64]$Disksize = 520GB,
 <#fixes the Docker -i issue from GiT#>
 [switch]$bugfix,
 <#Adjusts some Timeouts#>
