@@ -63,7 +63,7 @@ switch ($PsCmdlet.ParameterSetName)
 {
     "import"
         {
-        if (!((Get-ChildItem $ovf).Extension -match "ovf"))
+        if (!((Get-ChildItem $ovf).Extension -match "ovf" -or "ova"))
             {
             write-warning "no OVF Template found"
             exit
