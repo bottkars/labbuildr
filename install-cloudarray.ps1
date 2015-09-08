@@ -30,7 +30,7 @@ This will Install default Cloud Array
 Param(
 ### import parameters
 [Parameter(ParameterSetName = "import",Mandatory=$true)][String]
-[ValidateScript({ Test-Path -Path $_ -Filter *.ovf -PathType Leaf})]$ovf,
+[ValidateScript({ Test-Path -Path $_ -Filter *.ov* -PathType Leaf})]$ovf,
 [Parameter(ParameterSetName = "import",Mandatory=$false)][String]$mastername,
 ### install param
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
