@@ -584,6 +584,17 @@ catch
     {
     [datetime]$Latest_vmxtoolkit_git = "07/01/2015"
     }
+
+try
+    {
+    [datetime]$Latest_SIOToolKit_git = Get-Content  ($Builddir + "\SIOToolKit.gitver") -ErrorAction Stop
+    }
+    catch
+    {
+    [datetime]$Latest_SIOToolKit_git = "07/01/2015"
+    }
+
+
 $LogFile = "$Builddir\$(Get-Content env:computername).log"
 $WAIKVER = "WAIK"
 $domainsuffix = ".local"
@@ -603,6 +614,7 @@ $latest_ex_cu = 'cu9'
 $latest_sqlver  = 'SQL2014'
 $latest_master = '2012R2FallUpdate'
 $latest_sql_2012 = 'SQL2012SP2'
+$SIOToolKit_Branch = "master"
 $labbuildr_branch = "harmony"
 $vmxtoolkit_branch = "harmony"
 $NW85_requiredJava = "jre-7u61-windows-x64"
@@ -1263,29 +1275,34 @@ switch ($PsCmdlet.ParameterSetName)
                     Expand-LABZip -zipfilename "$Builddir\update\vmxoolkit-$vmxtoolkit_branch.zip" -destination $Builddir\vmxtoolkit -Folder vmxtoolkit-$vmxtoolkit_branch
                     $Isnew = $true
                     $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\vmxtoolkit.gitver") 
-				    if (Test-Path "$Builddir\deletefiles.txt")
-					    {
-						$deletefiles = get-content "$Builddir\deletefiles.txt"
-						foreach ($deletefile in $deletefiles)
-						    {
-							if (Get-Item $Builddir\$deletefile -ErrorAction SilentlyContinue)
-							    {
-								Remove-Item -Path $Builddir\$deletefile -Recurse -ErrorAction SilentlyContinue
-								status "deleted $deletefile"
-								write-log "deleted $deletefile"
-							    }
-						    }
-                        }
-                    else 
-                        {
-                        Write-Host "No Deletions required"
-                        }
                     }
                 else 
                     {
                     Status "No update required for vmxtoolkit, already newest version "
                     }
-###
+###     
+        $Uri = "https://api.github.com/repos/emccode/SIOToolKit/commits/$SIOToolKit_Branch"
+        $Zip = ("https://github.com/emccode/SIOToolKit/archive/$SIOToolKit_Branch.zip").ToLower()
+        $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
+        [datetime]$latest_SIOToolKit_OnGit = $request.Headers.'Last-Modified'
+        Write-Verbose "We have labbuildr version $Latest_SIOToolKit_git, $latest_SIOToolKit_OnGit is online !"
+                if ($Latest_SIOToolKit_git -lt $latest_SIOToolKit_OnGit -or $force.IsPresent)
+                    {
+                    $Updatepath = "$Builddir\Update"
+					if (!(Get-Item -Path $Updatepath -ErrorAction SilentlyContinue))
+					        {
+						    $newDir = New-Item -ItemType Directory -Path "$Updatepath"
+                            }
+                    Write-Output "We found a newer Version for SIOToolKit on Git Dated $($request.Headers.'Last-Modified')"
+                    Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\vmxoolkit-$SIOToolKit_branch.zip" -ignoresize
+                    Expand-LABZip -zipfilename "$Builddir\update\vmxoolkit-$SIOToolKit_branch.zip" -destination $Builddir\SIOToolKit -Folder SIOToolKit-$SIOToolKit_branch
+                    # $Isnew = $true
+                    $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\SIOToolKit.gitver") 
+                    }
+                else 
+                    {
+                    Status "No update required for SIOToolKit, already newest version "
+                    }
 
                 if ($Isnew)
                     {
