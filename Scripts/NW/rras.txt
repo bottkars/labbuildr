@@ -4,7 +4,7 @@
 # ----------------------------------
 pushd interface ipv4
 set global icmpredirects=disabled
-add route prefix=0.0.0.0/0 interface="Ethernet" nexthop=x.x.x.103 publish=Yes
+add route prefix=0.0.0.0/0 interface="Ethernet" nexthop=x.x.x.11 publish=Yes
 set interface interface="Local Area Connection* 9" forwarding=enabled advertise=enabled nud=enabled ignoredefaultroutes=disabled
 set interface interface="Ethernet" forwarding=enabled advertise=enabled nud=enabled ignoredefaultroutes=disabled
 set interface interface="External DHCP" forwarding=enabled advertise=enabled nud=enabled ignoredefaultroutes=disabled
