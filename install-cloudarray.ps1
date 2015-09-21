@@ -63,13 +63,17 @@ switch ($PsCmdlet.ParameterSetName)
 {
     "import"
         {
-        if (!((Get-ChildItem $ovf).Extension -match "ovf" -or "ova"))
+        if (!(($Mymaster = Get-Item $ovf).Extension -match "ovf" -or "ova"))
             {
             write-warning "no OVF Template found"
             exit
             }
         
-        if (!($mastername)) {$mastername = (Split-Path -Leaf $ovf).Replace(".ovf","")}
+        # if (!($mastername)) {$mastername = (Split-Path -Leaf $ovf).Replace(".ovf","")}
+        # $Mymaster = Get-Item $ovf
+        $Mastername = $Mymaster.Basename
+        $Mastername
+        Pause
         & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck  --name=$mastername $ovf $PSScriptRoot #
         $Content = Get-Content $PSScriptRoot\$mastername\$mastername.vmx
         $Content = $Content-notmatch 'snapshot.maxSnapshots'
@@ -135,7 +139,7 @@ default
             $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$node 
             Write-Verbose "Creating Disks"
             $SCSI = 0
-            foreach ($LUN in (1..$Cachevols))
+            foreach ($LUN in (2..(1+$Cachevols)))
                 {
                 $Diskname =  "SCSI$SCSI"+"_LUN$LUN"+"_$Cachevolsize.vmdk"
                 Write-Verbose "Building new Disk $Diskname"

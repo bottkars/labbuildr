@@ -648,7 +648,7 @@ $Buildname = Split-Path -Leaf $Builddir
 $Scenarioname = "default"
 $Scenario = 1
 $AddonFeatures = ("RSAT-ADDS", "RSAT-ADDS-TOOLS", "AS-HTTP-Activation", "NET-Framework-45-Features")
-$Gatewayhost = "103" 
+$Gatewayhost = "11" 
 ##################
 ### VMrun Error Condition help to tune the Bug wher the VMRUN Command can not communicate with the Host !
 $VMrunErrorCondition = @("Waiting for Command execution Available", "Error", "Unable to connect to host.", "Error: The operation is not supported for the specified parameters", "Unable to connect to host. Error: The operation is not supported for the specified parameters", "Error: vmrun was unable to start. Please make sure that vmrun is installed correctly and that you have enough resources available on your system.", "Error: The specified guest user must be logged in interactively to perform this operation")
@@ -1573,7 +1573,7 @@ if ($defaults.IsPresent)
             if ($Default.Gateway -eq "true")
                 {
                 $Gateway = $true
-                $NW = $True
+                [switch]$NW = $True
                 $DefaultGateway = "$IPv4Subnet.$Gatewayhost"
                 }
             
