@@ -316,32 +316,37 @@ end {}
 }
 
 
-function Expand-LABZip
+
+
+function Expand-LAB7Zip
 {
  [CmdletBinding(DefaultParameterSetName='Parameter Set 1',
     HelpUri = "https://github.com/bottkars/LABbuildr/wiki/LABtools#Expand-LABZip")]
 	param (
-        [string]$zipfilename,
-        [string] $destination,
-        [String]$Folder)
-	$copyFlag = 16 # overwrite = yes
+        [string]$Archive,
+        [string]$destination=$vmxdir
+        #[String]$Folder
+        )
 	$Origin = $MyInvocation.MyCommand
-	if (test-path($zipfilename))
+	if (test-path($Archive))
 	{
-    If ($Folder)
-        {
-        $zipfilename = Join-Path $zipfilename $Folder
-        }
-    		
-        Write-Verbose "extracting $zipfilename to $destination"
+ #   If ($Folder)
+ #      {
+ #     $zipfilename = Join-Path $zipfilename $Folder
+ #    }
+    	$7za = "$vmwarepath\7za.exe"
+    
+        if (!(test-path $7za))
+            {
+            Write-Warning "7za not found in $vmwarepath"
+            }	
+        Write-Verbose "extracting $Archive to $destination"
         if (!(test-path  $destination))
             {
             New-Item -ItemType Directory -Force -Path $destination | Out-Null
             }
-        $shellApplication = New-object -com shell.application
-		$zipPackage = $shellApplication.NameSpace($zipfilename)
-		$destinationFolder = $shellApplication.NameSpace("$destination")
-		$destinationFolder.CopyHere($zipPackage.Items(), $copyFlag)
+        $destination = "-o"+$destination
+        .$7za x $destination $Archive
 	}
 }
 
