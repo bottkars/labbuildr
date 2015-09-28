@@ -59,8 +59,11 @@ $Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateSet(100GB,500GB,520GB)][uint64]$Disksize = 520GB,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[ValidateSet("2.0","2.1","Develop")]$ECSVersion,
 <#fixes the Docker -i issue from GiT#>
-[switch]$bugfix,
+#[switch]$bugfix,
 <#Adjusts some Timeouts#>
 [switch]$AdjustTimeouts
 )
@@ -212,7 +215,7 @@ if (!$MasterVMX.Template)
         {
         If (!(get-vmx $Nodeprefix$node))
         {
-        write-verbose " Creating $Nodeprefix$node"
+        write-verbose "Creating $Nodeprefix$node"
         If ($FullClone.IsPresent)
             {
             Write-Warning "Creating full Clone of $($MasterVMX.vmxname), doing full sync now"
@@ -421,7 +424,21 @@ foreach ($Node in $machinesBuilt)
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
     Write-Verbose "Clonig $Scenario" 
-    $Scriptblock = "git clone https://github.com/EMCECS/ECS-CommunityEdition"
+    switch ($ECSVersion)
+        {
+        "2.0"
+            {
+            $Scriptblock = "git clone -b master https://github.com/EMCECS/ECS-CommunityEdition"
+            }
+        "2.1"
+            {
+            $Scriptblock = "git clone -b release-2.1 --single-branch https://github.com/EMCECS/ECS-CommunityEdition.git"
+            }
+        "Develop"
+            {
+            $Scriptblock = "git clone -b develop --single-branch https://github.com/bottkars/ECS-CommunityEdition.git"
+            }
+        }
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
     foreach ($remotehost in ('emccodevmstore001.blob.core.windows.net','registry-1.docker.io','index.docker.io'))
@@ -443,7 +460,7 @@ foreach ($Node in $machinesBuilt)
 
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
-
+<#
     if ($bugfix.IsPresent)
         {
         Write-Warning "Now adjusting some settings......"
@@ -470,6 +487,7 @@ foreach ($Node in $machinesBuilt)
             }
 
         }
+#>
 }
 if ($uiconfig.ispresent)
     {

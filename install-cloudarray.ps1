@@ -72,8 +72,6 @@ switch ($PsCmdlet.ParameterSetName)
         # if (!($mastername)) {$mastername = (Split-Path -Leaf $ovf).Replace(".ovf","")}
         # $Mymaster = Get-Item $ovf
         $Mastername = $Mymaster.Basename
-        $Mastername
-        Pause
         & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck  --name=$mastername $ovf $PSScriptRoot #
         $Content = Get-Content $PSScriptRoot\$mastername\$mastername.vmx
         $Content = $Content-notmatch 'snapshot.maxSnapshots'
