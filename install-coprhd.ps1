@@ -33,6 +33,10 @@ Param(
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath = '.\OpenSuse',
+<#Specify desired branch#>
+[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[ValidateSet('master','bugfix-COP-17153')]$branch = "master",
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
@@ -303,7 +307,7 @@ node_id=vipr1"
 
     $Scriptname = "build_coprhd.sh"
 $content = "#!/bin/bash
-git clone https://github.com/CoprHD/coprhd-controller.git /root/coprhd-controller
+git clone -b $branch https://github.com/CoprHD/coprhd-controller.git /root/coprhd-controller
 cd /root/coprhd-controller   
 make clobber BUILD_TYPE=oss rpm"
 

@@ -61,7 +61,7 @@ $Sourcedir = 'h:\sources',
 [ValidateSet(100GB,500GB,520GB)][uint64]$Disksize = 520GB,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateSet("2.0","2.1","Develop")]$ECSVersion,
+[ValidateSet("2.0","2.1","Develop")]$Branch,
 <#fixes the Docker -i issue from GiT#>
 #[switch]$bugfix,
 <#Adjusts some Timeouts#>
@@ -424,7 +424,7 @@ foreach ($Node in $machinesBuilt)
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
     Write-Verbose "Clonig $Scenario" 
-    switch ($ECSVersion)
+    switch ($Branch)
         {
         "2.0"
             {
