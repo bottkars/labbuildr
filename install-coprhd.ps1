@@ -276,6 +276,12 @@ make install
 
         
 }
+        else
+        {
+        Write-Warning "Machine $Nodeprefix$Node already exists"
+        break
+        }
+
     
     $Scriptname = "ovfenv.properties"
     $Content = "network_1_ipaddr6=::0
