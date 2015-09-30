@@ -1616,6 +1616,7 @@ Write-Verbose "NMM : $($nmm.IsPresent)"
 Write-Verbose "MySubnet : $MySubnet"
 Write-Verbose "ScaleIOVer : $ScaleIOVer"
 Write-Verbose "Masterpath : $Masterpath"
+Write-Verbose "Master : $Master"
 Write-Verbose "Defaults before Safe:"
 
 If ($DefaultGateway -match "$IPv4Subnet.$Gatewayhost")
@@ -1718,9 +1719,19 @@ if (!$Master)
     # write-verbose $_.Exception
     break
     }
-
+if (!$MyMaster)
+    {
+    Write-Warning "Could not find $Masterpath\$Master"
+    Write-Warning "Please download a Master from https://github.com/bottkars/labbuildr/wiki/Master"
+    Write-Warning "And extract to $Masterpath"
+    # write-verbose $_.Exception
+    break
+    }
+else
+    {
    $MasterVMX = $mymaster.config		
    Write-Verbose "We got master $MasterVMX"
+   }
 
 write-verbose "After Masterconfig !!!! "
 
