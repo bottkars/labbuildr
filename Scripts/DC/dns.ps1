@@ -35,7 +35,7 @@ if ( $AddressFamily -match 'IPv4')
     {
     $reverse = $IPv4subnet+'.0/'+$IPv4PrefixLength
     Add-DnsServerPrimaryZone -NetworkID $reverse -ReplicationScope "Forest" -DynamicUpdate NonsecureAndSecure
-    
+    Add-DnsServerForwarder -IPAddress 8.8.8.8
     Write-Verbose "Setting Ressource Records for EMC VA´s"
     Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name Vipr1 -IPv4Address "$IPv4Subnet.9" -ZoneName $zone.Zonename
     foreach ( $N in 1..3)
