@@ -27,45 +27,48 @@
     ConfirmImpact="Medium")]
 Param(
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateRange(1,3)][int32]$Disks = 1,
+
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 $Sourcedir = 'h:\sources',
 #[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir = 'h:\sources',
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath = '.\CentOS7 Master',
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
-[int32]$Nodes=1,
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateRange(1,5)]
-[int32]$Startnode = 1,
-<# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
-[Parameter(ParameterSetName = "install",Mandatory=$false)][ipaddress]$subnet = "192.168.2.0",
-[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateLength(1,15)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
-[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = "vmnet2",
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$Update,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$FullClone,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$EMC_ca,
+
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('12288','20480','30720','51200','65536')]$Memory = "20480",
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$uiconfig,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateSet(100GB,500GB,520GB)][uint64]$Disksize = 520GB,
+
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateSet("2.0","2.1","Develop")]$Branch,
 <#fixes the Docker -i issue from GiT#>
 #[switch]$bugfix,
 <#Adjusts some Timeouts#>
-[switch]$AdjustTimeouts
+[switch]$AdjustTimeouts,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$EMC_ca,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$uiconfig,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[ValidateSet(100GB,500GB,520GB)][uint64]$Disksize = 520GB,
+[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath = '.\CentOS7 Master',
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[int32]$Nodes=1,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateRange(1,3)][int32]$Disks = 1,[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateRange(1,5)]
+[int32]$Startnode = 1,
+<# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
+[Parameter(ParameterSetName = "install",Mandatory=$false)][ipaddress]$subnet = "192.168.2.0",
+[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateLength(1,15)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
+[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = "vmnet2",
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
+
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
