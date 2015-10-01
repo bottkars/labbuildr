@@ -121,8 +121,6 @@ default
         $Config = Get-VMXConfig -config $MasterVMX.Config
         $Config = $Config -notmatch 'snapshot.maxSnapshots'
         $Config | set-Content -Path $MasterVMX.Config
-
-
         Write-verbose "Base snap does not exist, creating now"
         $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
         if (!$MasterVMX.Template) 
@@ -142,6 +140,12 @@ default
             write-verbose "Creating clone $Nodeprefix$node"
             $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$node 
             Write-Verbose "tweaking $Nodeprefix to run on Workstation"
+            $Content = Get-Content $nodeclone.config
+            $Content = $Content -notmatch 'ethernet0.pciSlotNumber'
+            $Content = $Content -notmatch 'vmci0.pciSlotNumber'
+            $Content += 'ethernet0.pciSlotNumber = "32"'
+            $Content += 'vmci0.pciSlotNumber = "33"'
+            $Content | Set-Content $NodeClone.config
             $NodeClone | Set-VMXmemory -MemoryMB 8192
             Write-Verbose "Setting ext-0"
             Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config
