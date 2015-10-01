@@ -75,9 +75,7 @@ switch ($PsCmdlet.ParameterSetName)
         # & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck  --name=$mastername $ovf $PSScriptRoot #
         $Content = Get-Content $PSScriptRoot\$mastername\$mastername.vmx
         $Content = $Content -notmatch 'snapshot.maxSnapshots'
-        $Content = $Content -notmatch 'ethernet0.pciSlotNumber'
         $Content = $Content -notmatch 'vmci0.pciSlotNumber'
-        $Content += 'ethernet0.pciSlotNumber = "32"'
         $Content += 'vmci0.pciSlotNumber = "33"'
         $Content | Set-Content $PSScriptRoot\$mastername\$mastername.vmx
         $Mastervmx = get-vmx -path $PSScriptRoot\$mastername\$mastername.vmx
@@ -140,16 +138,10 @@ default
             write-verbose "Creating clone $Nodeprefix$node"
             $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$node 
             Write-Verbose "tweaking $Nodeprefix to run on Workstation"
-            $Content = Get-Content $nodeclone.config
-            $Content = $Content -notmatch 'ethernet0.pciSlotNumber'
-            $Content = $Content -notmatch 'vmci0.pciSlotNumber'
-            $Content += 'ethernet0.pciSlotNumber = "32"'
-            $Content += 'vmci0.pciSlotNumber = "33"'
-            $Content | Set-Content $NodeClone.config
             $NodeClone | Set-VMXmemory -MemoryMB 8192
             Write-Verbose "Setting ext-0"
-            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config
-            Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config 
+            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType e1000 -PCISlot 32 -config $NodeClone.Config
+            Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config
             $Scenario = Set-VMXscenario -config $NodeClone.Config -Scenarioname $Nodeprefix -Scenario 6
             $ActivationPrefrence = Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node 
             # Set-VMXVnet -Adapter 0 -vnet vmnet2
