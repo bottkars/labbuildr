@@ -80,7 +80,7 @@ switch ($PsCmdlet.ParameterSetName)
         $Content += 'ethernet0.pciSlotNumber = "32"'
         $Content += 'vmci0.pciSlotNumber = "33"'
         $Content | Set-Content $PSScriptRoot\$mastername\$mastername.vmx
-        write-Warning "Now run .\install-cloudboost.ps1 -MasterPath .\$mastername -Defaults " 
+        write-Warning "Now run .\install-cloudboost.ps1 -Master .\$mastername -Defaults " 
         }
 default
     {
@@ -139,6 +139,7 @@ default
             {
             write-verbose "Creating clone $Nodeprefix$node"
             $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$node 
+            Write-Verbose "tweaking $Nodeprefix to run on Workstation"
             $NodeClone | Set-VMXHWversion -HWversion 7
             $NodeClone | Set-VMXmemory -MemoryMB 8192
             Write-Verbose "Setting ext-0"
