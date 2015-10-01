@@ -104,7 +104,7 @@ default
 
 
     $Nodeprefix = "cloudboost"
-    If (!($MasterVMX = get-vmx -path $MasterPath))
+    If (!($MasterVMX = get-vmx -path $Master))
       {
        Write-Error "No Valid Master Found"
       break
