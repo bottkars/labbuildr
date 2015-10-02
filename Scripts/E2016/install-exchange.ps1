@@ -10,7 +10,7 @@
 [CmdletBinding()]
 param(
 [Parameter(Mandatory=$true)]
-[ValidateSet('Preview1')]$ex_cu,
+[ValidateSet('Preview1','final')]$ex_cu,
 $ex_version= "E2016",
 $SourcePath = "\\vmware-host\Shared Folders\Sources",
 $Setupcmd = "Setup.exe"
