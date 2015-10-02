@@ -141,8 +141,8 @@ param (
     Default is latest
     CU Location is [Driveletter]:\sources\e2016[cuver], e.g. c:\sources\e2016Preview1
     #>
-	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
-    [ValidateSet('Preview1')]$e16_cu,
+	[Parameter(ParameterSetName = "E16", Mandatory = $false)]
+    [ValidateSet('Preview1','final')]$e16_cu,
 <#
     Determines Exchange CU Version to be Installed
     Valid Versions are:
@@ -609,7 +609,7 @@ $Default_AddressFamily = "IPv4"
 $latest_ScaleIOVer = '1.32-403.2'
 $latest_nmm = 'nmm8216'
 $latest_nw = 'nw8216'
-$latest_e16_cu = 'Preview1'
+$latest_e16_cu = 'final'
 $latest_ex_cu = 'cu9'
 $latest_sqlver  = 'SQL2014'
 $latest_master = '2012R2FallUpdate'
@@ -737,6 +737,7 @@ if (!(Test-Path $Destination))
             {
             New-Item -ItemType Directory  -Path (Split-Path $destination) -Force
             }
+        Write-verbose "Starting Download of $DownLoadUrl"
         Start-BitsTransfer -Source $DownLoadUrl -Destination $destination -DisplayName "Getting $destination" -Priority Foreground -Description "From $DownLoadUrl..." -ErrorVariable err 
                 If ($err) {Throw ""} 
 
@@ -2172,13 +2173,17 @@ if ($Exchange2016.IsPresent)
                 {
                 $URL = "http://download.microsoft.com/download/D/F/7/DF7BC677-B1BE-45FC-AD48-B86C917100D8/Exchange2016-x64-Preview.exe"
                 }
+                "final"
+                {
+                $URL = "http://download.microsoft.com/download/3/9/B/39B8DDA8-509C-4B9E-BCE9-4CD8CDC9A7DA/Exchange2016-x64.exe"
+                }
 
             }
 
         $FileName = Split-Path -Leaf -Path $Url
         if (!(test-path  $Sourcedir\$FileName))
             {
-            "We need to Download $EX_Version $e16_cu, this may take a while"
+            "We need to Download $EX_Version $e16_cu from $url, this may take a while"
             if (!(get-prereq -DownLoadUrl $URL -destination $Sourcedir\$FileName))
                 { write-warning "Error Downloading file $Url, Please check connectivity"
                 exit
