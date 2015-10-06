@@ -17,7 +17,7 @@ New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
 $Domain = (get-addomain).name
 $devicepath = Join-Path "C:\" $AFTD
 new-item -Type  Directory -Path $devicepath
-New-SmbShare -Description "$AFTD Direct Access" -Path $devicepath -Name $AFTD -FullAccess "$Domain\Domain Users"
+New-SmbShare -Description "$AFTD Direct Access" -Path $devicepath -Name $AFTD -FullAccess "$Domain\Domain Users","$Domain\Domain Computers"
 $device = Get-ChildItem -Path C:\Scripts -Filter nsrdevice.txt
 $content = Get-Content -path $device.fullname
 $Devicefile = Join-Path "$Builddir" "$AFTD.txt"

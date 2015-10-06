@@ -1,4 +1,4 @@
 create type: NSR device; 
 name:AFTD;
-Device Access Information : "C:\\AFTD"; 
+Device Access Information : "C:\\AFTD", "\\\\nwserver\\AFTD"; 
 media type: adv_file;
