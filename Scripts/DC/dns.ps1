@@ -38,6 +38,7 @@ if ( $AddressFamily -match 'IPv4')
     Add-DnsServerForwarder -IPAddress 8.8.8.8
     Write-Verbose "Setting Ressource Records for EMC VA´s"
     Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name Vipr1 -IPv4Address "$IPv4Subnet.9" -ZoneName $zone.Zonename
+    Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name "NVENode1" -IPv4Address "$IPv4Subnet.12" -ZoneName $zone.Zonename
     foreach ( $N in 1..3)
         {
         Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name "DDVeNode$N" -IPv4Address "$IPv4Subnet.2$N" -ZoneName $zone.Zonename
