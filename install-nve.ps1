@@ -27,11 +27,9 @@
 [CmdletBinding()]
 Param(
 [Parameter(ParameterSetName = "import", Mandatory = $true)]$OVA,
-
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$Defaults = $true,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]$NVEMaster,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
-
 )
 
 $targetname = "nvenode1"
@@ -120,18 +118,15 @@ $NodeClone = $Base | New-VMXLinkedClone -CloneName $targetname
 $NodeClone | Set-VMXNetworkAdapter -Adapter 0 -AdapterType e1000 -ConnectionType custom
 $NodeClone | Set-VMXVnet -Adapter 0 -vnet $vmnet
 $NodeClone | Set-VMXDisplayName -DisplayName $targetname
-$Annotation = $NodeClone | Set-VMXAnnotation -Line1 "https://$subnet.9" -Line2 "user:$rootuser" -Line3 "password:$rootpassword" -Line4 "add license from $masterpath" -Line5 "labbuildr by @hyperv_guy" -builddate
+$Annotation = $NodeClone | Set-VMXAnnotation -Line1 "https://$ip" -Line2 "user:$rootuser" -Line3 "password:$rootpassword" -Line4 "add license from $masterpath" -Line5 "labbuildr by @hyperv_guy" -builddate
 $NodeClone | Start-VMX
-
-
      do {
         $ToolState = Get-VMXToolsState -config $NodeClone.config
         Write-Verbose "VMware tools are in $($ToolState.State) state"
         sleep 10
         }
-
     until ($ToolState.state -match "running")
-        do {
+     do {
         Write-Warning "Waiting for $targetname to come up"
         $Process = Get-VMXProcessesInGuest -config $NodeClone.config -Guestuser $rootuser -Guestpassword $rootpassword
         sleep 10
@@ -139,19 +134,16 @@ $NodeClone | Start-VMX
     until ($process -match "mingetty")
     $NodeClone | Invoke-VMXBash -Scriptblock "yast2 lan edit id=0 ip=$IP netmask=255.255.255.0 prefix=24 verbose" -Guestuser $rootuser -Guestpassword $rootpassword 
     $NodeClone | Invoke-VMXBash -Scriptblock "hostname $($NodeClone.CloneName)" -Guestuser $rootuser -Guestpassword $rootpassword 
-    $Scriptblock = "echo 'default "+$Gateway+" - -' > /etc/sysconfig/network/routes"
+    $Scriptblock = "echo 'default "+$DefaultGateway+" - -' > /etc/sysconfig/network/routes"
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock  -Guestuser $rootuser -Guestpassword $rootpassword 
     $sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SEARCHLIST=\`"\`"/NETCONFIG_DNS_STATIC_SEARCHLIST=\`""+$BuildDomain+".local\`"/g' /etc/sysconfig/network/config" 
     $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword 
     $sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SERVERS=\`"\`"/NETCONFIG_DNS_STATIC_SERVERS=\`""+$subnet+".10\`"/g' /etc/sysconfig/network/config"
     $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword 
     $NodeClone | Invoke-VMXBash -Scriptblock "/sbin/netconfig -f update" -Guestuser $rootuser -Guestpassword $rootpassword 
-    $Scriptblock = "echo '"+$Nodeprefix+$Node+"."+$BuildDomain+".local'  > /etc/HOSTNAME"
+    $Scriptblock = "echo '"+$targetname+"."+$BuildDomain+".local'  > /etc/HOSTNAME"
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $rootpassword
     $NodeClone | Invoke-VMXBash -Scriptblock "/etc/init.d/network restart" -Guestuser $rootuser -Guestpassword $rootpassword
-
-
-
 Write-Host -ForegroundColor Yellow "
 Successfully Deployed $targetname
 wait a view minutes for storageos to be up and running
