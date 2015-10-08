@@ -362,7 +362,7 @@ Version Of Networker Modules
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
-	[ValidateSet('nmm8212','nmm8214','nmm8216','nmm821','nmm300', 'nmm301', 'nmm2012', 'nmm3012', 'nmm82','nmm85','nmm85.BR1','nmm85.BR2','nmm85.BR3','nmm85.BR4','nmm90.DA')]
+	[ValidateSet('nmm8211','nmm8212','nmm8214','nmm8216','nmm8217','nmm8218','nmm822','nmm821','nmm300', 'nmm301', 'nmm2012', 'nmm3012', 'nmm82','nmm85','nmm85.BR1','nmm85.BR2','nmm85.BR3','nmm85.BR4','nmm90.DA')]
 $nmm_ver,
 	
 <# Indicates to install Networker Server with Scenario #>
@@ -393,7 +393,7 @@ mus be extracted to [sourcesdir]\[nw_ver], ex. c:\sources\nw82
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
-    [ValidateSet('nw8216','nw8215','nw8214','nw8213','nw8212','nw8211','nw821','nw8205','nw8204','nw8203','nw8202','nw82','nw8116','nw8115','nw8114', 'nw8113','nw8112', 'nw811',  'nw8105','nw8104','nw8102', 'nw81','nw85','nw85.BR1','nw85.BR2','nw85.BR3','nw85.BR4','nw90.DA','nwunknown')]
+    [ValidateSet('nw822','nw8218','nw8217','nw8216','nw8215','nw8214','nw8213','nw8212','nw8211','nw821','nw8205','nw8204','nw8203','nw8202','nw82','nw8116','nw8115','nw8114', 'nw8113','nw8112', 'nw811',  'nw8105','nw8104','nw8102', 'nw81','nw85','nw85.BR1','nw85.BR2','nw85.BR3','nw85.BR4','nw90.DA','nwunknown')]
     $nw_ver,
 
 ### network Parameters ######
@@ -2617,7 +2617,10 @@ if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
                 Write-Verbose "$FileName not found, trying Download"
                 if (!( Get-LABFTPFile -Source $URL -Target $Zipfilename -verbose -Defaultcredentials))
                     { 
-                    write-warning "Error Downloading file $Url, Please check connectivity or download manually"
+                    write-warning "Error Downloading file $Url, 
+                    $url might not exist.
+                    Please check connectivity or download manually"
+                    break
                     }
                 }
             Write-Verbose $Zipfilename     
@@ -2628,6 +2631,25 @@ if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
 
 if ($NMM.IsPresent)
     {
+    if ($nmm_ver -ge "nmm85")
+        { 
+        write-verbose "we need .Net Framework 4.51 or later"
+        $Prereqdir = "NMMPrereq"
+        $Url =  "http://download.microsoft.com/download/E/2/1/E21644B5-2DF2-47C2-91BD-63C560427900/NDP452-KB2901907-x86-x64-AllOS-ENU.exe"
+        $FileName = Split-Path -Leaf -Path $Url
+        Write-Verbose "Testing $FileName in $Prereqdir"
+        if (!(test-path  "$Sourcedir\$Prereqdir\$FileName"))
+        {
+        Write-Verbose "Trying Download"
+        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$Prereqdir\$FileName"))
+            { 
+            write-warning "Error Downloading file $Url, Please check connectivity"
+            exit
+            }
+        }
+    }
+       
+         
 
     if ((Test-Path "$Sourcedir/$nmm_ver/win_x64/networkr/NetWorker Module for Microsoft.msi") -or (Test-Path "$Sourcedir/$nmm_ver/win_x64/networkr/NWVSS.exe"))
         {
@@ -2640,6 +2662,12 @@ if ($NMM.IsPresent)
         # }
         switch ($nmm_ver)
         {
+        "nmm8211"
+            {
+            $urls = ("ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.1/nmm821_win_x64.zip",
+                    "ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.1/scvmm821_win_x64.zip")
+            }
+
         "nmm8212"
             {
             $urls = ("ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.2/nmm821_win_x64.zip",
@@ -2656,6 +2684,17 @@ if ($NMM.IsPresent)
             $urls = ("ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.6/nmm821_win_x64.zip",
                     "ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.6/scvmm821_win_x64.zip")
             }
+        "nmm8217"
+            {
+            $urls = ("ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.7/nmm821_win_x64.zip",
+                    "ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.7/scvmm821_win_x64.zip")
+            }
+        "nmm8218"
+            {
+            $urls = ("ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.8/nmm821_win_x64.zip",
+                    "ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.8/scvmm821_win_x64.zip")
+            }
+
 
         default
             {
