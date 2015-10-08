@@ -2580,33 +2580,16 @@ if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
         {
 
         Write-Warning "We need to get $NW_ver, trying Automated Download"
-        # New-Item -ItemType Directory -Path $Sourcedir\$EX_Version$ex_cu | Out-Null
-        # }
-        
-        $nwdotver = $nw_ver -replace "nw",""
-        $nwdotver = $nwdotver.insert(1,'.')
-        $nwdotver = $nwdotver.insert(3,'.')
-        $nwdotver = $nwdotver.insert(5,'.')
-        $nwzip = $nw_ver -replace ".$"
-        $nwzip = $nwzip+'_win_x64.zip'
-        $url = "ftp://ftp.legato.com/pub/NetWorker/Cumulative_Hotfixes/$($nwdotver.Substring(0,3))/$nwdotver/$nwzip"
-
-        <#
-        switch ($nw_ver)
-        
-        {
-        "nw8213"
+        if ($nw_ver -notin ('nw822','nw821','nw82'))
             {
+            $nwdotver = $nw_ver -replace "nw",""
+            $nwdotver = $nwdotver.insert(1,'.')
+            $nwdotver = $nwdotver.insert(3,'.')
+            $nwdotver = $nwdotver.insert(5,'.')
+            $nwzip = $nw_ver -replace ".$"
+            $nwzip = $nwzip+'_win_x64.zip'
             $url = "ftp://ftp.legato.com/pub/NetWorker/Cumulative_Hotfixes/$($nwdotver.Substring(0,3))/$nwdotver/$nwzip"
-            }
-
-        default
-            {
-            $url = $false
-            }
-        }
-        #>
-        if ($url)
+            if ($url)
             {
             # $FileName = Split-Path -Leaf -Path $Url
             $FileName = "$nw_ver.zip"
@@ -2626,7 +2609,14 @@ if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
             Write-Verbose $Zipfilename     
             Expand-LABZip -zipfilename "$Zipfilename" -destination "$Destinationdir" -verbose
             }
-      }
+            }
+        else
+            {
+            Write-Warning "We can only autodownload Cumulative Updates from ftp, please get $nw_ver from support.emc.com"
+            break
+            }
+
+      } #end elseif
 }
 
 if ($NMM.IsPresent)
