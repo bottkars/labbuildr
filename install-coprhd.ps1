@@ -49,7 +49,6 @@ $Node = 1
 #requires -module vmxtoolkit
 $Range = "24"
 
-https://github.com/CoprHD/coprhd-controller/tree/VIPR-2.3-PATCH1-HF4
 
 If ($Defaults.IsPresent)
     {
