@@ -42,7 +42,8 @@ Param(
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
 [Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
 [Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = "vmnet2",
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+$Node = 1
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
@@ -76,7 +77,7 @@ $Scriptdir = "$Sourcedir\$($Scenarioname.ToLower())"
 
 [uint64]$Disksize = 100GB
 $scsi = 0
-$Node = "1"
+#$Node = "1"
 if (!($MasterVMX = get-vmx -path $MasterPath))
     {
     Write-Warning "no OpenSuse Master found. Please download from
