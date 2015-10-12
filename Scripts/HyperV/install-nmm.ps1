@@ -42,8 +42,8 @@ if ($scvmm.IsPresent)
         {
         Write-Verbose "Installing Networker Extended Client" 
         $nw_ver = $nmm_ver -replace "nmm","nw"
-        $Setuppath = "\\vmware-host\Shared Folders\Sources\$nw_ver\win_x64\networkr\lgtoxtdclnt-8.5.0.0.exe" 
-        .$Builddir\test-setup -setup lgtoxtdclnt-8.5.0.0 -setuppath $Setuppath
+        $Setuppath = "\\vmware-host\Shared Folders\Sources\$nw_ver\win_x64\networkr\lgtoxtdclnt*.exe" 
+        .$Builddir\test-setup -setup lgtoxtdclnt -setuppath $Setuppath
         Start-Process $Setuppath -ArgumentList "/q" -Wait
         }
     $SCVMMPlugin = $NMM_VER -replace "nmm","scvmm"
