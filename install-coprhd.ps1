@@ -36,7 +36,7 @@ Param(
 <#Specify desired branch#>
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateSet('master','bugfix-COP-17106','bugfix-COP-17153')]$branch = "master",
+[ValidateSet('master','INTEGRATION-YODA-FOUNDATION','INTEGRATION-2.4.1-FOUNDATION','VIPR-2.3-PATCH1-HF4','VIPR-2.3-PATCH1-HF3','VIPR-2.3-PATCH1-HF2','VIPR-2.3-PATCH1-HF1','bugfix-COP-17106','bugfix-COP-17153')]$branch = "master",
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
@@ -49,7 +49,7 @@ $Node = 1
 #requires -module vmxtoolkit
 $Range = "24"
 
-
+https://github.com/CoprHD/coprhd-controller/tree/VIPR-2.3-PATCH1-HF4
 
 If ($Defaults.IsPresent)
     {
@@ -121,7 +121,7 @@ if (!(Test-path "$Sourcedir\$Scenarioname"))
         $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
         $Annotation = $NodeClone | Set-VMXAnnotation -Line1 "rootuser:$Rootuser" -Line2 "rootpasswd:$Guestpassword" -Line3 "Guestuser:$Guestuser" -Line4 "Guestpassword:$Guestpassword" -Line5 "labbuildr by @hyperv_guy" -builddate
         $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname $Nodeprefix -Scenario 6
-        $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
+        # $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
         $NodeClone | Set-VMXprocessor -Processorcount 4 | Out-Null
         $NodeClone | Set-VMXmemory -MemoryMB 8192 | Out-Null
         $Config = $Nodeclone | Get-VMXConfig
