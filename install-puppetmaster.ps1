@@ -20,8 +20,8 @@
 .LINK
    https://community.emc.com/blogs/bottk/
 .EXAMPLE
-.\install-centos4scaleio.ps1
-This will install 3 Centos Nodes CentOSNode1 -CentOSNode3 from the Default CentOS Master , in the Default 192.168.2.0 network, IP .221 - .223
+.\install-puppetmaster.ps1 -defaults
+this will install a Puppetmaster on CentOS7 using default Values derived from defaults.xml
 
 #>
 #
@@ -131,7 +131,7 @@ $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | O
 #>
 $Scriptblock = "systemctl disable iptables.service"
 Write-Verbose $Scriptblock
-$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword 
+$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
 
 $Scriptblock = "systemctl stop iptables.service"
 Write-Verbose $Scriptblock
@@ -257,7 +257,7 @@ Listen 8140
 
 
 $httpdconf | Set-Content -Path .\puppetmaster.conf
-convert-VMXdos2unix -Sourcefile .\puppetmaster.conf 
+convert-VMXdos2unix -Sourcefile .\puppetmaster.conf
 $NodeClone | copy-VMXfile2guest -Sourcefile .\puppetmaster.conf -targetfile /etc/httpd/conf.d/puppetmaster.conf -Guestuser $Rootuser -Guestpassword $Guestpassword
 
 
