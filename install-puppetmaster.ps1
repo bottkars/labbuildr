@@ -40,13 +40,14 @@ Param(
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
 [Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
 [Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
+[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('puppetlabs-release-7-11', 'PuppetEnterprise')]$PuppetMaster = "puppetlabs-release-7-11",
+
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
-[Parameter(Mandatory = $false)][ValidateSet('puppetlabs-release-7-11', 'PuppetEnterprise')]$PuppetlabsRelease = "puppetlabs-release-7-11",
 [switch]$download
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
-If  ($PuppetlabsRelease -match "PuppetEnterprise")
+If  ($PuppetMaster -match "PuppetEnterprise")
     {
     $Requires_Sources = $true
     $Enterprise = $true
@@ -58,13 +59,17 @@ If ($Defaults.IsPresent)
      $vmnet = $labdefaults.vmnet
      $subnet = $labdefaults.MySubnet
      $BuildDomain = $labdefaults.BuildDomain
-     If ($Requires_Sources)
-        {
-        $Sourcedir = $labdefaults.Sourcedir
-        }
+     $PuppetMaster = $labdefaults.Puppetmaster
      $DefaultGateway = $labdefaults.DefaultGateway
      $DNS1 = $labdefaults.DNS1
+       If  ($PuppetMaster -match "PuppetEnterprise")
+        {
+        $Requires_Sources = $true
+        $Enterprise = $true
+        $Sourcedir = $labdefaults.Sourcedir
+        }
      }
+
 
 if ($Requires_Sources)
     {
@@ -103,7 +108,7 @@ if ($Requires_Sources)
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 $rootuser = "root"
 $Guestpassword = "Password123!"
-If  ($PuppetlabsRelease -match "PuppetEnterprise")
+If  ($PuppetMaster -match "PuppetEnterprise")
     {
     [uint64]$Disksize = 100GB
     $scsi = 0
@@ -193,11 +198,7 @@ If (!(get-vmx $Nodeprefix$node))
     $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
     Write-Verbose "Starting $NodeClone$Node"
     start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
-    }
-else
-  {
-    write-Warning "Machine $Nodeprefix$node already Exists"
-  }
+    
 do {
     $ToolState = Get-VMXToolsState -config $NodeClone.config
     Write-Verbose "VMware tools are in $($ToolState.State) state"
@@ -252,9 +253,9 @@ $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Gues
 if (!$Enterprise)
     {
 
-    $Scriptblock = "rpm -ivh https://yum.puppetlabs.com/el/7/products/x86_64/$PuppetlabsRelease.noarch.rpm"
+    $Scriptblock = "rpm -ivh https://yum.puppetlabs.com/el/7/products/x86_64/$PuppetMaster.noarch.rpm"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/$PuppetlabsRelease.log
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/$PuppetMaster.log
 
     $Scriptblock = "yum install -y puppet-server"
     Write-Verbose $Scriptblock
@@ -424,3 +425,8 @@ Write-Warning "puppetmaster creation finished. please try connect to console  ht
 
 }
 
+}
+else
+  {
+    write-Warning "Machine $Nodeprefix$node already Exists"
+  }

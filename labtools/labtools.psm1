@@ -61,6 +61,7 @@ function Set-LABDefaultGateway
 }
 
 
+
 function Set-LABDNS1
 {
 	[CmdletBinding(HelpUri = "https://github.com/bottkars/LABbuildr/wiki/LABtools#SET-LABDNS1")]
@@ -115,6 +116,44 @@ if (!(Test-Path $Defaultsfile))
     Write-Verbose "Setting $Gateway"
     Save-LABdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
 }
+
+function Set-LABpuppet
+{
+	[CmdletBinding(HelpUri = "https://github.com/bottkars/LABbuildr/wiki/LABtools#Set-LABpuppet")]
+	param (
+	[Parameter(ParameterSetName = "1", Mandatory = $false,Position = 2)]$Defaultsfile=".\defaults.xml",
+    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 1)][switch]$enabled
+    )
+if (!(Test-Path $Defaultsfile))
+    {
+    Write-Warning "Creating New defaultsfile"
+    New-LABdefaults -Defaultsfile $Defaultsfile
+    }
+    $Defaults = Get-LABdefaults -Defaultsfile $Defaultsfile
+    $Defaults.puppet = $enabled.IsPresent
+    Write-Verbose "Setting $puppet"
+    Save-LABdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
+}
+
+function Set-LABPuppetMaster
+{
+	[CmdletBinding(HelpUri = "https://github.com/bottkars/LABbuildr/wiki/LABtools#Set-LABpuppetMaster")]
+	param (
+	[Parameter(ParameterSetName = "1", Mandatory = $false,Position = 2)]$Defaultsfile=".\defaults.xml",
+    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 1)][ValidateSet('puppetlabs-release-7-11', 'PuppetEnterprise')]$PuppetMaster = "PuppetEnterprise"
+    )
+if (!(Test-Path $Defaultsfile))
+    {
+    Write-Warning "Creating New defaultsfile"
+    New-LABdefaults -Defaultsfile $Defaultsfile
+    }
+    $Defaults = Get-LABdefaults -Defaultsfile $Defaultsfile
+    $Defaults.puppetmaster = $PuppetMaster
+    Write-Verbose "Setting $puppetMaster"
+    Save-LABdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
+}
+
+
 
 function Set-LABnmm
 {
@@ -253,6 +292,8 @@ process
         $object | Add-Member -MemberType NoteProperty -Name NW_Ver -Value $Default.config.nw_ver
         $object | Add-Member -MemberType NoteProperty -Name NMM -Value $Default.config.nmm
         $object | Add-Member -MemberType NoteProperty -Name Masterpath -Value $Default.config.Masterpath
+        $object | Add-Member -MemberType NoteProperty -Name Puppet -Value $Default.config.Puppet
+        $object | Add-Member -MemberType NoteProperty -Name PuppetMaster -Value $Default.config.PuppetMaster
         Write-Output $object
         }
     }
@@ -309,6 +350,8 @@ process {
         $xmlcontent += ("<Sourcedir>$($Defaults.Sourcedir)</Sourcedir>")
         $xmlcontent += ("<ScaleIOVer>$($Defaults.ScaleIOVer)</ScaleIOVer>")
         $xmlcontent += ("<Masterpath>$($Defaults.Masterpath)</Masterpath>")
+        $xmlcontent += ("<Puppet>$($Defaults.Puppet)</Puppet>")
+        $xmlcontent += ("<PuppetMaster>$($Defaults.PuppetMaster)</PuppetMaster>")
         $xmlcontent += ("</config>")
         $xmlcontent | Set-Content $defaultsfile
         }
