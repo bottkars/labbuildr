@@ -39,6 +39,8 @@ if ( $AddressFamily -match 'IPv4')
     Write-Verbose "Setting Ressource Records for EMC VA´s"
     Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name Vipr1 -IPv4Address "$IPv4Subnet.9" -ZoneName $zone.Zonename
     Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name "NVENode1" -IPv4Address "$IPv4Subnet.12" -ZoneName $zone.Zonename
+    Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name PuppetMaster1 -IPv4Address "$IPv4Subnet.15" -ZoneName $zone.Zonename
+    Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name PuppetENMaster1 -IPv4Address "$IPv4Subnet.16" -ZoneName $zone.Zonename
     foreach ( $N in 1..3)
         {
         Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name "DDVeNode$N" -IPv4Address "$IPv4Subnet.2$N" -ZoneName $zone.Zonename
