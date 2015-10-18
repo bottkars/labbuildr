@@ -192,6 +192,25 @@ function Set-LABsubnet
     Save-LABdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
 }
 
+
+function Set-LABHostKey
+{
+	[CmdletBinding(HelpUri = "https://github.com/bottkars/LABbuildr/wiki/LABtools#Set-LABHostKey")]
+	param (
+	[Parameter(ParameterSetName = "1", Mandatory = $false,Position)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 1)]$HostKey
+    )
+    if (!(Test-Path $Defaultsfile))
+    {
+        Write-Warning "Creating New defaultsfile"
+        New-LABdefaults -Defaultsfile $Defaultsfile
+    }
+    $Defaults = Get-LABdefaults -Defaultsfile $Defaultsfile
+    $Defaults.HostKey = $HostKey
+    Write-Verbose "Setting HostKey $HostKey"
+    Save-LABdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
+}
+
 function Set-LABBuilddomain
 {
 	[CmdletBinding(HelpUri = "https://github.com/bottkars/LABbuildr/wiki/LABtools#Set-LABBuilddomain")]
@@ -294,6 +313,8 @@ process
         $object | Add-Member -MemberType NoteProperty -Name Masterpath -Value $Default.config.Masterpath
         $object | Add-Member -MemberType NoteProperty -Name Puppet -Value $Default.config.Puppet
         $object | Add-Member -MemberType NoteProperty -Name PuppetMaster -Value $Default.config.PuppetMaster
+        $object | Add-Member -MemberType NoteProperty -Name HostKey -Value $Default.config.Hostkey
+
         Write-Output $object
         }
     }
@@ -352,6 +373,8 @@ process {
         $xmlcontent += ("<Masterpath>$($Defaults.Masterpath)</Masterpath>")
         $xmlcontent += ("<Puppet>$($Defaults.Puppet)</Puppet>")
         $xmlcontent += ("<PuppetMaster>$($Defaults.PuppetMaster)</PuppetMaster>")
+        $xmlcontent += ("<Hostkey>$($Defaults.HostKey)</Hostkey>")
+
         $xmlcontent += ("</config>")
         $xmlcontent | Set-Content $defaultsfile
         }
@@ -526,6 +549,9 @@ function New-LABdefaults
         $xmlcontent += ("<Sourcedir></Sourcedir>")
         $xmlcontent += ("<ScaleIOVer></ScaleIOVer>")
         $xmlcontent += ("<Masterpath></Masterpath>")
+        $xmlcontent += ("<Puppet></Puppet>")
+        $xmlcontent += ("<PuppetMaster></PuppetMaster>")
+        $xmlcontent += ("<HostKey></HostKey>")
         $xmlcontent += ("</config>")
         $xmlcontent | Set-Content $defaultsfile
      }

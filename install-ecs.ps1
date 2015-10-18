@@ -119,7 +119,7 @@ $Rootpassword  = "Password123!"
 
 $Guestuser = "$($Szenarioname.ToLower())user"
 $Guestpassword  = "Password123!"
-
+$IPOffset = 5
 
 $yumcachedir = join-path -Path $Sourcedir "ECS\yum"
 ### checking for license file ###
@@ -275,7 +275,7 @@ if (!$MasterVMX.Template)
     }
 foreach ($Node in $machinesBuilt)
         {
-        $ip="$subnet.$Range$($Node[-1])"
+        $ip="$subnet.$Range($($Node+$Offset)"
         $NodeClone = get-vmx $Node
         do {
             $ToolState = Get-VMXToolsState -config $NodeClone.config
