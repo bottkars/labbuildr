@@ -336,8 +336,8 @@ switch ($PsCmdlet.ParameterSetName)
     Answer yes for GUI Wizard
     Answer yes for Configure Network
     Answer No for DHCP
-    Enter $Nodeprefix$Node.$BuildDomain as hostname
-    Enter $BuildDomain as DNSDomainname
+    Enter $Nodeprefix$Node.$BuildDomain.local as hostname
+    Enter $BuildDomain.local as DNSDomainname
     (The orde of the next command and Devicenames may vary from Version to Version )
     Enter yes for Enable Ethernet eth1
     Enter yes for DHCP
