@@ -9,14 +9,13 @@
 #requires -version 3
 [CmdletBinding()]
 param (
-[Parameter(Mandatory=$true)]
-[ValidateSet('MDM','TB','SDS','SDC','gateway')]$role,
-[Parameter(Mandatory=$true)]$Disks,
-[Parameter(Mandatory=$true)]
-[ValidateSet('1.30-426.0','1.31-258.2','1.31-1277.3','1.31-2333.2','1.32-277.0','1.32-402.1','1.32-403.2')][alias('siover')]$ScaleIOVer,
-[Parameter(Mandatory=$false)]$mdmipa,
-[Parameter(Mandatory=$false)]$mdmipb
-
+    [Parameter(Mandatory=$true)]
+    [ValidateSet('MDM','TB','SDS','SDC','gateway')]$role,
+    [Parameter(Mandatory=$true)]$Disks,
+    [Parameter(Mandatory=$true)]
+    [ValidateSet('1.30-426.0','1.31-258.2','1.31-1277.3','1.31-2333.2','1.32-277.0','1.32-402.1','1.32-403.2','1.32-2451.4')][alias('siover')]$ScaleIOVer,
+    [Parameter(Mandatory=$false)]$mdmipa,
+    [Parameter(Mandatory=$false)]$mdmipb
 )
 $ScriptName = $MyInvocation.MyCommand.Name
 $Host.UI.RawUI.WindowTitle = "$ScriptName"
@@ -76,13 +75,23 @@ else
         $ScaleIOArgs = '/i "'+$Setuppath+'" /quiet'
         Start-Process -FilePath "msiexec.exe" -ArgumentList $ScaleIOArgs -PassThru -Wait
         }
-    foreach ($role in("sds","sdc"))
+    foreach ($role in("sds","sdc","lia"))
         {
         $Setuppath = Join-Path $ScaleIOPath "EMC-ScaleIO-$role-$ScaleIOVer.msi"
         .$Builddir\test-setup -setup "Saleio$role$ScaleIOVer" -setuppath $Setuppath
         $ScaleIOArgs = '/i "'+$Setuppath+'" /quiet'
         Start-Process -FilePath "msiexec.exe" -ArgumentList $ScaleIOArgs -PassThru -Wait
         }
+    ### configure lia
+    $Content = @()
+    $Content += "lia_token=Password123!"
+    $Content += "lia_enable_configure_call_home=0"
+    $Content += Get-Content 'C:\Program Files\EMC\scaleio\lia\cfg\conf.txt'| where {$_ -NotMatch "lia_token"}
+    $Content | Set-Content -Path 'C:\Program Files\EMC\scaleio\lia\cfg\conf.txt'
+    restart-service lia_service
+
+    
+    
     ####sdc checkup
 
     Write-Verbose "Preparing Disks"

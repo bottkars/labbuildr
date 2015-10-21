@@ -166,7 +166,7 @@ param (
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch][alias('sc')]$ScaleIO,
 	<# ScaleIO on hyper-v #>	
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][string]
-    [ValidateSet('1.30-426.0','1.31-258.2','1.31-1277.3','1.31-2333.2','1.32-277.0','1.32-402.1','1.32-403.2')][alias('siover')]$ScaleIOVer,
+    [ValidateSet('1.30-426.0','1.31-258.2','1.31-1277.3','1.31-2333.2','1.32-277.0','1.32-402.1','1.32-403.2','1.32-2451.4')][alias('siover')]$ScaleIOVer,
     <# single mode with mdm only on first node ( no secondary, no tb ) #>
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$singlemdm,
     # <# Cluster modemdm automatically#>
@@ -606,7 +606,9 @@ $Default_Subnet = "192.168.2.0"
 $Default_IPv6Prefix = "FD00::"
 $Default_IPv6PrefixLength = '8'
 $Default_AddressFamily = "IPv4"
-$latest_ScaleIOVer = '1.32-403.2'
+$latest_ScaleIOVer = '1.32-2451.4'
+$ScaleIO_OS = "Windows"
+$ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
 $latest_nmm = 'nmm8216'
 $latest_nw = 'nw8216'
 $latest_e16_cu = 'final'
@@ -2728,7 +2730,7 @@ if ($ScaleIO.IsPresent)
     # ScaleIO_1.32_Complete_Windows_SW_Download\ScaleIO_1.32_Windows_Download #
     Write-Verbose "Now Checking for ScaleIO $ScaleIOVer"
     $ScaleIO_Major = ($ScaleIOVer.Split("-"))[0]
-    $ScaleIORoot = join-path $Sourcedir "Scaleio"
+    $ScaleIORoot = join-path $Sourcedir "Scaleio\$ScaleIO_Path"
     $ScaleIOPath = (Get-ChildItem -Path $ScaleIORoot -Recurse -Filter "*mdm-$ScaleIOVer.msi").Directory.FullName
 
     try
@@ -2738,51 +2740,58 @@ if ($ScaleIO.IsPresent)
     catch
         {
         write-warning "we did not find ScaleIO $ScaleIOVer, we will check local zip/try to download latest version!"
-                switch ($ScaleIOVer)
+        $Uri = "http://www.emc.com/products-solutions/trial-software-download/scaleio.htm"
+        $request = Invoke-WebRequest -Uri $Uri -UseBasicParsing
+        $DownloadLinks = $request.Links | where href -match $ScaleIO_OS
+        foreach ($Link in $DownloadLinks)
             {
-            "$latest_ScaleIO"
+            $Url = $link.href
+            $FileName = Split-Path -Leaf -Path $Url
+            if (!(test-path  $Sourcedir\$FileName) -or $forcedownload.IsPresent)
                 {
-                $url = "ftp://ftp.emc.com/Downloads/ScaleIO/ScaleIO_Windows_SW_Download.zip"
-                }
+                $ok = Get-labyesnoabort -title "Could not find $Filename, we need to dowload from www.emc.com" -message "Should we Download $FileName from www.emc.com ?" 
+                switch ($ok)
+                    {
 
-            default
+                    "0"
+                        {
+                        Write-Verbose "$FileName not found, trying Download"
+                        Get-LABHttpFile -SourceURL $URL -TarGetFile $Sourcedir\$FileName -verbose
+                        $Downloadok = $true
+                        }
+             
+                        "1"
+                        {
+                        break
+                        }   
+                        "2"
+                        {
+                        Write-Verbose "User requested Abort"
+                        exit
+                        }
+                    }
+                        
+                }#end if
+            Else
                 {
-                $url = $false
-                Write-Warning "Sorry,no Autodownload for Scaleio $ScaleIOVer available"
+            Write-Warning "Found $Sourcedir\$FileName, using this one unless -forcedownload is specified ! "
                 }
             }
-            if ($url)
-                {
-                $FileName = Split-Path -Leaf -Path $Url
-                # $FileName = $FileName -replace "$FileName","ScaleIO_$ScaleIOVer.zip"
-                $Zipfilename = Join-Path $Sourcedir $FileName
-                $Destinationdir = Join-Path "$Sourcedir" "ScaleIO"
-                if (!(test-path  $ZipFileName))
-                    {
-                    Write-Verbose "$FileName not found, trying Download"
-                    if (!( Get-LABFTPFile -Source $URL -Target $Zipfilename -verbose -Defaultcredentials))
-                        { 
-                        write-warning "Error Downloading file $Url, Please check connectivity"
-                        Remove-Item -Path $Zipfilename -Verbose
-                        }
-                    } 
-                if (Test-Path "$Zipfilename")
-                    {
-                    Expand-LABZip -zipfilename "$Zipfilename" -destination $Destinationdir
-                    }
-                }
-        }
+            if (Test-Path "$Sourcedir\$FileName")
+            {
+                Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\ScaleIO\$ScaleIO_Path"
+            }
 
-        
+        } 
 
-      Write-Verbose "Checking Diskspeed"
-      $URL = "https://gallery.technet.microsoft.com/DiskSpd-a-robust-storage-6cd2f223/file/132882/1/Diskspd-v2.0.15.zip"
-      $FileName = Split-Path -Leaf -Path $Url
-      $Zipfilename = Join-Path $Sourcedir $FileName
-      $Destinationdir = Join-Path "$Sourcedir" "diskspd"
+        Write-Verbose "Checking Diskspeed"
+        $URL = "https://gallery.technet.microsoft.com/DiskSpd-a-robust-storage-6cd2f223/file/132882/1/Diskspd-v2.0.15.zip"
+        $FileName = Split-Path -Leaf -Path $Url
+        $Zipfilename = Join-Path $Sourcedir $FileName
+        $Destinationdir = Join-Path "$Sourcedir" "diskspd"
 
-      # $Directory = Split-Path 
-      if (!(test-path  (join-path "$Sourcedir" "\diskspd\amd64fre\diskspd.exe")))
+        # $Directory = Split-Path 
+        if (!(test-path  (join-path "$Sourcedir" "\diskspd\amd64fre\diskspd.exe")))
         {
         ## Test if we already have the ZIP
 
@@ -2797,8 +2806,8 @@ if ($ScaleIO.IsPresent)
             }
         Extract-Zip -zipfilename $Zipfilename -destination $Destination
 
-}
-}
+}# end DiskSpeed
+} #end ScaleIO
 ##end Autodownloaders
 ##########################################
 if ($nw.IsPresent) { workorder "Networker $nw_ver Node will be installed" }
