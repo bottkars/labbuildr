@@ -36,7 +36,7 @@ Param(
 <#Specify desired branch#>
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateSet('master','INTEGRATION-YODA-FOUNDATION','INTEGRATION-2.4.1-FOUNDATION','VIPR-2.3-PATCH1-HF4','VIPR-2.3-PATCH1-HF3','VIPR-2.3-PATCH1-HF2','VIPR-2.3-PATCH1-HF1','bugfix-COP-17106','bugfix-COP-17153')]$branch = "master",
+[ValidateSet('master','INTEGRATION-YODA-FOUNDATION','INTEGRATION-2.4.1-FOUNDATION','integration-2.4.1','VIPR-2.3-PATCH1-HF4','VIPR-2.3-PATCH1-HF3','VIPR-2.3-PATCH1-HF2','VIPR-2.3-PATCH1-HF1','bugfix-COP-17106','bugfix-COP-17153')]$branch = "master",
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
