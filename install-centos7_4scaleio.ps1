@@ -56,14 +56,27 @@ Param(
 #requires -module vmxtoolkit
 If ($Defaults.IsPresent)
     {
-     $labdefaults = Get-labDefaults
-     $vmnet = $labdefaults.vmnet
-     $subnet = $labdefaults.MySubnet
-     $BuildDomain = $labdefaults.BuildDomain
-     $Sourcedir = $labdefaults.Sourcedir
-     $DefaultGateway = $labdefaults.DefaultGateway
-     $DNS1 = $labdefaults.DNS1
-     }
+    $labdefaults = Get-labDefaults
+    $vmnet = $labdefaults.vmnet
+    $subnet = $labdefaults.MySubnet
+    $BuildDomain = $labdefaults.BuildDomain
+    try
+        {
+        $Sourcedir = $labdefaults.Sourcedir
+        }
+    catch [System.Management.Automation.ValidationMetadataException]
+        {
+        Write-Warning "Could not test Sourcedir Found from Defaults, USB stick connected ?"
+        Break
+        }
+    catch [System.Management.Automation.ParameterBindingException]
+        {
+        Write-Warning "No valid Sourcedir Found from Defaults, USB stick connected ?"
+        Break
+        }
+    $DefaultGateway = $labdefaults.DefaultGateway
+    $DNS1 = $labdefaults.DNS1
+    }
 
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
@@ -72,34 +85,34 @@ $Guestpassword = "Password123!"
 [uint64]$Disksize = 100GB
 $scsi = 0
 $Nodeprefix = "CentOS7Node"
+$ScaleIO_OS = "Linux"
+$ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
+
 ##### cecking for linux binaries
-$url = "ftp://ftp.emc.com/Downloads/ScaleIO/ScaleIO_RHEL6_Download.zip"
 write-warning "Checking for Downloaded RPM Packages"
-if (!($rpmpath  = Get-ChildItem -Path "$Sourcedir\ScaleIO\" -Recurse -Filter "*.el7.x86_64.rpm" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
+if (!($rpmpath  = Get-ChildItem -Path "$Sourcedir\ScaleIO\$ScaleIO_Path" -Recurse -Filter "*.el7.x86_64.rpm" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
     {
     write-warning "Checking for Downloaded Package"
     $Uri = "http://www.emc.com/products-solutions/trial-software-download/scaleio.htm"
     $request = Invoke-WebRequest -Uri $Uri -UseBasicParsing
-    $DownloadLinks = $request.Links | where href -match "linux"
+    $DownloadLinks = $request.Links | where href -match $ScaleIO_OS
     foreach ($Link in $DownloadLinks)
         {
         $Url = $link.href
         $FileName = Split-Path -Leaf -Path $Url
         if (!(test-path  $Sourcedir\$FileName) -or $forcedownload.IsPresent)
             {
-                        $ok = Get-labyesnoabort -title "Could not find $Filename, we need to dowload from www.emc.com" -message "Should we Download $FileName from ww.emc.com ?" 
+                        $ok = Get-labyesnoabort -title "Could not find $Filename, we need to dowload from www.emc.com" -message "Should we Download $FileName from www.emc.com ?" 
                         switch ($ok)
                             {
 
                             "0"
                                 {
                                 Write-Verbose "$FileName not found, trying Download"
-                                if (!( Get-LABFTPFile -Source $URL -Target $Sourcedir\$FileName -verbose -Defaultcredentials))
-                                    { 
-                                    write-warning "Error Downloading file $Url, Please check connectivity"
-                                    Remove-Item -Path $Sourcedir\$FileName -Verbose
-                                    }
+                                Get-LABHttpFile -SourceURL $URL -TarGetFile $Sourcedir\$FileName -verbose
+                                $Downloadok = $true
                                 }
+             
                              "1"
                                 {
                              break
@@ -119,7 +132,7 @@ if (!($rpmpath  = Get-ChildItem -Path "$Sourcedir\ScaleIO\" -Recurse -Filter "*.
         }
     if (Test-Path "$Sourcedir\$FileName")
         {
-            Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\ScaleIO\"
+            Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\ScaleIO\$ScaleIO_Path"
         }
 }
 $SIOGatewayrpm = Get-ChildItem -Path "$Sourcedir\ScaleIO\" -Recurse -Filter "EMC-ScaleIO-gateway-*noarch.rpm" -ErrorAction SilentlyContinue

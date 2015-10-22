@@ -42,6 +42,8 @@ The extracte OVA will be dehydrated to a VMware Workstation Master #>
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir,
 [Parameter(ParameterSetName = "import",Mandatory=$false)][switch]$forcedownload,
 [Parameter(ParameterSetName = "import",Mandatory=$false)][switch]$noextract,
+[Parameter(ParameterSetName = "import",Mandatory=$true)][switch]$import,
+
 #### install parameters#
 <# The ScaleIO Master created from -sourcedir  #>
 [Parameter(ParameterSetName = "defaults",Mandatory = $false)]
@@ -109,6 +111,8 @@ If ($Defaults.IsPresent)
      $DefaultGateway = $labdefaults.DefaultGateway
      $Sourcedir = $labdefaults.Sourcedir
      }
+$ScaleIO_OS = "VMware"
+$ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
 
 switch ($PsCmdlet.ParameterSetName)
 {
@@ -127,12 +131,12 @@ switch ($PsCmdlet.ParameterSetName)
                 exit
                 }
             }
-        if (!($OVAPath = Get-ChildItem -Path "$Sourcedir\ScaleIO\" -recurse -Filter "*.ova" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
+        if (!($OVAPath = Get-ChildItem -Path "$Sourcedir\ScaleIO\$ScaleIO_Path" -recurse -Filter "*.ova" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
             {
                     write-warning "Checking for Downloaded Package"
                     $Uri = "http://www.emc.com/products-solutions/trial-software-download/scaleio.htm"
                     $request = Invoke-WebRequest -Uri $Uri -UseBasicParsing
-                    $DownloadLinks = $request.Links | where href -match "zip"
+                    $DownloadLinks = $request.Links | where href -match "VMWARE"
                     foreach ($Link in $DownloadLinks)
                         {
                         $Url = $link.href
@@ -148,11 +152,8 @@ switch ($PsCmdlet.ParameterSetName)
                             "0"
                                 {
                                 Write-Verbose "$FileName not found, trying Download"
-                                if (!( Get-LABFTPFile -Source $URL -Target $Sourcedir\$FileName -verbose -Defaultcredentials))
-                                    { 
-                                    write-warning "Error Downloading file $Url, Please check connectivity"
-                                    Remove-Item -Path $Sourcedir\$FileName -Verbose
-                                    }
+                                Get-LABHttpFile -SourceURL $URL -TarGetFile $Sourcedir\$FileName -verbose
+                                $Downloadok = $true
                                 }
                              "1"
                                 {
@@ -169,7 +170,7 @@ switch ($PsCmdlet.ParameterSetName)
 
                         if ((Test-Path "$Sourcedir\$FileName") -and (!($noextract.ispresent)))
                             {
-                            Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\ScaleIO\"
+                            Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\ScaleIO\$ScaleIO_Path"
                             }
                         else
                             {
@@ -183,7 +184,7 @@ switch ($PsCmdlet.ParameterSetName)
 
         }
            
-        $OVAPath = Get-ChildItem -Path "$Sourcedir\ScaleIO\" -Recurse -Filter "*.ova" |Sort-Object -Descending
+        $OVAPath = Get-ChildItem -Path "$Sourcedir\ScaleIO\$ScaleIO_Path" -Recurse -Filter "*.ova"  -Exclude ".*" | Sort-Object -Descending
         $OVAPath = $OVApath[0]
         Write-Warning "Creating ScaleIO Master for $($ovaPath.Basename), may take a while"
         & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --name=$($ovaPath.Basename) $ovaPath.FullName $PSScriptRoot  #

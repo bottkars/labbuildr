@@ -55,11 +55,24 @@ Param(
 #requires -module vmxtoolkit
 If ($Defaults.IsPresent)
     {
-     $labdefaults = Get-labDefaults
-     $vmnet = $labdefaults.vmnet
-     $subnet = $labdefaults.MySubnet
-     $BuildDomain = $labdefaults.BuildDomain
-     $Sourcedir = $labdefaults.Sourcedir
+    $labdefaults = Get-labDefaults
+    $vmnet = $labdefaults.vmnet
+    $subnet = $labdefaults.MySubnet
+    $BuildDomain = $labdefaults.BuildDomain
+    try
+        {
+        $Sourcedir = $labdefaults.Sourcedir
+        }
+    catch [System.Management.Automation.ValidationMetadataException]
+        {
+        Write-Warning "Could not test Sourcedir Found from Defaults, USB stick connected ?"
+        Break
+        }
+    catch [System.Management.Automation.ParameterBindingException]
+        {
+        Write-Warning "No valid Sourcedir Found from Defaults, USB stick connected ?"
+        Break
+        }
      }
 
 [System.Version]$subnet = $Subnet.ToString()
@@ -83,12 +96,16 @@ if (!($rpmpath  = Get-ChildItem -Path "$Sourcedir\ScaleIO\ScaleIO_1.32_RHEL6_FnF
          "0"
             {
             Write-Verbose "$FileName not found, trying Download"
-            if (!( Get-LABFTPFile -Source $URL -Target $Sourcedir\$FileName -verbose -Defaultcredentials))
+            Write-Verbose "$FileName not found, trying Download"
+            if (!( Get-LABHttpFile -SourceURL $URL -TarGetFile $Sourcedir\$FileName -verbose ))
                 { 
                 write-warning "Error Downloading file $Url, Please check connectivity"
                 Remove-Item -Path $Sourcedir\$FileName -Verbose
                 }
-                else {$Downloadok = $true}
+            else 
+                {
+                $Downloadok = $true
+                }
             } 
          "2"
             {
