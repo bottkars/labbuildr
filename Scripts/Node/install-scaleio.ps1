@@ -49,6 +49,7 @@ if ($role -eq 'gateway')
         press any key when done pr Ctrl-C to exit"
         pause
         }
+    $Setuppath = $Setuppath[0]
     $ScaleIOArgs = 'GATEWAY_ADMIN_PASSWORD=Password123! /i "'+$Setuppath+'"   /quiet'
     Start-Process -FilePath "msiexec.exe" -ArgumentList $ScaleIOArgs -PassThru -Wait
     $Content = get-content -Path "C:\Program Files\EMC\scaleio\Gateway\webapps\ROOT\WEB-INF\classes\gatewayUser.properties"

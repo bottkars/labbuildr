@@ -51,6 +51,7 @@ $Devicename = "$Location"+"_Disk_$Driveletter"
 $VolumeName = "Volume_$Location"
 $ProtectionDomainName = "PD_$Location"
 $StoragePoolName = "SP_$Location"
+$FaulSetName = "Rack_"
 
 # 2. ######################################################################################################
 ####### create MDM
@@ -127,14 +128,23 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     Write-Verbose "We are now configuring the Protection Domain and Storage Pool"
     Pause
     }
-
 scli --user --login --username admin --password $Password --mdm_ip $mdm_ip
+
 do {
     scli --add_protection_domain --protection_domain_name $ProtectionDomainName --mdm_ip $mdm_ip
     Write-Verbose $LASTEXITCODE
     }
 until ($LASTEXITCODE -in ('0','7'))
 
+scli --user --login --username admin --password $Password --mdm_ip $mdm_ip
+foreach ($set in (1..3))
+    {
+    do {
+        scli --add_fault_set  --protection_domain_name $ProtectionDomainName --fault_set_name "$FaulSetName$Set"
+        Write-Verbose $LASTEXITCODE
+        }
+    until ($LASTEXITCODE -in ('0','7'))
+}
 do {
     scli --add_storage_pool --storage_pool_name $StoragePoolName --protection_domain_name $ProtectionDomainName --mdm_ip $mdm_ip
     Write-Verbose $LASTEXITCODE
@@ -161,13 +171,16 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     Write-Verbose "We are now adding the S[torage] D[ata] S[ervice] Nodes"
     Pause
     }
+
+    ## will be mgrated to ,disk,disk,disk ##
 $Disks = @()
 $Disks += (Get-ChildItem -Path C:\scaleio_devices\ -Recurse -Filter *.bin ).FullName
 
 $Devicename = "PhysicalDisk1"
-scli --add_sds --sds_ip $PrimaryIP --device_path $Disks[0] --device_name $Devicename  --sds_name hvnode1 --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --no_test --mdm_ip $mdm_ip
-scli --add_sds --sds_ip $SecondaryIP --device_path $Disks[0] --device_name $Devicename  --sds_name hvnode2 --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --no_test --mdm_ip $mdm_ip
-scli --add_sds --sds_ip $TiebreakerIP --device_path $Disks[0] --device_name $Devicename  --sds_name hvnode3 --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --no_test --mdm_ip $mdm_ip
+
+scli --add_sds --sds_ip $PrimaryIP --device_path $Disks[0] --device_name $Devicename  --sds_name hvnode1 --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --fault_set_name "$($FaulSetName)1" --no_test --mdm_ip $mdm_ip
+scli --add_sds --sds_ip $SecondaryIP --device_path $Disks[0] --device_name $Devicename  --sds_name hvnode2 --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --fault_set_name "$($FaulSetName)2" --no_test --mdm_ip $mdm_ip
+scli --add_sds --sds_ip $TiebreakerIP --device_path $Disks[0] --device_name $Devicename  --sds_name hvnode3 --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --fault_set_name "$($FaulSetName)3" --no_test --mdm_ip $mdm_ip
 
 
 # 6. ######################################################################################################
@@ -178,8 +191,6 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     Pause
     }
 scli --user --login --username admin --password $Password --mdm_ip $mdm_ip
-
-
 If ($Disks.Count -gt 1)
 {
     foreach ($Disk in 2..($Disks.Count)) 
