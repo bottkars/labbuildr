@@ -10,7 +10,7 @@
 [CmdletBinding()]
 param (
     [Parameter(Mandatory=$true)]
-    [ValidateSet('MDM','TB','SDS','SDC','gateway')]$role,
+    [ValidateSet('MDM','TB','SDS','SDC','gateway','LIA')]$role,
     [Parameter(Mandatory=$true)]$Disks,
     [Parameter(Mandatory=$true)]
     [ValidateSet('1.30-426.0','1.31-258.2','1.31-1277.3','1.31-2333.2','1.32-277.0','1.32-402.1','1.32-403.2','1.32-2451.4')][alias('siover')]$ScaleIOVer,
@@ -41,7 +41,7 @@ $ScaleIOArgs = '/i "'+$Setuppath+'" /quiet'
 #>
 if ($role -eq 'gateway')
     {
-    While (!($Setuppath = (Get-ChildItem -Path $ScaleIORoot -Recurse -Filter "*-$role-$ScaleIOVer-x64.msi").FullName))
+    While (!($Setuppath = (Get-ChildItem -Path $ScaleIORoot -Recurse -Filter "*-$role-$ScaleIOVer-x64.msi" -Exclude ".*" ).FullName))
         {
         Write-Warning "Cannot find ScaleIO $ScaleIOVer in $ScaleIORoot
         Make sure the Windows Package is downloaded and extracted to $ScaleIORoot
@@ -59,7 +59,7 @@ if ($role -eq 'gateway')
     }
 else
     {
-    While (!($ScaleIOPath = (Get-ChildItem -Path $ScaleIORoot -Recurse -Filter "*$Role-$ScaleIOVer.msi").Directory.FullName))
+    While (!($ScaleIOPath = (Get-ChildItem -Path $ScaleIORoot -Recurse -Filter "*$Role-$ScaleIOVer.msi" -Exclude ".*").Directory.FullName))
     {
     Write-Warning "Cannot find ScaleIO $ScaleIOVer in $ScaleIORoot
     Make sure the Windows Package is downloaded and extracted to $ScaleIORoot

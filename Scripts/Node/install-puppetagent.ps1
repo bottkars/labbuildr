@@ -11,17 +11,15 @@
 param(
     [ValidateSet('1.2.6')]
     $puppetagentver='1.2.6',
-    [ValidateSet('puppet','puppeten')]
-    $puppetver='puppeten',
-    $Master = 'Master1'
+    $Puppetmaster = 'PuppetMaster1'
 )
 $ScriptName = $MyInvocation.MyCommand.Name
 $Host.UI.RawUI.WindowTitle = "$ScriptName"
 $Builddir = $PSScriptRoot
 $Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
 New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
-############
-$Puppetmaster  = "$puppetver$Master.$Env:USERDNSDOMAIN"
+
+$Puppetmaster = "$Puppetmaster.$env:USERDOMAIN"
 .$Builddir\test-sharedfolders.ps1
 $Setuppath = "\\vmware-host\Shared Folders\Sources\Puppet\puppet-agent-$puppetagentver-x64.msi"
 .$Builddir\test-setup -setup PuppetAgent -setuppath $Setuppath

@@ -1089,6 +1089,10 @@ function invoke-postsection
 	invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script powerconf.ps1 -interactive # $CommonParameter
 	write-verbose "Configuring UAC"
     invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script set-uac.ps1 -interactive # $CommonParameter
+    if ($Default.Puppet)
+        {
+        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-puppetagent.ps1 -Parameter "-Puppetmaster $Puppetmaster" -interactive # $CommonParameter
+        }
     if ($wait.IsPresent)
         {
         checkpoint-progress -step UAC -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
@@ -2811,6 +2815,23 @@ if ($ScaleIO.IsPresent)
 
 }# end DiskSpeed
 } #end ScaleIO
+
+
+##### puppet stuff
+
+############
+if ($default.Puppet)
+    {
+    If ($Default.Puppetmaster -match "Enterprise")
+    {
+        $Puppetmaster  = "PuppetENMaster1"
+    }
+else
+    {
+    $Puppetmaster  = "PuppetMaster1"
+    }
+Write-Verbose "Pupppetmaster will be $Puppetmaster"
+}
 ##end Autodownloaders
 ##########################################
 if ($nw.IsPresent) { workorder "Networker $nw_ver Node will be installed" }

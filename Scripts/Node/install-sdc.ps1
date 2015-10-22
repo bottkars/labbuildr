@@ -30,7 +30,7 @@ While ((Test-Path $ScaleIORoot) -Ne $true)
     pause
     }
 $ScaleIO_Major = ($ScaleIOVer.Split("-"))[0]
-While (!($ScaleIOPath = (Get-ChildItem -Path $ScaleIORoot -Recurse -Filter "*mdm-$ScaleIOVer.msi").Directory.FullName))
+While (!($ScaleIOPath = (Get-ChildItem -Path $ScaleIORoot -Recurse -Filter "*mdm-$ScaleIOVer.msi" -Exclude ".*").Directory.FullName))
     {
     Write-Warning "Cannot find ScaleIO $ScaleIOVer in $ScaleIORoot
     Make sure the Windows Package is downloaded and extracted to $ScaleIORoot
