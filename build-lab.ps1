@@ -1668,6 +1668,9 @@ $config += ("<ScaleIOVer>$($ScaleIOVer)</ScaleIOVer>")
 $config += ("<DNS1>$($DNS1)</DNS1>")
 $config += ("<NMM>$($NMM.IsPresent)</NMM>")
 $config += ("<Masterpath>$Masterpath</Masterpath>")
+$config += ("<Puppet>$($Default.Puppet)</Puppet>")
+$config += ("<PuppetMaster>$($Default.PuppetMaster)</PuppetMaster>")
+$config += ("<Hostkey>$($Default.HostKey)</Hostkey>")
 $config += ("</config>")
 $config | Set-Content $defaultsfile
 }
