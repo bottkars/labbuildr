@@ -3557,8 +3557,12 @@ switch ($PsCmdlet.ParameterSetName)
 				write-Verbose "Starting Customization"
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
 				test-user Administrator
+				write-verbose "Setting up Hyper-V Configuration"
+				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script configure-hyperv.ps1 -interactive
+
 				write-verbose "Setting up WINRM"
 				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script set-winrm.ps1 -interactive
+                
                 if ($ScaleIO.IsPresent)
                     {
                     switch ($HVNODE){
