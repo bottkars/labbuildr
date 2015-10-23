@@ -29,7 +29,7 @@ $Percentage = [math]::Round(100/$nodes.count)+1
 write-verbose "fetching remote IP Addresses..."
 $NodeIP = foreach ($node in $nodes){
 Invoke-Command -ComputerName $node.name -ScriptBlock {param( $Location )
-    (Get-NetIPAddress -AddressState Preferred -InterfaceAlias $Location -SkipAsSource $false -AddressFamily IPv4 ).IPAddress
+    (Get-NetIPAddress -AddressState Preferred -InterfaceAlias "vEthernet (External)" -SkipAsSource $false -AddressFamily IPv4 ).IPAddress
     } -ArgumentList $Location
 }
 $PrimaryIP = $NodeIP[0]
