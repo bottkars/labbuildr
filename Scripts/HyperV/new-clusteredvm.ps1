@@ -34,7 +34,7 @@ if (!(Test-Path "$Clustervolume\vhds\$vmname"))
 Write-Warning "Copyig VHD File $Sourcevhd to $Clustervolume, This may Take a While"
 $Targetfile = Copy-Item $sourcevhd -Destination "$Clustervolume\$vmname\$vmname.vhd" -PassThru
 
-$NewVM = New-VM -Name $vmname -Path $Clustervolume -Memory 512MB  -VHDPath $Targetfile.FullName
+$NewVM = New-VM -Name $vmname -Path $Clustervolume -Memory 512MB  -VHDPath $Targetfile.FullName -SwitchName External
 $newVM | Set-VMMemory -DynamicMemoryEnabled $true -MinimumBytes 128MB -StartupBytes 512MB -MaximumBytes 4GB -Priority 80 -Buffer 25
 $Newvm | Set-VM –AutomaticStartAction Start
 $NewVM | Add-ClusterVirtualMachineRole 
