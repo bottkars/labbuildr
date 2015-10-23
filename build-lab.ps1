@@ -109,9 +109,14 @@ param (
 	[Parameter(ParameterSetName = "Spaces")][switch]$Spaces,
     <#
     Selects the Syncplicity Panorama Server
-    IP-Addresses: .15
+    IP-Addresses: .18
     #>
-	[Parameter(ParameterSetName = "Panorama")][switch][alias('pn')]$Panorama,
+    [Parameter(ParameterSetName = "Panorama")][switch][alias('pn')]$Panorama,
+    <#
+    Selects the EMC ViPR SRM Binary Install
+    IP-Addresses: .17
+    #>
+	[Parameter(ParameterSetName = "SRM")][switch][alias('srm')]$ViPRSRM,
     <#
     Selects the Blank Nodes Scenario
     IP-Addresses: .180 - .189
@@ -218,6 +223,7 @@ param (
     [Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [ValidateSet('2012R2FallUpdate','2012R2UMASTER','2012R2MASTER','2012MASTER','2012R2U1MASTER','2012R2UEFIMASTER','vNextevalMaster','RELEASE_SERVER')]$Master,
     <#do we want a special path to the Masters ? #>
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
@@ -231,6 +237,7 @@ param (
     [Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [ValidateScript({ Test-Path -Path $_ })]$Masterpath,
     <# Do we want Additional Disks / of additional 100GB Disks for ScaleIO. The disk will be made ready for ScaleIO usage in Guest OS#>	
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
@@ -253,7 +260,9 @@ param (
     [Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
-    [Parameter(ParameterSetName = "Panorama", Mandatory = $false)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet,
+    [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    [ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet,
 
  #   [Parameter(Mandatory = $false, HelpMessage = "Enter a valid VMware network Number vmnet between 1 and 19 ")]
 <# This stores the defaul config in defaults.xml#>
@@ -266,6 +275,7 @@ param (
     [Parameter(ParameterSetName = "DConly", Mandatory = $false)]
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
 	[switch]$savedefaults,
 
@@ -296,6 +306,7 @@ param (
    	[Parameter(ParameterSetName = "Isilon")]
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
 	[switch]$defaults,
 <# Specify if Machines should be Clustered, valid for Hyper-V and Blanknodes Scenario  #>
@@ -321,6 +332,7 @@ Machine Sizes
     [Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
 	[ValidateSet('XS', 'S', 'M', 'L', 'XL', 'TXL', 'XXL', 'XXXL')]$Size = "M",
 	
 <# Specify your own Domain name#>
@@ -334,6 +346,7 @@ Machine Sizes
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
 	[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain,
 	
@@ -376,6 +389,7 @@ $nmm_ver,
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Isilon")]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
 	[switch]$NW,
     <#
@@ -411,6 +425,7 @@ This should be used in Distributed scenario´s
     [Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Isilon", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
     [switch]$NoDomainCheck,
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
@@ -423,6 +438,7 @@ This should be used in Distributed scenario´s
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
     [Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[Validatepattern(‘(?<Address>((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))’)]$MySubnet,
 
@@ -439,7 +455,8 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
     [Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Isilon", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
-      [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
+    [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
+    [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Validateset('IPv4','IPv6','IPv4IPv6')]$AddressFamily, 
 
 <# Specify your IPv6 ULA Prefix, consider https://www.sixxs.net/tools/grh/ula/  #>
@@ -454,6 +471,7 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
 	[Parameter(ParameterSetName = "Isilon", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
+    [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [ValidateScript({$_ -match [IPAddress]$_ })]$IPV6Prefix,
 
 <# Specify your IPv6 ULA Prefix Length, #>
@@ -468,6 +486,7 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
 	[Parameter(ParameterSetName = "Isilon", Mandatory = $false)]
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
     $IPv6PrefixLength,
 <# 
@@ -486,6 +505,7 @@ Sources should be populated from a bases sources.zip
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
     [String]$Sourcedir,
 	#[Validatescript({Test-Path -Path $_ })][String]$Sourcedir,
@@ -511,6 +531,7 @@ Sources should be populated from a bases sources.zip
     [Parameter(ParameterSetName = "DConly", Mandatory = $false)]
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[switch]$ConsoleLog
 ) # end Param
@@ -4043,7 +4064,7 @@ switch ($PsCmdlet.ParameterSetName)
 	###################################################
 	# Panorama Setup
 	###################################################
-	$Nodeip = "$IPv4Subnet.15"
+	$Nodeip = "$IPv4Subnet.18"
 	$Nodename = "Panorama"
 	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
     [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features,Web-Mgmt-Console, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI" 
@@ -4078,6 +4099,52 @@ switch ($PsCmdlet.ParameterSetName)
 	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script panorama.ps1 -interactive -parameter " $CommonParameter"
 	}
 } #Panorama End
+
+"SRM"
+{
+	###################################################
+	# SRM Setup
+	###################################################
+	$Nodeip = "$IPv4Subnet.17"
+	$Nodename = "ViPRSRM"
+	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+    [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS" 
+	###################################################
+	status $Commentline
+	status "Creating SRM Server $Nodename"
+  	Write-Verbose $IPv4Subnet
+    write-verbose $Nodename
+    write-verbose $Nodeip
+    if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+        { 
+        Write-verbose "Now Pausing, Clone Process will start after keypress"
+        pause
+        }
+
+	test-dcrunning
+	$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -bridge -Gateway -size $Size -Sourcedir $Sourcedir $CommonParameter"
+	###################################################
+	If ($CloneOK)
+	{
+		$SourceScriptDir = "$Builddir\$Script_dir\SRM\"
+		write-verbose "Copy Configuration files, please be patient"
+		copy-tovmx -Sourcedir $NodeScriptDir
+		copy-tovmx -Sourcedir $SourceScriptDir
+		write-verbose "Waiting System Ready"
+		test-user -whois Administrator
+		write-Verbose "Starting Customization"
+		domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddonFeatures $AddonFeatures
+		While (([string]$UserLoggedOn = (&$vmrun -gu Administrator -gp Password123! listProcessesInGuest $CloneVMX)) -notmatch "owner=$BuildDomain\\Administrator") { write-host -NoNewline "." }
+        if ($NW.IsPresent)
+            {
+            write-verbose "Install NWClient"
+		    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+            }
+        write-verbose "Building SRM Server"
+        invoke-postsection -wait
+	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script INSTALL-SRM.ps1 -interactive -parameter " $CommonParameter"
+	}
+} #SRM End
 
 
 
