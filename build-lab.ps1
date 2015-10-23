@@ -4143,9 +4143,10 @@ switch ($PsCmdlet.ParameterSetName)
 		    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
             }
         write-verbose "Building SRM Server"
-        invoke-postsection -wait
 	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script INSTALL-SRM.ps1 -interactive -parameter " $CommonParameter"
-	}
+        invoke-postsection -wait
+	
+}
 } #SRM End
 
 

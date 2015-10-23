@@ -22,6 +22,7 @@ $Setuppath = "\\vmware-host\shared folders\Sources\ViPR_SRM_$($SRM_VER)_Win64.ex
 .$Builddir\test-setup -setup SRM -setuppath $Setuppath
 Write-Warning "Installing SRM $SRM_VER"
 Start-Process -FilePath $Setuppath -ArgumentList "/S" -PassThru -Wait
+Start-Process "http://$($Env:COMPUTERNAME):58080/APG/"
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     {
     Pause
