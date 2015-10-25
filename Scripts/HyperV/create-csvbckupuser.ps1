@@ -56,9 +56,9 @@ foreach ($ADgroup in ( "Remote Desktop Users"))#, "Windows Authorization Access 
     Write-Verbose "Adding $BackupAdmin to $ADgroup"
     Add-ADGroupMember -Identity $ADgroup -Members $BackupAdmin
     }
-<#
+Write-Verbose "Granting ClusterAccess for $BackupAdmin"
 Grant-ClusterAccess -User $ADDomain\$BackupAdmin -Full
-#>
+
 $Nodes = get-cluster . | Get-ClusterNode
 foreach ($Node in $Nodes)
     {

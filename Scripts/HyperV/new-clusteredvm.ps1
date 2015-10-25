@@ -35,7 +35,9 @@ Write-Warning "Copyig VHD File $Sourcevhd to $Clustervolume, This may Take a Whi
 $Targetfile = Copy-Item $sourcevhd -Destination "$Clustervolume\$vmname\$vmname.vhd" -PassThru
 
 $NewVM = New-VM -Name $vmname -Path $Clustervolume -Memory 512MB  -VHDPath $Targetfile.FullName -SwitchName External
-$newVM | Set-VMMemory -DynamicMemoryEnabled $true -MinimumBytes 128MB -StartupBytes 512MB -MaximumBytes 4GB -Priority 80 -Buffer 25
+$NewVM | Set-VMMemory -DynamicMemoryEnabled $true -MinimumBytes 128MB -StartupBytes 512MB -MaximumBytes 2GB -Priority 80 -Buffer 25
+$NewVM | Get-VMHardDiskDrive | Set-VMHardDiskDrive -MaximumIOPS 2000
 $Newvm | Set-VM –AutomaticStartAction Start
 $NewVM | Add-ClusterVirtualMachineRole 
-$newvm | start-vm
+$NewVM | start-vm
+$NewVM | Get-VM
