@@ -17,5 +17,22 @@ $Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
 $Logfile = New-Item -ItemType file  "$Builddir\$ScriptName$Logtime.log"
 ############
 Set-Content -Path $Logfile $MyInvocation.BoundParameters
+
+$Uri = "http://localhost:9000/gconsole.jnlp"
+do 
+    {
+    try
+        {
+        $gconsole_ready = Invoke-WebRequest -uri $Uri -UseBasicParsing -Method Head -ErrorAction SilentlyContinue
+        }
+    catch #[Microsoft.PowerShell.Commands.InvokeWebRequestCommand]
+        {
+        Write-Warning "Error $_ Catched, NMC still not running, waiting 10 Seconds"
+        sleep -Seconds 10
+        }
+    }
+Until ($gconsole_ready.StatusCode -eq "200")
+
 Write-Verbose "Setting Up NMC"
-start-process http://localhost:9000/gconsole.jnlp
+start-process $Uri
+

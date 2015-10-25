@@ -10,6 +10,7 @@
 param (
 [parameter(mandatory = $false)][ValidateRange(1,10)]$CSVnum = 3,
 [parameter(mandatory = $false)]$password = "Password123!",
+[parameter(mandatory = $false)]$VolumeSize = "56",
 [parameter(mandatory = $false)][switch]$singlemdm
 )
 
@@ -261,7 +262,7 @@ scli --mdm_ip $mdm_ip --query_all_volumes
 
 do 
     {
-    $newvol = scli --add_volume --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --size_gb 20 --thin_provisioned --volume_name $VolumeName --mdm_ip $mdm_ip
+    $newvol = scli --add_volume --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --size_gb $VolumeSize --thin_provisioned --volume_name $VolumeName --mdm_ip $mdm_ip
     Write-Warning $LASTEXITCODE
     Write-Output $newvol    
     }
