@@ -205,7 +205,7 @@ if ($sql.IsPresent)
 
 if ($AddDisks.IsPresent)
     {
-    [uint64]$Disksize = 100GB
+    [uint64]$Disksize = 200GB
     $SCSI = "0"
     foreach ($LUN in (1..$Disks))
         {
