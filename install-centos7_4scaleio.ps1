@@ -36,7 +36,7 @@ Param(
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath = '.\CentOS7 Master',
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[int32]$Nodes=3,
+[ValidateRange(1,9)][int32]$Nodes=3,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [int32]$Startnode = 1,
@@ -76,6 +76,7 @@ If ($Defaults.IsPresent)
         }
     $DefaultGateway = $labdefaults.DefaultGateway
     $DNS1 = $labdefaults.DNS1
+    $Hostkey = $labdefaults.HostKey
     }
 
 [System.Version]$subnet = $Subnet.ToString()
@@ -87,6 +88,9 @@ $scsi = 0
 $Nodeprefix = "CentOS7Node"
 $ScaleIO_OS = "Linux"
 $ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
+$Node_requires = "numactl libaio"
+$MDM_Requires = "mutt bash-completion python"
+$Gateway_Requires = "jre"
 
 ##### cecking for linux binaries
 write-warning "Checking for Downloaded RPM Packages"
@@ -204,6 +208,7 @@ if (!$MasterVMX.Template)
     }
     foreach ($Node in $machinesBuilt)
         {
+        $Node_num = $node -replace $Nodeprefix
         $ip="$subnet.22$($Node[-1])"
         $NodeClone = get-vmx $Node
         do {
@@ -234,14 +239,28 @@ if (!$MasterVMX.Template)
             {
             $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $ip -device eno16777984 -Peerdns -DNS1 $DNS1 -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $rootuser -rootpassword $Guestpassword | Out-Null
             }
-    
+        Write-Verbose "Nodenumber : $Node_num"
+        Switch ($Node_num)
+            {
+            {$_ -in (1,2)}
+                {
+                $requires = "$Node_requires $MDM_Requires"
+                }
+            "3"
+                {
+                $requires = "$Node_requires $Gateway_Requires"
+                }
+            default
+                {
+                $requires = "$Node_requires"
+                }
+            }
+        $Scriptblock = "yum install $requires -y"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/yum-requires.log
     
         if ($node[-1] -eq "3" -and $SIOGateway.ispresent)
             {
-            $Scriptblock = "yum install jre -y"
-            Write-Verbose $Scriptblock
-            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/yum-jre.log
-            
             $Scriptblock = "export GATEWAY_ADMIN_PASSWORD='Password123!';rpm -Uhv --nodeps $SIOGatewayrpm"
             Write-Verbose $Scriptblock
             $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile /tmp/SIOGateway.log
