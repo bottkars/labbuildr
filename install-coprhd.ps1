@@ -298,15 +298,15 @@ node_id=vipr1"
     $Content | Set-Content -Path $Scriptdir\$Scriptname
     convert-VMXdos2unix -Sourcefile $Scriptdir\$Scriptname -Verbose
     $NodeClone | copy-VMXfile2guest -Sourcefile $Scriptdir\$Scriptname -targetfile "/etc/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword
-
+    
     $Scriptblock = "groupadd storageos"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
 
-    $Scriptblock = "useradd -d /opt/storageos -g storageos storageos"
+    $Scriptblock = "useradd -u 444 -d /opt/storageos -g storageos storageos"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
-
+    
     $Scriptblock = "/usr/sbin/update-alternatives --set java /usr/lib64/jvm/jre-1.7.0-openjdk/bin/java"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
