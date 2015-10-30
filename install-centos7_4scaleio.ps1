@@ -2,7 +2,7 @@
 .Synopsis
    .\install-scaleio.ps1 
 .DESCRIPTION
-  install-scaleio is  the a vmxtoolkit solutionpack for configuring and deploying scaleio svm´s
+  install-centos7_4scaleio is  the a vmxtoolkit solutionpack for configuring and deploying centos VM´s for ScaleIO Implementation
       
       Copyright 2014 Karsten Bott
 
@@ -18,10 +18,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://community.emc.com/blogs/bottk/
+   https://github.com/bottkars/labbuildr/wiki/SolutionPacks#install-centos7_4scaleio
 .EXAMPLE
-.\install-centos4scaleio.ps1
-This will install 3 Centos Nodes CentOSNode1 -CentOSNode3 from the Default CentOS Master , in the Default 192.168.2.0 network, IP .221 - .223
+.\install-centos7_4scaleio.ps1 -Defaults
+This will install 3 Centos Nodes CentOSNode1 -CentOSNode3 from the Default CentOS7 Master , in the Default 192.168.2.0 network, IP .221 - .223
 
 #>
 [CmdletBinding(DefaultParametersetName = "defaults")]
@@ -31,9 +31,9 @@ Param(
 [Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateRange(1,3)][int32]$Disks = 1,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir = 'h:\sources',
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath = '.\CentOS7 Master',
+#[Parameter(ParameterSetName = "install",Mandatory=$false)]
+# [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+# [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath = '.\CentOS7 Master',
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateRange(1,9)][int32]$Nodes=3,
@@ -91,6 +91,20 @@ $ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
 $Node_requires = "numactl libaio"
 $MDM_Requires = "mutt bash-completion python"
 $Gateway_Requires = "jre"
+$Required_Master = "CentOS7 Master"
+
+###### checking master Present
+if (!($MasterVMX = get-vmx $Required_Master))
+    {
+    Write-Warning "Required Master $Required_Master not found
+    please download and extraxt $Required_Master to .\$Required_Master
+    see: 
+    ------------------------------------------------
+    get-help $($MyInvocation.MyCommand.Name) -online
+    ------------------------------------------------"
+    exit
+    }
+####
 
 ##### cecking for linux binaries
 write-warning "Checking for Downloaded RPM Packages"
@@ -141,19 +155,14 @@ if (!($rpmpath  = Get-ChildItem -Path "$Sourcedir\ScaleIO\$ScaleIO_Path" -Recurs
 }
 $SIOGatewayrpm = Get-ChildItem -Path "$Sourcedir\ScaleIO\" -Recurse -Filter "EMC-ScaleIO-gateway-*noarch.rpm"  -Exclude ".*" -ErrorAction SilentlyContinue
 $SIOGatewayrpm = $SIOGatewayrpm[-1].FullName
-$Sourcedir = $Sourcedir.Replace("\","\\")
+$Sourcedir_replace = $Sourcedir.Replace("\","\\")
 Write-Verbose $SIOGatewayrpm
-Write-Verbose $Sourcedir
+Write-Verbose $Sourcedir_replace
 
-$SIOGatewayrpm = $SIOGatewayrpm -replace  $Sourcedir,"/mnt/hgfs/Sources"
+$SIOGatewayrpm = $SIOGatewayrpm -replace  $Sourcedir_replace,"/mnt/hgfs/Sources"
 $SIOGatewayrpm = $SIOGatewayrpm.Replace("\","/")
 Write-Verbose $SIOGatewayrpm
-if (!($MasterVMX = get-vmx -path $MasterPath))
-    {
-    Write-Warning "no centos Master found
-    please download Centos7 Master to $Sourcedir\Centos7"
-    exit
-    }
+
 if (!$MasterVMX.Template) 
             {
             write-verbose "Templating Master VMX"
@@ -271,9 +280,3 @@ if (!$MasterVMX.Template)
     }
     write-Warning "Login to the VM´s with root/Password123!"
     
-
-
-
-
-
-
