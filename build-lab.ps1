@@ -4124,7 +4124,7 @@ switch ($PsCmdlet.ParameterSetName)
         }
 
 	test-dcrunning
-	$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -bridge -Gateway -size XXL -Sourcedir $Sourcedir $CommonParameter"
+	$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Gateway -size XXL -Sourcedir $Sourcedir $CommonParameter"
 	###################################################
 	If ($CloneOK)
 	{
