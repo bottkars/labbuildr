@@ -135,11 +135,15 @@ if (!($rpmpath  = Get-ChildItem -Path "$Sourcedir\ScaleIO\$ScaleIO_Path" -Recurs
             Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\ScaleIO\$ScaleIO_Path"
         }
 }
-$SIOGatewayrpm = Get-ChildItem -Path "$Sourcedir\ScaleIO\" -Recurse -Filter "EMC-ScaleIO-gateway-*noarch.rpm" -ErrorAction SilentlyContinue
+$SIOGatewayrpm = Get-ChildItem -Path "$Sourcedir\ScaleIO\" -Recurse -Filter "EMC-ScaleIO-gateway-*noarch.rpm"  -Exclude ".*" -ErrorAction SilentlyContinue
 $SIOGatewayrpm = $SIOGatewayrpm[-1].FullName
-$SIOGatewayrpm = $SIOGatewayrpm.Replace($Sourcedir,"/mnt/hgfs/Sources")
-$SIOGatewayrpm = $SIOGatewayrpm.Replace("\","/")
+$Sourcedir = $Sourcedir.Replace("\","\\")
+Write-Verbose $SIOGatewayrpm
+Write-Verbose $Sourcedir
 
+$SIOGatewayrpm = $SIOGatewayrpm -replace  $Sourcedir,"/mnt/hgfs/Sources"
+$SIOGatewayrpm = $SIOGatewayrpm.Replace("\","/")
+Write-Verbose $SIOGatewayrpm
 if (!($MasterVMX = get-vmx -path $MasterPath))
     {
     Write-Warning "no centos Master found
