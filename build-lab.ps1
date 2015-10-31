@@ -116,7 +116,10 @@ param (
     Selects the EMC ViPR SRM Binary Install
     IP-Addresses: .17
     #>
-	[Parameter(ParameterSetName = "SRM")][switch][alias('srm')]$ViPRSRM,
+	[Parameter(ParameterSetName = "SRM", Mandatory = $true)][switch][alias('srm')]$ViPRSRM,
+    [Parameter(ParameterSetName = "SRM")]
+    [ValidateSet('3.7.0.0','3.6.0.3')]
+    $SRM_VER='3.7.0.0',
     <#
     Selects the Blank Nodes Scenario
     IP-Addresses: .180 - .189
@@ -4142,9 +4145,10 @@ switch ($PsCmdlet.ParameterSetName)
             write-verbose "Install NWClient"
 		    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
             }
-        write-verbose "Building SRM Server"
-	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script INSTALL-SRM.ps1 -interactive -parameter " $CommonParameter"
         invoke-postsection -wait
+        write-verbose "Building SRM Server"
+	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script INSTALL-SRM.ps1 -interactive -parameter "-SRM_VER=$SRM_VER $CommonParameter"
+        
 	
 }
 } #SRM End
