@@ -4148,7 +4148,7 @@ switch ($PsCmdlet.ParameterSetName)
         invoke-postsection -wait
         write-verbose "Building SRM Server"
 	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script INSTALL-SRM.ps1 -interactive -parameter "-SRM_VER=$SRM_VER $CommonParameter"
-        
+        Write-Host -ForegroundColor White "You cn now Connect to http://$($Nodeip):58080/APG/ with admin/changeme"
 	
 }
 } #SRM End
