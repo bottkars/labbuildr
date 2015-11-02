@@ -140,10 +140,10 @@ if (!(Test-path "$Sourcedir\$Scenarioname"))
         Write-Verbose "Setting Shared Folders"
         $NodeClone | Set-VMXSharedFolderState -enabled
         Write-verbose "Cleaning Shared Folders"
-        $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources
+        $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | out-null
         Write-Verbose "Adding Shared Folders"        
-        $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
-        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -suse -device eno16777984 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
+        $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir
+        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -suse -device eno16777984 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $Rootuser -rootpassword $Guestpassword
         # $NodeClone | Invoke-VMXBash -Scriptblock "/sbin/rcnetwork restart" -Guestuser $Rootuser -Guestpassword $Guestpassword
         Write-Warning "Starting zypper Tasks, this may take a while"
         $Scriptblock = "zypper -n rm patterns-openSUSE-minimal_base-conflicts"
