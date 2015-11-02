@@ -109,11 +109,11 @@ if (!(Test-path "$Sourcedir\$Scenarioname"))
         $Config = Get-VMXConfig -config $NodeClone.config
         Write-Verbose "Tweaking Config"
         write-verbose "Setting NIC0 to HostOnly"
-        Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config | Out-Null
+        Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config 
         if ($vmnet)
             {
             Write-Verbose "Configuring NIC 0 for $vmnet"
-            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config | Out-Null
+            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config
             Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config | Out-Null
             }
         $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.CloneName)@$BuildDomain"
@@ -121,13 +121,13 @@ if (!(Test-path "$Sourcedir\$Scenarioname"))
         $Annotation = $NodeClone | Set-VMXAnnotation -Line1 "rootuser:$Rootuser" -Line2 "rootpasswd:$Guestpassword" -Line3 "Guestuser:$Guestuser" -Line4 "Guestpassword:$Guestpassword" -Line5 "labbuildr by @hyperv_guy" -builddate
         $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname $Nodeprefix -Scenario 6
         # $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
-        $NodeClone | Set-VMXprocessor -Processorcount 4 | Out-Null
-        $NodeClone | Set-VMXmemory -MemoryMB 8192 | Out-Null
+        $NodeClone | Set-VMXprocessor -Processorcount 4
+        $NodeClone | Set-VMXmemory -MemoryMB 8192l
         $Config = $Nodeclone | Get-VMXConfig
         $Config = $Config -notmatch "ide1:0.fileName"
         $Config | Set-Content -Path $NodeClone.config 
         Write-Verbose "Starting $($NodeClone.CloneName)"
-        start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
+        start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName
         $machinesBuilt += $($NodeClone.cloneName)
 
         $ip="$subnet.245"
@@ -138,9 +138,9 @@ if (!(Test-path "$Sourcedir\$Scenarioname"))
             }
         until ($ToolState.state -match "running")
         Write-Verbose "Setting Shared Folders"
-        $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
+        $NodeClone | Set-VMXSharedFolderState -enabled
         Write-verbose "Cleaning Shared Folders"
-        $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | Out-Null
+        $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources
         Write-Verbose "Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
         $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -suse -device eno16777984 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
