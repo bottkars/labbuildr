@@ -48,10 +48,9 @@ $Setupcmd = "setup.exe"
 $Setuppath = "$SourcePath\$SCOMver\$Setupcmd"
 .$Builddir\test-setup -setup $Setupcmd -setuppath $Setuppath
 Write-Warning "Starting $SCSCOMVER setup, this may take a while"
-
 Start-Process "$Setuppath" -ArgumentList "/install /components:$Components /ManagementGroupName:$MGMTGrp /SqlServerInstance:$INSTANCENAME /DatabaseName:OperationsManager /DWSqlServerInstance:$INSTANCENAME /DWDatabaseName:OperationsManagerDW /ActionAccountUser:$Action_ACT /ActionAccountPassword:$Password /DASAccountUser:$DAS_ACT /DASAccountPassword:$Password /DatareaderUser:$Data_Reader /DatareaderPassword:$Password /DataWriterUser:$Data_Writer /DataWriterPassword:$Password /EnableErrorReporting:Never /SendCEIPReports:0 /UseMicrosoftUpdate:0 /AcceptEndUserLicenseAgreement:1 /silent" -Wait
    
-write-verbose "Checking for Updates"
+Write-Warning "Checking for Updates"
 foreach ($Updatepattern in ("*AMD64-server.msp","*AMD64-ENU-Console.msp"))
     {
     $SCOMUpdate = Get-ChildItem "$($SourcePath)\$($SCOMver)updates"  -Filter $Updatepattern
