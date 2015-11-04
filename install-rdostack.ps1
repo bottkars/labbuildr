@@ -29,9 +29,6 @@ Param(
 [Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateRange(1,3)][int32]$Disks = 1,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir = 'h:\sources',
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath = '.\CentOS7 Master',
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [int32]$Nodes=1,
@@ -65,9 +62,23 @@ If ($Defaults.IsPresent)
      $vmnet = $labdefaults.vmnet
      $subnet = $labdefaults.MySubnet
      $BuildDomain = $labdefaults.BuildDomain
-     $Sourcedir = $labdefaults.Sourcedir
+    try
+        {
+        $Sourcedir = $labdefaults.Sourcedir
+        }
+    catch [System.Management.Automation.ValidationMetadataException]
+        {
+        Write-Warning "Could not test Sourcedir Found from Defaults, USB stick connected ?"
+        Break
+        }
+    catch [System.Management.Automation.ParameterBindingException]
+        {
+        Write-Warning "No valid Sourcedir Found from Defaults, USB stick connected ?"
+        Break
+        }
      $Gateway = $labdefaults.Gateway
      $DefaultGateway = $labdefaults.Defaultgateway
+     $Hostkey = $labdefaults.HostKey
      $DNS1 = $labdefaults.DNS1
      }
 [System.Version]$subnet = $Subnet.ToString()
@@ -82,8 +93,22 @@ $Guestpassword  = "Password123!"
 [uint64]$Disksize = 100GB
 $scsi = 0
 
+$Node_requires = "numactl libaio"
+$Required_Master = "CentOS7 Master"
 
-$MasterVMX = get-vmx -path $MasterPath
+###### checking master Present
+if (!($MasterVMX = get-vmx $Required_Master))
+    {
+    Write-Warning "Required Master $Required_Master not found
+    please download and extraxt $Required_Master to .\$Required_Master
+    see: 
+    ------------------------------------------------
+    get-help $($MyInvocation.MyCommand.Name) -online
+    ------------------------------------------------"
+    exit
+    }
+####
+
 if (!$MasterVMX.Template) 
             {
             write-verbose "Templating Master VMX"
@@ -135,11 +160,11 @@ if (!(Test-path "$Sourcedir\Openstack"))
             $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
             }
         write-verbose "Setting NIC0 to HostOnly"
-        Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config | Out-Null
+        Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config #| Out-Null
         if ($vmnet)
             {
             Write-Verbose "Configuring NIC 0 for $vmnet"
-            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config | Out-Null
+            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config # | Out-Null
             Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config | Out-Null
             }
         $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.CloneName)@$BuildDomain"
@@ -214,7 +239,6 @@ if (!(Test-path "$Sourcedir\Openstack"))
     $myrepo="/mnt/hgfs/Sources/Openstack/openstack-$release/"
     write-verbose "installing openstack repo location"
     $Scriptblock = "yum install -y https://repos.fedorapeople.org/repos/openstack/openstack-$release/rdo-release-$release-1.noarch.rpm"
-    #                              https://repos.fedorapeople.org/repos/openstack/openstack-kilo/rdo-release-kilo-1.noarch.rpm
     $NodeClone |Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
     write-verbose "downloading openstack files"
     $Scriptblock = "reposync -l --repoid=openstack-$release --download_path=/mnt/hgfs/Sources/Openstack --downloadcomps --download-metadata -n"
@@ -232,10 +256,11 @@ if (!(Test-path "$Sourcedir\Openstack"))
     $Property = "gpgcheck"
     $Scriptblock = "sed -i '/.*$Property.*/ c\$Property=0' $file"
     Write-Verbose $Scriptblock
-
     $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
     write-verbose "installing packstack"
-    $Scriptblock = "yum install -y openstack-packstack"
+
+    $Scriptblock = "yum install -y openstack-packstack $Node_requires"
+    Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
 ### generate user ssh keys
     $Scriptblock ="/usr/bin/ssh-keygen -t rsa -N '' -f /home/$Guestuser/.ssh/id_rsa"
@@ -246,14 +271,22 @@ if (!(Test-path "$Sourcedir\Openstack"))
     $Scriptblock = "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys;chmod 0600 ~/.ssh/authorized_keys"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
-#### Start ssh for pwless  root local login
-    $Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword 
+####
 
+    if ($Hostkey)
+        {
+        $Scriptblock = "echo 'ssh-rsa $Hostkey' >> /root/.ssh/authorized_keys"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+        }
+    
     $Scriptblock = "cat /home/stack/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+    
+    $Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword 
 
     $Scriptblock = "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys;chmod 0600 /root/.ssh/authorized_keys"
     Write-Verbose $Scriptblock
@@ -268,11 +301,11 @@ if (!(Test-path "$Sourcedir\Openstack"))
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
  #### end ssh
     Write-Warning "Installing AllInOne Openstack.... this will take a While !!!
-    you might open putty to $ip and run TOP with user stack"
+    you might open putty to $ip and tail -f /tmp/inst_openstack.log"
 
     $Scriptblock = "/usr/bin/packstack --allinone"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile /tmp/inst_openstack.log
 }
     
 
