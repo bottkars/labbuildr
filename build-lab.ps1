@@ -121,6 +121,15 @@ param (
     [ValidateSet('3.7.0.0','3.6.0.3')]
     $SRM_VER='3.7.0.0',
     <#
+    Selects the Microsoft System Center Binary Install
+    IP-Addresses: .18
+    #>
+	[Parameter(ParameterSetName = "SCOM", Mandatory = $true)][switch][alias('SCOM')]$SCOM2012R2,
+    [Parameter(ParameterSetName = "SCOM")]
+   # [ValidateSet('3.7.0.0','3.6.0.3')]
+   # $SCOM_VER='3.7.0.0',
+
+    <#
     Selects the Blank Nodes Scenario
     IP-Addresses: .180 - .189
     #>
@@ -243,6 +252,7 @@ param (
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
 	[switch]$defaults,
 
     
@@ -261,6 +271,7 @@ param (
     [Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [ValidateSet('2012R2FallUpdate','2012R2UMASTER','2012R2MASTER','2012MASTER','2012R2U1MASTER','2012R2UEFIMASTER','vNextevalMaster','RELEASE_SERVER')]$Master,
     <#do we want a special path to the Masters ? #>
@@ -275,6 +286,7 @@ param (
     [Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [ValidateScript({ Test-Path -Path $_ })]$Masterpath,
     <# Do we want Additional Disks / of additional 100GB Disks for ScaleIO. The disk will be made ready for ScaleIO usage in Guest OS#>	
@@ -299,6 +311,7 @@ param (
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet,
 
@@ -314,6 +327,7 @@ param (
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
 	[switch]$savedefaults,
 
@@ -340,6 +354,7 @@ Machine Sizes
     [Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
 	[ValidateSet('XS', 'S', 'M', 'L', 'XL', 'TXL', 'XXL', 'XXXL')]$Size = "M",
 	
@@ -355,6 +370,7 @@ Machine Sizes
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
 	[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain,
 	
@@ -382,6 +398,7 @@ Version Of Networker Modules
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
 	[ValidateSet('nmm8211','nmm8212','nmm8214','nmm8216','nmm8217','nmm8218','nmm822','nmm821','nmm300', 'nmm301', 'nmm2012', 'nmm3012', 'nmm82','nmm85','nmm85.BR1','nmm85.BR2','nmm85.BR3','nmm85.BR4','nmm90.DA')]
 $nmm_ver,
@@ -398,6 +415,7 @@ $nmm_ver,
 	[Parameter(ParameterSetName = "Isilon")]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
 	[switch]$NW,
     <#
@@ -416,6 +434,7 @@ mus be extracted to [sourcesdir]\[nw_ver], ex. c:\sources\nw82
     [Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [ValidateSet('nw822','nw8218','nw8217','nw8216','nw8215','nw8214','nw8213','nw8212','nw8211','nw821','nw8205','nw8204','nw8203','nw8202','nw82','nw8116','nw8115','nw8114', 'nw8113','nw8112', 'nw811',  'nw8105','nw8104','nw8102', 'nw81','nw85','nw85.BR1','nw85.BR2','nw85.BR3','nw85.BR4','nw90.DA','nwunknown')]
     $nw_ver,
@@ -436,6 +455,7 @@ This should be used in Distributed scenario´s
 	[Parameter(ParameterSetName = "Isilon", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
     [switch]$NoDomainCheck,
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
@@ -449,6 +469,7 @@ This should be used in Distributed scenario´s
     [Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[Validatepattern(‘(?<Address>((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))’)]$MySubnet,
 
@@ -466,6 +487,7 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
 	[Parameter(ParameterSetName = "Isilon", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
+    [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Validateset('IPv4','IPv6','IPv4IPv6')]$AddressFamily, 
 
@@ -481,6 +503,7 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
 	[Parameter(ParameterSetName = "Isilon", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
+    [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [ValidateScript({$_ -match [IPAddress]$_ })]$IPV6Prefix,
 
@@ -497,6 +520,7 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
     $IPv6PrefixLength,
 <# 
@@ -516,7 +540,8 @@ Sources should be populated from a bases sources.zip
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
-    [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
+    [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
+   [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
     [String]$Sourcedir,
 	#[Validatescript({Test-Path -Path $_ })][String]$Sourcedir,
 
@@ -542,6 +567,7 @@ Sources should be populated from a bases sources.zip
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[switch]$ConsoleLog
 ) # end Param
@@ -662,6 +688,7 @@ $Dots = [char]58
 [string]$Commentline = "#######################################################################################################################"
 $SCVMMVER = "SCVMM2012R2"
 $WAIKVER = "WAIK"
+$SCOMVER = "SC2012_R2_SCOM"
 #$SQLVER = "SQL2012SP1"
 $DCNODE = "DCNODE"
 $NWNODE = "NWSERVER"
@@ -2391,7 +2418,77 @@ if ($scvmm.IsPresent)
     workorder "We are going to Install Hyper-V with $SCVMMVER in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet and $SQLVER"
     # exit
     }# end SCVMMPREREQ
+############## SCOM Section
+if ($SCOM2012R2.IsPresent)
 
+  {
+    Write-Warning "Entering SCOM Prereq Section"
+    [switch]$SQL=$true
+    if ($SQLVER -gt "SQL2012SP1")
+        {
+        Write-Warning "SCOM can only be inbstalled on SQL2012, Setting to SQL2012SP1"
+        $SQLVER = "SQL2012SP1"
+        }
+    $Prereqdir = "$SCOMVER"+"prereq"
+    
+    Write-Verbose "We are now going to Test SCOM Prereqs"
+    
+    $DownloadUrls= (
+            'http://download.microsoft.com/download/F/B/7/FB728406-A1EE-4AB5-9C56-74EB8BDDF2FF/ReportViewer.msi',
+            "http://download.microsoft.com/download/F/E/D/FEDB200F-DE2A-46D8-B661-D019DFE9D470/ENU/x64/SQLSysClrTypes.msi"
+            )
+    
+    Foreach ($URL in $DownloadUrls)
+    {
+    $FileName = Split-Path -Leaf -Path $Url
+    Write-Verbose "Testing $FileName in $Prereqdir"
+    if (!(test-path  "$Sourcedir\$Prereqdir\$FileName"))
+        {
+        Write-Verbose "Trying Download"
+        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$Prereqdir\$FileName"))
+            { 
+            write-warning "Error Downloading file $Url, Please check connectivity"
+            exit
+            }
+        }
+    }
+    $URL = "http://care.dlservice.microsoft.com/dl/download/evalx/sc2012r2/$SCOMVER.exe"
+    $FileName = Split-Path -Leaf -Path $Url
+    Write-Verbose "Testing $SCOMVER"
+    if (!(test-path  "$Sourcedir\$SCOMVER"))
+        {
+        Write-Verbose "Trying Download"
+        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
+            { 
+            write-warning "Error Downloading file $Url, Please check connectivity"
+            exit
+            }
+        write-Warning "We are going to Extract $FileName, this may take a while"
+        Start-Process "$Sourcedir\$FileName" -ArgumentList "/SP- /dir=$Sourcedir\$SCOMVER /SILENT" -Wait
+        }
+
+
+    $Url = "http://download.microsoft.com/download/6/A/E/6AEA92B0-A412-4622-983E-5B305D2EBE56/adk/adksetup.exe" # ADKSETUP 8.1
+    Write-Verbose "Testing WAIK in $Sourcedir"
+    if (!(test-path  "$Sourcedir\$Prereqdir"))
+        {
+        $FileName = Split-Path -Leaf -Path $Url
+        Write-Verbose "Trying Download"
+        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
+            { 
+            write-warning "Error Downloading file $Url, Please check connectivity"
+            exit
+            }
+        Write-Warning "Getting WAIK, Could take a While"
+        Start-Process -FilePath "$Sourcedir\$FileName" -ArgumentList "/quiet /layout $Sourcedir\$Prereqdir" -Wait
+        }
+
+    workorder "We are going to Install SCOM with $SCOMVER in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet and $SQLVER"
+    # exit
+    }# end SCOMPREREQ
+
+
+##############
 
 if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
     {
@@ -4154,6 +4251,59 @@ switch ($PsCmdlet.ParameterSetName)
         write-verbose "Building SRM Server"
 	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script INSTALL-SRM.ps1 -interactive -parameter "-SRM_VER $SRM_VER $CommonParameter"
         Write-Host -ForegroundColor White "You cn now Connect to http://$($Nodeip):58080/APG/ with admin/changeme"
+	
+}
+} #SRM End
+
+"SCOM"
+{
+	###################################################
+	# SRM Setup
+	###################################################
+	$Nodeip = "$IPv4Subnet.18"
+	$Nodename = "SCOM2012R2"
+	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+    [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS" 
+	###################################################
+	status $Commentline
+	status "Creating $SCOMVER Server $Nodename"
+    $SQLScriptDir = "$Builddir\$Script_dir\sql\"
+  	Write-Verbose $IPv4Subnet
+    write-verbose $Nodename
+    write-verbose $Nodeip
+    if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+        { 
+        Write-verbose "Now Pausing, Clone Process will start after keypress"
+        pause
+        }
+
+	test-dcrunning
+	$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Gateway -size XXL -Sourcedir $Sourcedir $CommonParameter"
+	###################################################
+	If ($CloneOK)
+	{
+		$SourceScriptDir = "$Builddir\$Script_dir\SCOM\"
+		write-verbose "Copy Configuration files, please be patient"
+        copy-tovmx -Sourcedir $SQLScriptDir
+		copy-tovmx -Sourcedir $NodeScriptDir
+		copy-tovmx -Sourcedir $SourceScriptDir
+		write-verbose "Waiting System Ready"
+		test-user -whois Administrator
+		write-Verbose "Starting Customization"
+		domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddonFeatures $AddonFeatures
+		While (([string]$UserLoggedOn = (&$vmrun -gu Administrator -gp Password123! listProcessesInGuest $CloneVMX)) -notmatch "owner=$BuildDomain\\Administrator") { write-host -NoNewline "." }
+        if ($NW.IsPresent)
+            {
+            write-verbose "Install NWClient"
+		    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+            }
+        invoke-postsection -wait
+        write-verbose "Installing SQL Binaries"
+	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -DefaultDBpath" -interactive
+
+        write-verbose "Building SCOM Server"
+        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script INSTALL-Scom.ps1 -interactive -parameter "$CommonParameter"
+#        Write-Host -ForegroundColor White "You cn now Connect to http://$($Nodeip):58080/APG/ with admin/changeme"
 	
 }
 } #SRM End
