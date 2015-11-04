@@ -1923,7 +1923,7 @@ status "# and vmxtoolkit   Build $vervmxtoolkit                                 
 
 status "# this is an automated Deployment for VMware Workstation VMs on Windows                                               #"
 status "# current supportet Guests are:                                                                                       #"
-status "# Exchange 2013 Standalone or DAG, SQL 2012SP1 and 2014, Always On, Hyper-V, SCVMM, Networker, Blank Nodes            #"
+status "# Exchange 2013/16 Standalone or DAG, SQL 2012SP1 and 2014, Always On, Hyper-V, SCVMM,SCOM Networker, Blank Nodes     #"
 status "# Available OS Masters are 2012, 2012R2, 2012R2Update and Techical Preview of vNext                                   #"
 status "# EMC Integration for Networker, OneFS, Avamar, DD, ScaleIO and other VADP´s                                          #"
 status "# Idea and Scripting by @HyperV_Guy                                                                                   #"
