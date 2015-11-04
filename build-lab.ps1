@@ -2357,7 +2357,7 @@ if ($scvmm.IsPresent)
     [switch]$SQL=$true
     if ($SQLVER -gt "SQL2012SP1")
         {
-        Write-Warning "SCVMM can only be inbstalled on SQL2012, Setting to SQL2012SP1"
+        Write-Warning "SCVMM can only be installed on SQL2012, Setting to SQL2012SP1"
         $SQLVER = "SQL2012SP1"
         }
     $Prereqdir = "$SCVMMVER"+"prereq"
@@ -2426,7 +2426,7 @@ if ($SCOM2012R2.IsPresent)
     [switch]$SQL=$true
     if ($SQLVER -gt "SQL2012SP1")
         {
-        Write-Warning "SCOM can only be inbstalled on SQL2012, Setting to SQL2012SP1"
+        Write-Warning "SCOM can only be installed on SQL2012, Setting to SQL2012SP1"
         $SQLVER = "SQL2012SP1"
         }
     $Prereqdir = "$SCOMVER"+"prereq"
