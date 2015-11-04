@@ -4171,7 +4171,7 @@ switch ($PsCmdlet.ParameterSetName)
 	###################################################
 	# Panorama Setup
 	###################################################
-	$Nodeip = "$IPv4Subnet.18"
+	$Nodeip = "$IPv4Subnet.19"
 	$Nodename = "Panorama"
 	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
     [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features,Web-Mgmt-Console, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI" 
