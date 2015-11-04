@@ -827,10 +827,11 @@ function domainjoin
     $AddonFeatures
     )
     $Origin = $MyInvocation.MyCommand
+    Write-Warning "Preparing VMware Tools Upgrade by injecting tools CD ( update will start before next reboot of VM )"
+    Start-Process 'C:\Program Files (x86)\VMware\VMware Workstation\vmrun.exe' -ArgumentList  "installTools $CloneVMX" -NoNewWindow
     Write-Verbose "Configuring Node and Features"
 	invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script configurenode.ps1 -Parameter "-nodeip $Nodeip -IPv4subnet $IPv4subnet -nodename $Nodename -IPv4PrefixLength $IPv4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -IPv6Prefix $IPv6Prefix -AddressFamily $AddressFamily $AddGateway -AddOnfeatures '$AddonFeatures' -Domain $BuildDomain $CommonParameter" -nowait -interactive
 	write-verbose "Waiting for Pass 2 (Node Configured)"
-    
     do {
         $ToolState = Get-VMXToolsState -config $CloneVMX
         Write-Verbose $ToolState.State

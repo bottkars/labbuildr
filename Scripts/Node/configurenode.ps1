@@ -105,6 +105,21 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     {
     Pause
     }
+Write-Verbose "trying tools update"
+try {
+    $CDDrive = Get-Volume -FileSystemLabel "VMware Tools"  -ErrorAction SilentlyContinue
+    }
+catch [Microsoft.PowerShell.Cmdletization.Cim.CimJobException]
+    {
+    
+    }
+
+
+if ($CDDrive)
+    {
+    Write-Warning "Starting Tools Update from $($CDDrive.DriveLetter)" 
+    Start-Process "$($CDDrive.DriveLetter):\setup.exe" -ArgumentList "/S /v `"/qn REBOOT=R ADDLOCAL=ALL" -Wait
+    }
 Rename-Computer -NewName $nodename
 New-Item -ItemType File -Path c:\scripts\2.pass
 restart-computer
