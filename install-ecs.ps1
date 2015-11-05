@@ -72,8 +72,9 @@ $Sourcedir = 'h:\sources',
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
-$Range = "21"
+$Range = "24"
 $Start = "1"
+$IPOffset = 5
 $Szenarioname = "ECS"
 $Nodeprefix = "$($Szenarioname)Node"
 $scsi = 0
@@ -100,7 +101,7 @@ If ($Defaults.IsPresent)
         exit
         }
 
-     
+     $Hostkey = $labdefaults.HostKey
      $Gateway = $labdefaults.Gateway
      $DefaultGateway = $labdefaults.Defaultgateway
      $DNS1 = $labdefaults.DNS1
@@ -119,7 +120,7 @@ $Rootpassword  = "Password123!"
 
 $Guestuser = "$($Szenarioname.ToLower())user"
 $Guestpassword  = "Password123!"
-$IPOffset = 5
+
 
 $yumcachedir = join-path -Path $Sourcedir "ECS\yum"
 ### checking for license file ###
@@ -275,7 +276,9 @@ if (!$MasterVMX.Template)
     }
 foreach ($Node in $machinesBuilt)
         {
-        $ip="$subnet.$Range($($Node+$Offset)"
+        [int]$NodeNum = $Node -replace "$Nodeprefix"
+        $ClassC = $NodeNum+$IPOffset
+        $ip="$subnet.$Range$ClassC"
         $NodeClone = get-vmx $Node
         do {
             $ToolState = Get-VMXToolsState -config $NodeClone.config
@@ -377,6 +380,13 @@ foreach ($Node in $machinesBuilt)
     $Scriptblock = "cat /home/$Guestuser/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword # -logfile $Logfile
+    
+    if ($Hostkey)
+            {
+            $Scriptblock = "echo 'ssh-rsa $Hostkey' >> /root/.ssh/authorized_keys"
+            Write-Verbose $Scriptblock
+            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+            }
 
     $Scriptblock = "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys;chmod 0600 /root/.ssh/authorized_keys"
     Write-Verbose $Scriptblock
@@ -389,6 +399,11 @@ foreach ($Node in $machinesBuilt)
     $Scriptblock = "{ echo -n 'localhost '; cat /etc/ssh/ssh_host_rsa_key.pub; } >> ~/.ssh/known_hosts"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword # -logfile $Logfile
+
+
+    
+
+
     ### preparing yum
     $file = "/etc/yum.conf"
     $Property = "cachedir"
