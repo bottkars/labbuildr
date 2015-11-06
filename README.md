@@ -1,4 +1,4 @@
-labbuildr testing
+labbuildr master
 =========
 
 labbuildr is a Framework based upon vmxtookit.
