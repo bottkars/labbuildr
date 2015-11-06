@@ -43,12 +43,13 @@ if ( $AddressFamily -match 'IPv4')
     Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name PuppetENMaster1 -IPv4Address "$IPv4Subnet.16" -ZoneName $zone.Zonename
     foreach ( $N in 1..3)
         {
+        $M = $n + 5
         Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name "DDVeNode$N" -IPv4Address "$IPv4Subnet.2$N" -ZoneName $zone.Zonename
         Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name "AveNode$N" -IPv4Address "$IPv4Subnet.3$N" -ZoneName $zone.Zonename
         Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name "CoreOS$N" -IPv4Address "$IPv4Subnet.4$N" -ZoneName $zone.Zonename
         Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name "CloudBoost$N" -IPv4Address "$IPv4Subnet.7$N" -ZoneName $zone.Zonename
         Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name "CloudArray$N" -IPv4Address "$IPv4Subnet.10$N" -ZoneName $zone.Zonename
-        Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name "ECSNode$N" -IPv4Address "$IPv4Subnet.21$N" -ZoneName $zone.Zonename
+        Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name "ECSNode$N" -IPv4Address "$IPv4Subnet.24$M" -ZoneName $zone.Zonename
         Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name "ScaleIONode$N" -IPv4Address "$IPv4Subnet.19$N" -ZoneName $zone.Zonename
         Add-DnsServerResourceRecordA -AllowUpdateAny -CreatePtr -Name "CentOSNode$N" -IPv4Address "$IPv4Subnet.22$N" -ZoneName $zone.Zonename
         }
