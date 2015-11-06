@@ -50,6 +50,7 @@ param (
     <# 
     run build-lab update    #>
 	[Parameter(ParameterSetName = "updatefromGit",Mandatory = $false, HelpMessage = "this will update labbuildr from latest git commit")][switch]$UpdatefromGit,
+    
     <# 
     create deskop shortcut
     #>	
@@ -91,7 +92,10 @@ param (
     #>
 	[Parameter(ParameterSetName = "SQL")][switch]$SQL,
     <#
-    Specify if Networker Scenario sould be installed
+    run build-lab update    #>
+	[Parameter(ParameterSetName = "Branch",Mandatory = $false, HelpMessage = "select a branch to update from")][ValidateSet('master','testing','develop')]$branch  = "master",
+    <# 
+Specify if Networker Scenario sould be installed
     IP-Addresses: .103
     #>
     [Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
@@ -626,7 +630,7 @@ catch
     }
 try
     {
-    [datetime]$Latest_labbuildr_git = Get-Content  ($Builddir + "\labbuildr.gitver") -ErrorAction Stop
+    [datetime]$Latest_labbuildr_git = Get-Content  ($Builddir + "\labbuildr-$branch.gitver") -ErrorAction Stop
     }
     catch
     {
@@ -635,7 +639,7 @@ try
 
 try
     {
-    [datetime]$Latest_vmxtoolkit_git = Get-Content  ($Builddir + "\vmxtoolkit.gitver") -ErrorAction Stop
+    [datetime]$Latest_vmxtoolkit_git = Get-Content  ($Builddir + "\vmxtoolkit-$branch.gitver") -ErrorAction Stop
     }
 catch
     {
@@ -674,8 +678,8 @@ $latest_sqlver  = 'SQL2014'
 $latest_master = '2012R2FallUpdate'
 $latest_sql_2012 = 'SQL2012SP2'
 $SIOToolKit_Branch = "master"
-$labbuildr_branch = "harmony"
-$vmxtoolkit_branch = "harmony"
+# $labbuildr_branch = "harmony"
+# $vmxtoolkit_branch = "harmony"
 $NW85_requiredJava = "jre-7u61-windows-x64"
 # $latest_java8 = "jre-8u51-windows-x64.exe"
 $latest_java8uri = "http://javadl.sun.com/webapps/download/AutoDL?BundleId=107944"
@@ -1284,8 +1288,8 @@ switch ($PsCmdlet.ParameterSetName)
     }
     "updatefromGit" 
         {
-        $Uri = "https://api.github.com/repos/bottkars/labbuildr/commits/$Labbuildr_Branch"
-        $Zip = ("https://github.com/bottkars/labbuildr/archive/$Labbuildr_Branch.zip").ToLower()
+        $Uri = "https://api.github.com/repos/bottkars/labbuildr/commits/$branch"
+        $Zip = ("https://github.com/bottkars/labbuildr/archive/$branch.zip").ToLower()
         $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
         [datetime]$latest_Labuildr_OnGit = $request.Headers.'Last-Modified'
                 Write-Verbose "We have labbuildr version $Latest_labbuildr_git, $latest_Labuildr_OnGit is online !"
@@ -1297,10 +1301,10 @@ switch ($PsCmdlet.ParameterSetName)
 						    $newDir = New-Item -ItemType Directory -Path "$Updatepath"
                             }
                     Write-Output "We found a newer Version for labbuildr on Git Dated $($request.Headers.'Last-Modified')"
-                    Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\labbuildr-$labbuildr_branch.zip" -ignoresize
-                    Expand-LABZip -zipfilename "$Builddir\update\labbuildr-$labbuildr_branch.zip" -destination $Builddir -Folder labbuildr-$labbuildr_branch
+                    Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\labbuildr-$branch.zip" -ignoresize
+                    Expand-LABZip -zipfilename "$Builddir\update\labbuildr-$branch.zip" -destination $Builddir -Folder labbuildr-$branch
                     $Isnew = $true
-                    $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\labbuildr.gitver") 
+                    $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\labbuildr-$branch.gitver") 
 				    if (Test-Path "$Builddir\deletefiles.txt")
 					    {
 						$deletefiles = get-content "$Builddir\deletefiles.txt"
@@ -1324,8 +1328,8 @@ switch ($PsCmdlet.ParameterSetName)
                     Status "No update required for labbuildr, already newest version "
                     }
 ###
-        $Uri = "https://api.github.com/repos/bottkars/vmxtoolkit/commits/$vmxtoolkit_Branch"
-        $Zip = ("https://github.com/bottkars/vmxtoolkit/archive/$vmxtoolkit_Branch.zip").ToLower()
+        $Uri = "https://api.github.com/repos/bottkars/vmxtoolkit/commits/$branch"
+        $Zip = ("https://github.com/bottkars/vmxtoolkit/archive/$branch.zip").ToLower()
         $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
         [datetime]$latest_vmxtoolkit_OnGit = $request.Headers.'Last-Modified'
         Write-Verbose "We have labbuildr version $Latest_vmxtoolkit_git, $latest_vmxtoolkit_OnGit is online !"
@@ -1337,10 +1341,10 @@ switch ($PsCmdlet.ParameterSetName)
 						    $newDir = New-Item -ItemType Directory -Path "$Updatepath"
                             }
                     Write-Output "We found a newer Version for vmxtoolkit on Git Dated $($request.Headers.'Last-Modified')"
-                    Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\vmxoolkit-$vmxtoolkit_branch.zip" -ignoresize
-                    Expand-LABZip -zipfilename "$Builddir\update\vmxoolkit-$vmxtoolkit_branch.zip" -destination $Builddir\vmxtoolkit -Folder vmxtoolkit-$vmxtoolkit_branch
+                    Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\vmxoolkit-$branch.zip" -ignoresize
+                    Expand-LABZip -zipfilename "$Builddir\update\vmxoolkit-$branch.zip" -destination $Builddir\vmxtoolkit -Folder vmxtoolkit-$branch
                     $Isnew = $true
-                    $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\vmxtoolkit.gitver") 
+                    $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\vmxtoolkit-$branch.gitver") 
                     }
                 else 
                     {
