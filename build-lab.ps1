@@ -50,7 +50,9 @@ param (
     <# 
     run build-lab update    #>
 	[Parameter(ParameterSetName = "updatefromGit",Mandatory = $false, HelpMessage = "this will update labbuildr from latest git commit")][switch]$UpdatefromGit,
-    
+    <#
+    run build-lab update    #>
+	[Parameter(ParameterSetName = "updatefromGit",Mandatory = $false, HelpMessage = "select a branch to update from")][ValidateSet('master','testing','develop')]$branch  = "master",
     <# 
     create deskop shortcut
     #>	
@@ -91,9 +93,6 @@ param (
     IP-Addresses: .130
     #>
 	[Parameter(ParameterSetName = "SQL")][switch]$SQL,
-    <#
-    run build-lab update    #>
-	[Parameter(ParameterSetName = "Branch",Mandatory = $false, HelpMessage = "select a branch to update from")][ValidateSet('master','testing','develop')]$branch  = "master",
     <# 
 Specify if Networker Scenario sould be installed
     IP-Addresses: .103
