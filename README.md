@@ -1,9 +1,7 @@
-<<<<<<< HEAD
+
 labbuildr testing !
 =======
-labbuildr develop
->>>>>>> develop
-=========
+
 
 labbuildr is a Framework based upon vmxtookit.
 labbuildr allows on demand creation of lab environments
