@@ -5,7 +5,7 @@
 .DESCRIPTION
    labbuildr is a Self Installing Lab tool for Building VMware Virtual Machines on VMware Workstation
       
-      Copyright 2014 Karsten Bott
+      Copyright 2015 Karsten Bott
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
