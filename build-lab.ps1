@@ -3401,6 +3401,8 @@ switch ($PsCmdlet.ParameterSetName)
 	
 	"E16"{
         Write-Verbose "Starting $EX_Version $e16_cu Setup"
+        $ScenarioScriptDir = "$GuestScriptdir\E2016"
+
         # we need ipv4
         if ($AddressFamily -notmatch 'ipv4')
             { 
@@ -3461,26 +3463,26 @@ switch ($PsCmdlet.ParameterSetName)
 		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Exchange -Size $Exchangesize -Sourcedir $Sourcedir "
 		    ###################################################
 		    If ($CloneOK)
-            {
-            $EXnew = $True
-			write-verbose "Copy Configuration files, please be patient"
-			copy-tovmx -Sourcedir $NodeScriptDir
-			copy-tovmx -Sourcedir $SourceScriptDir
-			# copy-tovmx -Sourcedir $Exprereqdir
-			write-verbose "Waiting System Ready"
-			test-user -whois Administrator
-			write-Verbose "Starting Customization"
-			domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $EXAddressFamiliy -AddOnfeatures $AddonFeatures
-			write-verbose "Setup Database Drives"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script prepare-disks.ps1
-			write-verbose "Setup e16 Prereqs"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-exchangeprereqs.ps1 -interactive
-            checkpoint-progress -step exprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
-			write-verbose "Setting Power Scheme"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script powerconf.ps1 -interactive
-			write-verbose "Installing e16, this may take up to 60 Minutes ...."
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-exchange.ps1 -interactive -nowait -Parameter "$CommonParameter -ex_cu $e16_cu"
-            }
+                {
+                $EXnew = $True
+			    # write-verbose "Copy Configuration files, please be patient"
+			    #copy-tovmx -Sourcedir $NodeScriptDir
+			    #copy-tovmx -Sourcedir $SourceScriptDir
+			    # copy-tovmx -Sourcedir $Exprereqdir
+			    write-verbose "Waiting System Ready"
+			    test-user -whois Administrator
+			    write-Verbose "Starting Customization"
+			    domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $EXAddressFamiliy -AddOnfeatures $AddonFeatures
+			    write-verbose "Setup Database Drives"
+			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script prepare-disks.ps1
+			    write-verbose "Setup e16 Prereqs"
+			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script install-exchangeprereqs.ps1 -interactive
+                checkpoint-progress -step exprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
+			    write-verbose "Setting Power Scheme"
+			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script powerconf.ps1 -interactive
+			    write-verbose "Installing e16, this may take up to 60 Minutes ...."
+			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script install-exchange.ps1 -interactive -nowait -Parameter "$CommonParameter -ex_cu $e16_cu"
+                }
             }
         if ($EXnew)
         {
@@ -3504,7 +3506,7 @@ switch ($PsCmdlet.ParameterSetName)
                         }
                     until ($ToolState.state -match "running")
             write-Verbose "Performing e16 Post Install Tasks:"
-    		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script configure-exchange.ps1 -interactive
+    		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script configure-exchange.ps1 -interactive
      
     
     #  -nowait
@@ -3513,7 +3515,7 @@ switch ($PsCmdlet.ParameterSetName)
                 if ($DAG.IsPresent) 
                     {
 				    write-verbose "Creating DAG"
-				    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -activeWindow -interactive -Script create-dag.ps1 -Parameter "-DAGIP $DAGIP -AddressFamily $EXAddressFamiliy -EX_Version $EX_Version $CommonParameter"
+				    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -activeWindow -interactive -Script create-dag.ps1 -Parameter "-DAGIP $DAGIP -AddressFamily $EXAddressFamiliy -EX_Version $EX_Version $CommonParameter"
 				    } # end if $DAG
                 if (!($nouser.ispresent))
                     {
@@ -3533,16 +3535,16 @@ switch ($PsCmdlet.ParameterSetName)
             $Nodename = "$EX_Version"+"N"+"$EXNODE"
             $CloneVMX = (get-vmx $Nodename).config				
 			write-verbose "Setting Local Security Policies"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script create-security.ps1 -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script create-security.ps1 -interactive
 			########### Entering networker Section ##############
 			if ($NMM.IsPresent)
 			{
 				write-verbose "Install NWClient"
-				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
 				write-verbose "Install NMM"
-				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-nmm.ps1 -interactive -Parameter $nmm_ver
+				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script install-nmm.ps1 -interactive -Parameter $nmm_ver
 			    write-verbose "Performin NMM Post Install Tasks"
-			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script finish-nmm.ps1 -interactive
+			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script finish-nmm.ps1 -interactive
             }# end nmm
 			########### leaving NMM Section ###################
 		    invoke-postsection
