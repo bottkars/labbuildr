@@ -5,7 +5,7 @@
 .DESCRIPTION
    labbuildr is a Self Installing Lab tool for Building VMware Virtual Machines on VMware Workstation
       
-      Copyright 2014 Karsten Bott
+      Copyright 2015 Karsten Bott
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -49,10 +49,10 @@ param (
 	[Parameter(ParameterSetName = "version",Mandatory = $false, HelpMessage = "this will display the current version")][switch]$version,
     <# 
     run build-lab update    #>
-	[Parameter(ParameterSetName = "updatefromGit",Mandatory = $false, HelpMessage = "this will update labbuildr from latest git commit")][switch]$UpdatefromGit,
+	[Parameter(ParameterSetName = "update",Mandatory = $false, HelpMessage = "this will update labbuildr from latest git commit")][switch]$Update,
     <#
     run build-lab update    #>
-	[Parameter(ParameterSetName = "updatefromGit",Mandatory = $false, HelpMessage = "select a branch to update from")][ValidateSet('master','testing','develop')]$branch  = "master",
+	[Parameter(ParameterSetName = "update",Mandatory = $false, HelpMessage = "select a branch to update from")][ValidateSet('master','testing','develop')]$branch  = "develop",
     <# 
     create deskop shortcut
     #>	
@@ -549,13 +549,9 @@ Sources should be populated from a bases sources.zip
 	#[Validatescript({Test-Path -Path $_ })][String]$Sourcedir,
 
     <#
-    run build-lab update old for old update methos    #>
-	[Parameter(ParameterSetName = "updatefromBlog",Mandatory = $false, HelpMessage = "this will update labbuildr")][alias('Update')][switch]$UpdatefromBlog,
-    <#
      run build-lab -update -force to force an update
     #>
-    [Parameter(ParameterSetName = "updatefromGit",Mandatory = $false, HelpMessage = "this will force update labbuildr")]
-    [Parameter(ParameterSetName = "updatefromBlog",Mandatory = $false, HelpMessage = "this will force update labbuildr")]
+    [Parameter(ParameterSetName = "update",Mandatory = $false, HelpMessage = "this will force update labbuildr")]
     [switch]$force,
 
 
@@ -633,8 +629,17 @@ try
     }
     catch
     {
-    [datetime]$Latest_labbuildr_git = "07/01/2015"
+    [datetime]$Latest_labbuildr_git = "07/11/2015"
     }
+try
+    {
+    [datetime]$Latest_labbuildr_scripts_git = Get-Content  ($Builddir + "\labbuildr-scripts-$branch.gitver") -ErrorAction Stop
+    }
+    catch
+    {
+    [datetime]$Latest_labbuildr_scripts_git = "07/11/2015"
+    }
+
 
 try
     {
@@ -642,7 +647,7 @@ try
     }
 catch
     {
-    [datetime]$Latest_vmxtoolkit_git = "07/01/2015"
+    [datetime]$Latest_vmxtoolkit_git = "07/11/2015"
     }
 
 try
@@ -651,7 +656,7 @@ try
     }
     catch
     {
-    [datetime]$Latest_SIOToolKit_git = "07/01/2015"
+    [datetime]$Latest_SIOToolKit_git = "07/11/2015"
     }
 
 
@@ -659,7 +664,7 @@ $LogFile = "$Builddir\$(Get-Content env:computername).log"
 $WAIKVER = "WAIK"
 $domainsuffix = ".local"
 $AAGDB = "AWORKS"
-$major = "4.0"
+$major = "5.0"
 $Default_vmnet = "vmnet2"
 $Default_BuildDomain = "labbuildr"
 $Default_Subnet = "192.168.2.0"
@@ -669,8 +674,8 @@ $Default_AddressFamily = "IPv4"
 $latest_ScaleIOVer = '1.32-2451.4'
 $ScaleIO_OS = "Windows"
 $ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
-$latest_nmm = 'nmm8216'
-$latest_nw = 'nw8216'
+$latest_nmm = 'nmm90'
+$latest_nw = 'nw90'
 $latest_e16_cu = 'final'
 $latest_ex_cu = 'cu10'
 $latest_sqlver  = 'SQL2014'
@@ -697,10 +702,6 @@ $DCNODE = "DCNODE"
 $NWNODE = "NWSERVER"
 $SPver = "SP2013SP1fndtn"
 $SPPrefix = "SP2013"
-$vmxtoolkit = "vmxtoolkit.zip"
-$labbuildr = "labbuildr4.zip"
-$Updatefiles = ($labbuildr,$vmxtoolkit)
-$UpdateUri = "https://community.emc.com/blogs/bottk/2015/03/30/labbuildrbeta"
 $Edition = "Halloween"
 $Sleep = 10
 [string]$Sources = "Sources"
@@ -1191,101 +1192,7 @@ Import-Module "$Builddir\$Module" -Force
 ###################################################
 switch ($PsCmdlet.ParameterSetName)
 {
-    "UpdatefromBlog" 
-        {
-                $Webrequest = Invoke-WebRequest -Uri $UpdateUri
-                foreach ($Updatefile in $Updatefiles)
-                {
-                Write-Verbose "testing $Updatefile"
-                switch ($Updatefile)
-                                {
-                                $labbuildr
-                                    {
-                                    $Currentver = $verlabbuildr
-                                    }
-                                $vmxtoolkit
-                                    {
-                                    $Currentver = $vervmxtoolkit
-                                    }
-                                } # end switch
-
-				write-verbose "Checking for $Updatefile"
-				if ($Link = ($Webrequest).Links | where { $_.OuterHTML -Match "$Updatefile" -and $_.Innertext -match "$Updatefile"} )
-				    {
-				    $uri = $link.href
-				    $Updateversion = $uri.TrimStart("/servlet/JiveServlet/download/")
-				    $Updateversion = $Updateversion.TrimEnd("/$updatefile")
-                    $Updatever = New-Object System.Version $Updateversion.replace("-",".")
-				    Write-Verbose "found  $Updatever"
-                    Write-host "Comparing versions for $Updatefile"
-                    Write-Host "Installed $Currentver, found $Updatever"
-				    Write-Verbose "installed $Currentver"
-				    Write-Verbose "comparing Versions"
-                    write-verbose "Building version"
-                    if ($Currentver -lt $Updatever -or $force.IsPresent )
-				        {
-                        $Isnew = $true
-					    status "Downloading Update for $Updatefile, please be patient ....."
-					    $Updatepath = "$Builddir\Update"
-					    if (!(Get-Item -Path $Updatepath -ErrorAction SilentlyContinue))
-					        {
-						$newDir = New-Item -ItemType Directory -Path "$Updatepath"
-					}
-					    $UpdateSource = "https://community.emc.com/$uri"
-					    $UpdateDestination = "$Updatepath\$Updatefile"
-					    get-update -UpdateSource $UpdateSource -Updatedestination $UpdateDestination
-                        Unblock-File -Path $UpdateDestination
-					    switch ($Updatefile)
-                            {
-                                $vmxtoolkit
-                                    {
-                                    Extract-Zip -zipfilename "$Builddir\update\$Updatefile" -destination $Builddir\vmxtoolkit
-                                    }
-                                $labbuildr
-                                    {
-                                    Remove-Item $Builddir\Scripts -Recurse
-                                    Extract-Zip -zipfilename "$Builddir\update\$Updatefile" -destination $Builddir
-                                    }
-                                } # end switch
-                        $Part = $Updatefile.Replace(".zip","")
-                        $Updatever | Set-Content ($Builddir+"\$part.version") 
-					    if (Test-Path "$Builddir\deletefiles.txt")
-					        {
-						$deletefiles = get-content "$Builddir\deletefiles.txt"
-						foreach ($deletefile in $deletefiles)
-						{
-							if (Get-Item $Builddir\$deletefile -ErrorAction SilentlyContinue)
-							{
-								Remove-Item -Path $Builddir\$deletefile -Recurse -ErrorAction SilentlyContinue
-								status "deleted $deletefile"
-								write-log "deleted $deletefile"
-							}
-						}
-
-
-					}#end testpath deletfiles
-				        } # end current version
-				     else 
-                        {
-                        Status "No update required for $updatefile, already newest version "
-                        }
-				    }# end if updatefile
-                    else
-				        {
-				        Write-Host "no updatefile available"
-				        }#>
-                } # end foreach
-                if ($Isnew)
-                    {
-                    Remove-Item .\Update -Recurse -Confirm:$false
-				    status "Update Done"
-                    status "press any key for reloading vmxtoolkit Modules"
-                    pause
-                    ./profile.ps1
-                    }
-	return		
-    }
-    "updatefromGit" 
+    "update" 
         {
         $Uri = "https://api.github.com/repos/bottkars/labbuildr/commits/$branch"
         $Zip = ("https://github.com/bottkars/labbuildr/archive/$branch.zip").ToLower()
@@ -1327,6 +1234,40 @@ switch ($PsCmdlet.ParameterSetName)
                     Status "No update required for labbuildr, already newest version "
                     }
 ###
+
+        $Repo = "labbuildr-scripts"
+        $RepoLocation = "bottkars"
+        $Latest_local_git = $Latest_labbuildr_scripts_git
+
+        $Uri = "https://api.github.com/repos/$RepoLocation/$repo/commits/$branch"
+        $Zip = ("https://github.com/$RepoLocation/$repo/archive/$branch.zip").ToLower()
+        $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
+        [datetime]$latest_OnGit = $request.Headers.'Last-Modified'
+                Write-Verbose "We have $repo version $latest_local_Git, $latest_OnGit is online !"
+                if ($latest_local_Git -lt $latest_OnGit -or $force.IsPresent )
+                    {
+                    $Updatepath = "$Builddir\Update"
+					if (!(Get-Item -Path $Updatepath -ErrorAction SilentlyContinue))
+					        {
+						    $newDir = New-Item -ItemType Directory -Path "$Updatepath"
+                            }
+                    Write-Output "We found a newer Version for $repo on Git Dated $($request.Headers.'Last-Modified')"
+                    Write-Verbose "Cleaning old Scripts Directory"
+                    Remove-Item -Path $Builddir\scripts -Recurse -ErrorAction SilentlyContinue
+                    Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\$repo-$branch.zip" -ignoresize
+                    Expand-LABZip -zipfilename "$Builddir\update\$repo-$branch.zip" -destination $Builddir\Scripts -Folder $repo-$branch
+                    $Isnew = $true
+                    $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\$repo-$branch.gitver") 
+                    }
+                else 
+                    {
+                    Status "No update required for labbuildr, already newest version "
+                    }
+
+
+
+
+####
         $Uri = "https://api.github.com/repos/bottkars/vmxtoolkit/commits/$branch"
         $Zip = ("https://github.com/bottkars/vmxtoolkit/archive/$branch.zip").ToLower()
         $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
@@ -1392,7 +1333,7 @@ switch ($PsCmdlet.ParameterSetName)
     }# end shortcut
     "Version"
         {
-				Status "labbuildr version $major-$verlabbuildr $Edition"
+				Status "labbuildr version $major-$verlabbuildr $Edition on $branch"
                 if ($Latest_labbuildr_git)
                     {
                     Status "Git Release $Latest_labbuildr_git"
@@ -3120,7 +3061,7 @@ else
         Pause
         }
 
-	$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 0 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Size 'L' -Sourcedir $Sourcedir"
+	$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 0 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Size 'L' -Sourcedir $Sourcedir"
 	
 	###################################################
 	#
@@ -3216,7 +3157,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 			# Clone Base Machine
 			status $Commentline
 			status "Creating $Nodename with IP $Nodeip for Always On Availability Group"
-			$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $AAGNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -sql"
+			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $AAGNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -sql"
 			###################################################
 			If ($CloneOK)
 			{
@@ -3350,7 +3291,7 @@ switch ($PsCmdlet.ParameterSetName)
 		    test-dcrunning
 		    status $Commentline
 		    workorder "Creating E15 Host $Nodename with IP $Nodeip in Domain $BuildDomain"
-		    $CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Exchange -Size $Exchangesize -Sourcedir $Sourcedir "
+		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Exchange -Size $Exchangesize -Sourcedir $Sourcedir "
 		    ###################################################
 		    If ($CloneOK)
             {
@@ -3500,7 +3441,7 @@ switch ($PsCmdlet.ParameterSetName)
 		    test-dcrunning
 		    status $Commentline
 		    workorder "Creating $EX_Version Host $Nodename with IP $Nodeip in Domain $BuildDomain"
-		    $CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Exchange -Size $Exchangesize -Sourcedir $Sourcedir "
+		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Exchange -Size $Exchangesize -Sourcedir $Sourcedir "
 		    ###################################################
 		    If ($CloneOK)
             {
@@ -3670,7 +3611,7 @@ switch ($PsCmdlet.ParameterSetName)
 			status "Creating Hyper-V Node  $Nodename"
 			# status "Hyper-V Development is still not finished and untested, be careful"
 			test-dcrunning
-			$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $HVNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir $cloneparm"
+			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $HVNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir $cloneparm"
 			###################################################
 			
             If ($CloneOK)
@@ -3867,7 +3808,7 @@ switch ($PsCmdlet.ParameterSetName)
 			# Clone Base Machine
 			status $Commentline
 			status "Creating SOFS Node Host $Nodename with IP $Nodeip"
-			$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir "
+			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir "
 			
 			###################################################
 			If ($CloneOK)
@@ -3942,7 +3883,7 @@ switch ($PsCmdlet.ParameterSetName)
 			# Clone Base Machine
 			status $Commentline
 			status "Creating Blank Node Host $Nodename with IP $Nodeip"
-		    $CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $SPSize -Sourcedir $Sourcedir $cloneparm"
+		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $SPSize -Sourcedir $Sourcedir $cloneparm"
 			###################################################
 			If ($CloneOK)
 			{
@@ -4017,11 +3958,11 @@ switch ($PsCmdlet.ParameterSetName)
 			status "Creating Blank Node Host $Nodename with IP $Nodeip"
 			if ($VTbit)
 			{
-				$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir $cloneparm"
+				$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir $cloneparm"
 			}
 			else
 			{
-				$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir $cloneparm"
+				$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir $cloneparm"
 			}
 			###################################################
 			If ($CloneOK)
@@ -4077,7 +4018,7 @@ switch ($PsCmdlet.ParameterSetName)
 			if ($SpaceNodes -gt 1) {$AddonFeatures = "Failover-Clustering, RSAT-Clustering"}
 			status $Commentline
 			status "Creating Storage Spaces Node Host $Nodename with IP $Nodeip"
-			$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -AddOnfeatures $AddonFeature"
+			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -AddOnfeatures $AddonFeature"
 			###################################################
 			If ($CloneOK)
 			{
@@ -4127,7 +4068,7 @@ switch ($PsCmdlet.ParameterSetName)
 		# Clone Base Machine
 		status $Commentline
 		status "Creating $SQLVER Node $Nodename with IP $Nodeip"
-		$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -sql"
+		$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -sql"
 		###################################################
 		If ($CloneOK)
 		{
@@ -4195,7 +4136,7 @@ switch ($PsCmdlet.ParameterSetName)
         }
 
 	test-dcrunning
-	$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -bridge -Gateway -size $Size -Sourcedir $Sourcedir $CommonParameter"
+	$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -bridge -Gateway -size $Size -Sourcedir $Sourcedir $CommonParameter"
 	###################################################
 	If ($CloneOK)
 	{
@@ -4236,7 +4177,7 @@ switch ($PsCmdlet.ParameterSetName)
         }
 
 	test-dcrunning
-	$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Gateway -size XXL -Sourcedir $Sourcedir $CommonParameter"
+	$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Gateway -size XXL -Sourcedir $Sourcedir $CommonParameter"
 	###################################################
 	If ($CloneOK)
 	{
@@ -4285,7 +4226,7 @@ switch ($PsCmdlet.ParameterSetName)
         }
 
 	test-dcrunning
-	$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Gateway -size XXL -Sourcedir $Sourcedir $CommonParameter"
+	$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Gateway -size XXL -Sourcedir $Sourcedir $CommonParameter"
 	###################################################
 	If ($CloneOK)
 	{
@@ -4355,7 +4296,7 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
 
 	test-dcrunning
     If ($DefaultGateway -match $Nodeip){$SetGateway = "-Gateway"}
-	$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 9 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -NW $SetGateway -size $Size -Sourcedir $Sourcedir $CommonParameter"
+	$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 9 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -NW $SetGateway -size $Size -Sourcedir $Sourcedir $CommonParameter"
 	###################################################
 	If ($CloneOK)
 	{
