@@ -769,6 +769,57 @@ function get-update
 	$update.DownloadFile($Updatesource, $Updatedestination)
 }
 
+
+
+
+####
+function update-fromGit
+{
+
+
+	param (
+            [string]$Repo,
+            [string]$RepoLocation,
+            [string]$branch,
+            [string]$latest_local_Git,
+            [string]$Destination,
+            [switch]$delete
+            )
+
+
+
+        $Uri = "https://api.github.com/repos/$RepoLocation/$repo/commits/$branch"
+        $Zip = ("https://github.com/$RepoLocation/$repo/archive/$branch.zip").ToLower()
+        $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
+        [datetime]$latest_OnGit = $request.Headers.'Last-Modified'
+                Write-Verbose "We have $repo version $latest_local_Git, $latest_OnGit is online !"
+                if ($latest_local_Git -lt $latest_OnGit -or $force.IsPresent )
+                    {
+                    $Updatepath = "$Builddir\Update"
+					if (!(Get-Item -Path $Updatepath -ErrorAction SilentlyContinue))
+					        {
+						    $newDir = New-Item -ItemType Directory -Path "$Updatepath"
+                            }
+                    Write-Output "We found a newer Version for $repo on Git Dated $($request.Headers.'Last-Modified')"
+                    Write-Verbose "Cleaning old Scripts Directory"
+                    if ($delete.IsPresent)
+                        {
+                        Write-Verbose "Cleaning $Destination"
+                        Remove-Item -Path $Destination -Recurse -ErrorAction SilentlyContinue
+                        }
+                    Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\$repo-$branch.zip" -ignoresize
+                    Expand-LABZip -zipfilename "$Builddir\update\$repo-$branch.zip" -destination $Destination -Folder $repo-$branch
+                    $Isnew = $true
+                    $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\$repo-$branch.gitver") 
+                    }
+                else 
+                    {
+                    Status "No update required for labbuildr, already newest version "
+                    }
+
+}
+#####
+
 function Extract-Zip
 {
 	param ([string]$zipfilename, [string] $destination)
@@ -1238,31 +1289,8 @@ switch ($PsCmdlet.ParameterSetName)
         $Repo = "labbuildr-scripts"
         $RepoLocation = "bottkars"
         $Latest_local_git = $Latest_labbuildr_scripts_git
-
-        $Uri = "https://api.github.com/repos/$RepoLocation/$repo/commits/$branch"
-        $Zip = ("https://github.com/$RepoLocation/$repo/archive/$branch.zip").ToLower()
-        $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
-        [datetime]$latest_OnGit = $request.Headers.'Last-Modified'
-                Write-Verbose "We have $repo version $latest_local_Git, $latest_OnGit is online !"
-                if ($latest_local_Git -lt $latest_OnGit -or $force.IsPresent )
-                    {
-                    $Updatepath = "$Builddir\Update"
-					if (!(Get-Item -Path $Updatepath -ErrorAction SilentlyContinue))
-					        {
-						    $newDir = New-Item -ItemType Directory -Path "$Updatepath"
-                            }
-                    Write-Output "We found a newer Version for $repo on Git Dated $($request.Headers.'Last-Modified')"
-                    Write-Verbose "Cleaning old Scripts Directory"
-                    Remove-Item -Path $Builddir\scripts -Recurse -ErrorAction SilentlyContinue
-                    Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\$repo-$branch.zip" -ignoresize
-                    Expand-LABZip -zipfilename "$Builddir\update\$repo-$branch.zip" -destination $Builddir\Scripts -Folder $repo-$branch
-                    $Isnew = $true
-                    $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\$repo-$branch.gitver") 
-                    }
-                else 
-                    {
-                    Status "No update required for labbuildr, already newest version "
-                    }
+        $Destination = "$Builddir\Scripts"
+        update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -delete
 
 
 
