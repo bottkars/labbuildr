@@ -1236,13 +1236,15 @@ switch ($PsCmdlet.ParameterSetName)
 ###
 
         $Repo = "labbuildr-scripts"
+        $RepoLocation = "bottkars"
+        $Latest_local_git = $Latest_labbuildr_scripts_git
 
-        $Uri = "https://api.github.com/repos/bottkars/$repo/commits/$branch"
-        $Zip = ("https://github.com/bottkars/$repo/archive/$branch.zip").ToLower()
+        $Uri = "https://api.github.com/repos/$RepoLocation/$repo/commits/$branch"
+        $Zip = ("https://github.com/$RepoLocation/$repo/archive/$branch.zip").ToLower()
         $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
-        [datetime]$latest_Labuildr_OnGit = $request.Headers.'Last-Modified'
-                Write-Verbose "We have $repo version $Latest_labbuildr_scripts_git, $latest_Labuildr_scripts_OnGit is online !"
-                if ($Latest_labbuildr_scripts_git -lt $latest_Labuildr_scripts_OnGit -or $force.IsPresent )
+        [datetime]$latest_OnGit = $request.Headers.'Last-Modified'
+                Write-Verbose "We have $repo version $latest_local_Git, $latest_OnGit is online !"
+                if ($latest_local_Git -lt $latest_OnGit -or $force.IsPresent )
                     {
                     $Updatepath = "$Builddir\Update"
 					if (!(Get-Item -Path $Updatepath -ErrorAction SilentlyContinue))
