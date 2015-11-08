@@ -1,9 +1,0 @@
-[Unicode]
-Unicode=yes
-[Version]
-signature="$CHICAGO$"
-Revision=1
-[Registry Values]
-[Profile Description]
-Description=Set log on as a service etc
-[Privilege Rights]
