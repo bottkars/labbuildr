@@ -693,7 +693,7 @@ $Adminpassword = "Password123!"
 $GuestScriptdir = "\\vmware-host\Shared Folders\Scripts"
 $GuestSourcePath = "\\vmware-host\Shared Folders\Sources"
 $GuestLogDir = "C:\Scripts"
-$NodeScriptDir = "$GuestScriptdir\Node\"
+$NodeScriptDir = "$GuestScriptdir\Node"
 $Dots = [char]58
 [string]$Commentline = "#######################################################################################################################"
 $SCVMMVER = "SCVMM2012R2"
@@ -3117,11 +3117,11 @@ else
 		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$GuestScriptDir\$DCNODE" -Script add_serviceuser.ps1 -interactive
 	    write-verbose "Setting Password Policies"
 		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$GuestScriptDir\$DCNODE"  -Script pwpolicy.ps1 -interactive
-        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$GuestScriptDir\$DCNODE" -Script set-winrm.ps1 -interactive
+        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$NodeScriptDir" -Script set-winrm.ps1 -interactive
         if ($NW.IsPresent)
             {
             write-verbose "Install NWClient"
-		    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$GuestScriptDir\NODE" -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+		    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$NodeScriptDir" -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
             }
         invoke-postsection 
 		# run-vmpowershell -Script gpo.ps1 -interactive
