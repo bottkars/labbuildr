@@ -787,7 +787,7 @@ function update-fromGit
             )
 
 
-
+        Write-Verbose "Using update-fromgit function for $repo"
         $Uri = "https://api.github.com/repos/$RepoLocation/$repo/commits/$branch"
         $Zip = ("https://github.com/$RepoLocation/$repo/archive/$branch.zip").ToLower()
         $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
@@ -1245,6 +1245,33 @@ switch ($PsCmdlet.ParameterSetName)
 {
     "update" 
         {
+
+
+        $Repo = "labbuildr"
+        $RepoLocation = "bottkars"
+        $Latest_local_git = $Latest_labbuildr_git
+        $Destination = "$Builddir"
+        update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination
+        if (Test-Path "$Builddir\deletefiles.txt")
+		    {
+			$deletefiles = get-content "$Builddir\deletefiles.txt"
+			foreach ($deletefile in $deletefiles)
+			    {
+				if (Get-Item $Builddir\$deletefile -ErrorAction SilentlyContinue)
+				    {
+					Remove-Item -Path $Builddir\$deletefile -Recurse -ErrorAction SilentlyContinue
+					status "deleted $deletefile"
+					write-log "deleted $deletefile"
+					}
+			    }
+            }
+        else 
+            {
+            Write-Host "No Deletions required"
+            }
+
+
+<#
         $Uri = "https://api.github.com/repos/bottkars/labbuildr/commits/$branch"
         $Zip = ("https://github.com/bottkars/labbuildr/archive/$branch.zip").ToLower()
         $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
@@ -1262,29 +1289,13 @@ switch ($PsCmdlet.ParameterSetName)
                     Expand-LABZip -zipfilename "$Builddir\update\labbuildr-$branch.zip" -destination $Builddir -Folder labbuildr-$branch
                     $Isnew = $true
                     $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\labbuildr-$branch.gitver") 
-				    if (Test-Path "$Builddir\deletefiles.txt")
-					    {
-						$deletefiles = get-content "$Builddir\deletefiles.txt"
-						foreach ($deletefile in $deletefiles)
-						    {
-							if (Get-Item $Builddir\$deletefile -ErrorAction SilentlyContinue)
-							    {
-								Remove-Item -Path $Builddir\$deletefile -Recurse -ErrorAction SilentlyContinue
-								status "deleted $deletefile"
-								write-log "deleted $deletefile"
-							    }
-						    }
-                        }
-                    else 
-                        {
-                        Write-Host "No Deletions required"
-                        }
                     }
                 else 
                     {
                     Status "No update required for labbuildr, already newest version "
                     }
-###
+##
+#>
 
         $Repo = "labbuildr-scripts"
         $RepoLocation = "bottkars"
