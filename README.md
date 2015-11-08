@@ -1,8 +1,12 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 labbuildr testing
 =======
 labbuildr develop
 >>>>>>> develop
+=======
+labbuildr testing
+>>>>>>> parent of 2fabc5a... master
 =========
 
 labbuildr is a Framework based upon vmxtookit.
