@@ -1235,11 +1235,13 @@ switch ($PsCmdlet.ParameterSetName)
                     }
 ###
 
-        $Uri = "https://api.github.com/repos/bottkars/labbuildr-scripts/commits/$branch"
-        $Zip = ("https://github.com/bottkars/labbuildr-scripts/archive/$branch.zip").ToLower()
+        $Repo = "labbuildr-scripts"
+
+        $Uri = "https://api.github.com/repos/bottkars/$repo/commits/$branch"
+        $Zip = ("https://github.com/bottkars/$repo/archive/$branch.zip").ToLower()
         $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
         [datetime]$latest_Labuildr_OnGit = $request.Headers.'Last-Modified'
-                Write-Verbose "We have labbuildr-scripts version $Latest_labbuildr_scripts_git, $latest_Labuildr_scripts_OnGit is online !"
+                Write-Verbose "We have $repo version $Latest_labbuildr_scripts_git, $latest_Labuildr_scripts_OnGit is online !"
                 if ($Latest_labbuildr_scripts_git -lt $latest_Labuildr_scripts_OnGit -or $force.IsPresent )
                     {
                     $Updatepath = "$Builddir\Update"
@@ -1247,13 +1249,13 @@ switch ($PsCmdlet.ParameterSetName)
 					        {
 						    $newDir = New-Item -ItemType Directory -Path "$Updatepath"
                             }
-                    Write-Output "We found a newer Version for labbuildr on Git Dated $($request.Headers.'Last-Modified')"
+                    Write-Output "We found a newer Version for $repo on Git Dated $($request.Headers.'Last-Modified')"
                     Write-Verbose "Cleaning old Scripts Directory"
                     Remove-Item -Path $Builddir\scripts -Recurse -ErrorAction SilentlyContinue
-                    Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\labbuildr-scripts-$branch.zip" -ignoresize
-                    Expand-LABZip -zipfilename "$Builddir\update\labbuildr-scripts-$branch.zip" -destination $Builddir\Scripts -Folder labbuildr-scripts-$branch
+                    Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\$repo-$branch.zip" -ignoresize
+                    Expand-LABZip -zipfilename "$Builddir\update\$repo-$branch.zip" -destination $Builddir\Scripts -Folder $repo-$branch
                     $Isnew = $true
-                    $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\labbuildr-scripts-$branch.gitver") 
+                    $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\$repo-$branch.gitver") 
                     }
                 else 
                     {
