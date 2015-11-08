@@ -256,7 +256,7 @@ write-verbose "Enabling Shared Folders"
 
 $Clone | Set-VMXSharedFolderState -enabled
 # $Clone | Write-Host -ForegroundColor Gray
-
+$Clone | Set-VMXSharedFolder -add -Sharename Scripts -Folder "$Builddir\Scripts"
 Write-verbose "Waiting for Pass 1 (sysprep Finished)"
 test-user -whois Administrator
 } #end not isilon
