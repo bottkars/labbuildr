@@ -3518,7 +3518,7 @@ switch ($PsCmdlet.ParameterSetName)
 			test-user -whois Administrator
             status "Waiting for Pass 4 (e16 Installed) for $Nodename"
             #$EXSetupStart = Get-Date
-			    While ($FileOK = (&$vmrun -gu $BuildDomain\Administrator -gp Password123! fileExistsInGuest $CloneVMX $GuestLogDir\exchange.pass) -ne "The file exists.")
+			    While ($FileOK = (&$vmrun -gu $BuildDomain\Administrator -gp Password123! fileExistsInGuest $CloneVMX "$GuestLogDir\exchange.pass") -ne "The file exists.")
 			    {
 				    sleep $Sleep
 				    #runtime $EXSetupStart "Exchange"
