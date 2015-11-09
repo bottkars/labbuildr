@@ -4122,7 +4122,7 @@ switch ($PsCmdlet.ParameterSetName)
 			Write-Verbose "Importing Database"
 			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script import-database.ps1 -interactive
 
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script finish_sql.ps1 -interactive -nowait
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script finish-sql.ps1 -interactive -nowait
 
 			#invoke-postsection
 		}# end Cloneok
