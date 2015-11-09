@@ -3484,7 +3484,7 @@ switch ($PsCmdlet.ParameterSetName)
 		    test-dcrunning
 		    status $Commentline
 		    workorder "Creating $EX_Version Host $Nodename with IP $Nodeip in Domain $BuildDomain"
-		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Exchange -Size $Exchangesize -Sourcedir $Sourcedir "
+		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -AddDisks -Disks 3 -Disksize 500GB -Size $Exchangesize -Sourcedir $Sourcedir "
 		    ###################################################
 		    If ($CloneOK)
                 {

@@ -20,6 +20,7 @@ Param(
 [Parameter(Mandatory=$false)][int]$Scenario = 1,
 [Parameter(Mandatory=$false)][int]$ActivationPreference = 1,
 [Parameter(Mandatory=$false)][switch]$AddDisks,
+[Parameter(Mandatory=$false)][uint64]$Disksize = 200GB,
 [Parameter(Mandatory=$false)][ValidateRange(1, 6)][int]$Disks = 1,
 #[string]$Build,
 [Parameter(Mandatory=$false)][ValidateSet('XS','S','M','L','XL','TXL','XXL','XXXL')]$Size = "M",
@@ -205,7 +206,6 @@ if ($sql.IsPresent)
 
 if ($AddDisks.IsPresent)
     {
-    [uint64]$Disksize = 200GB
     $SCSI = "0"
     foreach ($LUN in (1..$Disks))
         {
