@@ -258,7 +258,22 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
 	[switch]$defaults,
 
-    
+    <#do we want Tools Update? #>
+    [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
+	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
+	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+    [Parameter(ParameterSetName = "E16", Mandatory = $false)]
+	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
+	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
+    [Parameter(ParameterSetName = "DConly", Mandatory = $false)]
+    [Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
+    [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    [Switch]$Toolsupdate,
+
     
     <# Wich version of OS Master should be installed
     '2012R2FallUpdate','2012R2U1MASTER','2012R2MASTER','2012R2UMASTER','2012MASTER','2012R2UEFIMASTER','vNextevalMaster','RELEASE_SERVER'
@@ -883,8 +898,11 @@ function domainjoin
     $AddonFeatures
     )
     $Origin = $MyInvocation.MyCommand
-    Write-Warning "Preparing VMware Tools Upgrade by injecting tools CD ( update will start before next reboot of VM )"
-    Start-Process 'C:\Program Files (x86)\VMware\VMware Workstation\vmrun.exe' -ArgumentList  "installTools $CloneVMX" -NoNewWindow
+    if ($Toolsupdate.IsPresent)
+        {
+        Write-Warning "Preparing VMware Tools Upgrade by injecting tools CD ( update will start before next reboot of VM )"
+        Start-Process 'C:\Program Files (x86)\VMware\VMware Workstation\vmrun.exe' -ArgumentList  "installTools $CloneVMX" -NoNewWindow
+        }
     Write-Verbose "Configuring Node and Features"
 	invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script configure-node.ps1 -Parameter "-nodeip $Nodeip -IPv4subnet $IPv4subnet -nodename $Nodename -IPv4PrefixLength $IPv4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -IPv6Prefix $IPv6Prefix -AddressFamily $AddressFamily $AddGateway -AddOnfeatures '$AddonFeatures' -Domain $BuildDomain $CommonParameter" -nowait -interactive
 	write-verbose "Waiting for Pass 2 (Node Configured)"
@@ -3108,8 +3126,11 @@ else
             Write-Host
 		    }
 		test-user -whois Administrator
-        Write-Warning "Preparing VMware Tools Upgrade by injecting tools CD ( update will start before next reboot of VM )"
-        Start-Process 'C:\Program Files (x86)\VMware\VMware Workstation\vmrun.exe' -ArgumentList  "installTools $CloneVMX" -NoNewWindow
+        if ($Toolsupdate.IsPresent)
+            {
+            Write-Warning "Preparing VMware Tools Upgrade by injecting tools CD ( update will start before next reboot of VM )"
+            Start-Process 'C:\Program Files (x86)\VMware\VMware Workstation\vmrun.exe' -ArgumentList  "installTools $CloneVMX" -NoNewWindow
+            }
 
 		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$GuestScriptDir\$DCNODE" -Script finish-domain.ps1 -Parameter "-domain $BuildDomain -domainsuffix $domainsuffix $CommonParameter" -interactive -nowait
 		status "Creating Domain $BuildDomain"
