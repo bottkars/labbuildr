@@ -1914,7 +1914,7 @@ If ($DAG.IsPresent)
     if (!$EXNodes)
         {
         $EXNodes = 2 
-        Write-Warning "No -EXnodes specified, defaulting to $EXNodes Nodes"
+        Write-Warning "No -EXnodes specified, defaulting to $EXNodes Nodes for DAG Deployment"
         }
     }
 if ($Blanknode.IsPresent)
