@@ -1891,8 +1891,8 @@ if (!($DConly.IsPresent))
 } # end not dconly
 
 status "Version $($major).$Edition"
-status "# running Labuildr Build $verlabbuildr"
-status "# and vmxtoolkit   Build $vervmxtoolkit"
+#status "# running Labuildr Build $verlabbuildr"
+# status "# and vmxtoolkit   Build $vervmxtoolkit"
 
 <# Clear-Host
 status $Commentline
