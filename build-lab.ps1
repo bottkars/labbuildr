@@ -127,10 +127,8 @@ Specify if Networker Scenario sould be installed
     Selects the Microsoft System Center Binary Install
     IP-Addresses: .18
     #>
-	[Parameter(ParameterSetName = "SCOM", Mandatory = $true)][switch][alias('SCOM')]$SCOM2012R2,
-    [Parameter(ParameterSetName = "SCOM")]
-   # [ValidateSet('3.7.0.0','3.6.0.3')]
-   # $SCOM_VER='3.7.0.0',
+	[Parameter(ParameterSetName = "SCOM", Mandatory = $true)][switch][alias('SC_OM')]$SCOM,
+    [Parameter(ParameterSetName = "SCOM", Mandatory = $false)][ValidateSet('SC2012_R2_SCOM','SCTP3_SCOM')]$SCOM_VER = "SC2012_R2_SCOM",
 
     <#
     Selects the Blank Nodes Scenario
@@ -711,7 +709,7 @@ $Dots = [char]58
 [string]$Commentline = "#######################################################################################################################"
 $SCVMMVER = "SCVMM2012R2"
 $WAIKVER = "WAIK"
-$SCOMVER = "SC2012_R2_SCOM"
+# $SCOMVER = "SC2012_R2_SCOM"
 #$SQLVER = "SQL2012SP1"
 $DCNODE = "DCNODE"
 $NWNODE = "NWSERVER"
@@ -2399,54 +2397,100 @@ if ($scvmm.IsPresent)
     # exit
     }# end SCVMMPREREQ
 ############## SCOM Section
-if ($SCOM2012R2.IsPresent)
-
+if ($SCOM.IsPresent)
   {
     Write-Warning "Entering SCOM Prereq Section"
     [switch]$SQL=$true
-    if ($SQLVER -gt "SQL2012SP1")
-        {
-        Write-Warning "SCOM can only be installed on SQL2012, Setting to SQL2012SP1"
-        $SQLVER = "SQL2012SP1"
-        }
-    $Prereqdir = "$SCOMVER"+"prereq"
+    $Prereqdir = "$SCOM_VER"+"prereq"
+    switch ($SCOM_VER)
+    {
+        "SC2012_R2_SCOM"
+            {
+            if ($SQLVER -gt "SQL2012SP1")
+                {
+                Write-Warning "SCOM can only be installed on SQL2012, Setting to SQL2012SP1"
+                $SQLVER = "SQL2012SP1"
+                }# end sqlver
+
+            Write-Verbose "We are now going to Test SCOM Prereqs"
     
-    Write-Verbose "We are now going to Test SCOM Prereqs"
-    
-    $DownloadUrls= (
+            $DownloadUrls= (
             'http://download.microsoft.com/download/F/B/7/FB728406-A1EE-4AB5-9C56-74EB8BDDF2FF/ReportViewer.msi',
             "http://download.microsoft.com/download/F/E/D/FEDB200F-DE2A-46D8-B661-D019DFE9D470/ENU/x64/SQLSysClrTypes.msi"
             )
     
-    Foreach ($URL in $DownloadUrls)
-    {
-    $FileName = Split-Path -Leaf -Path $Url
-    Write-Verbose "Testing $FileName in $Prereqdir"
-    if (!(test-path  "$Sourcedir\$Prereqdir\$FileName"))
-        {
-        Write-Verbose "Trying Download"
-        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$Prereqdir\$FileName"))
-            { 
-            write-warning "Error Downloading file $Url, Please check connectivity"
-            exit
+            Foreach ($URL in $DownloadUrls)
+                {
+                $FileName = Split-Path -Leaf -Path $Url
+                Write-Verbose "Testing $FileName in $Prereqdir"
+                if (!(test-path  "$Sourcedir\$Prereqdir\$FileName"))
+                    {
+                    Write-Verbose "Trying Download"
+                    if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$Prereqdir\$FileName"))
+                        { 
+                        write-warning "Error Downloading file $Url, Please check connectivity"
+                        exit
+                        }
+                    }
+                }
+            $URL = "http://care.dlservice.microsoft.com/dl/download/evalx/sc2012r2/$SCOM_VER.exe"
+            $FileName = Split-Path -Leaf -Path $Url
+            Write-Verbose "Testing $SCOM_VER"
+            if (!(test-path  "$Sourcedir\$SCOM_VER"))
+                {
+                Write-Verbose "Trying Download"
+                if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
+                    { 
+                    write-warning "Error Downloading file $Url, Please check connectivity"
+                    exit
+                    }
+                write-Warning "We are going to Extract $FileName, this may take a while"
+                Start-Process "$Sourcedir\$FileName" -ArgumentList "/SP- /dir=$Sourcedir\$SCOM_VER /SILENT" -Wait
+                }
             }
-        }
-    }
-    $URL = "http://care.dlservice.microsoft.com/dl/download/evalx/sc2012r2/$SCOMVER.exe"
-    $FileName = Split-Path -Leaf -Path $Url
-    Write-Verbose "Testing $SCOMVER"
-    if (!(test-path  "$Sourcedir\$SCOMVER"))
-        {
-        Write-Verbose "Trying Download"
-        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
-            { 
-            write-warning "Error Downloading file $Url, Please check connectivity"
-            exit
-            }
-        write-Warning "We are going to Extract $FileName, this may take a while"
-        Start-Process "$Sourcedir\$FileName" -ArgumentList "/SP- /dir=$Sourcedir\$SCOMVER /SILENT" -Wait
-        }
+        
+        "SCTP3_SCOM"
+            {
+            <#
+            http://care.dlservice.microsoft.com/dl/download/1/8/E/18E12925-8F05-402A-BF24-2DE6E4ED357F/SCTP3_SCO_EN.exe
+            http://care.dlservice.microsoft.com/dl/download/F/A/A/FAA14AC2-720A-4B17-8250-75EEEA13B259/SCTP3_SCVMM_EN.exe
+            http://care.dlservice.microsoft.com/dl/download/B/0/7/B07BF90E-2CC8-4538-A7D2-83BB074C49F5/SCTP3_SCOM_EN.exe
+            http://care.dlservice.microsoft.com/dl/download/F/A/3/FA31ADFB-B7FA-4F3C-AF0B-CA5C8973EEF5/SCTP3_SCDPM_EN.exe
+            http://care.dlservice.microsoft.com/dl/download/B/B/3/BB3A1E87-28F2-4362-9B1E-24CC3992EF3B/SCTP3_SCSM_EN.exe
+            http://care.dlservice.microsoft.com/dl/download/3/5/B/35BB1415-28AD-46D5-B227-DD8AB821E9D8/SC_Configmgr_SCEP_SCTP3.exe
+            #>
 
+            $URL = "http://care.dlservice.microsoft.com/dl/download/B/0/7/B07BF90E-2CC8-4538-A7D2-83BB074C49F5/SCTP3_SCOM_EN.exe"
+            $FileName = Split-Path -Leaf -Path $Url
+            Write-Verbose "Testing $SCOM_VER\"
+            if (!(test-path  "$Sourcedir\$SCOM_VER"))
+                {
+                Write-Verbose "Trying Download"
+                if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
+                    { 
+                    write-warning "Error Downloading file $Url, Please check connectivity"
+                    exit
+                    }
+                write-Warning "We are going to Extract $FileName, this may take a while"
+                Start-Process "$Sourcedir\$FileName" -ArgumentList "/SP- /dir=$Sourcedir\$FileName /SILENT" -Wait
+                }
+            }
+
+
+
+            }
+
+
+
+
+    }# end switch
+
+
+
+
+    
+    
+<#
 
     $Url = "http://download.microsoft.com/download/6/A/E/6AEA92B0-A412-4622-983E-5B305D2EBE56/adk/adksetup.exe" # ADKSETUP 8.1
     Write-Verbose "Testing WAIK in $Sourcedir"
@@ -2462,11 +2506,11 @@ if ($SCOM2012R2.IsPresent)
         Write-Warning "Getting WAIK, Could take a While"
         Start-Process -FilePath "$Sourcedir\$FileName" -ArgumentList "/quiet /layout $Sourcedir\$Prereqdir" -Wait
         }
-
-    workorder "We are going to Install SCOM with $SCOMVER in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet and $SQLVER"
+#>
+    workorder "We are going to Install SCOM with $SCOM_VER in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet and $SQLVER"
     # exit
     }# end SCOMPREREQ
-
+#######
 
 ##############
 
@@ -4262,15 +4306,15 @@ switch ($PsCmdlet.ParameterSetName)
 "SCOM"
 {
 	###################################################
-	# SRM Setup
+	# SCO Setup
 	###################################################
 	$Nodeip = "$IPv4Subnet.18"
-	$Nodename = "SCOM2012R2"
+	$Nodename = "SC_OM"
 	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
     [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS" 
 	###################################################
 	status $Commentline
-	status "Creating $SCOMVER Server $Nodename"
+	status "Creating $SCOM_VER Server $Nodename"
     $SQLScriptDir = "$Builddir\$Script_dir\sql\"
   	Write-Verbose $IPv4Subnet
     write-verbose $Nodename
