@@ -2472,7 +2472,7 @@ if ($SCOM.IsPresent)
                     exit
                     }
                 write-Warning "We are going to Extract $FileName, this may take a while"
-                Start-Process "$Sourcedir\$FileName" -ArgumentList "/SP- /dir=$Sourcedir\$FileName /SILENT" -Wait
+                Start-Process "$Sourcedir\$FileName" -ArgumentList "/SP- /dir=$Sourcedir\$SCOM_VER /SILENT" -Wait
                 }
             }
     }# end switch
@@ -4297,11 +4297,13 @@ switch ($PsCmdlet.ParameterSetName)
 	$Nodeip = "$IPv4Subnet.18"
 	$Nodename = "SC_OM"
 	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
-    [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS" 
+    [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS"
+    $ScenarioScriptDir = "$GuestScriptdir\SCOM"
+    $SQLScriptDir = "$GuestScriptdir\sql\"
+
 	###################################################
 	status $Commentline
 	status "Creating $SCOM_VER Server $Nodename"
-    $SQLScriptDir = "$Builddir\$Script_dir\sql\"
   	Write-Verbose $IPv4Subnet
     write-verbose $Nodename
     write-verbose $Nodeip
@@ -4316,11 +4318,11 @@ switch ($PsCmdlet.ParameterSetName)
 	###################################################
 	If ($CloneOK)
 	{
-		$SourceScriptDir = "$Builddir\$Script_dir\SCOM\"
+		#$SourceScriptDir = "$Builddir\$Script_dir\SCOM\"
 		write-verbose "Copy Configuration files, please be patient"
-        copy-tovmx -Sourcedir $SQLScriptDir
-		copy-tovmx -Sourcedir $NodeScriptDir
-		copy-tovmx -Sourcedir $SourceScriptDir
+        # copy-tovmx -Sourcedir $SQLScriptDir
+		# copy-tovmx -Sourcedir $NodeScriptDir
+		# copy-tovmx -Sourcedir $SourceScriptDir
 		write-verbose "Waiting System Ready"
 		test-user -whois Administrator
 		write-Verbose "Starting Customization"
@@ -4329,14 +4331,14 @@ switch ($PsCmdlet.ParameterSetName)
         if ($NW.IsPresent)
             {
             write-verbose "Install NWClient"
-		    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+		    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
             }
         invoke-postsection -wait
         write-verbose "Installing SQL Binaries"
-	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -DefaultDBpath" -interactive
+	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $SQLScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -DefaultDBpath" -interactive
 
         write-verbose "Building SCOM Server"
-        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script INSTALL-Scom.ps1 -interactive -parameter "$CommonParameter"
+        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script INSTALL-Scom.ps1 -interactive -parameter "-SCOM_VER $SCOM_VER $CommonParameter"
 #        Write-Host -ForegroundColor White "You cn now Connect to http://$($Nodeip):58080/APG/ with admin/changeme"
 	
 }
