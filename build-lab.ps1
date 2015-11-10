@@ -418,7 +418,7 @@ Version Of Networker Modules
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
-	[ValidateSet('nmm8211','nmm8212','nmm8214','nmm8216','nmm8217','nmm8218','nmm822','nmm821','nmm300', 'nmm301', 'nmm2012', 'nmm3012', 'nmm82','nmm85','nmm85.BR1','nmm85.BR2','nmm85.BR3','nmm85.BR4','nmm90.DA')]
+	[ValidateSet('nmm8221','nmm8211','nmm8212','nmm8214','nmm8216','nmm8217','nmm8218','nmm822','nmm821','nmm300', 'nmm301', 'nmm2012', 'nmm3012', 'nmm82','nmm85','nmm85.BR1','nmm85.BR2','nmm85.BR3','nmm85.BR4','nmm90.DA')]
 $nmm_ver,
 	
 <# Indicates to install Networker Server with Scenario #>
@@ -454,7 +454,7 @@ mus be extracted to [sourcesdir]\[nw_ver], ex. c:\sources\nw82
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
-    [ValidateSet('nw822','nw8218','nw8217','nw8216','nw8215','nw8214','nw8213','nw8212','nw8211','nw821','nw8205','nw8204','nw8203','nw8202','nw82','nw8116','nw8115','nw8114', 'nw8113','nw8112', 'nw811',  'nw8105','nw8104','nw8102', 'nw81','nw85','nw85.BR1','nw85.BR2','nw85.BR3','nw85.BR4','nw90.DA','nwunknown')]
+    [ValidateSet('nw8221','nw822','nw8218','nw8217','nw8216','nw8215','nw8214','nw8213','nw8212','nw8211','nw821','nw8205','nw8204','nw8203','nw8202','nw82','nw8116','nw8115','nw8114', 'nw8113','nw8112', 'nw811',  'nw8105','nw8104','nw8102', 'nw81','nw85','nw85.BR1','nw85.BR2','nw85.BR3','nw85.BR4','nw90.DA','nwunknown')]
     $nw_ver,
 
 ### network Parameters ######
@@ -2141,14 +2141,7 @@ if ($Exchange2016.IsPresent)
 {
     $Prereqdir = "Attachments"
     $attachments = (
-    "http://www.cisco.com/c/dam/en/us/solutions/collateral/data-center-virtualization/unified-computing/fle_vmware.pdf",
-    "http://www.emc.com/collateral/white-papers/h12234-emc-integration-for-microsoft-private-cloud-wp.pdf",
-    "http://www.emc.com/collateral/software/data-sheet/h2257-networker-ds.pdf",
-    "http://www.emc.com/collateral/software/data-sheet/h2479-networker-app-modules-ds.pdf",
-    "http://www.emc.com/collateral/software/data-sheet/h4525-networker-ms-apps-ds.pdf",
-    "http://www.emc.com/collateral/handouts/h14152-cloudboost-handout.pdf",
-    "http://www.emc.com/collateral/software/data-sheet/h2257-networker-ds.pdf",
-    "http://www.emc.com/collateral/software/data-sheet/h3979-networker-dedupe-ds.pdf"
+    "http://www.cisco.com/c/dam/en/us/solutions/collateral/data-center-virtualization/unified-computing/fle_vmware.pdf"
     )
     
     if (!(Test-Path $Sourcedir\$Prereqdir)){New-Item -ItemType Directory -Path $Sourcedir\$Prereqdir}
@@ -2175,8 +2168,8 @@ if ($Exchange2016.IsPresent)
 		        "http://download.microsoft.com/download/E/2/1/E21644B5-2DF2-47C2-91BD-63C560427900/NDP452-KB2901907-x86-x64-AllOS-ENU.exe",
 #                "http://download.microsoft.com/download/A/A/3/AA345161-18B8-45AE-8DC8-DA6387264CB9/filterpack2010sp1-kb2460041-x64-fullfile-en-us.exe",
 #                "http://download.microsoft.com/download/0/A/2/0A28BBFA-CBFA-4C03-A739-30CCA5E21659/FilterPack64bit.exe",
-                "http://download.microsoft.com/download/2/C/4/2C47A5C1-A1F3-4843-B9FE-84C0032C61EC/UcmaRuntimeSetup.exe",
-                "http://download.microsoft.com/download/6/2/D/62DFA722-A628-4CF7-A789-D93E17653111/ExchangeMapiCdo.EXE"
+                "http://download.microsoft.com/download/2/C/4/2C47A5C1-A1F3-4843-B9FE-84C0032C61EC/UcmaRuntimeSetup.exe"
+#                "http://download.microsoft.com/download/6/2/D/62DFA722-A628-4CF7-A789-D93E17653111/ExchangeMapiCdo.EXE"
                 
                 ) 
     if (Test-Path -Path "$Sourcedir\$Prereqdir")
@@ -2745,6 +2738,7 @@ if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
 
 if ($NMM.IsPresent)
     {
+    <#
     if ($nmm_ver -ge "nmm85")
         { 
         write-verbose "we need .Net Framework 4.51 or later"
@@ -2762,7 +2756,7 @@ if ($NMM.IsPresent)
             }
         }
     }
-       
+    #>   
          
 
     if ((Test-Path "$Sourcedir/$nmm_ver/win_x64/networkr/NetWorker Module for Microsoft.msi") -or (Test-Path "$Sourcedir/$nmm_ver/win_x64/networkr/NWVSS.exe"))
@@ -2774,6 +2768,22 @@ if ($NMM.IsPresent)
         Write-Warning "We need to get $NMM_ver, trying Automated Download"
         # New-Item -ItemType Directory -Path $Sourcedir\$EX_Version$ex_cu | Out-Null
         # }
+        $URLS = ""
+        if ($nmm_ver -notin ('nmm822','nmm821','nmm82'))
+            {
+            $nmmdotver = $nmm_ver -replace "nmm",""
+            $nmmdotver = $nmmdotver.insert(1,'.')
+            $nmmdotver = $nmmdotver.insert(3,'.')
+            $nmmdotver = $nmmdotver.insert(5,'.')
+            $nmmzip = $nmm_ver -replace ".$"
+            $nmmzip = $nmmzip+'_win_x64.zip'
+            $scvmmzip = $nmmzip -replace "nmm","scvmm"
+            Write-Verbose "$scvmmzip"
+            $urls = ("ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/$($nmmdotver.Substring(0,3))/$nmmdotver/$nmmzip",
+                     "ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/$($nmmdotver.Substring(0,3))/$nmmdotver/$scvmmzip")
+            }
+
+<#
         switch ($nmm_ver)
         {
         "nmm8211"
@@ -2815,6 +2825,7 @@ if ($NMM.IsPresent)
             $url = $false
             }
         }
+        #>
         if ($urls)
             {
             foreach ($url in $urls)
