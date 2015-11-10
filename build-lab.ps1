@@ -1890,8 +1890,11 @@ if (!($DConly.IsPresent))
 	}
 } # end not dconly
 
+status "Version $($major).$Edition"
+status "# running Labuildr Build $verlabbuildr"
+status "# and vmxtoolkit   Build $vervmxtoolkit"
 
-# Clear-Host
+<# Clear-Host
 status $Commentline
 status "# Welcome to labbuildr                                                                                                #"
 status "# Version $($major).$Edition                                                                                  #"
@@ -1904,7 +1907,7 @@ status "# Exchange 2013/16 Standalone or DAG, SQL 2012SP1 and 2014, Always On, H
 status "# Available OS Masters are 2012, 2012R2, 2012R2Update and Techical Preview of vNext                                   #"
 status "# EMC Integration for Networker, OneFS, Avamar, DD, ScaleIO and other VADP´s                                          #"
 status "# Idea and Scripting by @HyperV_Guy                                                                                   #"
-status $Commentline
+status $Commentline  #>
 workorder "Building Proposed Workorder"
 #If ($DAG.IsPresent)
 #    {
