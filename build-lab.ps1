@@ -150,7 +150,7 @@ Specify if Networker Scenario sould be installed
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)][switch]$DAG,
     <# Specify the Number of Exchange Nodes#>
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
-    [Parameter(ParameterSetName = "E15", Mandatory = $false)][ValidateRange(1, 10)][int][alias('exn')]$EXNodes = "1",
+    [Parameter(ParameterSetName = "E15", Mandatory = $false)][ValidateRange(1, 10)][int][alias('exn')]$EXNodes,
     <# Specify the Starting exchange Node#>
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)][ValidateRange(1, 9)][int][alias('exs')]$EXStartNode = "1",
@@ -1909,10 +1909,14 @@ status "# EMC Integration for Networker, OneFS, Avamar, DD, ScaleIO and other VA
 status "# Idea and Scripting by @HyperV_Guy                                                                                   #"
 status $Commentline  #>
 workorder "Building Proposed Workorder"
-#If ($DAG.IsPresent)
-#    {
-#    $Exchange = $True
-#    }
+If ($DAG.IsPresent)
+    {
+    if (!$EXNodes)
+        {
+        $EXNodes = 2 
+        Write-Warning "No -EXnodes specified, defaulting to $EXNodes Nodes"
+        }
+    }
 if ($Blanknode.IsPresent)
 {
 	workorder "We are going to Install $BlankNodes Blank Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
