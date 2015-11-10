@@ -4398,30 +4398,10 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
 		# Setup Networker
 		While (([string]$UserLoggedOn = (&$vmrun -gu Administrator -gp Password123! listProcessesInGuest $CloneVMX)) -notmatch "owner=$BuildDomain\\Administrator") { write-host -NoNewline "." }
 		write-verbose "Building Networker Server"
-		############ java
 		write-verbose "installing JAVA"
-		$Parm = "/s"
-		$Execute = "\\vmware-host\Shared Folders\Sources\$LatestJava"
-		do
-		{
-			($cmdresult = &$vmrun -gu Administrator -gp Password123! runPrograminGuest  $CloneVMX -activeWindow  $Execute $Parm) 2>&1 | Out-Null
-			write-log "$origin $cmdresult"
-		}
-		until ($VMrunErrorCondition -notcontains $cmdresult)
-		write-log "$origin $cmdresult"
-		###################adobe
+		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script install-program.ps1 -Parameter "-Program $LatestJava -ArgumentList '/s' $CommonParameter"-interactive
 		write-verbose "installing Acrobat Reader"
-		$Parm = "/sPB /rs"
-		$Execute = "\\vmware-host\Shared Folders\Sources\$LatestReader"
-		do
-		{
-			($cmdresult = &$vmrun -gu Administrator -gp Password123! runPrograminGuest  $CloneVMX -activeWindow  $Execute $Parm) 2>&1 | Out-Null
-			write-log "$origin $cmdresult"
-		}
-		until ($VMrunErrorCondition -notcontains $cmdresult)
-		write-log "$origin $cmdresult"
-		###################
-		
+		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script install-program.ps1 -Parameter "-Program $LatestReader -ArgumentList '/sPB /rs' $CommonParameter"-interactive
 		write-verbose "installing Networker Server"
 		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script install-nwserver.ps1 -Parameter "-nw_ver $nw_ver $CommonParameter"-interactive
 		if (!$Gateway.IsPresent)
