@@ -128,7 +128,8 @@ Specify if Networker Scenario sould be installed
     IP-Addresses: .18
     #>
 	[Parameter(ParameterSetName = "SCOM", Mandatory = $true)][switch][alias('SC_OM')]$SCOM,
-    [Parameter(ParameterSetName = "SCOM", Mandatory = $false)][ValidateSet('SC2012_R2_SCOM','SCTP3_SCOM')]$SCOM_VER = "SC2012_R2_SCOM",
+    [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
+    [ValidateSet('SC2012_R2_SCOM','SCTP3_SCOM')]$SCOM_VER = "SC2012_R2_SCOM",
 
     <#
     Selects the Blank Nodes Scenario
@@ -2402,17 +2403,7 @@ if ($SCOM.IsPresent)
     Write-Warning "Entering SCOM Prereq Section"
     [switch]$SQL=$true
     $Prereqdir = "$SCOM_VER"+"prereq"
-    switch ($SCOM_VER)
-    {
-        "SC2012_R2_SCOM"
-            {
-            if ($SQLVER -gt "SQL2012SP1")
-                {
-                Write-Warning "SCOM can only be installed on SQL2012, Setting to SQL2012SP1"
-                $SQLVER = "SQL2012SP1"
-                }# end sqlver
-
-            Write-Verbose "We are now going to Test SCOM Prereqs"
+    Write-Verbose "We are now going to Test SCOM Prereqs"
     
             $DownloadUrls= (
             'http://download.microsoft.com/download/F/B/7/FB728406-A1EE-4AB5-9C56-74EB8BDDF2FF/ReportViewer.msi',
@@ -2433,6 +2424,18 @@ if ($SCOM.IsPresent)
                         }
                     }
                 }
+    
+    switch ($SCOM_VER)
+    {
+        "SC2012_R2_SCOM"
+            {
+            if ($SQLVER -gt "SQL2012SP1")
+                {
+                Write-Warning "SCOM can only be installed on SQL2012, Setting to SQL2012SP1"
+                $SQLVER = "SQL2012SP1"
+                }# end sqlver
+
+            
             $URL = "http://care.dlservice.microsoft.com/dl/download/evalx/sc2012r2/$SCOM_VER.exe"
             $FileName = Split-Path -Leaf -Path $Url
             Write-Verbose "Testing $SCOM_VER"
@@ -4295,7 +4298,7 @@ switch ($PsCmdlet.ParameterSetName)
 	# SCO Setup
 	###################################################
 	$Nodeip = "$IPv4Subnet.18"
-	$Nodename = "SC_OM"
+	$Nodename = "SCOM"
 	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
     [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS"
     $ScenarioScriptDir = "$GuestScriptdir\SCOM"
@@ -4364,7 +4367,8 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
 	$Nodeip = "$IPv4Subnet.$Gatewayhost"
 	$Nodename = $NWNODE
 	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
-    [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features" 
+    [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features"
+    $ScenarioScriptDir = "$GuestScriptdir\$NWNODE" 
 	###################################################
 	status $Commentline
 	status "Creating Networker Server $Nodename"
@@ -4381,17 +4385,12 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
         Write-verbose "Now Pausing, Clone Process will start after keypress"
         pause
         }
-
 	test-dcrunning
     If ($DefaultGateway -match $Nodeip){$SetGateway = "-Gateway"}
 	$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 9 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -NW $SetGateway -size $Size -Sourcedir $Sourcedir $CommonParameter"
 	###################################################
 	If ($CloneOK)
-	{
-		$SourceScriptDir = "$Builddir\$Script_dir\NW\"
-		write-verbose "Copy Configuration files, please be patient"
-		copy-tovmx -Sourcedir $NodeScriptDir
-		copy-tovmx -Sourcedir $SourceScriptDir
+	    {
 		write-verbose "Waiting System Ready"
 		test-user -whois Administrator
 		write-Verbose "Starting Customization"
@@ -4424,7 +4423,7 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
 		###################
 		
 		write-verbose "installing Networker Server"
-		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-nwserver.ps1 -Parameter $nw_ver -interactive
+		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script install-nwserver.ps1 -Parameter $nw_ver -interactive
 		if (!$Gateway.IsPresent)
             {
             checkpoint-progress -step networker -reboot
@@ -4432,20 +4431,18 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
         write-verbose "Waiting for NSR Media Daemon to start"
 		While (([string]$UserLoggedOn = (&$vmrun -gu Administrator -gp Password123! listProcessesInGuest $CloneVMX)) -notmatch "nsrd.exe") { write-host -NoNewline "." }
 		write-verbose "Creating Networker users"
-		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script nsruserlist.ps1 -interactive
+		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script nsruserlist.ps1 -interactive
 		status "Creating AFT Device"
-		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script create-nsrdevice.ps1 -interactive -Parameter "-AFTD AFTD1"
-		# write-verbose "Creating Networker Clients, Groups and Saveset resources"
-		# invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script create-nsrres.ps1 -interactive
+		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script create-nsrdevice.ps1 -interactive -Parameter "-AFTD AFTD1"
         If ($DefaultGateway -match $Nodeip){
                 write-verbose "Opening Firewall on Networker Server for your Client"
-                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script firewall.ps1 -interactive
-        		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script add-rras.ps1 -interactive -Parameter "-IPv4Subnet $IPv4Subnet"
+                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script firewall.ps1 -interactive
+        		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script add-rras.ps1 -interactive -Parameter "-IPv4Subnet $IPv4Subnet"
                 checkpoint-progress -step rras -reboot
 
         }
         invoke-postsection -wait
-        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script configure-nmc.ps1 -interactive
+        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script configure-nmc.ps1 -interactive
 		progress "Please finish NMC Setup by Double-Clicking Networker Management Console from Desktop on $NWNODE.$builddomain.local"
 	    
 	}
