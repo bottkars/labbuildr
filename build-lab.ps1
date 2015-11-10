@@ -2475,21 +2475,7 @@ if ($SCOM.IsPresent)
                 Start-Process "$Sourcedir\$FileName" -ArgumentList "/SP- /dir=$Sourcedir\$FileName /SILENT" -Wait
                 }
             }
-
-
-
-            }
-
-
-
-
     }# end switch
-
-
-
-
-    
-    
 <#
 
     $Url = "http://download.microsoft.com/download/6/A/E/6AEA92B0-A412-4622-983E-5B305D2EBE56/adk/adksetup.exe" # ADKSETUP 8.1
