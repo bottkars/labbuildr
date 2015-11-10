@@ -2779,8 +2779,8 @@ if ($NMM.IsPresent)
             $nmmzip = $nmmzip+'_win_x64.zip'
             $scvmmzip = $nmmzip -replace "nmm","scvmm"
             Write-Verbose "$scvmmzip"
-            $urls = ("ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/$($nmmdotver.Substring(0,3))/$nmmdotver/$nmmzip",
-                     "ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/$($nmmdotver.Substring(0,3))/$nmmdotver/$scvmmzip")
+            $urls = ("ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/$($nmmdotver.Substring(0,5))/$nmmdotver/$nmmzip",
+                     "ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/$($nmmdotver.Substring(0,5))/$nmmdotver/$scvmmzip")
             }
 
 <#
