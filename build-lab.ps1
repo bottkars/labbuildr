@@ -801,8 +801,6 @@ function update-fromGit
             [string]$Destination,
             [switch]$delete
             )
-
-
         Write-Verbose "Using update-fromgit function for $repo"
         $Uri = "https://api.github.com/repos/$RepoLocation/$repo/commits/$branch"
         $Zip = ("https://github.com/$RepoLocation/$repo/archive/$branch.zip").ToLower()
@@ -1427,7 +1425,7 @@ if ($defaults.IsPresent)
                  $nmm_ver = $latest_nmm
                 }
             } 
-        $scvmm_ver = $nmm_ver -replace "nmm","scvmm"
+        $nmm_scvmm_ver = $nmm_ver -replace "nmm","scvmm"
         if (!$nw_ver)
             {
             try
@@ -2360,7 +2358,7 @@ if ($scvmm.IsPresent)
         }
     }
     
-    Url = "http://download.microsoft.com/download/6/A/E/6AEA92B0-A412-4622-983E-5B305D2EBE56/adk/adksetup.exe" # ADKSETUP 8.1
+    $Url = "http://download.microsoft.com/download/6/A/E/6AEA92B0-A412-4622-983E-5B305D2EBE56/adk/adksetup.exe" # ADKSETUP 8.1
     Write-Verbose "Testing WAIK in $Sourcedir"
     if (!(test-path  "$Sourcedir\$Prereqdir"))
         {
@@ -2813,49 +2811,6 @@ if ($NMM.IsPresent)
                      "ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/$($nmmdotver.Substring(0,5))/$nmmdotver/$scvmmzip")
             }
 
-<#
-        switch ($nmm_ver)
-        {
-        "nmm8211"
-            {
-            $urls = ("ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.1/nmm821_win_x64.zip",
-                    "ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.1/scvmm821_win_x64.zip")
-            }
-
-        "nmm8212"
-            {
-            $urls = ("ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.2/nmm821_win_x64.zip",
-                    "ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.2/scvmm821_win_x64.zip")
-            }
-        "nmm8214"
-            {
-            $urls = ("ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.4/nmm821_win_x64.zip",
-                    "ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.4/scvmm821_win_x64.zip")
-            }
-        
-        "nmm8216"
-            {
-            $urls = ("ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.6/nmm821_win_x64.zip",
-                    "ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.6/scvmm821_win_x64.zip")
-            }
-        "nmm8217"
-            {
-            $urls = ("ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.7/nmm821_win_x64.zip",
-                    "ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.7/scvmm821_win_x64.zip")
-            }
-        "nmm8218"
-            {
-            $urls = ("ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.8/nmm821_win_x64.zip",
-                    "ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.8/scvmm821_win_x64.zip")
-            }
-
-
-        default
-            {
-            $url = $false
-            }
-        }
-        #>
         if ($urls)
             {
             foreach ($url in $urls)
@@ -2867,7 +2822,7 @@ if ($NMM.IsPresent)
                     }
                 if ($FileName -match "scvmm")
                     {
-                    $Zipfilename = "$scvmm_ver.zip"
+                    $Zipfilename = "$NMM_scvmm_ver.zip"
                     }
                 $Zipfile = Join-Path $Sourcedir $Zipfilename
                 if (!(test-path  $Zipfile))
@@ -3832,15 +3787,15 @@ switch ($PsCmdlet.ParameterSetName)
 			write-verbose "Building SCVMM Setup Configruration"
 			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script set-vmmconfig.ps1 -interactive
 			write-verbose "Installing SQL Binaries"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $SQLScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -DefaultDBpath" -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $SQLScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -DefaultDBpath $CommonParameter" -interactive
 			write-verbose "Installing SCVMM PREREQS"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $ScenarioScriptDir -Script install-vmmprereq.ps1 -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $ScenarioScriptDir -Script install-vmmprereq.ps1 -Parameter "-scvmm_ver $scvmm_ver $CommonParameter"  -interactive
             checkpoint-progress -step vmmprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
 			write-verbose "Installing SCVMM"
             if ($ConfigureVMM.IsPresent)
                 {
                 Write-Warning "Setup of VMM and Update Rollups in progress, could take up to 20 Minutes"
-			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $ScenarioScriptDir -Script install-vmm.ps1 -interactive
+			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $ScenarioScriptDir -Script install-vmm.ps1 -Parameter "-scvmm_ver $scvmm_ver $CommonParameter" -interactive
 			    Write-Verbose "Configuring VMM"
                 if ($Cluster.IsPresent)
                     {
@@ -3853,7 +3808,7 @@ switch ($PsCmdlet.ParameterSetName)
                 }
             else
                 {
-                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $ScenarioScriptDir -Script install-vmm.ps1 -interactive -nowait
+                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $ScenarioScriptDir -Script install-vmm.ps1 -Parameter "-scvmm_ver $scvmm_ver $CommonParameter" -interactive -nowait
 		        }
             } #end SCVMM
         }#end newdeploy
