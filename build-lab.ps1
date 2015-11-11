@@ -192,7 +192,9 @@ Specify if Networker Scenario sould be installed
     # [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$clusteredmdm,
     <# SCVMM on last Node ? #>	
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$SCVMM,
-    <# Starting Node for Blank Nodes#>
+    <# SCVMM Version #>	
+    [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][ValidateSet('SC2012_R2_SCVMM','SCTP3_SCVMM')]$SCVMM_VER = "SC2012_R2_SCVMM",
+    <# Configure VMM ?#>
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$ConfigureVMM,
     <# Starting Node for Blank Nodes#>
     [Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)][ValidateRange(1, 9)][alias('bs')]$Blankstart = "1",
@@ -708,7 +710,7 @@ $GuestLogDir = "C:\Scripts"
 $NodeScriptDir = "$GuestScriptdir\Node"
 $Dots = [char]58
 [string]$Commentline = "#######################################################################################################################"
-$SCVMMVER = "SCVMM2012R2"
+#$SCVMM_VER = "SCVMM2012R2"
 $WAIKVER = "WAIK"
 # $SCOMVER = "SC2012_R2_SCOM"
 #$SQLVER = "SQL2012SP1"
@@ -2333,16 +2335,10 @@ if ($ConfigureVMM.IsPresent)
 
 if ($scvmm.IsPresent)
   {
+    Write-Warning "Entering $SCVMM_VER Prereq Section"
     [switch]$SQL=$true
-    if ($SQLVER -gt "SQL2012SP1")
-        {
-        Write-Warning "SCVMM can only be installed on SQL2012, Setting to SQL2012SP1"
-        $SQLVER = "SQL2012SP1"
-        }
-    $Prereqdir = "$SCVMMVER"+"prereq"
-    
-    Write-Verbose "We are now going to Test scvmm Prereqs"
-    
+    $Prereqdir = "$SCVMM_VER"+"prereq"
+    Write-Verbose "We are now going to Test $SCVMM_VER Prereqs"
     $DownloadUrls= (
             "http://download.microsoft.com/download/E/2/1/E21644B5-2DF2-47C2-91BD-63C560427900/NDP452-KB2901907-x86-x64-AllOS-ENU.exe",
             "http://download.microsoft.com/download/F/E/D/FEDB200F-DE2A-46D8-B661-D019DFE9D470/ENU/x64/SqlCmdLnUtils.msi",
@@ -2363,23 +2359,8 @@ if ($scvmm.IsPresent)
             }
         }
     }
-    $URL = "http://care.dlservice.microsoft.com/dl/download/evalx/sc2012r2/SC2012_R2_SCVMM.exe"
-    $FileName = Split-Path -Leaf -Path $Url
-    Write-Verbose "Testing $SCVMMVER"
-    if (!(test-path  "$Sourcedir\$SCVMMVER"))
-        {
-        Write-Verbose "Trying Download"
-        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
-            { 
-            write-warning "Error Downloading file $Url, Please check connectivity"
-            exit
-            }
-        write-Warning "We are going to Extract $FileName, this may take a while"
-        Start-Process "$Sourcedir\$FileName" -ArgumentList "/SP- /dir=$Sourcedir\$SCVMMVER /SILENT" -Wait
-        }
-
-
-    $Url = "http://download.microsoft.com/download/6/A/E/6AEA92B0-A412-4622-983E-5B305D2EBE56/adk/adksetup.exe" # ADKSETUP 8.1
+    
+    Url = "http://download.microsoft.com/download/6/A/E/6AEA92B0-A412-4622-983E-5B305D2EBE56/adk/adksetup.exe" # ADKSETUP 8.1
     Write-Verbose "Testing WAIK in $Sourcedir"
     if (!(test-path  "$Sourcedir\$Prereqdir"))
         {
@@ -2393,8 +2374,51 @@ if ($scvmm.IsPresent)
         Write-Warning "Getting WAIK, Could take a While"
         Start-Process -FilePath "$Sourcedir\$FileName" -ArgumentList "/quiet /layout $Sourcedir\$Prereqdir" -Wait
         }
+ 
+   ### 
+    switch ($SCvmm_VER)
+    {
+        "SC2012_R2_SCVMM"
+            {
+            if ($SQLVER -gt "SQL2012SP1")
+                {
+                Write-Warning "SCOM can only be installed on SQL2012, Setting to SQL2012SP1"
+                $SQLVER = "SQL2012SP1"
+                }# end sqlver
 
-    workorder "We are going to Install Hyper-V with $SCVMMVER in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet and $SQLVER"
+            
+            $URL = "http://care.dlservice.microsoft.com/dl/download/evalx/sc2012r2/SC2012_R2_SCVMM.exe"
+            }
+        
+        "SCTP3_SCVMM"
+            {
+            <#
+            http://care.dlservice.microsoft.com/dl/download/1/8/E/18E12925-8F05-402A-BF24-2DE6E4ED357F/SCTP3_SCO_EN.exe
+            http://care.dlservice.microsoft.com/dl/download/F/A/A/FAA14AC2-720A-4B17-8250-75EEEA13B259/SCTP3_SCVMM_EN.exe
+            http://care.dlservice.microsoft.com/dl/download/B/0/7/B07BF90E-2CC8-4538-A7D2-83BB074C49F5/SCTP3_SCOM_EN.exe
+            http://care.dlservice.microsoft.com/dl/download/F/A/3/FA31ADFB-B7FA-4F3C-AF0B-CA5C8973EEF5/SCTP3_SCDPM_EN.exe
+            http://care.dlservice.microsoft.com/dl/download/B/B/3/BB3A1E87-28F2-4362-9B1E-24CC3992EF3B/SCTP3_SCSM_EN.exe
+            http://care.dlservice.microsoft.com/dl/download/3/5/B/35BB1415-28AD-46D5-B227-DD8AB821E9D8/SC_Configmgr_SCEP_SCTP3.exe
+            #>
+
+            $URL = "http://care.dlservice.microsoft.com/dl/download/F/A/A/FAA14AC2-720A-4B17-8250-75EEEA13B259/SCTP3_SCVMM_EN.exe"
+
+            }
+    }# end switch
+    $FileName = Split-Path -Leaf -Path $Url
+    Write-Verbose "Testing $SCVMM_VER"
+    if (!(test-path  "$Sourcedir\$SCVMM_VER"))
+        {
+        Write-Verbose "Trying Download"
+        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
+            { 
+            write-warning "Error Downloading file $Url, Please check connectivity"
+            exit
+            }
+        write-Warning "We are going to Extract $FileName, this may take a while"
+        Start-Process "$Sourcedir\$FileName" -ArgumentList "/SP- /dir=$Sourcedir\$SCVMM_VER /SILENT" -Wait
+        }
+    workorder "We are going to Install Hyper-V with $SCVMM_VER in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet and $SQLVER"
     # exit
     }# end SCVMMPREREQ
 ############## SCOM Section
@@ -2437,19 +2461,6 @@ if ($SCOM.IsPresent)
 
             
             $URL = "http://care.dlservice.microsoft.com/dl/download/evalx/sc2012r2/$SCOM_VER.exe"
-            $FileName = Split-Path -Leaf -Path $Url
-            Write-Verbose "Testing $SCOM_VER"
-            if (!(test-path  "$Sourcedir\$SCOM_VER"))
-                {
-                Write-Verbose "Trying Download"
-                if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
-                    { 
-                    write-warning "Error Downloading file $Url, Please check connectivity"
-                    exit
-                    }
-                write-Warning "We are going to Extract $FileName, this may take a while"
-                Start-Process "$Sourcedir\$FileName" -ArgumentList "/SP- /dir=$Sourcedir\$SCOM_VER /SILENT" -Wait
-                }
             }
         
         "SCTP3_SCOM"
@@ -2464,9 +2475,13 @@ if ($SCOM.IsPresent)
             #>
 
             $URL = "http://care.dlservice.microsoft.com/dl/download/B/0/7/B07BF90E-2CC8-4538-A7D2-83BB074C49F5/SCTP3_SCOM_EN.exe"
-            $FileName = Split-Path -Leaf -Path $Url
-            Write-Verbose "Testing $SCOM_VER\"
-            if (!(test-path  "$Sourcedir\$SCOM_VER"))
+            }
+
+
+    }# end switch
+    $FileName = Split-Path -Leaf -Path $Url
+    Write-Verbose "Testing $SCOM_VER\"
+    if (!(test-path  "$Sourcedir\$SCOM_VER"))
                 {
                 Write-Verbose "Trying Download"
                 if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
@@ -2477,25 +2492,7 @@ if ($SCOM.IsPresent)
                 write-Warning "We are going to Extract $FileName, this may take a while"
                 Start-Process "$Sourcedir\$FileName" -ArgumentList "/SP- /dir=$Sourcedir\$SCOM_VER /SILENT" -Wait
                 }
-            }
-    }# end switch
-<#
 
-    $Url = "http://download.microsoft.com/download/6/A/E/6AEA92B0-A412-4622-983E-5B305D2EBE56/adk/adksetup.exe" # ADKSETUP 8.1
-    Write-Verbose "Testing WAIK in $Sourcedir"
-    if (!(test-path  "$Sourcedir\$Prereqdir"))
-        {
-        $FileName = Split-Path -Leaf -Path $Url
-        Write-Verbose "Trying Download"
-        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
-            { 
-            write-warning "Error Downloading file $Url, Please check connectivity"
-            exit
-            }
-        Write-Warning "Getting WAIK, Could take a While"
-        Start-Process -FilePath "$Sourcedir\$FileName" -ArgumentList "/quiet /layout $Sourcedir\$Prereqdir" -Wait
-        }
-#>
     workorder "We are going to Install SCOM with $SCOM_VER in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet and $SQLVER"
     # exit
     }# end SCOMPREREQ
@@ -3688,8 +3685,10 @@ switch ($PsCmdlet.ParameterSetName)
 			$Nodeip = "$IPv4Subnet.15$HVNode"
 			$Nodename = "HVNODE$HVNode"
 			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
-			$SourceScriptDir = "$Builddir\$Script_dir\HyperV\"
-            $SQLScriptDir = "$Builddir\$Script_dir\sql\"
+			$ScenarioScriptDir = "$GuestScriptdir\HyperV\"
+            $SQLScriptDir = "$GuestScriptdir\sql\"
+            $VMMScriptDir = "$GuestScriptdir\VMM" 
+
             Write-Verbose $IPv4Subnet
             write-verbose $Nodeip
             Write-Verbose $Nodename
@@ -3709,29 +3708,17 @@ switch ($PsCmdlet.ParameterSetName)
 			###################################################
 			
             If ($CloneOK)
-			{
-				write-verbose "Copy Configuration files, please be patient"
-				copy-tovmx -Sourcedir $NodeScriptDir
-                copy-tovmx -Sourcedir $SourceScriptDir
-                if ($SCVMM.IsPresent)
-                    {
-                    copy-tovmx -Sourcedir $SQLScriptDir
-                    }
-                If ($ScaleIO.IsPresent)
-                    {
-                    Write-Verbose "Copying DiskSpeed"
-                    Copy-VMXDirHost2Guest -config $Clonevmx -Sourcepath "$Sourcedir\diskspd\amd64fre\diskspd.exe" -targetpath "c:\Diskspd" -recurse -Guestuser "Administrator" -Guestpassword $Adminpassword
-				    }
+			    {
                 write-verbose "Waiting System Ready"
 				test-user -whois Administrator
 				write-Verbose "Starting Customization"
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
 				test-user Administrator
 				write-verbose "Setting up Hyper-V Configuration"
-				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script configure-hyperv.ps1 -interactive
+				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script configure-hyperv.ps1 -interactive
 
 				write-verbose "Setting up WINRM"
-				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script set-winrm.ps1 -interactive
+				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script set-winrm.ps1 -interactive
                 
                 if ($ScaleIO.IsPresent)
                     {
@@ -3739,19 +3726,19 @@ switch ($PsCmdlet.ParameterSetName)
                 1
                     {
                     Write-Output "Installing MDM"
-                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-scaleio.ps1 -Parameter "-Role MDM -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive
+                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role MDM -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive
                     }
                 2
                     {
                     if (!$singlemdm.IsPresent)
                         {
                         Write-Output "Installing MDM"
-                        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-scaleio.ps1 -Parameter "-Role MDM -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive
+                        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role MDM -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive
                         }
                     else
                         {
                         Write-Output "Installing single MDM"
-                        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
+                        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
                         }
                     
                     }
@@ -3767,14 +3754,14 @@ switch ($PsCmdlet.ParameterSetName)
                     if (!$singlemdm.IsPresent)
                         {                                        
                         Write-Output " Installing TB"
-                        Invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-scaleio.ps1 -Parameter "-Role TB -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
+                        Invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role TB -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
                         $mdmipa = "$IPv4Subnet.151"
                         $mdmipb = "$IPv4Subnet.152"
                         }
                     else
                         {
                         Write-Output " Installing single MDM"
-                        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
+                        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
                         $mdmipa = "$IPv4Subnet.151"
                         $mdmipb = "$IPv4Subnet.151"                        }
                     write-verbose "installing JAVA"
@@ -3787,13 +3774,13 @@ switch ($PsCmdlet.ParameterSetName)
 		                }
 		            until ($VMrunErrorCondition -notcontains $cmdresult)
 		            write-log "$origin $cmdresult"
-                    Invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-scaleio.ps1 -Parameter "-Role gateway -disks $Disks -ScaleIOVer $ScaleIOVer -mdmipa $mdmipa -mdmipb $mdmipb" -interactive 
+                    Invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role gateway -disks $Disks -ScaleIOVer $ScaleIOVer -mdmipa $mdmipa -mdmipb $mdmipb" -interactive 
 
 
                     }
                 default
                     {
-                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
+                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
                     }
                 }
                     }
@@ -3802,7 +3789,7 @@ switch ($PsCmdlet.ParameterSetName)
 	            if ($NMM.IsPresent)
 		            {
 			        write-verbose "Install NWClient"
-			        invoke-vmxpowershell -config $CloneVMX -ScriptPath $GuestScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver -Guestuser $Adminuser -Guestpassword $Adminpassword
+			        invoke-vmxpowershell -config $CloneVMX -ScriptPath $NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver -Guestuser $Adminuser -Guestpassword $Adminpassword
 			        
                     write-verbose "Install NMM"
                     $NMM_Parameter = "-nmm_ver $nmm_ver"
@@ -3810,7 +3797,7 @@ switch ($PsCmdlet.ParameterSetName)
                         {
                         $NMM_Parameter = "$NMM_Parameter -scvmm"
                         }
-			        invoke-vmxpowershell -config $CloneVMX -ScriptPath $GuestScriptDir -Script install-nmm.ps1 -interactive -Parameter $NMM_Parameter -Guestuser $Adminuser -Guestpassword $Adminpassword
+			        invoke-vmxpowershell -config $CloneVMX -ScriptPath $ScenarioScriptDir -Script install-nmm.ps1 -interactive -Parameter $NMM_Parameter -Guestuser $Adminuser -Guestpassword $Adminpassword
 		            }# End Nmm		
             invoke-postsection -wait
             } # end Clone OK
@@ -3824,7 +3811,7 @@ switch ($PsCmdlet.ParameterSetName)
 		{
 			write-host
 			write-verbose "Forming Hyper-V Cluster"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix 'HVNODE' -IPAddress '$IPv4Subnet.150' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix 'HVNODE' -IPAddress '$IPv4Subnet.150' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
 		}
 	    if ($ScaleIO.IsPresent)
             {
@@ -3832,41 +3819,41 @@ switch ($PsCmdlet.ParameterSetName)
             if ($singlemdm.IsPresent)
                     {
                     Write-Warning "Configuring Single MDM"
-                    get-vmx $FirstVMX | invoke-vmxpowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script configure-mdm.ps1 -Parameter "-singlemdm -CSVnum 3" -interactive 
+                    get-vmx $FirstVMX | invoke-vmxpowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script configure-mdm.ps1 -Parameter "-singlemdm -CSVnum 3" -interactive 
                     }
             else
                     {
                     Write-Warning "Configuring Clustered MDM"
-                    get-vmx $FirstVMX | invoke-vmxpowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script configure-mdm.ps1 -Parameter "-CSVnum 3" -interactive 
+                    get-vmx $FirstVMX | invoke-vmxpowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script configure-mdm.ps1 -Parameter "-CSVnum 3" -interactive 
                     }
             }
 		if ($SCVMM.IsPresent)
 		    {
 			write-verbose "Building SCVMM Setup Configruration"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script set-vmmconfig.ps1 -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script set-vmmconfig.ps1 -interactive
 			write-verbose "Installing SQL Binaries"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -DefaultDBpath" -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $SQLScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -DefaultDBpath" -interactive
 			write-verbose "Installing SCVMM PREREQS"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $GuestScriptDir -Script install-vmmprereq.ps1 -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $ScenarioScriptDir -Script install-vmmprereq.ps1 -interactive
             checkpoint-progress -step vmmprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
 			write-verbose "Installing SCVMM"
             if ($ConfigureVMM.IsPresent)
                 {
                 Write-Warning "Setup of VMM and Update Rollups in progress, could take up to 20 Minutes"
-			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $GuestScriptDir -Script install-vmm.ps1 -interactive
+			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $ScenarioScriptDir -Script install-vmm.ps1 -interactive
 			    Write-Verbose "Configuring VMM"
                 if ($Cluster.IsPresent)
                     {
-                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script configure-vmm.ps1 -Parameter "-Cluster" -interactive
+                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script configure-vmm.ps1 -Parameter "-Cluster" -interactive
                     }
                     else
                     {
-                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script configure-vmm.ps1 -interactive
+                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script configure-vmm.ps1 -interactive
                     }
                 }
             else
                 {
-                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $GuestScriptDir -Script install-vmm.ps1 -interactive -nowait
+                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $ScenarioScriptDir -Script install-vmm.ps1 -interactive -nowait
 		        }
             } #end SCVMM
         }#end newdeploy
