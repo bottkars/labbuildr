@@ -1619,14 +1619,13 @@ if ($defaults.IsPresent)
                 [switch]$NW = $True
                 $DefaultGateway = "$IPv4Subnet.$Gatewayhost"
                 }
+            }
         if (!($MyInvocation.BoundParameters.Keys.Contains("NoDomainCheck")))
             {
             if ($Default.NoDomainCheck -eq "true")
                 {
                 [switch]$NoDomainCheck = $true
                 }
-            
-            
             }
         if (!($MyInvocation.BoundParameters.Keys.Contains("NMM")))
             {
