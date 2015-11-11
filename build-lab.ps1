@@ -3622,7 +3622,7 @@ switch ($PsCmdlet.ParameterSetName)
                 Write-Warning "We want a Cluster for Automated SCALEIO Deployment, adjusting"
                 [switch]$Cluster = $true
                 }   
-            If (!$Disks){$Disks = 3} 
+            If (!$Disks){$Disks = 1} 
             $cloneparm = " -AddDisks -disks $Disks"
             if ("XXL" -notmatch $Size)
                 { 
@@ -3801,7 +3801,7 @@ switch ($PsCmdlet.ParameterSetName)
             if ($singlemdm.IsPresent)
                     {
                     Write-Warning "Configuring Single MDM"
-                    get-vmx $FirstVMX | invoke-vmxpowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script configure-mdm.ps1 -Parameter "-singlemdm -CSVnum 3" -interactive 
+                    get-vmx $FirstVMX | invoke-vmxpowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script configure-mdm.ps1 -Parameter "-singlemdm -CSVnum 2" -interactive 
                     }
             else
                     {
