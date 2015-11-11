@@ -2368,9 +2368,9 @@ if ($scvmm.IsPresent)
     
     $Url = "http://download.microsoft.com/download/6/A/E/6AEA92B0-A412-4622-983E-5B305D2EBE56/adk/adksetup.exe" # ADKSETUP 8.1
     Write-Verbose "Testing WAIK in $Sourcedir"
-    if (!(test-path  "$Sourcedir\$Prereqdir"))
+    $FileName = Split-Path -Leaf -Path $Url
+    if (!(test-path  "$Sourcedir\$Prereqdir\$FileName"))
         {
-        $FileName = Split-Path -Leaf -Path $Url
         Write-Verbose "Trying Download"
         if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
             { 
