@@ -2400,7 +2400,7 @@ if ($scvmm.IsPresent)
 
     Write-Verbose "Testing WAIK in $Sourcedir"
     $FileName = Split-Path -Leaf -Path $adkurl
-    if (!(test-path  "$Sourcedir\$Prereqdir\Installers"))
+    if (!(test-path  "$Sourcedir\$Prereqdir\WAIK"))
         {
         Write-Verbose "Trying Download"
         if (!(get-prereq -DownLoadUrl $adkurl -destination  "$Sourcedir\$Prereqdir\$FileName"))
@@ -2409,7 +2409,7 @@ if ($scvmm.IsPresent)
             exit
             }
         Write-Warning "Getting WAIK, Could take a While"
-        Start-Process -FilePath "$Sourcedir\$Prereqdir\$FileName" -ArgumentList "/quiet /layout $Sourcedir\$Prereqdir" -Wait
+        Start-Process -FilePath "$Sourcedir\$Prereqdir\$FileName" -ArgumentList "/quiet /layout $Sourcedir\$Prereqdir\WAIK" -Wait
         }
 
 
