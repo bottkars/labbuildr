@@ -2366,20 +2366,6 @@ if ($scvmm.IsPresent)
         }
     }
     
-    $Url = "http://download.microsoft.com/download/6/A/E/6AEA92B0-A412-4622-983E-5B305D2EBE56/adk/adksetup.exe" # ADKSETUP 8.1
-    Write-Verbose "Testing WAIK in $Sourcedir"
-    $FileName = Split-Path -Leaf -Path $Url
-    if (!(test-path  "$Sourcedir\$Prereqdir\$FileName"))
-        {
-        Write-Verbose "Trying Download"
-        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
-            { 
-            write-warning "Error Downloading file $Url, Please check connectivity"
-            exit
-            }
-        Write-Warning "Getting WAIK, Could take a While"
-        Start-Process -FilePath "$Sourcedir\$FileName" -ArgumentList "/quiet /layout $Sourcedir\$Prereqdir" -Wait
-        }
  
    ### 
     switch ($SCvmm_VER)
@@ -2392,7 +2378,7 @@ if ($scvmm.IsPresent)
                 $SQLVER = "SQL2012SP1"
                 }# end sqlver
 
-            
+            $adkurl = "http://download.microsoft.com/download/6/A/E/6AEA92B0-A412-4622-983E-5B305D2EBE56/adk/adksetup.exe" # ADKSETUP 8.1
             $URL = "http://care.dlservice.microsoft.com/dl/download/evalx/sc2012r2/SC2012_R2_SCVMM.exe"
             }
         
@@ -2406,11 +2392,28 @@ if ($scvmm.IsPresent)
             http://care.dlservice.microsoft.com/dl/download/B/B/3/BB3A1E87-28F2-4362-9B1E-24CC3992EF3B/SCTP3_SCSM_EN.exe
             http://care.dlservice.microsoft.com/dl/download/3/5/B/35BB1415-28AD-46D5-B227-DD8AB821E9D8/SC_Configmgr_SCEP_SCTP3.exe
             #>
-
+            $Adkurl = "http://download.microsoft.com/download/8/1/9/8197FEB9-FABE-48FD-A537-7D8709586715/adk/adksetup.exe" #ADKsetup 10
             $URL = "http://care.dlservice.microsoft.com/dl/download/F/A/A/FAA14AC2-720A-4B17-8250-75EEEA13B259/SCTP3_SCVMM_EN.exe"
 
             }
     }# end switch
+
+    Write-Verbose "Testing WAIK in $Sourcedir"
+    $FileName = Split-Path -Leaf -Path $Url
+    if (!(test-path  "$Sourcedir\$Prereqdir\$FileName"))
+        {
+        Write-Verbose "Trying Download"
+        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
+            { 
+            write-warning "Error Downloading file $Url, Please check connectivity"
+            exit
+            }
+        Write-Warning "Getting WAIK, Could take a While"
+        Start-Process -FilePath "$Sourcedir\$FileName" -ArgumentList "/quiet /layout $Sourcedir\$Prereqdir" -Wait
+        }
+
+
+
     $FileName = Split-Path -Leaf -Path $Url
     Write-Verbose "Testing $SCVMM_VER"
     if (!(test-path  "$Sourcedir\$SCVMM_VER"))
