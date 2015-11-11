@@ -1619,6 +1619,12 @@ if ($defaults.IsPresent)
                 [switch]$NW = $True
                 $DefaultGateway = "$IPv4Subnet.$Gatewayhost"
                 }
+        if (!($MyInvocation.BoundParameters.Keys.Contains("NoDomainCheck")))
+            {
+            if ($Default.NoDomainCheck -eq "true")
+                {
+                [switch]$NoDomainCheck = $true
+                }
             
             
             }
@@ -1708,6 +1714,7 @@ $config += ("<ScaleIOVer>$($ScaleIOVer)</ScaleIOVer>")
 $config += ("<DNS1>$($DNS1)</DNS1>")
 $config += ("<NMM>$($NMM.IsPresent)</NMM>")
 $config += ("<Masterpath>$Masterpath</Masterpath>")
+$config += ("<NoDomainCheck>$NoDomainCheck</NoDomainCheck>")
 $config += ("<Puppet>$($Default.Puppet)</Puppet>")
 $config += ("<PuppetMaster>$($Default.PuppetMaster)</PuppetMaster>")
 $config += ("<Hostkey>$($Default.HostKey)</Hostkey>")
