@@ -294,7 +294,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
-    [ValidateSet('2012R2FallUpdate','2012R2UMASTER','2012R2MASTER','2012MASTER','2012R2U1MASTER','2012R2UEFIMASTER','vNextevalMaster','RELEASE_SERVER')]$Master,
+    [ValidateSet('2016TP3''2012R2FallUpdate','2012R2UMASTER','2012R2MASTER','2012MASTER','2012R2U1MASTER','2012R2UEFIMASTER')]$Master,
     <#do we want a special path to the Masters ? #>
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
@@ -2384,6 +2384,11 @@ if ($scvmm.IsPresent)
         
         "SCTP3_SCVMM"
             {
+            if ($Master -lt "2016")
+                {
+                Write-Warning "Master 2016TP3 or Later is required for SCVMM TP3"
+                exit
+                }
             <#
             http://care.dlservice.microsoft.com/dl/download/1/8/E/18E12925-8F05-402A-BF24-2DE6E4ED357F/SCTP3_SCO_EN.exe
             http://care.dlservice.microsoft.com/dl/download/F/A/A/FAA14AC2-720A-4B17-8250-75EEEA13B259/SCTP3_SCVMM_EN.exe
@@ -2400,8 +2405,9 @@ if ($scvmm.IsPresent)
 
     Write-Verbose "Testing WAIK in $Sourcedir"
     $FileName = Split-Path -Leaf -Path $adkurl
-    if (!(test-path  "$Sourcedir\$Prereqdir\WAIK"))
+    if (!(test-path  "$Sourcedir\$Prereqdir\Installers"))
         {
+        # New-Item -ItemType Directory -Path "$Sourcedir\$Prereqdir\WAIK" -Force | Out-Null
         Write-Verbose "Trying Download"
         if (!(get-prereq -DownLoadUrl $adkurl -destination  "$Sourcedir\$Prereqdir\$FileName"))
             { 
@@ -2409,7 +2415,7 @@ if ($scvmm.IsPresent)
             exit
             }
         Write-Warning "Getting WAIK, Could take a While"
-        Start-Process -FilePath "$Sourcedir\$Prereqdir\$FileName" -ArgumentList "/quiet /layout $Sourcedir\$Prereqdir\WAIK" -Wait
+        Start-Process -FilePath "$Sourcedir\$Prereqdir\$FileName" -ArgumentList "/quiet /layout $Sourcedir\$Prereqdir" -Wait
         }
 
 
