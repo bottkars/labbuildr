@@ -224,6 +224,8 @@ Specify if Networker Scenario sould be installed
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
+	[Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
+	[Parameter(ParameterSetName = "SCVMM", Mandatory = $false)]
 	[ValidateSet('SQL2014SP1slip','SQL2012','SQL2012SP1','SQL2012SP2','SQL2012SP1SLIP','SQL2014')]$SQLVER,
     
     ######################### common Parameters start here in Order
@@ -2716,15 +2718,6 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
                     Start-Process $Sourcedir\$FileName -ArgumentList "/X:$Sourcedir\$SQLVER /q" -Wait
                 }
             }
-            
-            
-            
-            
-            
-            }
-
-
-
           } #end switch
     }#end $SQLEXPRESS
 
