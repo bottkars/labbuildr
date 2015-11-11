@@ -224,7 +224,7 @@ Specify if Networker Scenario sould be installed
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
-	[ValidateSet('SQL2012','SQL2012SP1','SQL2012SP2','SQL2012SP1SLIP','SQL2014')]$SQLVER,
+	[ValidateSet('SQL2014SP1slip','SQL2012','SQL2012SP1','SQL2012SP2','SQL2012SP1SLIP','SQL2014')]$SQLVER,
     
     ######################### common Parameters start here in Order
     <# reads the Default Config from defaults.xml
@@ -694,7 +694,7 @@ $latest_nmm = 'nmm90.DA'
 $latest_nw = 'nw90.DA'
 $latest_e16_cu = 'final'
 $latest_ex_cu = 'cu10'
-$latest_sqlver  = 'SQL2014'
+$latest_sqlver  = 'SQL2014SP1slip'
 $latest_master = '2012R2FallUpdate'
 $latest_sql_2012 = 'SQL2012SP2'
 $SIOToolKit_Branch = "master"
@@ -2510,6 +2510,9 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
     $SQL2012_SP1 = "http://download.microsoft.com/download/3/B/D/3BD9DD65-D3E3-43C3-BB50-0ED850A82AD5/SQLServer2012SP1-KB2674319-x64-ENU.exe"
     $SQL2012_SP2 = "http://download.microsoft.com/download/D/F/7/DF7BEBF9-AA4D-4CFE-B5AE-5C9129D37EFD/SQLServer2012SP2-KB2958429-x64-ENU.exe"
     $SQL2014_ZIP = "http://care.dlservice.microsoft.com/dl/download/evalx/sqlserver2014/x64/SQLServer2014_x64_enus.zip"
+    $SQL2014SP1SLIP_INST = "http://care.dlservice.microsoft.com/dl/download/2/F/8/2F8F7165-BB21-4D1E-B5D8-3BD3CE73C77D/SQLServer2014SP1-FullSlipstream-x64-ENU.exe"
+    $SQL2014SP1SLIP_box= "http://care.dlservice.microsoft.com/dl/download/2/F/8/2F8F7165-BB21-4D1E-B5D8-3BD3CE73C77D/SQLServer2014SP1-FullSlipstream-x64-ENU.box"
+
     $AAGURL = "https://community.emc.com/servlet/JiveServlet/download/38-111250/AWORKS.zip"
     $URL = $AAGURL
     $FileName = Split-Path -Leaf -Path $Url
@@ -2691,6 +2694,37 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
             
             }
             }
+            "SQL2014SP1slip"
+            {
+            if (!(Test-Path $Sourcedir\$SQLVER\setup.exe))
+                {
+                foreach ($url in ($SQL2014SP1SLIP_box,$SQL2014SP1SLIP_INST))
+                    {
+                    $FileName = Split-Path -Leaf -Path $Url
+                    Write-Verbose "Testing $FileName in $Sourcedir"
+                    if (!(test-path  "$Sourcedir\$FileName"))
+                        {
+                        Write-Verbose "Trying Download"
+                        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
+                            {  
+                            write-warning "Error Downloading file $Url, Please check connectivity"
+                            exit
+                            }
+                        }
+                    }
+                    Write-Warning "Creating $SQLVER Installtree, this might take a while"
+                    Start-Process $Sourcedir\$FileName -ArgumentList "/X:$Sourcedir\$SQLVER /q" -Wait
+                }
+            }
+            
+            
+            
+            
+            
+            }
+
+
+
           } #end switch
     }#end $SQLEXPRESS
 
