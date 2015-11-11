@@ -2403,7 +2403,7 @@ if ($scvmm.IsPresent)
     if (!(test-path  "$Sourcedir\$Prereqdir\$FileName"))
         {
         Write-Verbose "Trying Download"
-        if (!(get-prereq -DownLoadUrl $adkurl -destination  "$Sourcedir\$FileName"))
+        if (!(get-prereq -DownLoadUrl $adkurl -destination  "$Sourcedir\$Prereqdir\$FileName"))
             { 
             write-warning "Error Downloading file $adkurl, Please check connectivity"
             exit
