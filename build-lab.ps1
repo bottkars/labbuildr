@@ -294,7 +294,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
-    [ValidateSet('2016TP3''2012R2FallUpdate','2012R2UMASTER','2012R2MASTER','2012MASTER','2012R2U1MASTER','2012R2UEFIMASTER')]$Master,
+    [ValidateSet('2016TP3','2012R2FallUpdate','2012R2UMASTER','2012R2MASTER','2012MASTER','2012R2U1MASTER','2012R2UEFIMASTER')]$Master,
     <#do we want a special path to the Masters ? #>
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
