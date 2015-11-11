@@ -2409,7 +2409,7 @@ if ($scvmm.IsPresent)
             exit
             }
         Write-Warning "Getting WAIK, Could take a While"
-        Start-Process -FilePath "$Sourcedir\$FileName" -ArgumentList "/quiet /layout $Sourcedir\$Prereqdir" -Wait
+        Start-Process -FilePath "$Sourcedir\$Prereqdir\$FileName" -ArgumentList "/quiet /layout $Sourcedir\$Prereqdir" -Wait
         }
 
 
