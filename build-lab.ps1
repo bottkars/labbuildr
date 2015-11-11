@@ -2392,20 +2392,20 @@ if ($scvmm.IsPresent)
             http://care.dlservice.microsoft.com/dl/download/B/B/3/BB3A1E87-28F2-4362-9B1E-24CC3992EF3B/SCTP3_SCSM_EN.exe
             http://care.dlservice.microsoft.com/dl/download/3/5/B/35BB1415-28AD-46D5-B227-DD8AB821E9D8/SC_Configmgr_SCEP_SCTP3.exe
             #>
-            $Adkurl = "http://download.microsoft.com/download/8/1/9/8197FEB9-FABE-48FD-A537-7D8709586715/adk/adksetup.exe" #ADKsetup 10
+            $adkurl = "http://download.microsoft.com/download/8/1/9/8197FEB9-FABE-48FD-A537-7D8709586715/adk/adksetup.exe" #ADKsetup 10
             $URL = "http://care.dlservice.microsoft.com/dl/download/F/A/A/FAA14AC2-720A-4B17-8250-75EEEA13B259/SCTP3_SCVMM_EN.exe"
 
             }
     }# end switch
 
     Write-Verbose "Testing WAIK in $Sourcedir"
-    $FileName = Split-Path -Leaf -Path $Url
+    $FileName = Split-Path -Leaf -Path $adkurl
     if (!(test-path  "$Sourcedir\$Prereqdir\$FileName"))
         {
         Write-Verbose "Trying Download"
-        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
+        if (!(get-prereq -DownLoadUrl $adkurl -destination  "$Sourcedir\$FileName"))
             { 
-            write-warning "Error Downloading file $Url, Please check connectivity"
+            write-warning "Error Downloading file $adkurl, Please check connectivity"
             exit
             }
         Write-Warning "Getting WAIK, Could take a While"
