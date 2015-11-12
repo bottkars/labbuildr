@@ -208,14 +208,21 @@ if ($sql.IsPresent)
 
 if ($AddDisks.IsPresent)
     {
-    $SCSI = "0"
+    $SCSI = "1"
     foreach ($LUN in (1..$Disks))
         {
         $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
         Write-Verbose "Building new Disk $Diskname"
         $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $Clone.VMXname -Path $Clone.Path 
         Write-Verbose "Adding Disk $Diskname to $($Clone.VMXname)"
-        $AddDisk = $Clone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
+        if ($SharedDisk.ispresent)
+            {
+            $AddDisk = $Clone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI -Shared
+            }
+        else
+            {    
+            $AddDisk = $Clone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
+            }
         }
     }
 

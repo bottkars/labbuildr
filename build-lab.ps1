@@ -4046,15 +4046,16 @@ switch ($PsCmdlet.ParameterSetName)
             }
         $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features"
         if ($Cluster.IsPresent) {$AddonFeatures = "$AddonFeatures, Failover-Clustering, RSAT-Clustering, RSAT-Clustering-AutomationServer, RSAT-Clustering-CmdInterface, WVR"}
-        if ($BlankHV.IsPresent) {$AddonFeatures = "$AddonFeatures, Hyper-V, RSAT-Hyper-V-Tools"}
+        if ($BlankHV.IsPresent) {$AddonFeatures = "$AddonFeatures, Hyper-V, RSAT-Hyper-V-Tools, Multipath-IO"}
         
 		foreach ($Node in ($Blankstart..$BlankNodes))
 		{
 			###################################################
 			# Setup of a Blank Node
 			# Init
+            $NodePrefix = "Gennode"
 			$Nodeip = "$IPv4Subnet.18$Node"
-			$Nodename = "GenNode$Node"
+			$Nodename = "$NodePrefix$Node"
 			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
 			###################################################
 			# we need a DC, so check it is running
@@ -4078,7 +4079,7 @@ switch ($PsCmdlet.ParameterSetName)
 			status "Creating Blank Node Host $Nodename with IP $Nodeip"
 			if ($VTbit)
 			{
-				$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir $cloneparm"
+				$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir -SharedDisk $cloneparm"
 			}
 			else
 			{
@@ -4105,7 +4106,7 @@ switch ($PsCmdlet.ParameterSetName)
 		    {
 			write-host
 			write-verbose "Forming Blanknode Cluster"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix 'Gennode' -Clustername $ClusterName -IPAddress '$IPv4Subnet.180' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix $NodePrefix -ClusterName $ClusterName -IPAddress '$IPv4Subnet.180' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
 		    }
 
 	} # End Switchblock Blanknode
