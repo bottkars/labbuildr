@@ -3878,7 +3878,7 @@ switch ($PsCmdlet.ParameterSetName)
 		foreach ($Node in ($SOFSSTART..$SOFSNODES))
 		{
 			###################################################
-			# Setup of a Blank Node
+			# Setup of a SOFS Node
 			# Init
 			$Nodeip = "$IPv4Subnet.21$Node"
 			$Nodename = "SOFSNode$Node"
@@ -3953,7 +3953,7 @@ switch ($PsCmdlet.ParameterSetName)
             $Prefix= $SPPrefix
             $SPSize = "TXL"
 			###################################################
-			# Setup of a Blank Node
+			# Setup of a Sharepoint Node
 			# Init
 			$Nodeip = "$IPv4Subnet.14$Node"
 			$Nodename = "$Prefix"+"Node$Node"
@@ -3974,7 +3974,7 @@ switch ($PsCmdlet.ParameterSetName)
 			test-dcrunning
 			# Clone Base Machine
 			status $Commentline
-			status "Creating Blank Node Host $Nodename with IP $Nodeip"
+			status "Creating Host $Nodename with IP $Nodeip"
 		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $SPSize -Sourcedir $Sourcedir $cloneparm"
 			###################################################
 			If ($CloneOK)
@@ -4015,6 +4015,12 @@ switch ($PsCmdlet.ParameterSetName)
 
 	} # End Switchblock Sharepoint
 	"Blanknodes" {
+
+        if ($SpacesDirect.IsPresent -and $Master -lt "2016")
+                {
+                Write-Warning "Master 2016TP3 or Later is required for Spaces Direct"
+                exit
+                }
         If ($BlankHV.IsPresent)
             {
             $VTbit = $True
