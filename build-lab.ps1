@@ -136,6 +136,8 @@ Specify if Networker Scenario sould be installed
     IP-Addresses: .180 - .189
     #>
 	[Parameter(ParameterSetName = "Blanknodes")][switch][alias('bn')]$Blanknode,
+	[Parameter(ParameterSetName = "Blanknodes")][switch][alias('bnhv')]$BlankHV,
+	[Parameter(ParameterSetName = "Blanknodes")][switch][alias('Spaces')]$SpacesDirect,
     <#
     Selects the SOFS Scenario
     IP-Addresses: .210 - .219
@@ -4013,13 +4015,21 @@ switch ($PsCmdlet.ParameterSetName)
 
 	} # End Switchblock Sharepoint
 	"Blanknodes" {
+        If ($BlankHV.IsPresent)
+            {
+            $VTbit = $True
+            }
+        if ($SpacesDirect.IsPresent -and $Disks -lt 2)
+            {
+            $Disks = 2
+            }
         if ($Disks)
             {
 		    $cloneparm = " -AddDisks -disks $Disks"
             }
         $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features"
         if ($Cluster.IsPresent) {$AddonFeatures = "$AddonFeatures, Failover-Clustering, RSAT-Clustering, WVR"}
-
+        if ($BlankHV.IsPresent) {$AddonFeatures = "$AddonFeatures, Hyper-V, RSAT-HyperV"}
 		foreach ($Node in ($Blankstart..$BlankNodes))
 		{
 			###################################################
