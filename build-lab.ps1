@@ -4090,7 +4090,7 @@ switch ($PsCmdlet.ParameterSetName)
 		    {
 			write-host
 			write-verbose "Forming Blanknode Cluster"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix 'Gen'  -Clustername $ClusterName -IPAddress '$IPv4Subnet.180' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix 'Gennode' -Clustername $ClusterName -IPAddress '$IPv4Subnet.180' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
 		    }
 
 	} # End Switchblock Blanknode
