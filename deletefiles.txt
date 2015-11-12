@@ -8,4 +8,4 @@
 .\import-viprova.ps1
 .\install-scaleio.ps1
 .\get-*.ps1
-.\Scripts\HyperV\Hyperv.ps1
+.\deletefiles.txt

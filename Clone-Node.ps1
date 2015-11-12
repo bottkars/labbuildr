@@ -20,6 +20,7 @@ Param(
 [Parameter(Mandatory=$false)][int]$Scenario = 1,
 [Parameter(Mandatory=$false)][int]$ActivationPreference = 1,
 [Parameter(Mandatory=$false)][switch]$AddDisks,
+[Parameter(Mandatory=$false)][uint64]$Disksize = 200GB,
 [Parameter(Mandatory=$false)][ValidateRange(1, 6)][int]$Disks = 1,
 #[string]$Build,
 [Parameter(Mandatory=$false)][ValidateSet('XS','S','M','L','XL','TXL','XXL','XXXL')]$Size = "M",
@@ -148,6 +149,8 @@ $Clone | Set-VMXMainMemory -usefile:$false
 $Clone | Set-VMXDisplayName -DisplayName $Displayname
 if ($HyperV){
 ($Clone | Get-VMXConfig) | foreach-object {$_ -replace 'guestOS = "windows8srv-64"', 'guestOS = "winhyperv"' } | set-content $Clone.config
+($Clone | Get-VMXConfig) | foreach-object {$_ -replace 'guestOS = "windows9srv-64"', 'guestOS = "winhyperv"' } | set-content $Clone.config
+
 }
 $Clone | Set-VMXAnnotation -builddate -Line1 "This is node $Nodename for domain $Domainname"-Line2 "Adminpasswords: Password123!" -Line3 "Userpasswords: Welcome1"
 ######### next commands will be moved in vmrunfunction soon 
@@ -205,7 +208,6 @@ if ($sql.IsPresent)
 
 if ($AddDisks.IsPresent)
     {
-    [uint64]$Disksize = 200GB
     $SCSI = "0"
     foreach ($LUN in (1..$Disks))
         {
@@ -256,7 +258,7 @@ write-verbose "Enabling Shared Folders"
 
 $Clone | Set-VMXSharedFolderState -enabled
 # $Clone | Write-Host -ForegroundColor Gray
-
+$Clone | Set-VMXSharedFolder -add -Sharename Scripts -Folder "$Builddir\Scripts"
 Write-verbose "Waiting for Pass 1 (sysprep Finished)"
 test-user -whois Administrator
 } #end not isilon

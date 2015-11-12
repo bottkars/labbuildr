@@ -5,7 +5,7 @@
 .DESCRIPTION
    labbuildr is a Self Installing Lab tool for Building VMware Virtual Machines on VMware Workstation
       
-      Copyright 2014 Karsten Bott
+      Copyright 2015 Karsten Bott
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -49,10 +49,10 @@ param (
 	[Parameter(ParameterSetName = "version",Mandatory = $false, HelpMessage = "this will display the current version")][switch]$version,
     <# 
     run build-lab update    #>
-	[Parameter(ParameterSetName = "updatefromGit",Mandatory = $false, HelpMessage = "this will update labbuildr from latest git commit")][switch]$UpdatefromGit,
+	[Parameter(ParameterSetName = "update",Mandatory = $false, HelpMessage = "this will update labbuildr from latest git commit")][switch]$Update,
     <#
     run build-lab update    #>
-	[Parameter(ParameterSetName = "updatefromGit",Mandatory = $false, HelpMessage = "select a branch to update from")][ValidateSet('master','testing','develop')]$branch  = "master",
+	[Parameter(ParameterSetName = "update",Mandatory = $false, HelpMessage = "select a branch to update from")][ValidateSet('master','testing','develop')]$branch  = "develop",
     <# 
     create deskop shortcut
     #>	
@@ -127,16 +127,17 @@ Specify if Networker Scenario sould be installed
     Selects the Microsoft System Center Binary Install
     IP-Addresses: .18
     #>
-	[Parameter(ParameterSetName = "SCOM", Mandatory = $true)][switch][alias('SCOM')]$SCOM2012R2,
-    [Parameter(ParameterSetName = "SCOM")]
-   # [ValidateSet('3.7.0.0','3.6.0.3')]
-   # $SCOM_VER='3.7.0.0',
+	[Parameter(ParameterSetName = "SCOM", Mandatory = $true)][switch][alias('SC_OM')]$SCOM,
+    [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
+    [ValidateSet('SC2012_R2_SCOM','SCTP3_SCOM')]$SCOM_VER = "SC2012_R2_SCOM",
 
     <#
     Selects the Blank Nodes Scenario
     IP-Addresses: .180 - .189
     #>
 	[Parameter(ParameterSetName = "Blanknodes")][switch][alias('bn')]$Blanknode,
+	[Parameter(ParameterSetName = "Blanknodes")][switch][alias('bnhv')]$BlankHV,
+	[Parameter(ParameterSetName = "Blanknodes")][switch][alias('S2D')]$SpacesDirect,
     <#
     Selects the SOFS Scenario
     IP-Addresses: .210 - .219
@@ -150,7 +151,7 @@ Specify if Networker Scenario sould be installed
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)][switch]$DAG,
     <# Specify the Number of Exchange Nodes#>
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
-    [Parameter(ParameterSetName = "E15", Mandatory = $false)][ValidateRange(1, 10)][int][alias('exn')]$EXNodes = "1",
+    [Parameter(ParameterSetName = "E15", Mandatory = $false)][ValidateRange(1, 10)][int][alias('exn')]$EXNodes,
     <# Specify the Starting exchange Node#>
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)][ValidateRange(1, 9)][int][alias('exs')]$EXStartNode = "1",
@@ -193,7 +194,9 @@ Specify if Networker Scenario sould be installed
     # [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$clusteredmdm,
     <# SCVMM on last Node ? #>	
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$SCVMM,
-    <# Starting Node for Blank Nodes#>
+    <# SCVMM Version #>	
+    [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][ValidateSet('SC2012_R2_SCVMM','SCTP3_SCVMM')]$SCVMM_VER = "SC2012_R2_SCVMM",
+    <# Configure VMM ?#>
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$ConfigureVMM,
     <# Starting Node for Blank Nodes#>
     [Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)][ValidateRange(1, 9)][alias('bs')]$Blankstart = "1",
@@ -223,7 +226,9 @@ Specify if Networker Scenario sould be installed
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
-	[ValidateSet('SQL2012','SQL2012SP1','SQL2012SP2','SQL2012SP1SLIP','SQL2014')]$SQLVER,
+	[Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
+	[Parameter(ParameterSetName = "SCVMM", Mandatory = $false)]
+	[ValidateSet('SQL2014SP1slip','SQL2012','SQL2012SP1','SQL2012SP2','SQL2012SP1SLIP','SQL2014')]$SQLVER,
     
     ######################### common Parameters start here in Order
     <# reads the Default Config from defaults.xml
@@ -258,7 +263,22 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
 	[switch]$defaults,
 
-    
+    <#do we want Tools Update? #>
+    [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
+	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
+	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+    [Parameter(ParameterSetName = "E16", Mandatory = $false)]
+	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
+	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
+    [Parameter(ParameterSetName = "DConly", Mandatory = $false)]
+    [Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
+    [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    [Switch]$Toolsupdate,
+
     
     <# Wich version of OS Master should be installed
     '2012R2FallUpdate','2012R2U1MASTER','2012R2MASTER','2012R2UMASTER','2012MASTER','2012R2UEFIMASTER','vNextevalMaster','RELEASE_SERVER'
@@ -276,7 +296,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
-    [ValidateSet('2012R2FallUpdate','2012R2UMASTER','2012R2MASTER','2012MASTER','2012R2U1MASTER','2012R2UEFIMASTER','vNextevalMaster','RELEASE_SERVER')]$Master,
+    [ValidateSet('2016TP3','2012R2FallUpdate','2012R2UMASTER','2012R2MASTER','2012MASTER','2012R2U1MASTER','2012R2UEFIMASTER')]$Master,
     <#do we want a special path to the Masters ? #>
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
@@ -375,7 +395,7 @@ Machine Sizes
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
-	[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain,
+	[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain,
 	
 <# Turn this one on if you would like to install a Hypervisor inside a VM #>
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
@@ -403,7 +423,7 @@ Version Of Networker Modules
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
-	[ValidateSet('nmm8211','nmm8212','nmm8214','nmm8216','nmm8217','nmm8218','nmm822','nmm821','nmm300', 'nmm301', 'nmm2012', 'nmm3012', 'nmm82','nmm85','nmm85.BR1','nmm85.BR2','nmm85.BR3','nmm85.BR4','nmm90.DA')]
+	[ValidateSet('nmm8221','nmm8211','nmm8212','nmm8214','nmm8216','nmm8217','nmm8218','nmm822','nmm821','nmm300', 'nmm301', 'nmm2012', 'nmm3012', 'nmm82','nmm85','nmm85.BR1','nmm85.BR2','nmm85.BR3','nmm85.BR4','nmm90.DA')]
 $nmm_ver,
 	
 <# Indicates to install Networker Server with Scenario #>
@@ -439,7 +459,7 @@ mus be extracted to [sourcesdir]\[nw_ver], ex. c:\sources\nw82
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
-    [ValidateSet('nw822','nw8218','nw8217','nw8216','nw8215','nw8214','nw8213','nw8212','nw8211','nw821','nw8205','nw8204','nw8203','nw8202','nw82','nw8116','nw8115','nw8114', 'nw8113','nw8112', 'nw811',  'nw8105','nw8104','nw8102', 'nw81','nw85','nw85.BR1','nw85.BR2','nw85.BR3','nw85.BR4','nw90.DA','nwunknown')]
+    [ValidateSet('nw8221','nw822','nw8218','nw8217','nw8216','nw8215','nw8214','nw8213','nw8212','nw8211','nw821','nw8205','nw8204','nw8203','nw8202','nw82','nw8116','nw8115','nw8114', 'nw8113','nw8112', 'nw811',  'nw8105','nw8104','nw8102', 'nw81','nw85','nw85.BR1','nw85.BR2','nw85.BR3','nw85.BR4','nw90.DA','nwunknown')]
     $nw_ver,
 
 ### network Parameters ######
@@ -549,13 +569,9 @@ Sources should be populated from a bases sources.zip
 	#[Validatescript({Test-Path -Path $_ })][String]$Sourcedir,
 
     <#
-    run build-lab update old for old update methos    #>
-	[Parameter(ParameterSetName = "updatefromBlog",Mandatory = $false, HelpMessage = "this will update labbuildr")][alias('Update')][switch]$UpdatefromBlog,
-    <#
      run build-lab -update -force to force an update
     #>
-    [Parameter(ParameterSetName = "updatefromGit",Mandatory = $false, HelpMessage = "this will force update labbuildr")]
-    [Parameter(ParameterSetName = "updatefromBlog",Mandatory = $false, HelpMessage = "this will force update labbuildr")]
+    [Parameter(ParameterSetName = "update",Mandatory = $false, HelpMessage = "this will force update labbuildr")]
     [switch]$force,
 
 
@@ -633,8 +649,17 @@ try
     }
     catch
     {
-    [datetime]$Latest_labbuildr_git = "07/01/2015"
+    [datetime]$Latest_labbuildr_git = "07/11/2015"
     }
+try
+    {
+    [datetime]$Latest_labbuildr_scripts_git = Get-Content  ($Builddir + "\labbuildr-scripts-$branch.gitver") -ErrorAction Stop
+    }
+    catch
+    {
+    [datetime]$Latest_labbuildr_scripts_git = "07/11/2015"
+    }
+
 
 try
     {
@@ -642,7 +667,7 @@ try
     }
 catch
     {
-    [datetime]$Latest_vmxtoolkit_git = "07/01/2015"
+    [datetime]$Latest_vmxtoolkit_git = "07/11/2015"
     }
 
 try
@@ -651,7 +676,7 @@ try
     }
     catch
     {
-    [datetime]$Latest_SIOToolKit_git = "07/01/2015"
+    [datetime]$Latest_SIOToolKit_git = "07/11/2015"
     }
 
 
@@ -659,7 +684,7 @@ $LogFile = "$Builddir\$(Get-Content env:computername).log"
 $WAIKVER = "WAIK"
 $domainsuffix = ".local"
 $AAGDB = "AWORKS"
-$major = "4.0"
+$major = "5.0"
 $Default_vmnet = "vmnet2"
 $Default_BuildDomain = "labbuildr"
 $Default_Subnet = "192.168.2.0"
@@ -669,39 +694,35 @@ $Default_AddressFamily = "IPv4"
 $latest_ScaleIOVer = '1.32-2451.4'
 $ScaleIO_OS = "Windows"
 $ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
-$latest_nmm = 'nmm8216'
-$latest_nw = 'nw8216'
+$latest_nmm = 'nmm90.DA'
+$latest_nw = 'nw90.DA'
 $latest_e16_cu = 'final'
 $latest_ex_cu = 'cu10'
-$latest_sqlver  = 'SQL2014'
+$latest_sqlver  = 'SQL2014SP1slip'
 $latest_master = '2012R2FallUpdate'
 $latest_sql_2012 = 'SQL2012SP2'
 $SIOToolKit_Branch = "master"
-# $labbuildr_branch = "harmony"
-# $vmxtoolkit_branch = "harmony"
 $NW85_requiredJava = "jre-7u61-windows-x64"
 # $latest_java8 = "jre-8u51-windows-x64.exe"
 $latest_java8uri = "http://javadl.sun.com/webapps/download/AutoDL?BundleId=107944"
 $SourceScriptDir = "$Builddir\Scripts\"
 $Adminuser = "Administrator"
 $Adminpassword = "Password123!"
-$Targetscriptdir = "C:\Scripts\"
-$NodeScriptDir = "$Builddir\Scripts\Node\"
+$GuestScriptdir = "\\vmware-host\Shared Folders\Scripts"
+$GuestSourcePath = "\\vmware-host\Shared Folders\Sources"
+$GuestLogDir = "C:\Scripts"
+$NodeScriptDir = "$GuestScriptdir\Node"
 $Dots = [char]58
 [string]$Commentline = "#######################################################################################################################"
-$SCVMMVER = "SCVMM2012R2"
+#$SCVMM_VER = "SCVMM2012R2"
 $WAIKVER = "WAIK"
-$SCOMVER = "SC2012_R2_SCOM"
+# $SCOMVER = "SC2012_R2_SCOM"
 #$SQLVER = "SQL2012SP1"
 $DCNODE = "DCNODE"
 $NWNODE = "NWSERVER"
 $SPver = "SP2013SP1fndtn"
 $SPPrefix = "SP2013"
-$vmxtoolkit = "vmxtoolkit.zip"
-$labbuildr = "labbuildr4.zip"
-$Updatefiles = ($labbuildr,$vmxtoolkit)
-$UpdateUri = "https://community.emc.com/blogs/bottk/2015/03/30/labbuildrbeta"
-$Edition = "Halloween"
+$Edition = "Piranha"
 $Sleep = 10
 [string]$Sources = "Sources"
 $Sourcedirdefault = "c:\Sources"
@@ -730,7 +751,7 @@ function copy-tovmx
 		Write-Progress -Activity "Copy Files to $Nodename" -Status $file -PercentComplete (100/$count * $incr)
 		do
 		{
-			($cmdresult = &$vmrun -gu $Adminuser -gp $Adminpassword copyfilefromhosttoguest $CloneVMX $Sourcedir$file $TargetScriptdir$file) 2>&1 | Out-Null
+			($cmdresult = &$vmrun -gu $Adminuser -gp $Adminpassword copyfilefromhosttoguest $CloneVMX $Sourcedir$file $GuestScriptDir$file) 2>&1 | Out-Null
 			write-log "$origin $File $cmdresult"
 		}
 		until ($VMrunErrorCondition -notcontains $cmdresult)
@@ -767,6 +788,54 @@ function get-update
 	$update = New-Object System.Net.WebClient
 	$update.DownloadFile($Updatesource, $Updatedestination)
 }
+
+
+
+
+####
+function update-fromGit
+{
+
+
+	param (
+            [string]$Repo,
+            [string]$RepoLocation,
+            [string]$branch,
+            [string]$latest_local_Git,
+            [string]$Destination,
+            [switch]$delete
+            )
+        Write-Verbose "Using update-fromgit function for $repo"
+        $Uri = "https://api.github.com/repos/$RepoLocation/$repo/commits/$branch"
+        $Zip = ("https://github.com/$RepoLocation/$repo/archive/$branch.zip").ToLower()
+        $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
+        [datetime]$latest_OnGit = $request.Headers.'Last-Modified'
+                Write-Verbose "We have $repo version $latest_local_Git, $latest_OnGit is online !"
+                if ($latest_local_Git -lt $latest_OnGit -or $force.IsPresent )
+                    {
+                    $Updatepath = "$Builddir\Update"
+					if (!(Get-Item -Path $Updatepath -ErrorAction SilentlyContinue))
+					        {
+						    $newDir = New-Item -ItemType Directory -Path "$Updatepath"
+                            }
+                    Write-Output "We found a newer Version for $repo on Git Dated $($request.Headers.'Last-Modified')"
+                    if ($delete.IsPresent)
+                        {
+                        Write-Verbose "Cleaning $Destination"
+                        Remove-Item -Path $Destination -Recurse -ErrorAction SilentlyContinue
+                        }
+                    Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\$repo-$branch.zip" -ignoresize
+                    Expand-LABZip -zipfilename "$Builddir\update\$repo-$branch.zip" -destination $Destination -Folder $repo-$branch
+                    $Isnew = $true
+                    $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\$repo-$branch.gitver") 
+                    }
+                else 
+                    {
+                    Status "No update required for labbuildr, already newest version "
+                    }
+
+}
+#####
 
 function Extract-Zip
 {
@@ -830,10 +899,13 @@ function domainjoin
     $AddonFeatures
     )
     $Origin = $MyInvocation.MyCommand
-    Write-Warning "Preparing VMware Tools Upgrade by injecting tools CD ( update will start before next reboot of VM )"
-    Start-Process 'C:\Program Files (x86)\VMware\VMware Workstation\vmrun.exe' -ArgumentList  "installTools $CloneVMX" -NoNewWindow
+    if ($Toolsupdate.IsPresent)
+        {
+        Write-Warning "Preparing VMware Tools Upgrade by injecting tools CD ( update will start before next reboot of VM )"
+        Start-Process 'C:\Program Files (x86)\VMware\VMware Workstation\vmrun.exe' -ArgumentList  "installTools $CloneVMX" -NoNewWindow
+        }
     Write-Verbose "Configuring Node and Features"
-	invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script configurenode.ps1 -Parameter "-nodeip $Nodeip -IPv4subnet $IPv4subnet -nodename $Nodename -IPv4PrefixLength $IPv4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -IPv6Prefix $IPv6Prefix -AddressFamily $AddressFamily $AddGateway -AddOnfeatures '$AddonFeatures' -Domain $BuildDomain $CommonParameter" -nowait -interactive
+	invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script configure-node.ps1 -Parameter "-nodeip $Nodeip -IPv4subnet $IPv4subnet -nodename $Nodename -IPv4PrefixLength $IPv4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -IPv6Prefix $IPv6Prefix -AddressFamily $AddressFamily $AddGateway -AddOnfeatures '$AddonFeatures' -Domain $BuildDomain $CommonParameter" -nowait -interactive
 	write-verbose "Waiting for Pass 2 (Node Configured)"
     do {
         $ToolState = Get-VMXToolsState -config $CloneVMX
@@ -841,7 +913,7 @@ function domainjoin
         }
     until ($ToolState.State -match "running")
 
-	While ($FileOK = (&$vmrun -gu Administrator -gp Password123! fileExistsInGuest $CloneVMX c:\$Script_dir\2.pass) -ne "The file exists.")
+	While ($FileOK = (&$vmrun -gu Administrator -gp Password123! fileExistsInGuest $CloneVMX $GuestLogDir\2.pass) -ne "The file exists.")
     { 
         Write-Host -NoNewline "."
         sleep $Sleep
@@ -851,8 +923,8 @@ function domainjoin
 	do
         {
         Write-Verbose "Joining Domain $BuildDomain"
-        $domainadd = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script addtodomain.ps1 -Parameter "-Domain $BuildDomain -domainsuffix $domainsuffix -subnet $IPv4subnet -IPV6Subnet $IPv6Prefix -AddressFamily $AddressFamily" -nowait -interactive # $CommonParameter
-	    Write-Host $domainadd
+        $domainadd = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script add-todomain.ps1 -Parameter "-Domain $BuildDomain -domainsuffix $domainsuffix -subnet $IPv4subnet -IPV6Subnet $IPv6Prefix -AddressFamily $AddressFamily" -nowait -interactive # $CommonParameter
+	    # Write-Host $domainadd
         }
     until ($domainadd -match "success")
 
@@ -865,9 +937,8 @@ function domainjoin
     Write-Verbose "Paranoia, checking shared folders second time"
     Set-VMXSharedFolderState -VMXName $nodename -config $CloneVMX -enabled
     Write-Verbose "Please Check inside VM for Network Warnings"
-	While ($FileOK = (&$vmrun -gu Administrator -gp Password123! fileExistsInGuest $CloneVMX c:\$Script_dir\3.pass) -ne "The file exists.") { Write-Host -NoNewline "."; sleep $Sleep }
-    # Write-Host
-
+	While ($FileOK = (&$vmrun -gu Administrator -gp Password123! fileExistsInGuest $CloneVMX $GuestLogDir\3.pass) -ne "The file exists.") { Write-Host -NoNewline "."; sleep $Sleep }
+    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script create-labshortcut.ps1 -interactive # -Parameter $CommonParameter
 }
 
 
@@ -913,30 +984,6 @@ function write-log
 }
 
 
-function pause-vmx
-{
-	param ($vmname)
-	$Origin = $MyInvocation.MyCommand
-	do
-	{
-		($cmdresult = &$vmrun pause "$Builddir\\$vmname\\$vmname.vmx" 2>&1 | Out-Null)
-		write-log "$Origin pause $vmname $cmdresult"
-	}
-	until ($VMrunErrorCondition -notcontains $cmdresult)
-}
-
-
-function unpause-vmx
-{
-	param ($vmname)
-	$Origin = $MyInvocation.MyCommand
-	do
-	{
-		($cmdresult = &$vmrun unpause "$Builddir\\$vmname\\$vmname.vmx" 2>&1 | Out-Null)
-		write-log "$Origin unpause $vmname $cmdresult"
-	}
-	until ($VMrunErrorCondition -notcontains $cmdresult)
-}
 
 
 
@@ -992,18 +1039,18 @@ function test-domainsetup
 {
 	test-dcrunning
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing Domain Name ...: "
-	copy-vmxguesttohost -Guestpath "C:\$Script_dir\domain.txt" -Hostpath "$Builddir\domain.txt" -Guest $DCNODE
-	$holdomain = Get-Content $Builddir"\domain.txt"
+	# copy-vmxguesttohost -Guestpath "$Script_dir\domain.txt" -Hostpath "$Builddir\domain.txt" -Guest $DCNODE
+	$holdomain = Get-Content "$Builddir\$Script_dir\$DCNODE\domain.txt"
 	status $holdomain
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing Subnet.........: "
-	copy-vmxguesttohost -Guestpath "C:\$Script_dir\ip.txt" -Hostpath "$Builddir\ip.txt" -Guest $DCNODE
-	$DomainIP = Get-Content $Builddir"\ip.txt"
+	#copy-vmxguesttohost -Guestpath "C:\$Script_dir\ip.txt" -Hostpath "$Builddir\ip.txt" -Guest $DCNODE
+	$DomainIP = Get-Content "$Builddir\$Script_dir\$DCNODE\ip.txt"
 	$IPv4subnet = convert-iptosubnet $DomainIP
 	status $ipv4Subnet
 
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing Default Gateway: "
-	copy-vmxguesttohost -Guestpath "C:\$Script_dir\Gateway.txt" -Hostpath "$Builddir\Gateway.txt" -Guest $DCNODE
-	$DomainGateway = Get-Content $Builddir"\Gateway.txt"
+	#copy-vmxguesttohost -Guestpath "C:\$Script_dir\Gateway.txt" -Hostpath "$Builddir\Gateway.txt" -Guest $DCNODE
+	$DomainGateway = Get-Content "$Builddir\$Script_dir\$DCNODE\Gateway.txt"
 	status $DomainGateway
 
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing VMnet .........: "
@@ -1105,7 +1152,7 @@ function checkpoint-progress
         {
         $AddParameter = " -reboot"
         }
-	invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script set-step.ps1 -nowait -interactive -Parameter " -step $step $AddParameter" # $CommonParameter
+	invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$GuestScriptDir\Node" -Script set-step.ps1 -nowait -interactive -Parameter " -step $step $AddParameter" # $CommonParameter
 	write-Host
     if (!$Nowait.IsPresent)
         {
@@ -1115,7 +1162,7 @@ function checkpoint-progress
             Write-Verbose $ToolState.State
             }
         until ($ToolState.state -match "running")
-	    While ($FileOK = (&$vmrun -gu $Adminuser -gp $Adminpassword fileExistsInGuest $CloneVMX c:\$Script_dir\$step.pass) -ne "The file exists.") { Write-Host -NoNewline "."; write-log "$FileOK $Origin"; sleep $Sleep }
+	    While ($FileOK = (&$vmrun -gu $Adminuser -gp $Adminpassword fileExistsInGuest $CloneVMX "$GuestLogDir\$step.pass") -ne "The file exists.") { Write-Host -NoNewline "."; write-log "$FileOK $Origin"; sleep $Sleep }
 	    write-host
         }
     else
@@ -1148,12 +1195,12 @@ function invoke-postsection
     param (
     [switch]$wait)
     write-verbose "Setting Power Scheme"
-	invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script powerconf.ps1 -interactive # $CommonParameter
+	invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$NodeScriptDir" -Script powerconf.ps1 -interactive # $CommonParameter
 	write-verbose "Configuring UAC"
-    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script set-uac.ps1 -interactive # $CommonParameter
+    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$NodeScriptDir" -Script set-uac.ps1 -interactive # $CommonParameter
     if ($Default.Puppet)
         {
-        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-puppetagent.ps1 -Parameter "-Puppetmaster $Puppetmaster" -interactive # $CommonParameter
+        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$GuestScriptDir\Node" -Script install-puppetagent.ps1 -Parameter "-Puppetmaster $Puppetmaster" -interactive # $CommonParameter
         }
     if ($wait.IsPresent)
         {
@@ -1191,102 +1238,35 @@ Import-Module "$Builddir\$Module" -Force
 ###################################################
 switch ($PsCmdlet.ParameterSetName)
 {
-    "UpdatefromBlog" 
+    "update" 
         {
-                $Webrequest = Invoke-WebRequest -Uri $UpdateUri
-                foreach ($Updatefile in $Updatefiles)
-                {
-                Write-Verbose "testing $Updatefile"
-                switch ($Updatefile)
-                                {
-                                $labbuildr
-                                    {
-                                    $Currentver = $verlabbuildr
-                                    }
-                                $vmxtoolkit
-                                    {
-                                    $Currentver = $vervmxtoolkit
-                                    }
-                                } # end switch
 
-				write-verbose "Checking for $Updatefile"
-				if ($Link = ($Webrequest).Links | where { $_.OuterHTML -Match "$Updatefile" -and $_.Innertext -match "$Updatefile"} )
+
+        $Repo = "labbuildr"
+        $RepoLocation = "bottkars"
+        $Latest_local_git = $Latest_labbuildr_git
+        $Destination = "$Builddir"
+        update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination
+        if (Test-Path "$Builddir\deletefiles.txt")
+		    {
+			$deletefiles = get-content "$Builddir\deletefiles.txt"
+			foreach ($deletefile in $deletefiles)
+			    {
+				if (Get-Item $Builddir\$deletefile -ErrorAction SilentlyContinue)
 				    {
-				    $uri = $link.href
-				    $Updateversion = $uri.TrimStart("/servlet/JiveServlet/download/")
-				    $Updateversion = $Updateversion.TrimEnd("/$updatefile")
-                    $Updatever = New-Object System.Version $Updateversion.replace("-",".")
-				    Write-Verbose "found  $Updatever"
-                    Write-host "Comparing versions for $Updatefile"
-                    Write-Host "Installed $Currentver, found $Updatever"
-				    Write-Verbose "installed $Currentver"
-				    Write-Verbose "comparing Versions"
-                    write-verbose "Building version"
-                    if ($Currentver -lt $Updatever -or $force.IsPresent )
-				        {
-                        $Isnew = $true
-					    status "Downloading Update for $Updatefile, please be patient ....."
-					    $Updatepath = "$Builddir\Update"
-					    if (!(Get-Item -Path $Updatepath -ErrorAction SilentlyContinue))
-					        {
-						$newDir = New-Item -ItemType Directory -Path "$Updatepath"
+					Remove-Item -Path $Builddir\$deletefile -Recurse -ErrorAction SilentlyContinue
+					status "deleted $deletefile"
+					write-log "deleted $deletefile"
 					}
-					    $UpdateSource = "https://community.emc.com/$uri"
-					    $UpdateDestination = "$Updatepath\$Updatefile"
-					    get-update -UpdateSource $UpdateSource -Updatedestination $UpdateDestination
-                        Unblock-File -Path $UpdateDestination
-					    switch ($Updatefile)
-                            {
-                                $vmxtoolkit
-                                    {
-                                    Extract-Zip -zipfilename "$Builddir\update\$Updatefile" -destination $Builddir\vmxtoolkit
-                                    }
-                                $labbuildr
-                                    {
-                                    Remove-Item $Builddir\Scripts -Recurse
-                                    Extract-Zip -zipfilename "$Builddir\update\$Updatefile" -destination $Builddir
-                                    }
-                                } # end switch
-                        $Part = $Updatefile.Replace(".zip","")
-                        $Updatever | Set-Content ($Builddir+"\$part.version") 
-					    if (Test-Path "$Builddir\deletefiles.txt")
-					        {
-						$deletefiles = get-content "$Builddir\deletefiles.txt"
-						foreach ($deletefile in $deletefiles)
-						{
-							if (Get-Item $Builddir\$deletefile -ErrorAction SilentlyContinue)
-							{
-								Remove-Item -Path $Builddir\$deletefile -Recurse -ErrorAction SilentlyContinue
-								status "deleted $deletefile"
-								write-log "deleted $deletefile"
-							}
-						}
+			    }
+            }
+        else 
+            {
+            Write-Host "No Deletions required"
+            }
 
 
-					}#end testpath deletfiles
-				        } # end current version
-				     else 
-                        {
-                        Status "No update required for $updatefile, already newest version "
-                        }
-				    }# end if updatefile
-                    else
-				        {
-				        Write-Host "no updatefile available"
-				        }#>
-                } # end foreach
-                if ($Isnew)
-                    {
-                    Remove-Item .\Update -Recurse -Confirm:$false
-				    status "Update Done"
-                    status "press any key for reloading vmxtoolkit Modules"
-                    pause
-                    ./profile.ps1
-                    }
-	return		
-    }
-    "updatefromGit" 
-        {
+<#
         $Uri = "https://api.github.com/repos/bottkars/labbuildr/commits/$branch"
         $Zip = ("https://github.com/bottkars/labbuildr/archive/$branch.zip").ToLower()
         $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
@@ -1304,29 +1284,24 @@ switch ($PsCmdlet.ParameterSetName)
                     Expand-LABZip -zipfilename "$Builddir\update\labbuildr-$branch.zip" -destination $Builddir -Folder labbuildr-$branch
                     $Isnew = $true
                     $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\labbuildr-$branch.gitver") 
-				    if (Test-Path "$Builddir\deletefiles.txt")
-					    {
-						$deletefiles = get-content "$Builddir\deletefiles.txt"
-						foreach ($deletefile in $deletefiles)
-						    {
-							if (Get-Item $Builddir\$deletefile -ErrorAction SilentlyContinue)
-							    {
-								Remove-Item -Path $Builddir\$deletefile -Recurse -ErrorAction SilentlyContinue
-								status "deleted $deletefile"
-								write-log "deleted $deletefile"
-							    }
-						    }
-                        }
-                    else 
-                        {
-                        Write-Host "No Deletions required"
-                        }
                     }
                 else 
                     {
                     Status "No update required for labbuildr, already newest version "
                     }
-###
+##
+#>
+
+        $Repo = "labbuildr-scripts"
+        $RepoLocation = "bottkars"
+        $Latest_local_git = $Latest_labbuildr_scripts_git
+        $Destination = "$Builddir\Scripts"
+        update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -delete
+
+
+
+
+####
         $Uri = "https://api.github.com/repos/bottkars/vmxtoolkit/commits/$branch"
         $Zip = ("https://github.com/bottkars/vmxtoolkit/archive/$branch.zip").ToLower()
         $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
@@ -1392,7 +1367,7 @@ switch ($PsCmdlet.ParameterSetName)
     }# end shortcut
     "Version"
         {
-				Status "labbuildr version $major-$verlabbuildr $Edition"
+				Status "labbuildr version $major-$verlabbuildr $Edition on $branch"
                 if ($Latest_labbuildr_git)
                     {
                     Status "Git Release $Latest_labbuildr_git"
@@ -1453,7 +1428,7 @@ if ($defaults.IsPresent)
                  $nmm_ver = $latest_nmm
                 }
             } 
-        $scvmm_ver = $nmm_ver -replace "nmm","scvmm"
+        $nmm_scvmm_ver = $nmm_ver -replace "nmm","scvmm"
         if (!$nw_ver)
             {
             try
@@ -1645,8 +1620,13 @@ if ($defaults.IsPresent)
                 [switch]$NW = $True
                 $DefaultGateway = "$IPv4Subnet.$Gatewayhost"
                 }
-            
-            
+            }
+        if (!($MyInvocation.BoundParameters.Keys.Contains("NoDomainCheck")))
+            {
+            if ($Default.NoDomainCheck -eq "true")
+                {
+                [switch]$NoDomainCheck = $true
+                }
             }
         if (!($MyInvocation.BoundParameters.Keys.Contains("NMM")))
             {
@@ -1734,6 +1714,7 @@ $config += ("<ScaleIOVer>$($ScaleIOVer)</ScaleIOVer>")
 $config += ("<DNS1>$($DNS1)</DNS1>")
 $config += ("<NMM>$($NMM.IsPresent)</NMM>")
 $config += ("<Masterpath>$Masterpath</Masterpath>")
+$config += ("<NoDomainCheck>$NoDomainCheck</NoDomainCheck>")
 $config += ("<Puppet>$($Default.Puppet)</Puppet>")
 $config += ("<PuppetMaster>$($Default.PuppetMaster)</PuppetMaster>")
 $config += ("<Hostkey>$($Default.HostKey)</Hostkey>")
@@ -1917,8 +1898,11 @@ if (!($DConly.IsPresent))
 	}
 } # end not dconly
 
+status "Version $($major).$Edition"
+#status "# running Labuildr Build $verlabbuildr"
+# status "# and vmxtoolkit   Build $vervmxtoolkit"
 
-# Clear-Host
+<# Clear-Host
 status $Commentline
 status "# Welcome to labbuildr                                                                                                #"
 status "# Version $($major).$Edition                                                                                  #"
@@ -1931,12 +1915,16 @@ status "# Exchange 2013/16 Standalone or DAG, SQL 2012SP1 and 2014, Always On, H
 status "# Available OS Masters are 2012, 2012R2, 2012R2Update and Techical Preview of vNext                                   #"
 status "# EMC Integration for Networker, OneFS, Avamar, DD, ScaleIO and other VADP´s                                          #"
 status "# Idea and Scripting by @HyperV_Guy                                                                                   #"
-status $Commentline
+status $Commentline  #>
 workorder "Building Proposed Workorder"
-#If ($DAG.IsPresent)
-#    {
-#    $Exchange = $True
-#    }
+If ($DAG.IsPresent)
+    {
+    if (!$EXNodes)
+        {
+        $EXNodes = 2 
+        Write-Warning "No -EXnodes specified, defaulting to $EXNodes Nodes for DAG Deployment"
+        }
+    }
 if ($Blanknode.IsPresent)
 {
 	workorder "We are going to Install $BlankNodes Blank Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
@@ -2002,6 +1990,11 @@ if ($NWServer.IsPresent -or $NW.IsPresent)
     }
 if ($Exchange2013.IsPresent)
 {
+    If ($Master -gt '2012Z')
+        {
+        Write-Warning "Only master up 2012R2Fallupdate supported in this scenario"
+        exit
+        }
     $Prereqdir = "Attachments"
     $attachments = (
     "http://www.cisco.com/c/dam/en/us/solutions/collateral/data-center-virtualization/unified-computing/fle_vmware.pdf",
@@ -2159,16 +2152,14 @@ if ($Exchange2013.IsPresent)
 
 if ($Exchange2016.IsPresent)
 {
+    If ($Master -gt '2012Z')
+        {
+        Write-Warning "Only master up 2012R2Fallupdate supported in this scenario"
+        exit
+        }
     $Prereqdir = "Attachments"
     $attachments = (
-    "http://www.cisco.com/c/dam/en/us/solutions/collateral/data-center-virtualization/unified-computing/fle_vmware.pdf",
-    "http://www.emc.com/collateral/white-papers/h12234-emc-integration-for-microsoft-private-cloud-wp.pdf",
-    "http://www.emc.com/collateral/software/data-sheet/h2257-networker-ds.pdf",
-    "http://www.emc.com/collateral/software/data-sheet/h2479-networker-app-modules-ds.pdf",
-    "http://www.emc.com/collateral/software/data-sheet/h4525-networker-ms-apps-ds.pdf",
-    "http://www.emc.com/collateral/handouts/h14152-cloudboost-handout.pdf",
-    "http://www.emc.com/collateral/software/data-sheet/h2257-networker-ds.pdf",
-    "http://www.emc.com/collateral/software/data-sheet/h3979-networker-dedupe-ds.pdf"
+    "http://www.cisco.com/c/dam/en/us/solutions/collateral/data-center-virtualization/unified-computing/fle_vmware.pdf"
     )
     
     if (!(Test-Path $Sourcedir\$Prereqdir)){New-Item -ItemType Directory -Path $Sourcedir\$Prereqdir}
@@ -2195,8 +2186,8 @@ if ($Exchange2016.IsPresent)
 		        "http://download.microsoft.com/download/E/2/1/E21644B5-2DF2-47C2-91BD-63C560427900/NDP452-KB2901907-x86-x64-AllOS-ENU.exe",
 #                "http://download.microsoft.com/download/A/A/3/AA345161-18B8-45AE-8DC8-DA6387264CB9/filterpack2010sp1-kb2460041-x64-fullfile-en-us.exe",
 #                "http://download.microsoft.com/download/0/A/2/0A28BBFA-CBFA-4C03-A739-30CCA5E21659/FilterPack64bit.exe",
-                "http://download.microsoft.com/download/2/C/4/2C47A5C1-A1F3-4843-B9FE-84C0032C61EC/UcmaRuntimeSetup.exe",
-                "http://download.microsoft.com/download/6/2/D/62DFA722-A628-4CF7-A789-D93E17653111/ExchangeMapiCdo.EXE"
+                "http://download.microsoft.com/download/2/C/4/2C47A5C1-A1F3-4843-B9FE-84C0032C61EC/UcmaRuntimeSetup.exe"
+#                "http://download.microsoft.com/download/6/2/D/62DFA722-A628-4CF7-A789-D93E17653111/ExchangeMapiCdo.EXE"
                 
                 ) 
     if (Test-Path -Path "$Sourcedir\$Prereqdir")
@@ -2243,10 +2234,6 @@ if ($Exchange2016.IsPresent)
         Switch ($e16_cu)
 
             {
-                "Preview1"
-                {
-                $URL = "http://download.microsoft.com/download/D/F/7/DF7BC677-B1BE-45FC-AD48-B86C917100D8/Exchange2016-x64-Preview.exe"
-                }
                 "final"
                 {
                 $URL = "http://download.microsoft.com/download/3/9/B/39B8DDA8-509C-4B9E-BCE9-4CD8CDC9A7DA/Exchange2016-x64.exe"
@@ -2361,16 +2348,10 @@ if ($ConfigureVMM.IsPresent)
 
 if ($scvmm.IsPresent)
   {
+    Write-Warning "Entering $SCVMM_VER Prereq Section"
     [switch]$SQL=$true
-    if ($SQLVER -gt "SQL2012SP1")
-        {
-        Write-Warning "SCVMM can only be installed on SQL2012, Setting to SQL2012SP1"
-        $SQLVER = "SQL2012SP1"
-        }
-    $Prereqdir = "$SCVMMVER"+"prereq"
-    
-    Write-Verbose "We are now going to Test scvmm Prereqs"
-    
+    $Prereqdir = "$SCVMM_VER"+"prereq"
+    Write-Verbose "We are now going to Test $SCVMM_VER Prereqs"
     $DownloadUrls= (
             "http://download.microsoft.com/download/E/2/1/E21644B5-2DF2-47C2-91BD-63C560427900/NDP452-KB2901907-x86-x64-AllOS-ENU.exe",
             "http://download.microsoft.com/download/F/E/D/FEDB200F-DE2A-46D8-B661-D019DFE9D470/ENU/x64/SqlCmdLnUtils.msi",
@@ -2391,10 +2372,69 @@ if ($scvmm.IsPresent)
             }
         }
     }
-    $URL = "http://care.dlservice.microsoft.com/dl/download/evalx/sc2012r2/SC2012_R2_SCVMM.exe"
+    
+ 
+   ### 
+    switch ($SCvmm_VER)
+    {
+        "SC2012_R2_SCVMM"
+            {
+            If ($Master -gt '2012Z')
+                {
+                Write-Warning "Only master up 2012R2Fallupdate supported in this scenario"
+                exit
+                }
+            if ($SQLVER -gt "SQL2012SP1")
+                {
+                Write-Warning "SCOM can only be installed on SQL2012, Setting to SQL2012SP1"
+                $SQLVER = "SQL2012SP1"
+                }# end sqlver
+
+            $adkurl = "http://download.microsoft.com/download/6/A/E/6AEA92B0-A412-4622-983E-5B305D2EBE56/adk/adksetup.exe" # ADKSETUP 8.1
+            $URL = "http://care.dlservice.microsoft.com/dl/download/evalx/sc2012r2/SC2012_R2_SCVMM.exe"
+            }
+        
+        "SCTP3_SCVMM"
+            {
+            if ($Master -lt "2016")
+                {
+                Write-Warning "Master 2016TP3 or Later is required for SCVMM TP3"
+                exit
+                }
+            <#
+            http://care.dlservice.microsoft.com/dl/download/1/8/E/18E12925-8F05-402A-BF24-2DE6E4ED357F/SCTP3_SCO_EN.exe
+            http://care.dlservice.microsoft.com/dl/download/F/A/A/FAA14AC2-720A-4B17-8250-75EEEA13B259/SCTP3_SCVMM_EN.exe
+            http://care.dlservice.microsoft.com/dl/download/B/0/7/B07BF90E-2CC8-4538-A7D2-83BB074C49F5/SCTP3_SCOM_EN.exe
+            http://care.dlservice.microsoft.com/dl/download/F/A/3/FA31ADFB-B7FA-4F3C-AF0B-CA5C8973EEF5/SCTP3_SCDPM_EN.exe
+            http://care.dlservice.microsoft.com/dl/download/B/B/3/BB3A1E87-28F2-4362-9B1E-24CC3992EF3B/SCTP3_SCSM_EN.exe
+            http://care.dlservice.microsoft.com/dl/download/3/5/B/35BB1415-28AD-46D5-B227-DD8AB821E9D8/SC_Configmgr_SCEP_SCTP3.exe
+            #>
+            $adkurl = "http://download.microsoft.com/download/8/1/9/8197FEB9-FABE-48FD-A537-7D8709586715/adk/adksetup.exe" #ADKsetup 10
+            $URL = "http://care.dlservice.microsoft.com/dl/download/F/A/A/FAA14AC2-720A-4B17-8250-75EEEA13B259/SCTP3_SCVMM_EN.exe"
+
+            }
+    }# end switch
+
+    Write-Verbose "Testing WAIK in $Sourcedir"
+    $FileName = Split-Path -Leaf -Path $adkurl
+    if (!(test-path  "$Sourcedir\$Prereqdir\Installers"))
+        {
+        # New-Item -ItemType Directory -Path "$Sourcedir\$Prereqdir\WAIK" -Force | Out-Null
+        Write-Verbose "Trying Download"
+        if (!(get-prereq -DownLoadUrl $adkurl -destination  "$Sourcedir\$Prereqdir\$FileName"))
+            { 
+            write-warning "Error Downloading file $adkurl, Please check connectivity"
+            exit
+            }
+        Write-Warning "Getting WAIK, Could take a While"
+        Start-Process -FilePath "$Sourcedir\$Prereqdir\$FileName" -ArgumentList "/quiet /layout $Sourcedir\$Prereqdir" -Wait
+        }
+
+
+
     $FileName = Split-Path -Leaf -Path $Url
-    Write-Verbose "Testing $SCVMMVER"
-    if (!(test-path  "$Sourcedir\$SCVMMVER"))
+    Write-Verbose "Testing $SCVMM_VER"
+    if (!(test-path  "$Sourcedir\$SCVMM_VER"))
         {
         Write-Verbose "Trying Download"
         if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
@@ -2403,97 +2443,87 @@ if ($scvmm.IsPresent)
             exit
             }
         write-Warning "We are going to Extract $FileName, this may take a while"
-        Start-Process "$Sourcedir\$FileName" -ArgumentList "/SP- /dir=$Sourcedir\$SCVMMVER /SILENT" -Wait
+        Start-Process "$Sourcedir\$FileName" -ArgumentList "/SP- /dir=$Sourcedir\$SCVMM_VER /SILENT" -Wait
         }
-
-
-    $Url = "http://download.microsoft.com/download/6/A/E/6AEA92B0-A412-4622-983E-5B305D2EBE56/adk/adksetup.exe" # ADKSETUP 8.1
-    Write-Verbose "Testing WAIK in $Sourcedir"
-    if (!(test-path  "$Sourcedir\$Prereqdir"))
-        {
-        $FileName = Split-Path -Leaf -Path $Url
-        Write-Verbose "Trying Download"
-        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
-            { 
-            write-warning "Error Downloading file $Url, Please check connectivity"
-            exit
-            }
-        Write-Warning "Getting WAIK, Could take a While"
-        Start-Process -FilePath "$Sourcedir\$FileName" -ArgumentList "/quiet /layout $Sourcedir\$Prereqdir" -Wait
-        }
-
-    workorder "We are going to Install Hyper-V with $SCVMMVER in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet and $SQLVER"
+    workorder "We are going to Install Hyper-V with $SCVMM_VER in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet and $SQLVER"
     # exit
     }# end SCVMMPREREQ
 ############## SCOM Section
-if ($SCOM2012R2.IsPresent)
-
+if ($SCOM.IsPresent)
   {
     Write-Warning "Entering SCOM Prereq Section"
     [switch]$SQL=$true
-    if ($SQLVER -gt "SQL2012SP1")
-        {
-        Write-Warning "SCOM can only be installed on SQL2012, Setting to SQL2012SP1"
-        $SQLVER = "SQL2012SP1"
-        }
-    $Prereqdir = "$SCOMVER"+"prereq"
-    
+    $Prereqdir = "$SCOM_VER"+"prereq"
     Write-Verbose "We are now going to Test SCOM Prereqs"
     
-    $DownloadUrls= (
+            $DownloadUrls= (
             'http://download.microsoft.com/download/F/B/7/FB728406-A1EE-4AB5-9C56-74EB8BDDF2FF/ReportViewer.msi',
             "http://download.microsoft.com/download/F/E/D/FEDB200F-DE2A-46D8-B661-D019DFE9D470/ENU/x64/SQLSysClrTypes.msi"
             )
     
-    Foreach ($URL in $DownloadUrls)
+            Foreach ($URL in $DownloadUrls)
+                {
+                $FileName = Split-Path -Leaf -Path $Url
+                Write-Verbose "Testing $FileName in $Prereqdir"
+                if (!(test-path  "$Sourcedir\$Prereqdir\$FileName"))
+                    {
+                    Write-Verbose "Trying Download"
+                    if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$Prereqdir\$FileName"))
+                        { 
+                        write-warning "Error Downloading file $Url, Please check connectivity"
+                        exit
+                        }
+                    }
+                }
+    
+    switch ($SCOM_VER)
     {
+        "SC2012_R2_SCOM"
+            {
+            if ($SQLVER -gt "SQL2012SP1")
+                {
+                Write-Warning "SCOM can only be installed on SQL2012, Setting to SQL2012SP1"
+                $SQLVER = "SQL2012SP1"
+                }# end sqlver
+
+            
+            $URL = "http://care.dlservice.microsoft.com/dl/download/evalx/sc2012r2/$SCOM_VER.exe"
+            }
+        
+        "SCTP3_SCOM"
+            {
+            <#
+            http://care.dlservice.microsoft.com/dl/download/1/8/E/18E12925-8F05-402A-BF24-2DE6E4ED357F/SCTP3_SCO_EN.exe
+            http://care.dlservice.microsoft.com/dl/download/F/A/A/FAA14AC2-720A-4B17-8250-75EEEA13B259/SCTP3_SCVMM_EN.exe
+            http://care.dlservice.microsoft.com/dl/download/B/0/7/B07BF90E-2CC8-4538-A7D2-83BB074C49F5/SCTP3_SCOM_EN.exe
+            http://care.dlservice.microsoft.com/dl/download/F/A/3/FA31ADFB-B7FA-4F3C-AF0B-CA5C8973EEF5/SCTP3_SCDPM_EN.exe
+            http://care.dlservice.microsoft.com/dl/download/B/B/3/BB3A1E87-28F2-4362-9B1E-24CC3992EF3B/SCTP3_SCSM_EN.exe
+            http://care.dlservice.microsoft.com/dl/download/3/5/B/35BB1415-28AD-46D5-B227-DD8AB821E9D8/SC_Configmgr_SCEP_SCTP3.exe
+            #>
+
+            $URL = "http://care.dlservice.microsoft.com/dl/download/B/0/7/B07BF90E-2CC8-4538-A7D2-83BB074C49F5/SCTP3_SCOM_EN.exe"
+            }
+
+
+    }# end switch
     $FileName = Split-Path -Leaf -Path $Url
-    Write-Verbose "Testing $FileName in $Prereqdir"
-    if (!(test-path  "$Sourcedir\$Prereqdir\$FileName"))
-        {
-        Write-Verbose "Trying Download"
-        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$Prereqdir\$FileName"))
-            { 
-            write-warning "Error Downloading file $Url, Please check connectivity"
-            exit
-            }
-        }
-    }
-    $URL = "http://care.dlservice.microsoft.com/dl/download/evalx/sc2012r2/$SCOMVER.exe"
-    $FileName = Split-Path -Leaf -Path $Url
-    Write-Verbose "Testing $SCOMVER"
-    if (!(test-path  "$Sourcedir\$SCOMVER"))
-        {
-        Write-Verbose "Trying Download"
-        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
-            { 
-            write-warning "Error Downloading file $Url, Please check connectivity"
-            exit
-            }
-        write-Warning "We are going to Extract $FileName, this may take a while"
-        Start-Process "$Sourcedir\$FileName" -ArgumentList "/SP- /dir=$Sourcedir\$SCOMVER /SILENT" -Wait
-        }
+    Write-Verbose "Testing $SCOM_VER\"
+    if (!(test-path  "$Sourcedir\$SCOM_VER"))
+                {
+                Write-Verbose "Trying Download"
+                if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
+                    { 
+                    write-warning "Error Downloading file $Url, Please check connectivity"
+                    exit
+                    }
+                write-Warning "We are going to Extract $FileName, this may take a while"
+                Start-Process "$Sourcedir\$FileName" -ArgumentList "/SP- /dir=$Sourcedir\$SCOM_VER /SILENT" -Wait
+                }
 
-
-    $Url = "http://download.microsoft.com/download/6/A/E/6AEA92B0-A412-4622-983E-5B305D2EBE56/adk/adksetup.exe" # ADKSETUP 8.1
-    Write-Verbose "Testing WAIK in $Sourcedir"
-    if (!(test-path  "$Sourcedir\$Prereqdir"))
-        {
-        $FileName = Split-Path -Leaf -Path $Url
-        Write-Verbose "Trying Download"
-        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
-            { 
-            write-warning "Error Downloading file $Url, Please check connectivity"
-            exit
-            }
-        Write-Warning "Getting WAIK, Could take a While"
-        Start-Process -FilePath "$Sourcedir\$FileName" -ArgumentList "/quiet /layout $Sourcedir\$Prereqdir" -Wait
-        }
-
-    workorder "We are going to Install SCOM with $SCOMVER in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet and $SQLVER"
+    workorder "We are going to Install SCOM with $SCOM_VER in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet and $SQLVER"
     # exit
     }# end SCOMPREREQ
-
+#######
 
 ##############
 
@@ -2509,6 +2539,9 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
     $SQL2012_SP1 = "http://download.microsoft.com/download/3/B/D/3BD9DD65-D3E3-43C3-BB50-0ED850A82AD5/SQLServer2012SP1-KB2674319-x64-ENU.exe"
     $SQL2012_SP2 = "http://download.microsoft.com/download/D/F/7/DF7BEBF9-AA4D-4CFE-B5AE-5C9129D37EFD/SQLServer2012SP2-KB2958429-x64-ENU.exe"
     $SQL2014_ZIP = "http://care.dlservice.microsoft.com/dl/download/evalx/sqlserver2014/x64/SQLServer2014_x64_enus.zip"
+    $SQL2014SP1SLIP_INST = "http://care.dlservice.microsoft.com/dl/download/2/F/8/2F8F7165-BB21-4D1E-B5D8-3BD3CE73C77D/SQLServer2014SP1-FullSlipstream-x64-ENU.exe"
+    $SQL2014SP1SLIP_box= "http://care.dlservice.microsoft.com/dl/download/2/F/8/2F8F7165-BB21-4D1E-B5D8-3BD3CE73C77D/SQLServer2014SP1-FullSlipstream-x64-ENU.box"
+
     $AAGURL = "https://community.emc.com/servlet/JiveServlet/download/38-111250/AWORKS.zip"
     $URL = $AAGURL
     $FileName = Split-Path -Leaf -Path $Url
@@ -2690,6 +2723,28 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
             
             }
             }
+            "SQL2014SP1slip"
+            {
+            if (!(Test-Path $Sourcedir\$SQLVER\setup.exe))
+                {
+                foreach ($url in ($SQL2014SP1SLIP_box,$SQL2014SP1SLIP_INST))
+                    {
+                    $FileName = Split-Path -Leaf -Path $Url
+                    Write-Verbose "Testing $FileName in $Sourcedir"
+                    if (!(test-path  "$Sourcedir\$FileName"))
+                        {
+                        Write-Verbose "Trying Download"
+                        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
+                            {  
+                            write-warning "Error Downloading file $Url, Please check connectivity"
+                            exit
+                            }
+                        }
+                    }
+                    Write-Warning "Creating $SQLVER Installtree, this might take a while"
+                    Start-Process $Sourcedir\$FileName -ArgumentList "/X:$Sourcedir\$SQLVER /q" -Wait
+                }
+            }
           } #end switch
     }#end $SQLEXPRESS
 
@@ -2765,6 +2820,7 @@ if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
 
 if ($NMM.IsPresent)
     {
+    <#
     if ($nmm_ver -ge "nmm85")
         { 
         write-verbose "we need .Net Framework 4.51 or later"
@@ -2782,7 +2838,7 @@ if ($NMM.IsPresent)
             }
         }
     }
-       
+    #>   
          
 
     if ((Test-Path "$Sourcedir/$nmm_ver/win_x64/networkr/NetWorker Module for Microsoft.msi") -or (Test-Path "$Sourcedir/$nmm_ver/win_x64/networkr/NWVSS.exe"))
@@ -2794,47 +2850,21 @@ if ($NMM.IsPresent)
         Write-Warning "We need to get $NMM_ver, trying Automated Download"
         # New-Item -ItemType Directory -Path $Sourcedir\$EX_Version$ex_cu | Out-Null
         # }
-        switch ($nmm_ver)
-        {
-        "nmm8211"
+        $URLS = ""
+        if ($nmm_ver -notin ('nmm822','nmm821','nmm82') -and $nmm_ver -gt 'nmm_82')
             {
-            $urls = ("ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.1/nmm821_win_x64.zip",
-                    "ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.1/scvmm821_win_x64.zip")
+            $nmmdotver = $nmm_ver -replace "nmm",""
+            $nmmdotver = $nmmdotver.insert(1,'.')
+            $nmmdotver = $nmmdotver.insert(3,'.')
+            $nmmdotver = $nmmdotver.insert(5,'.')
+            $nmmzip = $nmm_ver -replace ".$"
+            $nmmzip = $nmmzip+'_win_x64.zip'
+            $scvmmzip = $nmmzip -replace "nmm","scvmm"
+            Write-Verbose "$scvmmzip"
+            $urls = ("ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/$($nmmdotver.Substring(0,5))/$nmmdotver/$nmmzip",
+                     "ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/$($nmmdotver.Substring(0,5))/$nmmdotver/$scvmmzip")
             }
 
-        "nmm8212"
-            {
-            $urls = ("ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.2/nmm821_win_x64.zip",
-                    "ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.2/scvmm821_win_x64.zip")
-            }
-        "nmm8214"
-            {
-            $urls = ("ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.4/nmm821_win_x64.zip",
-                    "ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.4/scvmm821_win_x64.zip")
-            }
-        
-        "nmm8216"
-            {
-            $urls = ("ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.6/nmm821_win_x64.zip",
-                    "ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.6/scvmm821_win_x64.zip")
-            }
-        "nmm8217"
-            {
-            $urls = ("ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.7/nmm821_win_x64.zip",
-                    "ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.7/scvmm821_win_x64.zip")
-            }
-        "nmm8218"
-            {
-            $urls = ("ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.8/nmm821_win_x64.zip",
-                    "ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/8.2.1/8.2.1.8/scvmm821_win_x64.zip")
-            }
-
-
-        default
-            {
-            $url = $false
-            }
-        }
         if ($urls)
             {
             foreach ($url in $urls)
@@ -2846,7 +2876,7 @@ if ($NMM.IsPresent)
                     }
                 if ($FileName -match "scvmm")
                     {
-                    $Zipfilename = "$scvmm_ver.zip"
+                    $Zipfilename = "$NMM_scvmm_ver.zip"
                     }
                 $Zipfile = Join-Path $Sourcedir $Zipfilename
                 if (!(test-path  $Zipfile))
@@ -3071,7 +3101,7 @@ if (test-vmx $DCNODE)
         {
 	    test-user -whois Administrator
 	    write-verbose "Verifiying Domainsetup"
-	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script checkdom.ps1 # $CommonParameter
+	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$GuestScriptDir\$DCNODE" -Script checkdom.ps1 # $CommonParameter
 	    $BuildDomain, $RunningIP, $VMnet, $MyGateway = test-domainsetup
 	    $IPv4Subnet = convert-iptosubnet $RunningIP
 	    workorder "We will Use Domain $BuildDomain and Subnet $IPv4Subnet.0 for on $VMnet the Running Workorder"
@@ -3120,7 +3150,7 @@ else
         Pause
         }
 
-	$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 0 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Size 'L' -Sourcedir $Sourcedir"
+	$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 0 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Size 'L' -Sourcedir $Sourcedir"
 	
 	###################################################
 	#
@@ -3133,38 +3163,44 @@ else
 
 		test-user -whois Administrator
 		Write-Host
-        copy-tovmx -Sourcedir $NodeScriptDir
-		copy-tovmx -Sourcedir $SourceScriptDir
+        # copy-tovmx -Sourcedir $NodeScriptDir
+		# copy-tovmx -Sourcedir $SourceScriptDir
         Write-Warning "Building DC for Domain $BuildDomain, this may take a while"
-        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script new-dc.ps1 -Parameter "-dcname $DCName -Domain $BuildDomain -IPv4subnet $IPv4subnet -IPv4Prefixlength $IPv4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -IPv6Prefix $IPv6Prefix  -AddressFamily $AddressFamily $AddGateway $CommonParameter" -interactive -nowait
+        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$GuestScriptDir\$DCNODE" -Script new-dc.ps1 -Parameter "-dcname $DCName -Domain $BuildDomain -IPv4subnet $IPv4subnet -IPv4Prefixlength $IPv4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -IPv6Prefix $IPv6Prefix  -AddressFamily $AddressFamily $AddGateway $CommonParameter" -interactive -nowait
    
         status "Preparing Domain"
         if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
             {
             write-verbose "verbose enabled, Please press any key within VM $Dcname"
-            While ($FileOK = (&$vmrun -gu Administrator -gp Password123! fileExistsInGuest $CloneVMX c:\$Script_dir\2.pass) -ne "The file exists.") { Write-Host -NoNewline "."; sleep $Sleep }
+            While ($FileOK = (&$vmrun -gu Administrator -gp Password123! fileExistsInGuest $CloneVMX $GuestLogDir\2.pass) -ne "The file exists.") { Write-Host -NoNewline "."; sleep $Sleep }
             }
         else 
             {
 
-		    While ($FileOK = (&$vmrun -gu Administrator -gp Password123! fileExistsInGuest $CloneVMX c:\$Script_dir\2.pass) -ne "The file exists.") { Write-Host -NoNewline "."; sleep $Sleep }
+		    While ($FileOK = (&$vmrun -gu Administrator -gp Password123! fileExistsInGuest $CloneVMX $GuestLogDir\2.pass) -ne "The file exists.") { Write-Host -NoNewline "."; sleep $Sleep }
             Write-Host
 		    }
 		test-user -whois Administrator
-		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script finishdomain.ps1 -Parameter "-domain $BuildDomain -domainsuffix $domainsuffix $CommonParameter" -interactive -nowait
+        if ($Toolsupdate.IsPresent)
+            {
+            Write-Warning "Preparing VMware Tools Upgrade by injecting tools CD ( update will start before next reboot of VM )"
+            Start-Process 'C:\Program Files (x86)\VMware\VMware Workstation\vmrun.exe' -ArgumentList  "installTools $CloneVMX" -NoNewWindow
+            }
+
+		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$GuestScriptDir\$DCNODE" -Script finish-domain.ps1 -Parameter "-domain $BuildDomain -domainsuffix $domainsuffix $CommonParameter" -interactive -nowait
 		status "Creating Domain $BuildDomain"
-		While ($FileOK = (&$vmrun -gu Administrator -gp Password123! fileExistsInGuest $CloneVMX c:\$Script_dir\3.pass) -ne "The file exists.") { Write-Host -NoNewline "."; sleep $Sleep }
+		While ($FileOK = (&$vmrun -gu Administrator -gp Password123! fileExistsInGuest $CloneVMX $GuestLogDir\3.pass) -ne "The file exists.") { Write-Host -NoNewline "."; sleep $Sleep }
 		write-host
 		status  "Domain Setup Finished"
-		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script dns.ps1 -Parameter "-IPv4subnet $IPv4Subnet -IPv4Prefixlength $IPV4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily  -IPV6Prefix $IPV6Prefix $CommonParameter"  -interactive
-		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script add_serviceuser.ps1 -interactive
+		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$GuestScriptDir\$DCNODE" -Script dns.ps1 -Parameter "-IPv4subnet $IPv4Subnet -IPv4Prefixlength $IPV4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily  -IPV6Prefix $IPV6Prefix $CommonParameter"  -interactive
+		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$GuestScriptDir\$DCNODE" -Script add-serviceuser.ps1 -interactive
 	    write-verbose "Setting Password Policies"
-		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir  -Script pwpolicy.ps1 -interactive
-        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script set-winrm.ps1 -interactive
+		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$GuestScriptDir\$DCNODE"  -Script pwpolicy.ps1 -interactive
+        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$NodeScriptDir" -Script set-winrm.ps1 -interactive
         if ($NW.IsPresent)
             {
             write-verbose "Install NWClient"
-		    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+		    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$NodeScriptDir" -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
             }
         invoke-postsection 
 		# run-vmpowershell -Script gpo.ps1 -interactive
@@ -3185,6 +3221,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 		test-dcrunning
 		status "Avalanching SQL Install on $AAGNodes Always On Nodes"
         $ListenerIP = "$IPv4Subnet.169"
+        $ScenarioScriptDir = (Join-Path $GuestScriptdir "AAG")
         $AAGName = $BuildDomain+"AAG"
         If ($AddressFamily -match 'IPv6')
             {
@@ -3216,23 +3253,23 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 			# Clone Base Machine
 			status $Commentline
 			status "Creating $Nodename with IP $Nodeip for Always On Availability Group"
-			$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $AAGNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -sql"
+			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $AAGNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -sql"
 			###################################################
 			If ($CloneOK)
 			{
 				write-verbose "Copy Configuration files, please be patient"
-				copy-tovmx -Sourcedir $SourceScriptDir
-				copy-tovmx -Sourcedir $NodeScriptDir
-                copy-tovmx -Sourcedir $SQLScriptDir
+				# copy-tovmx -Sourcedir $SourceScriptDir
+				# copy-tovmx -Sourcedir $NodeScriptDir
+                # copy-tovmx -Sourcedir $SQLScriptDir
 				write-verbose "Waiting System Ready"
 				test-user -whois Administrator
 				write-Verbose "Starting Customization"
 			    domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
                 invoke-postsection -wait
                 write-verbose "Setup Database Drives"
-			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script prepare-disks.ps1
+			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script prepare-disks.ps1
 				write-verbose "Starting $SQLVER Setup on $Nodename"
-				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -reboot" -interactive -nowait
+				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -reboot" -interactive -nowait
                 				
                 $SQLSetupStart = Get-Date
                 
@@ -3247,27 +3284,27 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 			foreach ($AAGNode in $AAGLIST)
 			{
 				
-				While ($FileOK = (&$vmrun -gu $builddomain\Administrator -gp Password123! fileExistsInGuest $AAGNode c:\$Script_dir\sql.pass) -ne "The file exists.")
+				While ($FileOK = (&$vmrun -gu $builddomain\Administrator -gp Password123! fileExistsInGuest $AAGNode $GuestLogDir\sql.pass) -ne "The file exists.")
 				{
 					runtime $SQLSetupStart "$SQLVER $Nodename"
 				}
 
             Write-Verbose "Setting SQL Server Roles on $AAGNode"
-            invoke-vmxpowershell -config $AAGNode -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script set-sqlroles.ps1 -interactive
+            invoke-vmxpowershell -config $AAGNode -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$GuestScriptDir\SQL" -Script set-sqlroles.ps1 -interactive
             
 
 			} # end aaglist
 			
 			write-host
 			write-verbose "Forming AlwaysOn WFC Cluster"
-	        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script createcluster.ps1 -Parameter "-Nodeprefix 'AAGNODE' -IPAddress '$IPv4Subnet.160' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
+	        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix 'AAGNODE' -IPAddress '$IPv4Subnet.160' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
 			
 			write-verbose "Enabling AAG"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script enable-aag.ps1 -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script enable-aag.ps1 -interactive
 			
 			write-verbose "Creating AAG"
 
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script create-aag.ps1 -interactive -Parameter "-Nodeprefix 'AAGNODE' -AgName '$AAGName' -DatabaseList 'AdventureWorks2012' -BackupShare '\\vmware-host\Shared Folders\Sources\AWORKS' -IPv4Subnet $IPv4Subnet -IPV6Prefix $IPV6Prefix -AddressFamily $AddressFamily $CommonParameter"
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script create-aag.ps1 -interactive -Parameter "-Nodeprefix 'AAGNODE' -AgName '$AAGName' -DatabaseList 'AdventureWorks2012' -BackupShare '\\vmware-host\Shared Folders\Sources\AWORKS' -IPv4Subnet $IPv4Subnet -IPV6Prefix $IPV6Prefix -AddressFamily $AddressFamily $CommonParameter"
 			foreach ($CloneVMX in $AAGLIST)
             {
                 if ($NMM.IsPresent)
@@ -3275,15 +3312,15 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 				    status "Installing Networker $nmm_ver an NMM $nmm_ver on all Nodes"
 					status $CloneVMX
 					write-verbose "Install NWClient"
-					invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+					invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
                     write-verbose "Install NMM"
-					invoke-vmxpowershell -config $CloneVMX -ScriptPath $Targetscriptdir -Script install-nmm.ps1 -interactive -Parameter $nmm_ver -Guestuser $Adminuser -Guestpassword $Adminpassword
+					invoke-vmxpowershell -config $CloneVMX -ScriptPath "$GuestScriptDir\SQL" -Script install-nmm.ps1 -interactive -Parameter $nmm_ver -Guestuser $Adminuser -Guestpassword $Adminpassword
                     write-verbose "Finishing Always On"
-                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script finish-aag.ps1 -interactive -nowait
+                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script finish-aag.ps1 -interactive -nowait
 					} # end !NMM
 				else 
                     {
-                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script finish-aag.ps1 -interactive -nowait
+                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script finish-aag.ps1 -interactive -nowait
                     }# end else nmm
 				}
            # 
@@ -3350,7 +3387,7 @@ switch ($PsCmdlet.ParameterSetName)
 		    test-dcrunning
 		    status $Commentline
 		    workorder "Creating E15 Host $Nodename with IP $Nodeip in Domain $BuildDomain"
-		    $CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Exchange -Size $Exchangesize -Sourcedir $Sourcedir "
+		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Exchange -Size $Exchangesize -Sourcedir $Sourcedir "
 		    ###################################################
 		    If ($CloneOK)
             {
@@ -3364,13 +3401,13 @@ switch ($PsCmdlet.ParameterSetName)
 			write-Verbose "Starting Customization"
 			domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $EXAddressFamiliy -AddOnfeatures $AddonFeatures
 			write-verbose "Setup Database Drives"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script prepare-disks.ps1
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script prepare-disks.ps1
 			write-verbose "Setup E15 Prereqs"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-exchangeprereqs.ps1 -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-exchangeprereqs.ps1 -interactive
 			write-verbose "Setting Power Scheme"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script powerconf.ps1 -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script powerconf.ps1 -interactive
 			write-verbose "Installing E15, this may take up to 60 Minutes ...."
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-exchange.ps1 -interactive -nowait -Parameter "$CommonParameter -ex_cu $ex_cu"
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-exchange.ps1 -interactive -nowait -Parameter "$CommonParameter -ex_cu $ex_cu"
             }
             }
         if ($EXnew)
@@ -3383,7 +3420,7 @@ switch ($PsCmdlet.ParameterSetName)
 			test-user -whois Administrator
             status "Waiting for Pass 4 (E15 Installed) for $Nodename"
             #$EXSetupStart = Get-Date
-			    While ($FileOK = (&$vmrun -gu $BuildDomain\Administrator -gp Password123! fileExistsInGuest $CloneVMX c:\$Script_dir\exchange.pass) -ne "The file exists.")
+			    While ($FileOK = (&$vmrun -gu $BuildDomain\Administrator -gp Password123! fileExistsInGuest $CloneVMX $GuestLogDir\exchange.pass) -ne "The file exists.")
 			    {
 				    sleep $Sleep
 				    #runtime $EXSetupStart "Exchange"
@@ -3395,7 +3432,7 @@ switch ($PsCmdlet.ParameterSetName)
                         }
                     until ($ToolState.state -match "running")
             write-Verbose "Performing E15 Post Install Tasks:"
-    		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script configure-exchange.ps1 -interactive
+    		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script configure-exchange.ps1 -interactive
      
     
     #  -nowait
@@ -3404,7 +3441,7 @@ switch ($PsCmdlet.ParameterSetName)
                 if ($DAG.IsPresent) 
                     {
 				    write-verbose "Creating DAG"
-				    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -activeWindow -interactive -Script create-dag.ps1 -Parameter "-DAGIP $DAGIP -AddressFamily $EXAddressFamiliy $CommonParameter"
+				    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -activeWindow -interactive -Script create-dag.ps1 -Parameter "-DAGIP $DAGIP -AddressFamily $EXAddressFamiliy $CommonParameter"
 				    } # end if $DAG
                 if (!($nouser.ispresent))
                     {
@@ -3424,16 +3461,16 @@ switch ($PsCmdlet.ParameterSetName)
             $Nodename = "$EX_Version"+"N"+"$EXNODE"
             $CloneVMX = (get-vmx $Nodename).config				
 			write-verbose "Setting Local Security Policies"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script create-security.ps1 -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script create-security.ps1 -interactive
 			########### Entering networker Section ##############
 			if ($NMM.IsPresent)
 			{
 				write-verbose "Install NWClient"
-				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
 				write-verbose "Install NMM"
-				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-nmm.ps1 -interactive -Parameter $nmm_ver
+				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-nmm.ps1 -interactive -Parameter $nmm_ver
 			    write-verbose "Performin NMM Post Install Tasks"
-			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script finish-nmm.ps1 -interactive
+			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script finish-nmm.ps1 -interactive
             }# end nmm
 			########### leaving NMM Section ###################
 		    invoke-postsection
@@ -3443,6 +3480,8 @@ switch ($PsCmdlet.ParameterSetName)
 	
 	"E16"{
         Write-Verbose "Starting $EX_Version $e16_cu Setup"
+        $ScenarioScriptDir = "$GuestScriptdir\E2016"
+
         # we need ipv4
         if ($AddressFamily -notmatch 'ipv4')
             { 
@@ -3478,7 +3517,7 @@ switch ($PsCmdlet.ParameterSetName)
 		    # $Exprereqdir = "$Sourcedir\EXPREREQ\"
             $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features"
             # $AddonFeatures = "$AddonFeatures, RSAT-DNS-SERVER, Desktop-Experience, RPC-over-HTTP-proxy, RSAT-Clustering, RSAT-Clustering-CmdInterface, Web-Mgmt-Console, WAS-Process-Model, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI, Windows-Identity-Foundation" 
-            $AddonFeatures = "$AddonFeatures, AS-HTTP-Activation, Desktop-Experience, NET-Framework-45-Features, RPC-over-HTTP-proxy, RSAT-Clustering, RSAT-Clustering-CmdInterface, RSAT-Clustering-Mgmt, RSAT-Clustering-PowerShell, Web-Mgmt-Console, WAS-Process-Model, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI, Windows-Identity-Foundation"
+            $AddonFeatures = "$AddonFeatures, RSAT-DNS-Server, AS-HTTP-Activation, Desktop-Experience, NET-Framework-45-Features, RPC-over-HTTP-proxy, RSAT-Clustering, RSAT-Clustering-CmdInterface, RSAT-Clustering-Mgmt, RSAT-Clustering-PowerShell, Web-Mgmt-Console, WAS-Process-Model, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI, Windows-Identity-Foundation"
 
 
 			###################################################
@@ -3500,29 +3539,29 @@ switch ($PsCmdlet.ParameterSetName)
 		    test-dcrunning
 		    status $Commentline
 		    workorder "Creating $EX_Version Host $Nodename with IP $Nodeip in Domain $BuildDomain"
-		    $CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Exchange -Size $Exchangesize -Sourcedir $Sourcedir "
+		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -AddDisks -Disks 3 -Disksize 500GB -Size $Exchangesize -Sourcedir $Sourcedir "
 		    ###################################################
 		    If ($CloneOK)
-            {
-            $EXnew = $True
-			write-verbose "Copy Configuration files, please be patient"
-			copy-tovmx -Sourcedir $NodeScriptDir
-			copy-tovmx -Sourcedir $SourceScriptDir
-			# copy-tovmx -Sourcedir $Exprereqdir
-			write-verbose "Waiting System Ready"
-			test-user -whois Administrator
-			write-Verbose "Starting Customization"
-			domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $EXAddressFamiliy -AddOnfeatures $AddonFeatures
-			write-verbose "Setup Database Drives"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script prepare-disks.ps1
-			write-verbose "Setup e16 Prereqs"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-exchangeprereqs.ps1 -interactive
-            checkpoint-progress -step exprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
-			write-verbose "Setting Power Scheme"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script powerconf.ps1 -interactive
-			write-verbose "Installing e16, this may take up to 60 Minutes ...."
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-exchange.ps1 -interactive -nowait -Parameter "$CommonParameter -ex_cu $e16_cu"
-            }
+                {
+                $EXnew = $True
+			    # write-verbose "Copy Configuration files, please be patient"
+			    #copy-tovmx -Sourcedir $NodeScriptDir
+			    #copy-tovmx -Sourcedir $SourceScriptDir
+			    # copy-tovmx -Sourcedir $Exprereqdir
+			    write-verbose "Waiting System Ready"
+			    test-user -whois Administrator
+			    write-Verbose "Starting Customization"
+			    domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $EXAddressFamiliy -AddOnfeatures $AddonFeatures
+			    write-verbose "Setup Database Drives"
+			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script prepare-disks.ps1
+			    write-verbose "Setup e16 Prereqs"
+			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script install-exchangeprereqs.ps1 -interactive
+                checkpoint-progress -step exprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
+			    write-verbose "Setting Power Scheme"
+			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script powerconf.ps1 -interactive
+			    write-verbose "Installing e16, this may take up to 60 Minutes ...."
+			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script install-exchange.ps1 -interactive -nowait -Parameter "$CommonParameter -ex_cu $e16_cu"
+                }
             }
         if ($EXnew)
         {
@@ -3534,7 +3573,7 @@ switch ($PsCmdlet.ParameterSetName)
 			test-user -whois Administrator
             status "Waiting for Pass 4 (e16 Installed) for $Nodename"
             #$EXSetupStart = Get-Date
-			    While ($FileOK = (&$vmrun -gu $BuildDomain\Administrator -gp Password123! fileExistsInGuest $CloneVMX c:\$Script_dir\exchange.pass) -ne "The file exists.")
+			    While ($FileOK = (&$vmrun -gu $BuildDomain\Administrator -gp Password123! fileExistsInGuest $CloneVMX "$GuestLogDir\exchange.pass") -ne "The file exists.")
 			    {
 				    sleep $Sleep
 				    #runtime $EXSetupStart "Exchange"
@@ -3546,7 +3585,7 @@ switch ($PsCmdlet.ParameterSetName)
                         }
                     until ($ToolState.state -match "running")
             write-Verbose "Performing e16 Post Install Tasks:"
-    		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script configure-exchange.ps1 -interactive
+    		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script configure-exchange.ps1 -interactive
      
     
     #  -nowait
@@ -3555,14 +3594,16 @@ switch ($PsCmdlet.ParameterSetName)
                 if ($DAG.IsPresent) 
                     {
 				    write-verbose "Creating DAG"
-				    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -activeWindow -interactive -Script create-dag.ps1 -Parameter "-DAGIP $DAGIP -AddressFamily $EXAddressFamiliy -EX_Version $EX_Version $CommonParameter"
+				    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -activeWindow -interactive -Script create-dag.ps1 -Parameter "-DAGIP $DAGIP -AddressFamily $EXAddressFamiliy -EX_Version $EX_Version $CommonParameter"
 				    } # end if $DAG
                 if (!($nouser.ispresent))
                     {
                     write-verbose "Creating Accounts and Mailboxes:"
 	                do
 				        {
-					    ($cmdresult = &$vmrun -gu "$BuildDomain\Administrator" -gp Password123! runPrograminGuest  $CloneVMX -activeWindow -interactive c:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe ". 'C:\Program Files\Microsoft\Exchange Server\V15\bin\RemoteExchange.ps1'; Connect-ExchangeServer -auto; C:\$Script_dir\User.ps1 -subnet $IPv4Subnet -AddressFamily $AddressFamily -IPV6Prefix $IPV6Prefix $CommonParameter") 
+						 #invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "'C:\Program Files\Microsoft\Exchange Server\V15\bin\'" -script "RemoteExchange.ps1;Connect-ExchangeServer -auto; . '$ScenarioScriptDir\User.ps1' -subnet $IPv4Subnet -AddressFamily $AddressFamily -IPV6Prefix $IPV6Prefix $CommonParameter"
+				    
+                        ($cmdresult = &$vmrun -gu "$BuildDomain\Administrator" -gp Password123! runPrograminGuest  $CloneVMX -activeWindow -interactive c:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe ". 'C:\Program Files\Microsoft\Exchange Server\V15\bin\RemoteExchange.ps1'; Connect-ExchangeServer -auto; . '$ScenarioScriptDir\User.ps1' -subnet $IPv4Subnet -AddressFamily $AddressFamily -IPV6Prefix $IPV6Prefix $CommonParameter") 
 					    if ($BugTest) { debug $Cmdresult }
 				        }
 				    until ($VMrunErrorCondition -notcontains $cmdresult)
@@ -3575,16 +3616,16 @@ switch ($PsCmdlet.ParameterSetName)
             $Nodename = "$EX_Version"+"N"+"$EXNODE"
             $CloneVMX = (get-vmx $Nodename).config				
 			write-verbose "Setting Local Security Policies"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script create-security.ps1 -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script create-security.ps1 -interactive
 			########### Entering networker Section ##############
 			if ($NMM.IsPresent)
 			{
 				write-verbose "Install NWClient"
-				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
 				write-verbose "Install NMM"
-				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-nmm.ps1 -interactive -Parameter $nmm_ver
+				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script install-nmm.ps1 -interactive -Parameter $nmm_ver
 			    write-verbose "Performin NMM Post Install Tasks"
-			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script finish-nmm.ps1 -interactive
+			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script finish-nmm.ps1 -interactive
             }# end nmm
 			########### leaving NMM Section ###################
 		    invoke-postsection
@@ -3597,7 +3638,7 @@ switch ($PsCmdlet.ParameterSetName)
 	"HyperV" {
         $Firstnode = "1" #for later use
         $Clusternum = "1" # for later use
-        $LASTVMX = "HVNODE$HyperVNodes"
+        #$LASTVMX = "HVNODE$HyperVNodes"
         $FirstVMX =  "HVNODE$Firstnode"
 		$HVLIST = @()
         $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features, Hyper-V, Hyper-V-Tools, Hyper-V-PowerShell, WindowsStorageManagementService"
@@ -3608,7 +3649,7 @@ switch ($PsCmdlet.ParameterSetName)
                 Write-Warning "We want a Cluster for Automated SCALEIO Deployment, adjusting"
                 [switch]$Cluster = $true
                 }   
-            If (!$Disks){$Disks = 3} 
+            If (!$Disks){$Disks = 1} 
             $cloneparm = " -AddDisks -disks $Disks"
             if ("XXL" -notmatch $Size)
                 { 
@@ -3640,7 +3681,8 @@ switch ($PsCmdlet.ParameterSetName)
         foreach ($HVNODE in ($Firstnode..$HyperVNodes))
 		{
 			if ($HVNODE -eq $HyperVNodes -and $SCVMM.IsPresent) 
-            { 
+            {
+            $LastNode = $True 
             if ("XL" -notmatch $Size)
                 { 
                 $Size = "TXL"              
@@ -3653,8 +3695,10 @@ switch ($PsCmdlet.ParameterSetName)
 			$Nodeip = "$IPv4Subnet.15$HVNode"
 			$Nodename = "HVNODE$HVNode"
 			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
-			$SourceScriptDir = "$Builddir\$Script_dir\HyperV\"
-            $SQLScriptDir = "$Builddir\$Script_dir\sql\"
+			$ScenarioScriptDir = "$GuestScriptdir\HyperV\"
+            $SQLScriptDir = "$GuestScriptdir\sql\"
+            $VMMScriptDir = "$GuestScriptdir\VMM" 
+
             Write-Verbose $IPv4Subnet
             write-verbose $Nodeip
             Write-Verbose $Nodename
@@ -3670,33 +3714,21 @@ switch ($PsCmdlet.ParameterSetName)
 			status "Creating Hyper-V Node  $Nodename"
 			# status "Hyper-V Development is still not finished and untested, be careful"
 			test-dcrunning
-			$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $HVNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir $cloneparm"
+			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $HVNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir $cloneparm"
 			###################################################
 			
             If ($CloneOK)
-			{
-				write-verbose "Copy Configuration files, please be patient"
-				copy-tovmx -Sourcedir $NodeScriptDir
-                copy-tovmx -Sourcedir $SourceScriptDir
-                if ($SCVMM.IsPresent)
-                    {
-                    copy-tovmx -Sourcedir $SQLScriptDir
-                    }
-                If ($ScaleIO.IsPresent)
-                    {
-                    Write-Verbose "Copying DiskSpeed"
-                    Copy-VMXDirHost2Guest -config $Clonevmx -Sourcepath "$Sourcedir\diskspd\amd64fre\diskspd.exe" -targetpath "c:\Diskspd" -recurse -Guestuser "Administrator" -Guestpassword $Adminpassword
-				    }
+			    {
                 write-verbose "Waiting System Ready"
 				test-user -whois Administrator
 				write-Verbose "Starting Customization"
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
 				test-user Administrator
 				write-verbose "Setting up Hyper-V Configuration"
-				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script configure-hyperv.ps1 -interactive
+				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script configure-hyperv.ps1 -interactive
 
 				write-verbose "Setting up WINRM"
-				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script set-winrm.ps1 -interactive
+				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script set-winrm.ps1 -interactive
                 
                 if ($ScaleIO.IsPresent)
                     {
@@ -3704,19 +3736,19 @@ switch ($PsCmdlet.ParameterSetName)
                 1
                     {
                     Write-Output "Installing MDM"
-                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-scaleio.ps1 -Parameter "-Role MDM -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive
+                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role MDM -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive
                     }
                 2
                     {
                     if (!$singlemdm.IsPresent)
                         {
                         Write-Output "Installing MDM"
-                        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-scaleio.ps1 -Parameter "-Role MDM -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive
+                        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role MDM -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive
                         }
                     else
                         {
                         Write-Output "Installing single MDM"
-                        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
+                        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
                         }
                     
                     }
@@ -3732,14 +3764,14 @@ switch ($PsCmdlet.ParameterSetName)
                     if (!$singlemdm.IsPresent)
                         {                                        
                         Write-Output " Installing TB"
-                        Invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-scaleio.ps1 -Parameter "-Role TB -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
+                        Invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role TB -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
                         $mdmipa = "$IPv4Subnet.151"
                         $mdmipb = "$IPv4Subnet.152"
                         }
                     else
                         {
                         Write-Output " Installing single MDM"
-                        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
+                        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
                         $mdmipa = "$IPv4Subnet.151"
                         $mdmipb = "$IPv4Subnet.151"                        }
                     write-verbose "installing JAVA"
@@ -3752,13 +3784,13 @@ switch ($PsCmdlet.ParameterSetName)
 		                }
 		            until ($VMrunErrorCondition -notcontains $cmdresult)
 		            write-log "$origin $cmdresult"
-                    Invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-scaleio.ps1 -Parameter "-Role gateway -disks $Disks -ScaleIOVer $ScaleIOVer -mdmipa $mdmipa -mdmipb $mdmipb" -interactive 
+                    Invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role gateway -disks $Disks -ScaleIOVer $ScaleIOVer -mdmipa $mdmipa -mdmipb $mdmipb" -interactive 
 
 
                     }
                 default
                     {
-                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
+                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
                     }
                 }
                     }
@@ -3767,15 +3799,15 @@ switch ($PsCmdlet.ParameterSetName)
 	            if ($NMM.IsPresent)
 		            {
 			        write-verbose "Install NWClient"
-			        invoke-vmxpowershell -config $CloneVMX -ScriptPath $Targetscriptdir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver -Guestuser $Adminuser -Guestpassword $Adminpassword
+			        invoke-vmxpowershell -config $CloneVMX -ScriptPath $NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver -Guestuser $Adminuser -Guestpassword $Adminpassword
 			        
                     write-verbose "Install NMM"
                     $NMM_Parameter = "-nmm_ver $nmm_ver"
-                    If ($SCVMM.IsPresent)
+                    If ($SCVMM.IsPresent -and $LastNode)
                         {
                         $NMM_Parameter = "$NMM_Parameter -scvmm"
                         }
-			        invoke-vmxpowershell -config $CloneVMX -ScriptPath $Targetscriptdir -Script install-nmm.ps1 -interactive -Parameter $NMM_Parameter -Guestuser $Adminuser -Guestpassword $Adminpassword
+			        invoke-vmxpowershell -config $CloneVMX -ScriptPath $ScenarioScriptDir -Script install-nmm.ps1 -interactive -Parameter $NMM_Parameter -Guestuser $Adminuser -Guestpassword $Adminpassword
 		            }# End Nmm		
             invoke-postsection -wait
             } # end Clone OK
@@ -3789,7 +3821,7 @@ switch ($PsCmdlet.ParameterSetName)
 		{
 			write-host
 			write-verbose "Forming Hyper-V Cluster"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script createcluster.ps1 -Parameter "-Nodeprefix 'HVNODE' -IPAddress '$IPv4Subnet.150' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix 'HVNODE' -IPAddress '$IPv4Subnet.150' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
 		}
 	    if ($ScaleIO.IsPresent)
             {
@@ -3797,42 +3829,46 @@ switch ($PsCmdlet.ParameterSetName)
             if ($singlemdm.IsPresent)
                     {
                     Write-Warning "Configuring Single MDM"
-                    get-vmx $FirstVMX | invoke-vmxpowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script configure-mdm.ps1 -Parameter "-singlemdm -CSVnum 3" -interactive 
+                    get-vmx $FirstVMX | invoke-vmxpowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script configure-mdm.ps1 -Parameter "-singlemdm -CSVnum 2" -interactive 
                     }
             else
                     {
                     Write-Warning "Configuring Clustered MDM"
-                    get-vmx $FirstVMX | invoke-vmxpowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script configure-mdm.ps1 -Parameter "-CSVnum 3" -interactive 
+                    get-vmx $FirstVMX | invoke-vmxpowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script configure-mdm.ps1 -Parameter "-CSVnum 3" -interactive 
                     }
             }
 		if ($SCVMM.IsPresent)
 		    {
 			write-verbose "Building SCVMM Setup Configruration"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script set-vmmconfig.ps1 -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script set-vmmconfig.ps1 -interactive
 			write-verbose "Installing SQL Binaries"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -DefaultDBpath" -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $SQLScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -DefaultDBpath $CommonParameter" -interactive
 			write-verbose "Installing SCVMM PREREQS"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $Targetscriptdir -Script install-vmmprereq.ps1 -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $ScenarioScriptDir -Script install-vmmprereq.ps1 -Parameter "-scvmm_ver $scvmm_ver $CommonParameter"  -interactive
             checkpoint-progress -step vmmprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
 			write-verbose "Installing SCVMM"
+            Write-Warning "Setup of VMM and Update Rollups in progress, could take up to 20 Minutes"
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $ScenarioScriptDir -Script install-vmm.ps1 -Parameter "-scvmm_ver $scvmm_ver $CommonParameter" -interactive
+            
+            
             if ($ConfigureVMM.IsPresent)
                 {
-                Write-Warning "Setup of VMM and Update Rollups in progress, could take up to 20 Minutes"
-			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $Targetscriptdir -Script install-vmm.ps1 -interactive
 			    Write-Verbose "Configuring VMM"
                 if ($Cluster.IsPresent)
                     {
-                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script configure-vmm.ps1 -Parameter "-Cluster" -interactive
+                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script configure-vmm.ps1 -Parameter "-Cluster" -interactive
                     }
                     else
                     {
-                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script configure-vmm.ps1 -interactive
+                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script configure-vmm.ps1 -interactive
                     }
                 }
+            <#
             else
                 {
-                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $Targetscriptdir -Script install-vmm.ps1 -interactive -nowait
+                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $ScenarioScriptDir -Script install-vmm.ps1 -Parameter "-scvmm_ver $scvmm_ver $CommonParameter" -interactive -nowait
 		        }
+#>
             } #end SCVMM
         }#end newdeploy
 	} # End Switchblock hyperv
@@ -3842,7 +3878,7 @@ switch ($PsCmdlet.ParameterSetName)
 		foreach ($Node in ($SOFSSTART..$SOFSNODES))
 		{
 			###################################################
-			# Setup of a Blank Node
+			# Setup of a SOFS Node
 			# Init
 			$Nodeip = "$IPv4Subnet.21$Node"
 			$Nodename = "SOFSNode$Node"
@@ -3867,14 +3903,11 @@ switch ($PsCmdlet.ParameterSetName)
 			# Clone Base Machine
 			status $Commentline
 			status "Creating SOFS Node Host $Nodename with IP $Nodeip"
-			$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir "
+			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir "
 			
 			###################################################
 			If ($CloneOK)
 			{
-				write-verbose "Copy Configuration files, please be patient"
-				copy-tovmx -Sourcedir $NodeScriptDir
-				copy-tovmx -Sourcedir $SourceScriptDir
 				write-verbose "Waiting System Ready"
 				test-user -whois Administrator
 				write-Verbose "Starting Customization"
@@ -3893,8 +3926,8 @@ switch ($PsCmdlet.ParameterSetName)
                 }
             until ((Get-VMXToolsState -config $Cluster).State -eq "running")
 
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script createcluster.ps1 -Parameter "-Nodeprefix 'SOFS' -IPAddress '$IPv4Subnet.210' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script new-sofsserver.ps1 -Parameter "-SOFSNAME 'SOFSServer'  $CommonParameter" -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix 'SOFS' -IPAddress '$IPv4Subnet.210' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script new-sofsserver.ps1 -Parameter "-SOFSNAME 'SOFSServer'  $CommonParameter" -interactive
 
 		# }
 
@@ -3920,7 +3953,7 @@ switch ($PsCmdlet.ParameterSetName)
             $Prefix= $SPPrefix
             $SPSize = "TXL"
 			###################################################
-			# Setup of a Blank Node
+			# Setup of a Sharepoint Node
 			# Init
 			$Nodeip = "$IPv4Subnet.14$Node"
 			$Nodename = "$Prefix"+"Node$Node"
@@ -3941,8 +3974,8 @@ switch ($PsCmdlet.ParameterSetName)
 			test-dcrunning
 			# Clone Base Machine
 			status $Commentline
-			status "Creating Blank Node Host $Nodename with IP $Nodeip"
-		    $CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $SPSize -Sourcedir $Sourcedir $cloneparm"
+			status "Creating Host $Nodename with IP $Nodeip"
+		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $SPSize -Sourcedir $Sourcedir $cloneparm"
 			###################################################
 			If ($CloneOK)
 			{
@@ -3953,28 +3986,28 @@ switch ($PsCmdlet.ParameterSetName)
 				test-user -whois Administrator
 				write-Verbose "Starting Customization"
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
-                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script powerconf.ps1 -interactive
-                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-spprereqs.ps1 -interactive
+                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script powerconf.ps1 -interactive
+                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-spprereqs.ps1 -interactive
                 checkpoint-progress -step spprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
                 Write-Verbose "Installing Sharepoint"
                 If ($AlwaysOn.IsPresent)
                     {
                     Write-Warning "installing sharepoint customized, could take an hour"
-                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-sp.ps1 -Parameter "-DBtype AAG" -interactive
-                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script configure-sp.ps1 -Parameter "-DBtype AAG" -interactive
+                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-sp.ps1 -Parameter "-DBtype AAG" -interactive
+                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script configure-sp.ps1 -Parameter "-DBtype AAG" -interactive
                     }
                 else
                     {
-                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-sp.ps1 -interactive
+                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-sp.ps1 -interactive
                     }
                 if ($NMM.IsPresent)
                     {
 				    status "Installing Networker $nmm_ver an NMM $nmm_ver on all Nodes"
 					status $CloneVMX
 					write-verbose "Install NWClient"
-					invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+					invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
                     write-verbose "Install NMM"
-					invoke-vmxpowershell -config $CloneVMX -ScriptPath $Targetscriptdir -Script install-nmm.ps1 -interactive -Parameter $nmm_ver -Guestuser $Adminuser -Guestpassword $Adminpassword
+					invoke-vmxpowershell -config $CloneVMX -ScriptPath $GuestScriptDir -Script install-nmm.ps1 -interactive -Parameter $nmm_ver -Guestuser $Adminuser -Guestpassword $Adminpassword
 					}
 				invoke-postsection
 			}# end Cloneok
@@ -3982,13 +4015,27 @@ switch ($PsCmdlet.ParameterSetName)
 
 	} # End Switchblock Sharepoint
 	"Blanknodes" {
+
+        if ($SpacesDirect.IsPresent -and $Master -lt "2016")
+                {
+                Write-Warning "Master 2016TP3 or Later is required for Spaces Direct"
+                exit
+                }
+        If ($BlankHV.IsPresent)
+            {
+            $VTbit = $True
+            }
+        if ($SpacesDirect.IsPresent -and $Disks -lt 2)
+            {
+            $Disks = 2
+            }
         if ($Disks)
             {
 		    $cloneparm = " -AddDisks -disks $Disks"
             }
         $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features"
         if ($Cluster.IsPresent) {$AddonFeatures = "$AddonFeatures, Failover-Clustering, RSAT-Clustering, WVR"}
-
+        if ($BlankHV.IsPresent) {$AddonFeatures = "$AddonFeatures, Hyper-V, RSAT-HyperV"}
 		foreach ($Node in ($Blankstart..$BlankNodes))
 		{
 			###################################################
@@ -4017,17 +4064,15 @@ switch ($PsCmdlet.ParameterSetName)
 			status "Creating Blank Node Host $Nodename with IP $Nodeip"
 			if ($VTbit)
 			{
-				$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir $cloneparm"
+				$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir $cloneparm"
 			}
 			else
 			{
-				$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir $cloneparm"
+				$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir $cloneparm"
 			}
 			###################################################
 			If ($CloneOK)
 			{
-				write-verbose "Copy Configuration files, please be patient"
-				copy-tovmx -Sourcedir $NodeScriptDir
 				write-verbose "Waiting System Ready"
 				test-user -whois Administrator
 				write-Verbose "Starting Customization"
@@ -4035,7 +4080,7 @@ switch ($PsCmdlet.ParameterSetName)
                 if ($NW.IsPresent)
                     {
                     write-verbose "Install NWClient"
-		            invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+		            invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
                     }
 				invoke-postsection
 			}# end Cloneok
@@ -4046,7 +4091,7 @@ switch ($PsCmdlet.ParameterSetName)
 		    {
 			write-host
 			write-verbose "Forming Blanknode Cluster"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script createcluster.ps1 -Parameter "-Nodeprefix 'NODE' -IPAddress '$IPv4Subnet.180' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix 'NODE' -IPAddress '$IPv4Subnet.180' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
 		    }
 
 	} # End Switchblock Blanknode
@@ -4077,7 +4122,7 @@ switch ($PsCmdlet.ParameterSetName)
 			if ($SpaceNodes -gt 1) {$AddonFeatures = "Failover-Clustering, RSAT-Clustering"}
 			status $Commentline
 			status "Creating Storage Spaces Node Host $Nodename with IP $Nodeip"
-			$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -AddOnfeatures $AddonFeature"
+			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -AddOnfeatures $AddonFeature"
 			###################################################
 			If ($CloneOK)
 			{
@@ -4096,7 +4141,7 @@ switch ($PsCmdlet.ParameterSetName)
 		{
 			write-host
 			write-verbose "Forming Storage Spaces Cluster"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script createcluster.ps1 -Parameter "-Nodeprefix 'Spaces' -IPAddress '$IPv4Subnet.170' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix 'Spaces' -IPAddress '$IPv4Subnet.170' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
 		}
 		
 		
@@ -4127,7 +4172,7 @@ switch ($PsCmdlet.ParameterSetName)
 		# Clone Base Machine
 		status $Commentline
 		status "Creating $SQLVER Node $Nodename with IP $Nodeip"
-		$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -sql"
+		$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -sql"
 		###################################################
 		If ($CloneOK)
 		{
@@ -4141,9 +4186,9 @@ switch ($PsCmdlet.ParameterSetName)
 			domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
 			invoke-postsection -wait
             write-verbose "Configure Disks"
-            invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script prepare-disks.ps1
+            invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script prepare-disks.ps1
             write-verbose "Installing SQL Binaries"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER $CommonParameter" -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER $CommonParameter" -interactive
             <#			
             $SQLSetupStart = Get-Date
 			While ($FileOK = (&$vmrun -gu $builddomain\Administrator -gp Password123! fileExistsInGuest $CloneVMX c:\$Script_dir\sql.pass) -ne "The file exists.")
@@ -4154,20 +4199,20 @@ switch ($PsCmdlet.ParameterSetName)
 			test-user -whois administrator
             #>
             Write-Verbose "Setting SQL Server Roles on $($CloneVMX.vmxname)"
-            invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script set-sqlroles.ps1 -interactive
+            invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script set-sqlroles.ps1 -interactive
 
 			if ($NMM.IsPresent)
 			{
 				write-verbose "Install NWClient"
-				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
 				write-verbose "Install NMM"
                 
-				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-nmm.ps1 -interactive -Parameter $nmm_ver
+				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-nmm.ps1 -interactive -Parameter $nmm_ver
 			}# End NoNmm
 			Write-Verbose "Importing Database"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script import-database.ps1 -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script import-database.ps1 -interactive
 
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script finish_sql.ps1 -interactive -nowait
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script finish-sql.ps1 -interactive -nowait
 
 			#invoke-postsection
 		}# end Cloneok
@@ -4195,7 +4240,7 @@ switch ($PsCmdlet.ParameterSetName)
         }
 
 	test-dcrunning
-	$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -bridge -Gateway -size $Size -Sourcedir $Sourcedir $CommonParameter"
+	$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -bridge -Gateway -size $Size -Sourcedir $Sourcedir $CommonParameter"
 	###################################################
 	If ($CloneOK)
 	{
@@ -4210,7 +4255,7 @@ switch ($PsCmdlet.ParameterSetName)
 		While (([string]$UserLoggedOn = (&$vmrun -gu Administrator -gp Password123! listProcessesInGuest $CloneVMX)) -notmatch "owner=$BuildDomain\\Administrator") { write-host -NoNewline "." }
         write-verbose "Building Panorama Server"
         invoke-postsection -wait
-	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script panorama.ps1 -interactive -parameter " $CommonParameter"
+	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script panorama.ps1 -interactive -parameter " $CommonParameter"
 	}
 } #Panorama End
 
@@ -4236,7 +4281,7 @@ switch ($PsCmdlet.ParameterSetName)
         }
 
 	test-dcrunning
-	$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Gateway -size XXL -Sourcedir $Sourcedir $CommonParameter"
+	$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Gateway -size XXL -Sourcedir $Sourcedir $CommonParameter"
 	###################################################
 	If ($CloneOK)
 	{
@@ -4252,11 +4297,11 @@ switch ($PsCmdlet.ParameterSetName)
         if ($NW.IsPresent)
             {
             write-verbose "Install NWClient"
-		    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+		    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
             }
         invoke-postsection -wait
         write-verbose "Building SRM Server"
-	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script INSTALL-SRM.ps1 -interactive -parameter "-SRM_VER $SRM_VER $CommonParameter"
+	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script INSTALL-SRM.ps1 -interactive -parameter "-SRM_VER $SRM_VER $CommonParameter"
         Write-Host -ForegroundColor White "You cn now Connect to http://$($Nodeip):58080/APG/ with admin/changeme"
 	
 }
@@ -4265,16 +4310,18 @@ switch ($PsCmdlet.ParameterSetName)
 "SCOM"
 {
 	###################################################
-	# SRM Setup
+	# SCO Setup
 	###################################################
 	$Nodeip = "$IPv4Subnet.18"
-	$Nodename = "SCOM2012R2"
+	$Nodename = "SCOM"
 	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
-    [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS" 
+    [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS"
+    $ScenarioScriptDir = "$GuestScriptdir\SCOM"
+    $SQLScriptDir = "$GuestScriptdir\sql\"
+
 	###################################################
 	status $Commentline
-	status "Creating $SCOMVER Server $Nodename"
-    $SQLScriptDir = "$Builddir\$Script_dir\sql\"
+	status "Creating $SCOM_VER Server $Nodename"
   	Write-Verbose $IPv4Subnet
     write-verbose $Nodename
     write-verbose $Nodeip
@@ -4285,15 +4332,15 @@ switch ($PsCmdlet.ParameterSetName)
         }
 
 	test-dcrunning
-	$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Gateway -size XXL -Sourcedir $Sourcedir $CommonParameter"
+	$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Gateway -size XXL -Sourcedir $Sourcedir $CommonParameter"
 	###################################################
 	If ($CloneOK)
 	{
-		$SourceScriptDir = "$Builddir\$Script_dir\SCOM\"
+		#$SourceScriptDir = "$Builddir\$Script_dir\SCOM\"
 		write-verbose "Copy Configuration files, please be patient"
-        copy-tovmx -Sourcedir $SQLScriptDir
-		copy-tovmx -Sourcedir $NodeScriptDir
-		copy-tovmx -Sourcedir $SourceScriptDir
+        # copy-tovmx -Sourcedir $SQLScriptDir
+		# copy-tovmx -Sourcedir $NodeScriptDir
+		# copy-tovmx -Sourcedir $SourceScriptDir
 		write-verbose "Waiting System Ready"
 		test-user -whois Administrator
 		write-Verbose "Starting Customization"
@@ -4302,14 +4349,14 @@ switch ($PsCmdlet.ParameterSetName)
         if ($NW.IsPresent)
             {
             write-verbose "Install NWClient"
-		    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+		    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
             }
         invoke-postsection -wait
         write-verbose "Installing SQL Binaries"
-	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -DefaultDBpath" -interactive
+	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $SQLScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -DefaultDBpath" -interactive
 
         write-verbose "Building SCOM Server"
-        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script INSTALL-Scom.ps1 -interactive -parameter "$CommonParameter"
+        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script INSTALL-Scom.ps1 -interactive -parameter "-SCOM_VER $SCOM_VER $CommonParameter"
 #        Write-Host -ForegroundColor White "You cn now Connect to http://$($Nodeip):58080/APG/ with admin/changeme"
 	
 }
@@ -4335,7 +4382,8 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
 	$Nodeip = "$IPv4Subnet.$Gatewayhost"
 	$Nodename = $NWNODE
 	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
-    [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features" 
+    [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features"
+    $ScenarioScriptDir = "$GuestScriptdir\$NWNODE" 
 	###################################################
 	status $Commentline
 	status "Creating Networker Server $Nodename"
@@ -4352,17 +4400,12 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
         Write-verbose "Now Pausing, Clone Process will start after keypress"
         pause
         }
-
 	test-dcrunning
     If ($DefaultGateway -match $Nodeip){$SetGateway = "-Gateway"}
-	$CloneOK = Invoke-expression "$Builddir\$Script_dir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 9 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -NW $SetGateway -size $Size -Sourcedir $Sourcedir $CommonParameter"
+	$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 9 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -NW $SetGateway -size $Size -Sourcedir $Sourcedir $CommonParameter"
 	###################################################
 	If ($CloneOK)
-	{
-		$SourceScriptDir = "$Builddir\$Script_dir\NW\"
-		write-verbose "Copy Configuration files, please be patient"
-		copy-tovmx -Sourcedir $NodeScriptDir
-		copy-tovmx -Sourcedir $SourceScriptDir
+	    {
 		write-verbose "Waiting System Ready"
 		test-user -whois Administrator
 		write-Verbose "Starting Customization"
@@ -4370,32 +4413,12 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
 		# Setup Networker
 		While (([string]$UserLoggedOn = (&$vmrun -gu Administrator -gp Password123! listProcessesInGuest $CloneVMX)) -notmatch "owner=$BuildDomain\\Administrator") { write-host -NoNewline "." }
 		write-verbose "Building Networker Server"
-		############ java
 		write-verbose "installing JAVA"
-		$Parm = "/s"
-		$Execute = "\\vmware-host\Shared Folders\Sources\$LatestJava"
-		do
-		{
-			($cmdresult = &$vmrun -gu Administrator -gp Password123! runPrograminGuest  $CloneVMX -activeWindow  $Execute $Parm) 2>&1 | Out-Null
-			write-log "$origin $cmdresult"
-		}
-		until ($VMrunErrorCondition -notcontains $cmdresult)
-		write-log "$origin $cmdresult"
-		###################adobe
+		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script install-program.ps1 -Parameter "-Program $LatestJava -ArgumentList '/s' $CommonParameter"-interactive
 		write-verbose "installing Acrobat Reader"
-		$Parm = "/sPB /rs"
-		$Execute = "\\vmware-host\Shared Folders\Sources\$LatestReader"
-		do
-		{
-			($cmdresult = &$vmrun -gu Administrator -gp Password123! runPrograminGuest  $CloneVMX -activeWindow  $Execute $Parm) 2>&1 | Out-Null
-			write-log "$origin $cmdresult"
-		}
-		until ($VMrunErrorCondition -notcontains $cmdresult)
-		write-log "$origin $cmdresult"
-		###################
-		
+		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script install-program.ps1 -Parameter "-Program $LatestReader -ArgumentList '/sPB /rs' $CommonParameter"-interactive
 		write-verbose "installing Networker Server"
-		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script install-nwserver.ps1 -Parameter $nw_ver -interactive
+		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script install-nwserver.ps1 -Parameter "-nw_ver $nw_ver $CommonParameter"-interactive
 		if (!$Gateway.IsPresent)
             {
             checkpoint-progress -step networker -reboot
@@ -4403,20 +4426,18 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
         write-verbose "Waiting for NSR Media Daemon to start"
 		While (([string]$UserLoggedOn = (&$vmrun -gu Administrator -gp Password123! listProcessesInGuest $CloneVMX)) -notmatch "nsrd.exe") { write-host -NoNewline "." }
 		write-verbose "Creating Networker users"
-		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script nsruserlist.ps1 -interactive
+		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script nsruserlist.ps1 -interactive
 		status "Creating AFT Device"
-		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script create-nsrdevice.ps1 -interactive -Parameter "-AFTD AFTD1"
-		# write-verbose "Creating Networker Clients, Groups and Saveset resources"
-		# invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script create-nsrres.ps1 -interactive
+		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script create-nsrdevice.ps1 -interactive -Parameter "-AFTD AFTD1"
         If ($DefaultGateway -match $Nodeip){
                 write-verbose "Opening Firewall on Networker Server for your Client"
-                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script firewall.ps1 -interactive
-        		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script add-rras.ps1 -interactive -Parameter "-IPv4Subnet $IPv4Subnet"
+                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script firewall.ps1 -interactive
+        		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script add-rras.ps1 -interactive -Parameter "-IPv4Subnet $IPv4Subnet"
                 checkpoint-progress -step rras -reboot
 
         }
         invoke-postsection -wait
-        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $Targetscriptdir -Script configure-nmc.ps1 -interactive
+        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script configure-nmc.ps1 -interactive
 		progress "Please finish NMC Setup by Double-Clicking Networker Management Console from Desktop on $NWNODE.$builddomain.local"
 	    
 	}
