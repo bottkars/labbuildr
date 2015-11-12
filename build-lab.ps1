@@ -4061,6 +4061,9 @@ switch ($PsCmdlet.ParameterSetName)
 		    Write-Verbose $IPv4Subnet
             write-verbose $Nodename
             write-verbose $Nodeip
+            Write-Verbose "Disks: $Disks"
+            Write-Verbose "Blanknodes: $BlankNodes"
+            Write-Verbose "Cluster: $($Cluster.IsPresent)"
             if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
                 { 
                 Write-verbose "Now Pausing"
@@ -4123,6 +4126,9 @@ switch ($PsCmdlet.ParameterSetName)
 		    Write-Verbose $IPv4Subnet
             write-verbose $Nodename
             write-verbose $Nodeip
+            Write-Verbose $Disks
+            Write-Verbose $ClusterName
+           
             if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
                 { 
                 Write-verbose "Now Pausing"
