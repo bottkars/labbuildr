@@ -138,6 +138,7 @@ Specify if Networker Scenario sould be installed
 	[Parameter(ParameterSetName = "Blanknodes")][switch][alias('bn')]$Blanknode,
 	[Parameter(ParameterSetName = "Blanknodes")][switch][alias('bnhv')]$BlankHV,
 	[Parameter(ParameterSetName = "Blanknodes")][switch][alias('S2D')]$SpacesDirect,
+	[Parameter(ParameterSetName = "Blanknodes")][switch][alias('CLN')]$ClusterName,
     <#
     Selects the SOFS Scenario
     IP-Addresses: .210 - .219
@@ -4015,7 +4016,7 @@ switch ($PsCmdlet.ParameterSetName)
 
 	} # End Switchblock Sharepoint
 	"Blanknodes" {
-
+        $Nodename = "GenNode$Node"
         if ($SpacesDirect.IsPresent -and $Master -lt "2016")
                 {
                 Write-Warning "Master 2016TP3 or Later is required for Spaces Direct"
@@ -4042,9 +4043,8 @@ switch ($PsCmdlet.ParameterSetName)
 			# Setup of a Blank Node
 			# Init
 			$Nodeip = "$IPv4Subnet.18$Node"
-			$Nodename = "GenNode$Node"
+			
 			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
-			# $SourceScriptDir = "$Builddir\$Script_dir\Exchange\"
 			###################################################
 			# we need a DC, so check it is running
 		    Write-Verbose $IPv4Subnet
@@ -4091,7 +4091,7 @@ switch ($PsCmdlet.ParameterSetName)
 		    {
 			write-host
 			write-verbose "Forming Blanknode Cluster"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix 'Gen' -IPAddress '$IPv4Subnet.180' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix 'Gen'  -Clustername $ClusterName -IPAddress '$IPv4Subnet.180' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
 		    }
 
 	} # End Switchblock Blanknode
