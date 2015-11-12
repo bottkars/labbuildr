@@ -34,10 +34,10 @@ to newly install, symply download labbuildr,labbuildr-scripts and vmxtoolkit
 
 Directory Structure
 
-labbmuildr -- |
-              |--scripts
-              |--labtools
-              |--vmxtoolkit
+labbuildr --  |    
+              |--scripts    
+              |--labtools    
+              |--vmxtoolkit    
                 
 
 
