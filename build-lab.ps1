@@ -1989,6 +1989,11 @@ if ($NWServer.IsPresent -or $NW.IsPresent)
     }
 if ($Exchange2013.IsPresent)
 {
+    If ($Master -gt '2012Z')
+        {
+        Write-Warning "Only master up 2012R2Fallupdate supported in this scenario"
+        exit
+        }
     $Prereqdir = "Attachments"
     $attachments = (
     "http://www.cisco.com/c/dam/en/us/solutions/collateral/data-center-virtualization/unified-computing/fle_vmware.pdf",
@@ -2146,6 +2151,11 @@ if ($Exchange2013.IsPresent)
 
 if ($Exchange2016.IsPresent)
 {
+    If ($Master -gt '2012Z')
+        {
+        Write-Warning "Only master up 2012R2Fallupdate supported in this scenario"
+        exit
+        }
     $Prereqdir = "Attachments"
     $attachments = (
     "http://www.cisco.com/c/dam/en/us/solutions/collateral/data-center-virtualization/unified-computing/fle_vmware.pdf"
@@ -2223,10 +2233,6 @@ if ($Exchange2016.IsPresent)
         Switch ($e16_cu)
 
             {
-                "Preview1"
-                {
-                $URL = "http://download.microsoft.com/download/D/F/7/DF7BC677-B1BE-45FC-AD48-B86C917100D8/Exchange2016-x64-Preview.exe"
-                }
                 "final"
                 {
                 $URL = "http://download.microsoft.com/download/3/9/B/39B8DDA8-509C-4B9E-BCE9-4CD8CDC9A7DA/Exchange2016-x64.exe"
@@ -2372,6 +2378,11 @@ if ($scvmm.IsPresent)
     {
         "SC2012_R2_SCVMM"
             {
+            If ($Master -gt '2012Z')
+                {
+                Write-Warning "Only master up 2012R2Fallupdate supported in this scenario"
+                exit
+                }
             if ($SQLVER -gt "SQL2012SP1")
                 {
                 Write-Warning "SCOM can only be installed on SQL2012, Setting to SQL2012SP1"

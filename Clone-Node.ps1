@@ -149,6 +149,8 @@ $Clone | Set-VMXMainMemory -usefile:$false
 $Clone | Set-VMXDisplayName -DisplayName $Displayname
 if ($HyperV){
 ($Clone | Get-VMXConfig) | foreach-object {$_ -replace 'guestOS = "windows8srv-64"', 'guestOS = "winhyperv"' } | set-content $Clone.config
+($Clone | Get-VMXConfig) | foreach-object {$_ -replace 'guestOS = "windows9srv-64"', 'guestOS = "winhyperv"' } | set-content $Clone.config
+
 }
 $Clone | Set-VMXAnnotation -builddate -Line1 "This is node $Nodename for domain $Domainname"-Line2 "Adminpasswords: Password123!" -Line3 "Userpasswords: Welcome1"
 ######### next commands will be moved in vmrunfunction soon 
