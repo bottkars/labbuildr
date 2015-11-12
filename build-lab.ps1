@@ -393,7 +393,7 @@ Machine Sizes
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
-	[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain,
+	[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain,
 	
 <# Turn this one on if you would like to install a Hypervisor inside a VM #>
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
@@ -3845,10 +3845,12 @@ switch ($PsCmdlet.ParameterSetName)
 			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $ScenarioScriptDir -Script install-vmmprereq.ps1 -Parameter "-scvmm_ver $scvmm_ver $CommonParameter"  -interactive
             checkpoint-progress -step vmmprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
 			write-verbose "Installing SCVMM"
+            Write-Warning "Setup of VMM and Update Rollups in progress, could take up to 20 Minutes"
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $ScenarioScriptDir -Script install-vmm.ps1 -Parameter "-scvmm_ver $scvmm_ver $CommonParameter" -interactive
+            
+            
             if ($ConfigureVMM.IsPresent)
                 {
-                Write-Warning "Setup of VMM and Update Rollups in progress, could take up to 20 Minutes"
-			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $ScenarioScriptDir -Script install-vmm.ps1 -Parameter "-scvmm_ver $scvmm_ver $CommonParameter" -interactive
 			    Write-Verbose "Configuring VMM"
                 if ($Cluster.IsPresent)
                     {
@@ -3859,10 +3861,12 @@ switch ($PsCmdlet.ParameterSetName)
                     invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script configure-vmm.ps1 -interactive
                     }
                 }
+            <#
             else
                 {
                 invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $ScenarioScriptDir -Script install-vmm.ps1 -Parameter "-scvmm_ver $scvmm_ver $CommonParameter" -interactive -nowait
 		        }
+#>
             } #end SCVMM
         }#end newdeploy
 	} # End Switchblock hyperv
