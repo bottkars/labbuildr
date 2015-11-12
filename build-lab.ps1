@@ -3637,7 +3637,7 @@ switch ($PsCmdlet.ParameterSetName)
 	"HyperV" {
         $Firstnode = "1" #for later use
         $Clusternum = "1" # for later use
-        $LASTVMX = "HVNODE$HyperVNodes"
+        #$LASTVMX = "HVNODE$HyperVNodes"
         $FirstVMX =  "HVNODE$Firstnode"
 		$HVLIST = @()
         $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features, Hyper-V, Hyper-V-Tools, Hyper-V-PowerShell, WindowsStorageManagementService"
@@ -3680,7 +3680,8 @@ switch ($PsCmdlet.ParameterSetName)
         foreach ($HVNODE in ($Firstnode..$HyperVNodes))
 		{
 			if ($HVNODE -eq $HyperVNodes -and $SCVMM.IsPresent) 
-            { 
+            {
+            $LastNode = $True 
             if ("XL" -notmatch $Size)
                 { 
                 $Size = "TXL"              
@@ -3801,7 +3802,7 @@ switch ($PsCmdlet.ParameterSetName)
 			        
                     write-verbose "Install NMM"
                     $NMM_Parameter = "-nmm_ver $nmm_ver"
-                    If ($SCVMM.IsPresent)
+                    If ($SCVMM.IsPresent -and $LastNode)
                         {
                         $NMM_Parameter = "$NMM_Parameter -scvmm"
                         }
