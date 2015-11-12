@@ -209,8 +209,16 @@ if ($sql.IsPresent)
 
 if ($AddDisks.IsPresent)
     {
-    $SCSI = "1"
-    foreach ($LUN in (0..$Disks))
+    if ($SharedDisk.IsPresent)
+        {
+        $SCSI = "1"
+        $Clone | Set-VMXScsiController -SCSIController $SCSI -Type lsisas1068 -Verbose
+        }
+    else
+        {
+        $SCSI = "0"
+        }
+    foreach ($LUN in (1..$Disks))
         {
         $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
         Write-Verbose "Building new Disk $Diskname"
