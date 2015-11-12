@@ -4016,26 +4016,38 @@ switch ($PsCmdlet.ParameterSetName)
 
 	} # End Switchblock Sharepoint
 	"Blanknodes" {
-        if ($SpacesDirect.IsPresent -and $Master -lt "2016")
+        if ($SpacesDirect.IsPresent )
+            {
+            If ($Master -lt "2016")
                 {
                 Write-Warning "Master 2016TP3 or Later is required for Spaces Direct"
                 exit
                 }
+            if ($Disks -lt 2)
+                {
+                $Disks = 2
+                }
+            if ($BlankNodes -lt 4)
+                {
+                $BlankNodes = 4
+                }
+            $Cluster = $true
+            $BlankHV = $true
+            }
+
         If ($BlankHV.IsPresent)
             {
             $VTbit = $True
             }
-        if ($SpacesDirect.IsPresent -and $Disks -lt 2)
-            {
-            $Disks = 2
-            }
+
         if ($Disks)
             {
 		    $cloneparm = " -AddDisks -disks $Disks"
             }
         $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features"
-        if ($Cluster.IsPresent) {$AddonFeatures = "$AddonFeatures, Failover-Clustering, RSAT-Clustering, WVR"}
+        if ($Cluster.IsPresent) {$AddonFeatures = "$AddonFeatures, Failover-Clustering, RSAT-Clustering, RSAT-Clustering-AutomationServer, RSAT-Clustering-CmdInterface, WVR"}
         if ($BlankHV.IsPresent) {$AddonFeatures = "$AddonFeatures, Hyper-V, RSAT-Hyper-V-Tools"}
+        
 		foreach ($Node in ($Blankstart..$BlankNodes))
 		{
 			###################################################
