@@ -138,7 +138,7 @@ Specify if Networker Scenario sould be installed
 	[Parameter(ParameterSetName = "Blanknodes")][switch][alias('bn')]$Blanknode,
 	[Parameter(ParameterSetName = "Blanknodes")][switch][alias('bnhv')]$BlankHV,
 	[Parameter(ParameterSetName = "Blanknodes")][switch][alias('S2D')]$SpacesDirect,
-	[Parameter(ParameterSetName = "Blanknodes")][switch][alias('CLN')]$ClusterName,
+	[Parameter(ParameterSetName = "Blanknodes")][string][alias('CLN')]$ClusterName,
     <#
     Selects the SOFS Scenario
     IP-Addresses: .210 - .219
