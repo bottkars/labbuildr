@@ -210,7 +210,7 @@ if ($sql.IsPresent)
 if ($AddDisks.IsPresent)
     {
     $SCSI = "1"
-    foreach ($LUN in (1..$Disks))
+    foreach ($LUN in (0..$Disks))
         {
         $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
         Write-Verbose "Building new Disk $Diskname"
