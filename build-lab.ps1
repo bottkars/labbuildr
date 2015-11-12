@@ -922,7 +922,7 @@ function domainjoin
         {
         Write-Verbose "Joining Domain $BuildDomain"
         $domainadd = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script add-todomain.ps1 -Parameter "-Domain $BuildDomain -domainsuffix $domainsuffix -subnet $IPv4subnet -IPV6Subnet $IPv6Prefix -AddressFamily $AddressFamily" -nowait -interactive # $CommonParameter
-	    Write-Host $domainadd
+	    # Write-Host $domainadd
         }
     until ($domainadd -match "success")
 
@@ -936,8 +936,7 @@ function domainjoin
     Set-VMXSharedFolderState -VMXName $nodename -config $CloneVMX -enabled
     Write-Verbose "Please Check inside VM for Network Warnings"
 	While ($FileOK = (&$vmrun -gu Administrator -gp Password123! fileExistsInGuest $CloneVMX $GuestLogDir\3.pass) -ne "The file exists.") { Write-Host -NoNewline "."; sleep $Sleep }
-    # Write-Host
-
+    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script create-labshortcut.ps1 -interactive # -Parameter $CommonParameter
 }
 
 
