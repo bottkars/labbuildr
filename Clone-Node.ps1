@@ -20,6 +20,7 @@ Param(
 [Parameter(Mandatory=$false)][int]$Scenario = 1,
 [Parameter(Mandatory=$false)][int]$ActivationPreference = 1,
 [Parameter(Mandatory=$false)][switch]$AddDisks,
+[Parameter(Mandatory=$false)][switch]$SharedDisk,
 [Parameter(Mandatory=$false)][uint64]$Disksize = 200GB,
 [Parameter(Mandatory=$false)][ValidateRange(1, 6)][int]$Disks = 1,
 #[string]$Build,
