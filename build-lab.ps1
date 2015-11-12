@@ -4016,7 +4016,6 @@ switch ($PsCmdlet.ParameterSetName)
 
 	} # End Switchblock Sharepoint
 	"Blanknodes" {
-        $Nodename = "GenNode$Node"
         if ($SpacesDirect.IsPresent -and $Master -lt "2016")
                 {
                 Write-Warning "Master 2016TP3 or Later is required for Spaces Direct"
@@ -4043,7 +4042,7 @@ switch ($PsCmdlet.ParameterSetName)
 			# Setup of a Blank Node
 			# Init
 			$Nodeip = "$IPv4Subnet.18$Node"
-			
+			$Nodename = "GenNode$Node"
 			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
 			###################################################
 			# we need a DC, so check it is running
