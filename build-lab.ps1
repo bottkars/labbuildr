@@ -4065,6 +4065,7 @@ switch ($PsCmdlet.ParameterSetName)
             Write-Verbose "Disks: $Disks"
             Write-Verbose "Blanknodes: $BlankNodes"
             Write-Verbose "Cluster: $($Cluster.IsPresent)"
+            Write-Verbose $ClusterName
             if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
                 { 
                 Write-verbose "Now Pausing"
@@ -4106,8 +4107,10 @@ switch ($PsCmdlet.ParameterSetName)
 		    {
 			write-host
 			write-verbose "Forming Blanknode Cluster"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix $NodePrefix -ClusterName $ClusterName -IPAddress '$IPv4Subnet.180' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
-		    }
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix '$NodePrefix' -ClusterName $ClusterName -IPAddress '$IPv4Subnet.180' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive -Verbose
+			# invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix 'HVNODE' -IPAddress '$IPv4Subnet.150' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
+		    
+            }
 
 	} # End Switchblock Blanknode
 	
