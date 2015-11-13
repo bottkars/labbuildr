@@ -2903,8 +2903,8 @@ if ($ScaleIO.IsPresent)
     # ScaleIO_1.32_Complete_Windows_SW_Download\ScaleIO_1.32_Windows_Download #
     Write-Verbose "Now Checking for ScaleIO $ScaleIOVer"
     $ScaleIO_Major = ($ScaleIOVer.Split("-"))[0]
-    $ScaleIORoot = join-path $Sourcedir "Scaleio\$ScaleIO_Path"
-    $ScaleIOPath = (Get-ChildItem -Path $ScaleIORoot -Recurse -Filter "*mdm-$ScaleIOVer.msi").Directory.FullName
+    $ScaleIORoot = join-path $Sourcedir "Scaleio\"
+    $ScaleIOPath = (Get-ChildItem -Path $ScaleIORoot -Recurse -Filter "*mdm-$ScaleIOVer.msi" -ErrorAction SilentlyContinue ).Directory.FullName
 
     try
         {
