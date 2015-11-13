@@ -212,7 +212,7 @@ if ($AddDisks.IsPresent)
     if ($SharedDisk.IsPresent)
         {
         $SCSI = "1"
-        $Clone | Set-VMXScsiController -SCSIController $SCSI -Type lsisas1068 -Verbose
+        $Clone | Set-VMXScsiController -SCSIController $SCSI -Type pvscsi
         }
     else
         {
@@ -222,7 +222,7 @@ if ($AddDisks.IsPresent)
         {
         $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
         Write-Verbose "Building new Disk $Diskname"
-        $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $Clone.VMXname -Path $Clone.Path 
+        $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -VMXName $Clone.VMXname -Path $Clone.Path 
         Write-Verbose "Adding Disk $Diskname to $($Clone.VMXname)"
         if ($SharedDisk.ispresent)
             {
