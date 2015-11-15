@@ -680,7 +680,7 @@ try
     [datetime]$Latest_SIOToolKit_git = "07/11/2015"
     }
 
-
+################## Statics
 $LogFile = "$Builddir\$(Get-Content env:computername).log"
 $WAIKVER = "WAIK"
 $domainsuffix = ".local"
@@ -983,10 +983,6 @@ function write-log
 	$Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
 	Add-Content $Logfile -Value "$Logtime  $line"
 }
-
-
-
-
 
 
 <#	
@@ -1400,7 +1396,7 @@ switch ($PsCmdlet.ParameterSetName)
 
 
 
-
+#################### default Parameter Section Start
 write-verbose "Config pre defaults"
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     {
