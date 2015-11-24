@@ -3331,6 +3331,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 switch ($PsCmdlet.ParameterSetName)
 {
 	"E15"{
+        $ScenarioScriptDir = "$GuestScriptdir\E2013"
         # we need ipv4
         if ($AddressFamily -notmatch 'ipv4')
             { 
@@ -3389,22 +3390,22 @@ switch ($PsCmdlet.ParameterSetName)
 		    If ($CloneOK)
             {
             $EXnew = $True
-			write-verbose "Copy Configuration files, please be patient"
-			copy-tovmx -Sourcedir $NodeScriptDir
-			copy-tovmx -Sourcedir $SourceScriptDir
+			# write-verbose "Copy Configuration files, please be patient"
+			# copy-tovmx -Sourcedir $NodeScriptDir
+			# copy-tovmx -Sourcedir $SourceScriptDir
 			# copy-tovmx -Sourcedir $Exprereqdir
 			write-verbose "Waiting System Ready"
 			test-user -whois Administrator
 			write-Verbose "Starting Customization"
 			domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $EXAddressFamiliy -AddOnfeatures $AddonFeatures
 			write-verbose "Setup Database Drives"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script prepare-disks.ps1
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script prepare-disks.ps1
 			write-verbose "Setup E15 Prereqs"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-exchangeprereqs.ps1 -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script install-exchangeprereqs.ps1 -interactive
 			write-verbose "Setting Power Scheme"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script powerconf.ps1 -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $NodeScriptDir -Script powerconf.ps1 -interactive
 			write-verbose "Installing E15, this may take up to 60 Minutes ...."
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $GuestScriptDir -Script install-exchange.ps1 -interactive -nowait -Parameter "$CommonParameter -ex_cu $ex_cu"
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $ScenarioScriptDir -Script install-exchange.ps1 -interactive -nowait -Parameter "$CommonParameter -ex_cu $ex_cu"
             }
             }
         if ($EXnew)
