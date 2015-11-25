@@ -3385,7 +3385,8 @@ switch ($PsCmdlet.ParameterSetName)
 		    test-dcrunning
 		    status $Commentline
 		    workorder "Creating E15 Host $Nodename with IP $Nodeip in Domain $BuildDomain"
-		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Exchange -Size $Exchangesize -Sourcedir $Sourcedir "
+		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -AddDisks -Disks 3 -Disksize 500GB -Size $Exchangesize -Sourcedir $Sourcedir "
+
 		    ###################################################
 		    If ($CloneOK)
             {
@@ -3713,7 +3714,8 @@ switch ($PsCmdlet.ParameterSetName)
 			# status "Hyper-V Development is still not finished and untested, be careful"
 			test-dcrunning
 			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $HVNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir $cloneparm"
-			###################################################
+			
+###################################################
 			
             If ($CloneOK)
 			    {
