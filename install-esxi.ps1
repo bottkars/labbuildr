@@ -41,7 +41,8 @@ Param(
 [Parameter(Mandatory=$true)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet,
 <# If not using standard labbuildr, specigy the driveletter for your sources directory#>
 [Parameter(Mandatory=$False)][ValidateLength(1,1)][Validatepattern('[A-Z]')][String]$Driveletter,
-[Parameter(Mandatory=$true)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain,
+[Parameter(Mandatory=$true)]
+[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain = "labbuildr",
 [Parameter(Mandatory=$false)][ValidateScript({Test-Path -Path $_ -PathType Leaf -Include "ESX*labbuildr-ks.iso"})]$esxiso,
 [Parameter(Mandatory=$true)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$ESXIMasterPath,
  <# NFS Parameter configures the NFS Default Datastore from DCNODE#>
