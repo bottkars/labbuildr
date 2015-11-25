@@ -3131,8 +3131,8 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 		test-dcrunning
 		status "Avalanching SQL Install on $AAGNodes Always On Nodes"
         $ListenerIP = "$IPv4Subnet.169"
-        $IN_Guest_UNC_ScenarioScriptDir = (Join-Path $IN_Guest_UNC_Scriptroot "AAG")
-        $In_Guest_UNC_SQLScriptDir = (Join-Path $IN_Guest_UNC_Scriptroot "SQL")
+        $IN_Guest_UNC_ScenarioScriptDir = Join-Path $IN_Guest_UNC_Scriptroot "AAG"
+        $In_Guest_UNC_SQLScriptDir = Join-Path $IN_Guest_UNC_Scriptroot "SQL"
         $AAGName = $BuildDomain+"AAG"
         If ($AddressFamily -match 'IPv6')
             {
