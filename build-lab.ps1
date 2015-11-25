@@ -3148,7 +3148,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 			$Nodename = "AAGNODE" + $AAGNODE
 			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
 			$AAGLIST += $CloneVMX
-            $In_Guest_UNC_SQLScriptDir = "$Builddir\$Scripts\sql\"
+            #$In_Guest_UNC_SQLScriptDir = "$Builddir\$Scripts\sql\"
             $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features, Failover-Clustering, RSAT-Clustering, WVR"
 			###################################################
 			Write-Verbose $IPv4Subnet
