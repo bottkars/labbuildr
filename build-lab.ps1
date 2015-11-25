@@ -1913,17 +1913,21 @@ if ($NWServer.IsPresent -or $NW.IsPresent)
             }
         }
 #>
-    $url = "ftp://ftp.adobe.com/pub/adobe/reader/win/Acrobat2015/1500630033/AcroRdr20151500630033_MUI.exe"
-    $FileName = Split-Path -Leaf -Path $Url
-    if (!(test-path  $Sourcedir\$FileName))
+    
+    $urls = ("ftp://ftp.adobe.com/pub/adobe/reader/win/Acrobat2015/1500630033/AcroRdr20151500630033_MUI.exe",
+           "ftp://ftp.adobe.com/pub/adobe/reader/win/Acrobat2015/1500630097/AcroRdr2015Upd1500630097_MUI.msp")
+    foreach ($url in $urls)
         {
-        Write-Verbose "$FileName not found, trying Download"
-        if (!( Get-LABFTPFile -Source $URL -Target $Sourcedir\$FileName -verbose -UserName Anonymous -Password "Admin@labbuildr.local"))
-            { 
-            write-warning "Error Downloading file $Url, Please check connectivity"
-            }
+        $FileName = Split-Path -Leaf -Path $Url
+        if (!(test-path  $Sourcedir\$FileName))
+            {
+            Write-Verbose "$FileName not found, trying Download"
+                if (!( Get-LABFTPFile -Source $URL -Target $Sourcedir\$FileName -verbose -UserName Anonymous -Password "Admin@labbuildr.local"))
+                    { 
+                    write-warning "Error Downloading file $Url, Please check connectivity"
+                    }
+                }
         }
-
     }
 if ($Exchange2013.IsPresent)
 {
@@ -2938,10 +2942,22 @@ if ($NW.IsPresent -or $NWServer.IsPresent)
 	else
 	    {
 		$Acroread = $Acroread | Sort-Object -Property Name -Descending
-		$LatestReader = $Acroread[0].Name
-		write-verbose "Found Adobe $LatestReader"
+		$Latest_Acroread = $Acroread[0].Name
+		write-verbose "Found Adobe $Latest_Acroread"
 	    }
-	
+    try
+        {
+        $Acroread_Patch = Get-ChildItem -Path $Sourcedir -Filter 'a*rdr*.msp'
+	    }
+    catch
+        {
+        Write-Warning "no reader Patch found"
+        }
+
+        $Acroread_Patch = $Acroread_Patch | Sort-Object -Property Name -Descending
+		$Latest_AcroreadPatch = $Acroread_Patch[0].Name
+		write-verbose "Found Adobe $Latest_Acroread"
+
 	##### 
     $Java7_required = $True
     #####
@@ -4168,8 +4184,8 @@ switch ($PsCmdlet.ParameterSetName)
 	# SRM Setup
 	###################################################
 	$Nodeip = "$IPv4Subnet.17"
-	$NodePrefix = "SRM"
-    $Nodename = "Vipr$NodePrefix"
+	$NodePrefix = "ViPRSRM"
+    $Nodename = $NodePrefix
 	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NodePrefix"
     [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS" 
@@ -4309,7 +4325,7 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
 		write-verbose "installing JAVA"
 		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-program.ps1 -Parameter "-Program $LatestJava -ArgumentList '/s' $CommonParameter"-interactive
 		write-verbose "installing Acrobat Reader"
-		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-program.ps1 -Parameter "-Program $LatestReader -ArgumentList '/sPB /rs' $CommonParameter"-interactive
+		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-program.ps1 -Parameter "-Program $Latest_Acroread -ArgumentList '/sPB /rs' $CommonParameter"-interactive
 		write-verbose "installing Networker Server"
 		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-nwserver.ps1 -Parameter "-nw_ver $nw_ver $CommonParameter"-interactive
 		if (!$Gateway.IsPresent)
