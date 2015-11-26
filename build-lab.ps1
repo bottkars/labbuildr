@@ -827,7 +827,7 @@ function update-fromGit
                         Remove-Item -Path $Destination -Recurse -ErrorAction SilentlyContinue
                         }
                     Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\$repo-$branch.zip" -ignoresize
-                    Expand-LABZip -zipfilename "$Builddir\update\$repo-$branch.zip" -destination $Destination -Folder $repo-$branch
+                    Expand-LABZip -zipfilename "$Builddir\update\$repo-$branch.zip" -destination $Destination -Folder $repo-$branch -verbose
                     $Isnew = $true
                     $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\$repo-$branch.gitver") 
                     }
@@ -1248,7 +1248,7 @@ switch ($PsCmdlet.ParameterSetName)
         $Repo = "labtools"
         $RepoLocation = "bottkars"
         $Latest_local_git = $Latest_labtools_git
-        $Destination = "$Builddir\labtools"
+        $Destination = "$Builddir\$Repo"
         update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -delete
 
 
