@@ -2770,7 +2770,8 @@ if ($NMM.IsPresent)
         # New-Item -ItemType Directory -Path $Sourcedir\$EX_Version$ex_cu | Out-Null
         # }
         $URLS = ""
-        if ($nmm_ver -notin ('nmm822','nmm821','nmm82','nmm90.DA','nmm9001') -and $nmm_ver -gt 'nmm_82')
+        # if ($nmm_ver -notin ('nmm822','nmm821','nmm82','nmm90.DA','nmm9001') -and 
+        if ($nmm_ver -gt 'nmm_82')
             {
             $nmmdotver = $nmm_ver -replace "nmm",""
             $nmmdotver = $nmmdotver.insert(1,'.')
