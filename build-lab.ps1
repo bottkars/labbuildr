@@ -2691,7 +2691,7 @@ if ($Panorama.IsPresent)
 if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
     {
 
-    if ((Test-Path "$Sourcedir/$nw_ver/win_x64/networkr/networker.msi") -or (Test-Path "$Sourcedir/$nw_ver/win_x64/networkr/lgtoclnt-8.5.0.0.exe"))
+    if ((Test-Path "$Sourcedir/$nw_ver/win_x64/networkr/networker.msi") -or (Test-Path "$Sourcedir/$nw_ver/win_x64/networkr/lgtoclnt-*.exe"))
         {
         Write-Verbose "Networker $nw_ver found"
         }
