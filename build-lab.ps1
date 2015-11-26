@@ -833,7 +833,7 @@ function update-fromGit
                     }
                 else 
                     {
-                    Status "No update required for labbuildr, already newest version "
+                    Status "No update required for $Repo, already newest version "
                     }
 
 }
