@@ -1227,36 +1227,18 @@ switch ($PsCmdlet.ParameterSetName)
             }
 
 
-<#
-        $Uri = "https://api.github.com/repos/bottkars/labbuildr/commits/$branch"
-        $Zip = ("https://github.com/bottkars/labbuildr/archive/$branch.zip").ToLower()
-        $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
-        [datetime]$latest_Labuildr_OnGit = $request.Headers.'Last-Modified'
-                Write-Verbose "We have labbuildr version $Latest_labbuildr_git, $latest_Labuildr_OnGit is online !"
-                if ($Latest_labbuildr_git -lt $latest_Labuildr_OnGit -or $force.IsPresent )
-                    {
-                    $Updatepath = "$Builddir\Update"
-					if (!(Get-Item -Path $Updatepath -ErrorAction SilentlyContinue))
-					        {
-						    $newDir = New-Item -ItemType Directory -Path "$Updatepath"
-                            }
-                    Write-Output "We found a newer Version for labbuildr on Git Dated $($request.Headers.'Last-Modified')"
-                    Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\labbuildr-$branch.zip" -ignoresize
-                    Expand-LABZip -zipfilename "$Builddir\update\labbuildr-$branch.zip" -destination $Builddir -Folder labbuildr-$branch
-                    $Isnew = $true
-                    $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\labbuildr-$branch.gitver") 
-                    }
-                else 
-                    {
-                    Status "No update required for labbuildr, already newest version "
-                    }
-##
-#>
 
+        ####
         $Repo = "labbuildr-scripts"
         $RepoLocation = "bottkars"
         $Latest_local_git = $Latest_labbuildr_scripts_git
-        $Destination = "$Builddir\Scripts"
+        $Destination = "$Builddir\$Scripts"
+        update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -delete
+        ####
+        $Repo = "labtools"
+        $RepoLocation = "bottkars"
+        $Latest_local_git = $Latest_labtools_git
+        $Destination = "$Builddir\labtools"
         update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -delete
 
 
