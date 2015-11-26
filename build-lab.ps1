@@ -129,7 +129,7 @@ Specify if Networker Scenario sould be installed
     #>
 	[Parameter(ParameterSetName = "SCOM", Mandatory = $true)][switch][alias('SC_OM')]$SCOM,
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
-    [ValidateSet('SC2012_R2_SCOM','SCTP3_SCOM')]$SCOM_VER = "SC2012_R2_SCOM",
+    [ValidateSet('SC2012_R2_SCOM','SCTP3_SCOM','SCTP4_SCOM')]$SCOM_VER = "SC2012_R2_SCOM",
 
     <#
     Selects the Blank Nodes Scenario
@@ -196,7 +196,7 @@ Specify if Networker Scenario sould be installed
     <# SCVMM on last Node ? #>	
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$SCVMM,
     <# SCVMM Version #>	
-    [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][ValidateSet('SC2012_R2_SCVMM','SCTP3_SCVMM')]$SCVMM_VER = "SC2012_R2_SCVMM",
+    [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][ValidateSet('SC2012_R2_SCVMM','SCTP3_SCVMM','SCTP4_SCVMM')]$SCVMM_VER = "SC2012_R2_SCVMM",
     <# Configure VMM ?#>
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$ConfigureVMM,
     <# Starting Node for Blank Nodes#>
@@ -297,7 +297,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
-    [ValidateSet('2016TP3','2012R2FallUpdate','2012R2UMASTER','2012R2MASTER','2012MASTER','2012R2U1MASTER','2012R2UEFIMASTER')]$Master,
+    [ValidateSet('2016TP4','2016TP3','2012R2FallUpdate','2012R2UEFIMASTER')]$Master,
     <#do we want a special path to the Masters ? #>
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
@@ -2329,6 +2329,17 @@ if ($scvmm.IsPresent)
             $adkurl = "http://download.microsoft.com/download/6/A/E/6AEA92B0-A412-4622-983E-5B305D2EBE56/adk/adksetup.exe" # ADKSETUP 8.1
             $URL = "http://care.dlservice.microsoft.com/dl/download/evalx/sc2012r2/SC2012_R2_SCVMM.exe"
             }
+        "SCTP4_SCVMM"
+            {
+            if ($Master -lt "2016TP3")
+                {
+                Write-Warning "Master 2016TP3 or Later is required for $SCVMM_VER"
+                exit
+                }
+            $adkurl = "http://download.microsoft.com/download/8/1/9/8197FEB9-FABE-48FD-A537-7D8709586715/adk/adksetup.exe" #ADKsetup 10
+            $URL = "http://care.dlservice.microsoft.com/dl/download/7/0/A/70A7A007-ABCA-42E5-9C82-79CB98B7855E/SCTP4_SCVMM_EN.exe"
+
+            }
         
         "SCTP3_SCVMM"
             {
@@ -2337,14 +2348,6 @@ if ($scvmm.IsPresent)
                 Write-Warning "Master 2016TP3 or Later is required for SCVMM TP3"
                 exit
                 }
-            <#
-            http://care.dlservice.microsoft.com/dl/download/1/8/E/18E12925-8F05-402A-BF24-2DE6E4ED357F/SCTP3_SCO_EN.exe
-            http://care.dlservice.microsoft.com/dl/download/F/A/A/FAA14AC2-720A-4B17-8250-75EEEA13B259/SCTP3_SCVMM_EN.exe
-            http://care.dlservice.microsoft.com/dl/download/B/0/7/B07BF90E-2CC8-4538-A7D2-83BB074C49F5/SCTP3_SCOM_EN.exe
-            http://care.dlservice.microsoft.com/dl/download/F/A/3/FA31ADFB-B7FA-4F3C-AF0B-CA5C8973EEF5/SCTP3_SCDPM_EN.exe
-            http://care.dlservice.microsoft.com/dl/download/B/B/3/BB3A1E87-28F2-4362-9B1E-24CC3992EF3B/SCTP3_SCSM_EN.exe
-            http://care.dlservice.microsoft.com/dl/download/3/5/B/35BB1415-28AD-46D5-B227-DD8AB821E9D8/SC_Configmgr_SCEP_SCTP3.exe
-            #>
             $adkurl = "http://download.microsoft.com/download/8/1/9/8197FEB9-FABE-48FD-A537-7D8709586715/adk/adksetup.exe" #ADKsetup 10
             $URL = "http://care.dlservice.microsoft.com/dl/download/F/A/A/FAA14AC2-720A-4B17-8250-75EEEA13B259/SCTP3_SCVMM_EN.exe"
 
@@ -2421,23 +2424,17 @@ if ($SCOM.IsPresent)
                 Write-Warning "SCOM can only be installed on SQL2012, Setting to SQL2012SP1"
                 $SQLVER = "SQL2012SP1"
                 }# end sqlver
-
-            
+           
             $URL = "http://care.dlservice.microsoft.com/dl/download/evalx/sc2012r2/$SCOM_VER.exe"
             }
         
         "SCTP3_SCOM"
             {
-            <#
-            http://care.dlservice.microsoft.com/dl/download/1/8/E/18E12925-8F05-402A-BF24-2DE6E4ED357F/SCTP3_SCO_EN.exe
-            http://care.dlservice.microsoft.com/dl/download/F/A/A/FAA14AC2-720A-4B17-8250-75EEEA13B259/SCTP3_SCVMM_EN.exe
-            http://care.dlservice.microsoft.com/dl/download/B/0/7/B07BF90E-2CC8-4538-A7D2-83BB074C49F5/SCTP3_SCOM_EN.exe
-            http://care.dlservice.microsoft.com/dl/download/F/A/3/FA31ADFB-B7FA-4F3C-AF0B-CA5C8973EEF5/SCTP3_SCDPM_EN.exe
-            http://care.dlservice.microsoft.com/dl/download/B/B/3/BB3A1E87-28F2-4362-9B1E-24CC3992EF3B/SCTP3_SCSM_EN.exe
-            http://care.dlservice.microsoft.com/dl/download/3/5/B/35BB1415-28AD-46D5-B227-DD8AB821E9D8/SC_Configmgr_SCEP_SCTP3.exe
-            #>
-
             $URL = "http://care.dlservice.microsoft.com/dl/download/B/0/7/B07BF90E-2CC8-4538-A7D2-83BB074C49F5/SCTP3_SCOM_EN.exe"
+            }
+        "SCTP4_SCOM"
+            {
+            $URL = "http://care.dlservice.microsoft.com/dl/download/3/3/3/333022FC-3BB1-4406-8572-ED07950151D4/SCTP4_SCOM_EN.exe"
             }
 
 
