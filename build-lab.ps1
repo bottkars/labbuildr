@@ -652,6 +652,8 @@ try
     {
     [datetime]$Latest_labbuildr_git = "07/11/2015"
     }
+
+
 try
     {
     [datetime]$Latest_labbuildr_scripts_git = Get-Content  ($Builddir + "\labbuildr-scripts-$branch.gitver") -ErrorAction Stop
@@ -659,6 +661,14 @@ try
     catch
     {
     [datetime]$Latest_labbuildr_scripts_git = "07/11/2015"
+    }
+try
+    {
+    [datetime]$Latest_labtools_git = Get-Content  ($Builddir + "\labtools-$branch.gitver") -ErrorAction Stop
+    }
+    catch
+    {
+    [datetime]$Latest_labtools_git = "07/11/2015"
     }
 
 
