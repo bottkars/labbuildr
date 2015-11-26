@@ -2695,11 +2695,10 @@ if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
         {
         Write-Verbose "Networker $nw_ver found"
         }
-    elseif ($nw_ver -lt "nw84")
+    else
         {
-
         Write-Warning "We need to get $NW_ver, trying Automated Download"
-        if ($nw_ver -notin ('nw822','nw821','nw82'))
+        if ($nw_ver -gt "nw76")
             {
             $nwdotver = $nw_ver -replace "nw",""
             $nwdotver = $nwdotver.insert(1,'.')
