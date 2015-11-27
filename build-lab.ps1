@@ -1277,13 +1277,19 @@ switch ($PsCmdlet.ParameterSetName)
                     {
                     Status "No update required for vmxtoolkit, already newest version "
                     }
-###     
+        ### 
+        $Repo = "VMXToolKit"
+        $RepoLocation = "bottkars"
+        $Latest_local_git = $Latest_vmxtoolkit_git
+        $Destination = "$Builddir\VMXToolKit"
+        update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -delete
+        
         ####
         $Repo = "SIOToolKit"
         $RepoLocation = "emccode"
         $Latest_local_git = $Latest_SIOToolkit_git
         $Destination = "$Builddir\SIOToolKit"
-        update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -delete
+        update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination
         <#
         $Uri = "https://api.github.com/repos/emccode/SIOToolKit/commits/$SIOToolKit_Branch"
         $Zip = ("https://github.com/emccode/SIOToolKit/archive/$SIOToolKit_Branch.zip").ToLower()
