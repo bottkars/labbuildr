@@ -1278,6 +1278,13 @@ switch ($PsCmdlet.ParameterSetName)
                     Status "No update required for vmxtoolkit, already newest version "
                     }
 ###     
+        ####
+        $Repo = "SIOToolKit"
+        $RepoLocation = "emccode"
+        $Latest_local_git = $Latest_SIOToolkit_git
+        $Destination = "$Builddir\SIOToolKit"
+        update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -delete
+        <#
         $Uri = "https://api.github.com/repos/emccode/SIOToolKit/commits/$SIOToolKit_Branch"
         $Zip = ("https://github.com/emccode/SIOToolKit/archive/$SIOToolKit_Branch.zip").ToLower()
         $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
@@ -1300,8 +1307,8 @@ switch ($PsCmdlet.ParameterSetName)
                     {
                     Status "No update required for SIOToolKit, already newest version "
                     }
-
-                if ($Isnew)
+#>
+         if ($Isnew)
                     {
                     Remove-Item .\Update -Recurse -Confirm:$false
 				    status "Update Done"
