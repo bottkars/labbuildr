@@ -683,7 +683,7 @@ catch
 
 try
     {
-    [datetime]$Latest_SIOToolKit_git = Get-Content  ($Builddir + "\SIOToolKit.gitver") -ErrorAction Stop
+    [datetime]$Latest_SIOToolKit_git = Get-Content  ($Builddir + "\SIOToolKit-$branch.gitver") -ErrorAction Stop
     }
     catch
     {
@@ -1254,7 +1254,7 @@ switch ($PsCmdlet.ParameterSetName)
 
 
 
-####
+<####
         $Uri = "https://api.github.com/repos/bottkars/vmxtoolkit/commits/$branch"
         $Zip = ("https://github.com/bottkars/vmxtoolkit/archive/$branch.zip").ToLower()
         $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
@@ -1277,7 +1277,7 @@ switch ($PsCmdlet.ParameterSetName)
                     {
                     Status "No update required for vmxtoolkit, already newest version "
                     }
-        ### 
+        ###>
         $Repo = "VMXToolKit"
         $RepoLocation = "bottkars"
         $Latest_local_git = $Latest_vmxtoolkit_git
