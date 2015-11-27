@@ -828,7 +828,7 @@ function update-fromGit
                         }
                     Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\$repo-$branch.zip" -ignoresize
                     Expand-LABZip -zipfilename "$Builddir\update\$repo-$branch.zip" -destination $Destination -Folder $repo-$branch -verbose
-                    $Isnew = $true
+                    [bool]$Isnew = $true
                     $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\$repo-$branch.gitver") 
                     }
                 else 
@@ -1290,31 +1290,7 @@ switch ($PsCmdlet.ParameterSetName)
         $Latest_local_git = $Latest_SIOToolkit_git
         $Destination = "$Builddir\SIOToolKit"
         update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination
-        <#
-        $Uri = "https://api.github.com/repos/emccode/SIOToolKit/commits/$SIOToolKit_Branch"
-        $Zip = ("https://github.com/emccode/SIOToolKit/archive/$SIOToolKit_Branch.zip").ToLower()
-        $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
-        [datetime]$latest_SIOToolKit_OnGit = $request.Headers.'Last-Modified'
-        Write-Verbose "We have labbuildr version $Latest_SIOToolKit_git, $latest_SIOToolKit_OnGit is online !"
-                if ($Latest_SIOToolKit_git -lt $latest_SIOToolKit_OnGit -or $force.IsPresent)
-                    {
-                    $Updatepath = "$Builddir\Update"
-					if (!(Get-Item -Path $Updatepath -ErrorAction SilentlyContinue))
-					        {
-						    $newDir = New-Item -ItemType Directory -Path "$Updatepath"
-                            }
-                    Write-Output "We found a newer Version for SIOToolKit on Git Dated $($request.Headers.'Last-Modified')"
-                    Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\vmxoolkit-$SIOToolKit_branch.zip" -ignoresize
-                    Expand-LABZip -zipfilename "$Builddir\update\vmxoolkit-$SIOToolKit_branch.zip" -destination $Builddir\SIOToolKit -Folder SIOToolKit-$SIOToolKit_branch
-                    # $Isnew = $true
-                    $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\SIOToolKit.gitver") 
-                    }
-                else 
-                    {
-                    Status "No update required for SIOToolKit, already newest version "
-                    }
-#>
-         if ($Isnew)
+        if ($Isnew)
                     {
                     Remove-Item .\Update -Recurse -Confirm:$false
 				    status "Update Done"
