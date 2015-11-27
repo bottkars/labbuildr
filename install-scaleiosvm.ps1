@@ -67,7 +67,8 @@ The extracte OVA will be dehydrated to a VMware Workstation Master #>
 [Parameter(ParameterSetName = "sdsonly",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
 <# Name of the domain, .local added#>
 [Parameter(ParameterSetName = "sdsonly",Mandatory=$false)]
-[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
+[Parameter(ParameterSetName = "install",Mandatory=$False)]
+[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain = "labbuildr",
 
 <# VMnet to use#>
 [Parameter(ParameterSetName = "sdsonly",Mandatory=$false)]
