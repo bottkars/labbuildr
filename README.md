@@ -2,6 +2,45 @@
 labbuildr testing !
 =======
 
+this is the desting branch for the new labbuikdr version
+testing gets megred from develop once scenarios run fine !
+=======
+
+For the "piranha" release, the following changes applied to labbuildr:
+
+- seperation of scripts to labbuildr-scripts
+  - this allows scripts to be used independant
+  - 
+- new scenarios
+- new 2016 Support
+- Support for Syctr TP3 ( SCOM and SCVMM )
+- Support for Spaces Direct ( currently with Blank Nods Scenario )
+Currently Prared for testing:
+- Hyper-V
+- SCOM
+- SQL
+- Exchange 2016
+- Networker
+- 
+Currently not tested / ported
+Always on, Sharepoint, SOFS, E2013
+========
+to update from labbuildr harmony elese, run update for 3 times:
+build-lab.ps1 -updatefrom git
+build-lab.ps1 -updatefrom -branch develop
+build-lab.ps1 -update -branch testing
+
+to newly install, symply download labbuildr,labbuildr-scripts and vmxtoolkit
+
+Directory Structure
+
+labbuildr --  |    
+              |--scripts    
+              |--labtools    
+              |--vmxtoolkit    
+                
+
+
 
 labbuildr is a Framework based upon vmxtookit.
 labbuildr allows on demand creation of lab environments
@@ -14,9 +53,7 @@ labbuildr deploys the folowing scenarios:
   - Automating EMC ScaleIO Installs
   - ....
  
-Harmony Beta
-==========
-new build command build-lab for even more ease of use
+
   
 Labbuildr requires doewload of a prebuilt sources.vhd and prebuilt os masters.
 See https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released for details
