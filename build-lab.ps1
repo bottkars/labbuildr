@@ -835,7 +835,7 @@ function update-fromGit
                     {
                     Status "No update required for $Repo, already newest version "
                     }
-
+return $Isnew
 }
 #####
 function Extract-Zip
