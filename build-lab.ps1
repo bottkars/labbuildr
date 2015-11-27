@@ -1212,13 +1212,12 @@ switch ($PsCmdlet.ParameterSetName)
 {
     "update" 
         {
-
         $ReloadProfile = $False
         $Repo = "labbuildr"
         $RepoLocation = "bottkars"
         $Latest_local_git = $Latest_labbuildr_git
         $Destination = "$Builddir"
-        update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination
+        $Has_update = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination
         if (Test-Path "$Builddir\deletefiles.txt")
 		    {
 			$deletefiles = get-content "$Builddir\deletefiles.txt"
