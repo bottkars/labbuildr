@@ -37,7 +37,7 @@
     Builds a single-node Exchange DAG  
 .EXAMPLE
     .\build-lab.ps1 -defaults -Sharepoint  
-    Builda a Sharepoint Foundation with integrated SQL Server
+    Build  a Sharepoint Foundation with integrated SQL Server
 #>
 [CmdletBinding(DefaultParametersetName = "version",
     SupportsShouldProcess=$true,
