@@ -834,6 +834,7 @@ function update-fromGit
                 else 
                     {
                     Status "No update required for $Repo, already newest version "
+                    [bool]$Isnew = $False
                     }
 return $Isnew
 }
@@ -1212,7 +1213,7 @@ switch ($PsCmdlet.ParameterSetName)
     "update" 
         {
 
-
+        $ReloadProfile = $False
         $Repo = "labbuildr"
         $RepoLocation = "bottkars"
         $Latest_local_git = $Latest_labbuildr_git
@@ -1243,54 +1244,33 @@ switch ($PsCmdlet.ParameterSetName)
         $RepoLocation = "bottkars"
         $Latest_local_git = $Latest_labbuildr_scripts_git
         $Destination = "$Builddir\$Scripts"
-        update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -delete
+        $Has_update = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -delete
         ####
         $Repo = "labtools"
         $RepoLocation = "bottkars"
         $Latest_local_git = $Latest_labtools_git
         $Destination = "$Builddir\$Repo"
-        update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -delete
-
-
-
-
-<####
-        $Uri = "https://api.github.com/repos/bottkars/vmxtoolkit/commits/$branch"
-        $Zip = ("https://github.com/bottkars/vmxtoolkit/archive/$branch.zip").ToLower()
-        $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
-        [datetime]$latest_vmxtoolkit_OnGit = $request.Headers.'Last-Modified'
-        Write-Verbose "We have labbuildr version $Latest_vmxtoolkit_git, $latest_vmxtoolkit_OnGit is online !"
-                if ($Latest_vmxtoolkit_git -lt $latest_vmxtoolkit_OnGit -or $force.IsPresent)
-                    {
-                    $Updatepath = "$Builddir\Update"
-					if (!(Get-Item -Path $Updatepath -ErrorAction SilentlyContinue))
-					        {
-						    $newDir = New-Item -ItemType Directory -Path "$Updatepath"
-                            }
-                    Write-Output "We found a newer Version for vmxtoolkit on Git Dated $($request.Headers.'Last-Modified')"
-                    Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\vmxoolkit-$branch.zip" -ignoresize
-                    Expand-LABZip -zipfilename "$Builddir\update\vmxoolkit-$branch.zip" -destination $Builddir\vmxtoolkit -Folder vmxtoolkit-$branch
-                    $Isnew = $true
-                    $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\vmxtoolkit-$branch.gitver") 
-                    }
-                else 
-                    {
-                    Status "No update required for vmxtoolkit, already newest version "
-                    }
-        ###>
+        if ($Has_update = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -delete)
+            {
+            $ReloadProfile = $True
+            }
+        ####
         $Repo = "VMXToolKit"
         $RepoLocation = "bottkars"
         $Latest_local_git = $Latest_vmxtoolkit_git
         $Destination = "$Builddir\VMXToolKit"
-        update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -delete
-        
+        if ($Hasupdate = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -delete)
+            {
+            $ReloadProfile = $True
+            }
         ####
         $Repo = "SIOToolKit"
         $RepoLocation = "emccode"
         $Latest_local_git = $Latest_SIOToolkit_git
         $Destination = "$Builddir\SIOToolKit"
         update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination
-        if ($Isnew)
+
+        if ($ReloadProfile)
                     {
                     Remove-Item .\Update -Recurse -Confirm:$false
 				    status "Update Done"
