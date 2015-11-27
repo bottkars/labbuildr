@@ -52,7 +52,7 @@ param (
 	[Parameter(ParameterSetName = "update",Mandatory = $false, HelpMessage = "this will update labbuildr from latest git commit")][switch]$Update,
     <#
     run build-lab update    #>
-	[Parameter(ParameterSetName = "update",Mandatory = $false, HelpMessage = "select a branch to update from")][ValidateSet('master','testing','develop')]$branch  = "develop",
+	[Parameter(ParameterSetName = "update",Mandatory = $false, HelpMessage = "select a branch to update from")][ValidateSet('master','testing','develop')]$branch  = "testing",
     <# 
     create deskop shortcut
     #>	
@@ -1267,7 +1267,7 @@ switch ($PsCmdlet.ParameterSetName)
         $RepoLocation = "emccode"
         $Latest_local_git = $Latest_SIOToolkit_git
         $Destination = "$Builddir\SIOToolKit"
-        update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination
+        $Hasupdate = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination
 
         if ($ReloadProfile)
                     {
