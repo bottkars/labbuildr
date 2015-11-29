@@ -1265,6 +1265,7 @@ switch ($PsCmdlet.ParameterSetName)
         $Latest_local_git = $Latest_SIOToolkit_git
         $Destination = "$Builddir\SIOToolKit"
         $Hasupdate = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination
+        Set-Content -Value $branch -Path (Join-Path $Builddir "labbuildr.branch")
 
         if ($ReloadProfile)
                     {
@@ -1274,7 +1275,8 @@ switch ($PsCmdlet.ParameterSetName)
                     pause
                     ./profile.ps1
                     }
-    return
+
+    return $ReloadProfile
     }# end Updatefromgit
 			
     "Shortcut"
