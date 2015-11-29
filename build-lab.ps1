@@ -606,7 +606,7 @@ $Starttime = Get-Date
 $Builddir = $PSScriptRoot
 try
     {
-    $Current_labbuildr_branch = Get-Content  ($Builddir + "\labbuildr-.branch") -ErrorAction Stop
+    $Current_labbuildr_branch = Get-Content  ($Builddir + "\labbuildr.branch") -ErrorAction Stop
     }
 catch
     {
