@@ -1299,11 +1299,11 @@ switch ($PsCmdlet.ParameterSetName)
                     }
                 if ($Latest_labbuildr_scripts_git)
                     {
-                    Status "Scripts Git Release $Latest_labbuildr_scripts_git"
+                    Status "scripts Git Release $Latest_labbuildr_scripts_git"
                     }
                 if ($Latest_labtools_git)
                     {
-                    Status "Labtools Git Release $Latest_labtools_git"
+                    Status "labtools Git Release $Latest_labtools_git"
                     }
 
                 Write-Output '   Copyright 2014 Karsten Bott
