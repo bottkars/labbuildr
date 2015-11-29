@@ -1276,7 +1276,8 @@ switch ($PsCmdlet.ParameterSetName)
                     ./profile.ps1
                     }
 
-    return $ReloadProfile
+    return 
+    #$ReloadProfile
     }# end Updatefromgit
 			
     "Shortcut"
