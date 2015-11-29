@@ -1293,12 +1293,10 @@ switch ($PsCmdlet.ParameterSetName)
                     {
                     Status "Git Release $Latest_labbuildr_git"
                     }
-                Status "vmxtoolkit version $major-$vervmxtoolkit $Edition"
                 if ($Latest_vmxtoolkit_git)
                     {
-                    Status "Git Release $Latest_vmxtoolkit_git"
+                    Status "vmxtoolkit Git Release $Latest_vmxtoolkit_git"
                     }
-
                 if ($Latest_labbuildr_scripts_git)
                     {
                     Status "Scripts Git Release $Latest_labbuildr_scripts_git"
