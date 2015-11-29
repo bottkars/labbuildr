@@ -597,30 +597,6 @@ Sources should be populated from a bases sources.zip
 #requires -module labtools 
 ###################################################
 ### VMware Master Script
-### Karsten Bott
-### 09.08 Added -action Switch
-### 11.08.added First Time VMware Start vor Master to be imported
-### 12.08.2013 Added vmx Evaluation upon Memory
-### 07.10.2013. Official release 1.0
-### 08.10.2013 Cosmetical firstrun.pass fix for onerroraction
-### 30.10.2013 Added SQL
-### 30.10.2013 Added Online Update
-### 30.10.2013 Added Console Logging
-### 30.10.2013 Function Cleanup, started re-writeing for Log Functions
-### 30.10.2013 changed checkuser to tes-user
-### 30.10.2013 Added Advanced Mount Script
-### 30.10.2013 New VHD for SQL, WAIK and SCVMM
-### 03.11.2013 Munt-Routine completly Wre-Written tocheck for valid Mount Mountdrives
-### 14.01.2014 Lots of Changes: Support for NMM Version, NW Versions and CU Versions. Starting / Stopping/Pausing/Resumiong of VM´s and many more
-### 06.03.2014 Major Release networker2go
-### 24.03.2014 Major release 2.5
-### 08.04.2014 Finished SQL 2014, included always on for 2014
-### 11.06.2014 Changed  Exchange Install Scripts for flexible DAG Creation, 1 to Multi Node DAG´s
-### see all new changeson git
-###################################################
-## COnstants to be moved to Params
-
-
 ###################################################
 [string]$Myself = $MyInvocation.MyCommand
 #$AddressFamily = 'IPv4'
@@ -628,6 +604,18 @@ $IPv4PrefixLength = '24'
 $myself = $Myself.TrimEnd(".ps1")
 $Starttime = Get-Date
 $Builddir = $PSScriptRoot
+try
+    {
+    $Current_labbuildr_branch = Get-Content  ($Builddir + "\labbuildr-.branch") -ErrorAction Stop
+    }
+catch
+    {
+    $Current_labbuildr_branch = $branch
+    }
+If (!$PSCmdlet.MyInvocation.BoundParameters["branch"].IsPresent)
+    {
+    $branch = $Current_labbuildr_branch
+    }
 try
     {
     $verlabbuildr = New-Object System.Version (Get-Content  ($Builddir + "\labbuildr4.version") -ErrorAction Stop).Replace("-",".")
@@ -652,8 +640,6 @@ try
     {
     [datetime]$Latest_labbuildr_git = "07/11/2015"
     }
-
-
 try
     {
     [datetime]$Latest_labbuildr_scripts_git = Get-Content  ($Builddir + "\labbuildr-scripts-$branch.gitver") -ErrorAction Stop
@@ -810,7 +796,19 @@ function update-fromGit
         Write-Verbose "Using update-fromgit function for $repo"
         $Uri = "https://api.github.com/repos/$RepoLocation/$repo/commits/$branch"
         $Zip = ("https://github.com/$RepoLocation/$repo/archive/$branch.zip").ToLower()
-        $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
+        try
+            {
+            $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head -ErrorAction Stop
+            }
+        Catch
+            {
+            Write-Warning "Error connecting to git"
+            if ($_.Exception.Response.StatusCode -match "Forbidden")
+                {
+                Write-Warning "Status inidicates that Connection Limit is exceeded"
+                }
+            exit
+            }
         [datetime]$latest_OnGit = $request.Headers.'Last-Modified'
                 Write-Verbose "We have $repo version $latest_local_Git, $latest_OnGit is online !"
                 if ($latest_local_Git -lt $latest_OnGit -or $force.IsPresent )
@@ -818,7 +816,7 @@ function update-fromGit
                     $Updatepath = "$Builddir\Update"
 					if (!(Get-Item -Path $Updatepath -ErrorAction SilentlyContinue))
 					        {
-						    $newDir = New-Item -ItemType Directory -Path "$Updatepath"
+						    $newDir = New-Item -ItemType Directory -Path "$Updatepath" | out-null
                             }
                     Write-Output "We found a newer Version for $repo on Git Dated $($request.Headers.'Last-Modified')"
                     if ($delete.IsPresent)
@@ -827,16 +825,15 @@ function update-fromGit
                         Remove-Item -Path $Destination -Recurse -ErrorAction SilentlyContinue
                         }
                     Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\$repo-$branch.zip" -ignoresize
-                    Expand-LABZip -zipfilename "$Builddir\update\$repo-$branch.zip" -destination $Destination -Folder $repo-$branch -verbose
-                    [bool]$Isnew = $true
+                    Expand-LABZip -zipfilename "$Builddir\update\$repo-$branch.zip" -destination $Destination -Folder $repo-$branch
+                    $Isnew = $true
                     $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\$repo-$branch.gitver") 
                     }
                 else 
                     {
-                    Status "No update required for $Repo, already newest version "
-                    [bool]$Isnew = $False
+                    Status "No update required for $repo on $branch, already newest version "                    
                     }
-return $Isnew
+
 }
 #####
 function Extract-Zip
@@ -1298,6 +1295,16 @@ switch ($PsCmdlet.ParameterSetName)
                     {
                     Status "Git Release $Latest_vmxtoolkit_git"
                     }
+
+                if ($Latest_labbuildr_scripts_git)
+                    {
+                    Status "Scripts Git Release $Latest_labbuildr_scripts_git"
+                    }
+                if ($Latest_labtools_git)
+                    {
+                    Status "Labtools Git Release $Latest_labtools_git"
+                    }
+
                 Write-Output '   Copyright 2014 Karsten Bott
 
    Licensed under the Apache License, Version 2.0 (the "License");
