@@ -793,6 +793,7 @@ function update-fromGit
             [string]$Destination,
             [switch]$delete
             )
+        $Isnew = $false
         Write-Verbose "Using update-fromgit function for $repo"
         $Uri = "https://api.github.com/repos/$RepoLocation/$repo/commits/$branch"
         $Zip = ("https://github.com/$RepoLocation/$repo/archive/$branch.zip").ToLower()
@@ -833,7 +834,7 @@ function update-fromGit
                     {
                     Status "No update required for $repo on $branch, already newest version "                    
                     }
-
+return $Isnew
 }
 #####
 function Extract-Zip
