@@ -3640,7 +3640,8 @@ switch ($PsCmdlet.ParameterSetName)
                         Write-Output " Installing single MDM"
                         invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
                         $mdmipa = "$IPv4Subnet.151"
-                        $mdmipb = "$IPv4Subnet.151"                        }
+                        $mdmipb = "$IPv4Subnet.151"
+                        }
                     write-verbose "installing JAVA"
 		            $Parm = "/s"
 		            $Execute = "\\vmware-host\Shared Folders\Sources\$LatestJava"
