@@ -129,7 +129,8 @@ Specify if Networker Scenario sould be installed
     #>
 	[Parameter(ParameterSetName = "SCOM", Mandatory = $true)][switch][alias('SC_OM')]$SCOM,
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
-    [ValidateSet('SC2012_R2_SCOM','SCTP3_SCOM','SCTP4_SCOM')]$SCOM_VER = "SC2012_R2_SCOM",
+    [Parameter(ParameterSetName = "SCVMM", Mandatory = $false)]
+    [ValidateSet('SC2012_R2','SCTP3','SCTP4')]$SC_Version = "SC2012_R2",
 
     <#
     Selects the Blank Nodes Scenario
@@ -195,8 +196,6 @@ Specify if Networker Scenario sould be installed
     # [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$clusteredmdm,
     <# SCVMM on last Node ? #>	
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$SCVMM,
-    <# SCVMM Version #>	
-    [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][ValidateSet('SC2012_R2_SCVMM','SCTP3_SCVMM','SCTP4_SCVMM')]$SCVMM_VER = "SC2012_R2_SCVMM",
     <# Configure VMM ?#>
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$ConfigureVMM,
     <# Starting Node for Blank Nodes#>
@@ -2252,182 +2251,37 @@ if ($ConfigureVMM.IsPresent)
     {
     [switch]$SCVMM = $true
     }
-if ($scvmm.IsPresent)
+
+############## SCOM Section
+if ($SCVMM.IsPresent)
   {
-    Write-Warning "Entering $SCVMM_VER Prereq Section"
+    Write-Warning "Entering SCVMM Prereq Section"
     [switch]$SQL=$true
-    $Prereqdir = "$SCVMM_VER"+"prereq"
-    Write-Verbose "We are now going to Test $SCVMM_VER Prereqs"
-    $DownloadUrls= (
-            "http://download.microsoft.com/download/E/2/1/E21644B5-2DF2-47C2-91BD-63C560427900/NDP452-KB2901907-x86-x64-AllOS-ENU.exe",
-            "http://download.microsoft.com/download/F/E/D/FEDB200F-DE2A-46D8-B661-D019DFE9D470/ENU/x64/SqlCmdLnUtils.msi",
-            "http://download.microsoft.com/download/F/E/D/FEDB200F-DE2A-46D8-B661-D019DFE9D470/ENU/x64/sqlncli.msi"
-            )
-    
-    Foreach ($URL in $DownloadUrls)
-    {
-    $FileName = Split-Path -Leaf -Path $Url
-    Write-Verbose "Testing $FileName in $Prereqdir"
-    if (!(test-path  "$Sourcedir\$Prereqdir\$FileName"))
+    $Prereqdir = "prereq"
+    If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCVMM -Destination $Sourcedir -unzip))
         {
-        Write-Verbose "Trying Download"
-        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$Prereqdir\$FileName"))
-            { 
-            write-warning "Error Downloading file $Url, Please check connectivity"
-            exit
-            }
-        }
-    }
-    
- 
-   ### 
-    switch ($SCvmm_VER)
-    {
-        "SC2012_R2_SCVMM"
-            {
-            If ($Master -gt '2012Z')
-                {
-                Write-Warning "Only master up 2012R2Fallupdate supported in this scenario"
-                exit
-                }
-            if ($SQLVER -gt "SQL2012SP1")
-                {
-                Write-Warning "SCOM can only be installed on SQL2012, Setting to SQL2012SP1"
-                $SQLVER = "SQL2012SP1"
-                }# end sqlver
-
-            $adkurl = "http://download.microsoft.com/download/6/A/E/6AEA92B0-A412-4622-983E-5B305D2EBE56/adk/adksetup.exe" # ADKSETUP 8.1
-            $URL = "http://care.dlservice.microsoft.com/dl/download/evalx/sc2012r2/SC2012_R2_SCVMM.exe"
-            }
-        "SCTP4_SCVMM"
-            {
-            if ($Master -lt "2016TP3")
-                {
-                Write-Warning "Master 2016TP3 or Later is required for $SCVMM_VER"
-                exit
-                }
-            $adkurl = "http://download.microsoft.com/download/8/1/9/8197FEB9-FABE-48FD-A537-7D8709586715/adk/adksetup.exe" #ADKsetup 10
-            $URL = "http://care.dlservice.microsoft.com/dl/download/7/0/A/70A7A007-ABCA-42E5-9C82-79CB98B7855E/SCTP4_SCVMM_EN.exe"
-
-            }
-        
-        "SCTP3_SCVMM"
-            {
-            if ($Master -lt "2016")
-                {
-                Write-Warning "Master 2016TP3 or Later is required for SCVMM TP3"
-                exit
-                }
-            $adkurl = "http://download.microsoft.com/download/8/1/9/8197FEB9-FABE-48FD-A537-7D8709586715/adk/adksetup.exe" #ADKsetup 10
-            $URL = "http://care.dlservice.microsoft.com/dl/download/F/A/A/FAA14AC2-720A-4B17-8250-75EEEA13B259/SCTP3_SCVMM_EN.exe"
-
-            }
-    }# end switch
-
-    Write-Verbose "Testing WAIK in $Sourcedir"
-    $FileName = Split-Path -Leaf -Path $adkurl
-    if (!(test-path  "$Sourcedir\$Prereqdir\Installers"))
-        {
-        # New-Item -ItemType Directory -Path "$Sourcedir\$Prereqdir\WAIK" -Force | Out-Null
-        Write-Verbose "Trying Download"
-        if (!(get-prereq -DownLoadUrl $adkurl -destination  "$Sourcedir\$Prereqdir\$FileName"))
-            { 
-            write-warning "Error Downloading file $adkurl, Please check connectivity"
-            exit
-            }
-        Write-Warning "Getting WAIK, Could take a While"
-        Start-Process -FilePath "$Sourcedir\$Prereqdir\$FileName" -ArgumentList "/quiet /layout $Sourcedir\$Prereqdir" -Wait
+        Write-warning "We could not receive scom"
+        return
         }
 
+    }# end SCOMPREREQ
 
-
-    $FileName = Split-Path -Leaf -Path $Url
-    Write-Verbose "Testing $SCVMM_VER"
-    if (!(test-path  "$Sourcedir\$SCVMM_VER"))
-        {
-        Write-Verbose "Trying Download"
-        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
-            { 
-            write-warning "Error Downloading file $Url, Please check connectivity"
-            exit
-            }
-        write-Warning "We are going to Extract $FileName, this may take a while"
-        Start-Process "$Sourcedir\$FileName" -ArgumentList "/SP- /dir=$Sourcedir\$SCVMM_VER /SILENT" -Wait
-        }
-    workorder "We are going to Install Hyper-V with $SCVMM_VER in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet and $SQLVER"
-    # exit
-    }# end SCVMMPREREQ
+#######
 ############## SCOM Section
 if ($SCOM.IsPresent)
   {
     Write-Warning "Entering SCOM Prereq Section"
     [switch]$SQL=$true
-    $Prereqdir = "$SCOM_VER"+"prereq"
-    Write-Verbose "We are now going to Test SCOM Prereqs"
-    
-            $DownloadUrls= (
-            'http://download.microsoft.com/download/F/B/7/FB728406-A1EE-4AB5-9C56-74EB8BDDF2FF/ReportViewer.msi',
-            "http://download.microsoft.com/download/F/E/D/FEDB200F-DE2A-46D8-B661-D019DFE9D470/ENU/x64/SQLSysClrTypes.msi"
-            )
-    
-            Foreach ($URL in $DownloadUrls)
-                {
-                $FileName = Split-Path -Leaf -Path $Url
-                Write-Verbose "Testing $FileName in $Prereqdir"
-                if (!(test-path  "$Sourcedir\$Prereqdir\$FileName"))
-                    {
-                    Write-Verbose "Trying Download"
-                    if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$Prereqdir\$FileName"))
-                        { 
-                        write-warning "Error Downloading file $Url, Please check connectivity"
-                        exit
-                        }
-                    }
-                }
-    
-    switch ($SCOM_VER)
-    {
-        "SC2012_R2_SCOM"
-            {
-            if ($SQLVER -gt "SQL2012SP1")
-                {
-                Write-Warning "SCOM can only be installed on SQL2012, Setting to SQL2012SP1"
-                $SQLVER = "SQL2012SP1"
-                }# end sqlver
-           
-            $URL = "http://care.dlservice.microsoft.com/dl/download/evalx/sc2012r2/$SCOM_VER.exe"
-            }
-        
-        "SCTP3_SCOM"
-            {
-            $URL = "http://care.dlservice.microsoft.com/dl/download/B/0/7/B07BF90E-2CC8-4538-A7D2-83BB074C49F5/SCTP3_SCOM_EN.exe"
-            }
-        "SCTP4_SCOM"
-            {
-            $URL = "http://care.dlservice.microsoft.com/dl/download/3/3/3/333022FC-3BB1-4406-8572-ED07950151D4/SCTP4_SCOM_EN.exe"
-            }
+    $Prereqdir = "prereq"
+    If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCOM -Destination $Sourcedir -unzip))
+        {
+        Write-warning "We could not receive scom"
+        return
+        }
 
-
-    }# end switch
-    $FileName = Split-Path -Leaf -Path $Url
-    Write-Verbose "Testing $SCOM_VER\"
-    if (!(test-path  "$Sourcedir\$SCOM_VER"))
-                {
-                Write-Verbose "Trying Download"
-                if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
-                    { 
-                    write-warning "Error Downloading file $Url, Please check connectivity"
-                    exit
-                    }
-                write-Warning "We are going to Extract $FileName, this may take a while"
-                Start-Process "$Sourcedir\$FileName" -ArgumentList "/SP- /dir=$Sourcedir\$SCOM_VER /SILENT" -Wait
-                }
-
-    workorder "We are going to Install SCOM with $SCOM_VER in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet and $SQLVER"
-    # exit
     }# end SCOMPREREQ
-#######
-##############
+
+#################
 if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
     {
 
@@ -4206,7 +4060,7 @@ switch ($PsCmdlet.ParameterSetName)
 
 	###################################################
 	status $Commentline
-	status "Creating $SCOM_VER Server $Nodename"
+	status "Creating $SC_Version Server $Nodename"
   	Write-Verbose $IPv4Subnet
     write-verbose $Nodename
     write-verbose $Nodeip
@@ -4236,7 +4090,7 @@ switch ($PsCmdlet.ParameterSetName)
 	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $In_Guest_UNC_SQLScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -DefaultDBpath" -interactive
 
         write-verbose "Building SCOM Server"
-        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script INSTALL-Scom.ps1 -interactive -parameter "-SCOM_VER $SCOM_VER $CommonParameter"
+        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script INSTALL-Scom.ps1 -interactive -parameter "-SC_Version $SC_Version $CommonParameter"
 #        Write-Host -ForegroundColor White "You cn now Connect to http://$($Nodeip):58080/APG/ with admin/changeme"
 	
 }
