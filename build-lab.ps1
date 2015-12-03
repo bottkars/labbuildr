@@ -2059,6 +2059,58 @@ if ($Exchange2013.IsPresent)
 	        }
 
 }
+##### echange downloads section
+if ($Exchange2016.IsPresent)
+{
+    if (!$e16_cu)
+        {
+        $e16_cu = $Latest_e16_cu
+        }
+
+    If ($Master -gt '2012Z')
+        {
+        Write-Warning "Only master up 2012R2Fallupdate supported in this scenario"
+        exit
+        }
+    If (!(Receive-LABExchange -Exchange2016 -e16_cu $e16_cu -Destination $Sourcedir -unzip))
+        {
+        Write-warning "We could not receive Exchange 2016 $e16_cu"
+        return
+        }
+
+    $EX_Version = "E2016"
+    $Scenarioname = "Exchange"
+    $Prereqdir = "Attachments"
+    $attachments = (
+    "http://www.cisco.com/c/dam/en/us/solutions/collateral/data-center-virtualization/unified-computing/fle_vmware.pdf"
+    )
+    $Destination = Join-Path $Sourcedir $Prereqdir
+    if (!(Test-Path $Destination)){New-Item -ItemType Directory -Path $Destination | Out-Null }
+     foreach ($URL in $attachments)
+        {
+        $FileName = Split-Path -Leaf -Path $Url
+        if (!(test-path  "$Destination\$FileName"))
+            {
+            Write-Verbose "$FileName not found, trying Download"
+            if (!(Receive-LABBitsFile -DownLoadUrl $URL -destination $Sourcedir\$Prereqdir\$FileName))
+                { write-warning "Error Downloading file $Url, Please check connectivity"
+                  Write-Warning "Creating Dummy File"
+                  New-Item -ItemType file -Path "$Sourcedir\$Prereqdir\$FileName" | out-null
+                }
+            }
+
+        
+        }
+    
+	    if ($DAG.IsPresent)
+	        {
+		    Write-Host -ForegroundColor Yellow "We will form a $EXNodes-Node DAG"
+	        }
+
+}
+#########
+
+<########
 if ($Exchange2016.IsPresent)
 {
     If ($Master -gt '2012Z')
@@ -2178,6 +2230,9 @@ if ($Exchange2016.IsPresent)
 	        }
 
 }
+
+
+####>
 if ($NMM.IsPresent) { debug "Networker Modules $nmm_ver will be intalled by User selection" }
 if ($Sharepoint.IsPresent)
     {
@@ -2266,7 +2321,7 @@ if ($SCVMM.IsPresent)
 
     }# end SCOMPREREQ
 
-#######
+
 ############## SCOM Section
 if ($SCOM.IsPresent)
   {
@@ -2280,6 +2335,20 @@ if ($SCOM.IsPresent)
         }
 
     }# end SCOMPREREQ
+############## SCVMM Section
+if ($SCVMM.IsPresent)
+  {
+    Write-Warning "Entering SCVMM Prereq Section"
+    [switch]$SQL=$true
+    $Prereqdir = "prereq"
+    If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCVMM -Destination $Sourcedir -unzip))
+        {
+        Write-warning "We could not receive scom"
+        return
+        }
+
+    }# end SCOMPREREQ
+#######
 
 #################
 if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
@@ -3417,8 +3486,7 @@ switch ($PsCmdlet.ParameterSetName)
 			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
 			$IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\HyperV\"
             $In_Guest_UNC_SQLScriptDir = "$IN_Guest_UNC_Scriptroot\sql\"
-            $VMMScriptDir = "$IN_Guest_UNC_Scriptroot\VMM" 
-
+            $In_Guest_UNC_SCVMMScriptDir = "$IN_Guest_UNC_Scriptroot\scvmm\"
             Write-Verbose $IPv4Subnet
             write-verbose $Nodeip
             Write-Verbose $Nodename
@@ -3561,16 +3629,16 @@ switch ($PsCmdlet.ParameterSetName)
             }
 		if ($SCVMM.IsPresent)
 		    {
-			write-verbose "Building SCVMM Setup Configruration"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script set-vmmconfig.ps1 -interactive
+			#write-verbose "Building SCVMM Setup Configruration"
+			#invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest -Script set-vmmconfig.ps1 -interactive
 			write-verbose "Installing SQL Binaries"
 			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $In_Guest_UNC_SQLScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -DefaultDBpath $CommonParameter" -interactive
 			write-verbose "Installing SCVMM PREREQS"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-vmmprereq.ps1 -Parameter "-scvmm_ver $scvmm_ver $CommonParameter"  -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $In_Guest_UNC_SCVMMScriptDir -Script install-vmmprereq.ps1 -Parameter "-scvmm_ver $scvmm_ver $CommonParameter"  -interactive
             checkpoint-progress -step vmmprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
 			write-verbose "Installing SCVMM"
             Write-Warning "Setup of VMM and Update Rollups in progress, could take up to 20 Minutes"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-vmm.ps1 -Parameter "-scvmm_ver $scvmm_ver $CommonParameter" -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $In_Guest_UNC_SCVMMScriptDir -Script install-vmm.ps1 -Parameter "-scvmm_ver $scvmm_ver $CommonParameter" -interactive
             
             
             if ($ConfigureVMM.IsPresent)
@@ -3578,11 +3646,11 @@ switch ($PsCmdlet.ParameterSetName)
 			    Write-Verbose "Configuring VMM"
                 if ($Cluster.IsPresent)
                     {
-                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script configure-vmm.ps1 -Parameter "-Cluster" -interactive
+                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $In_Guest_UNC_SCVMMScriptDir -Script configure-vmm.ps1 -Parameter "-Cluster" -interactive
                     }
                     else
                     {
-                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script configure-vmm.ps1 -interactive
+                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $In_Guest_UNC_SCVMMScriptDir -Script configure-vmm.ps1 -interactive
                     }
                 }
             <#
