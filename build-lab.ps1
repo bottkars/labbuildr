@@ -128,8 +128,12 @@ Specify if Networker Scenario sould be installed
     IP-Addresses: .18
     #>
 	[Parameter(ParameterSetName = "SCOM", Mandatory = $true)][switch][alias('SC_OM')]$SCOM,
+
+
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
-    [ValidateSet('SC2012_R2_SCOM','SCTP3_SCOM','SCTP4_SCOM')]$SCOM_VER = "SC2012_R2_SCOM",
+    [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
+    [Parameter(ParameterSetName = "SCVMM", Mandatory = $false)]
+    [ValidateSet('SC2012_R2','SCTP3','SCTP4')]$SC_Version = "SC2012_R2",
 
     <#
     Selects the Blank Nodes Scenario
@@ -173,7 +177,7 @@ Specify if Networker Scenario sould be installed
     CU Location is [Driveletter]:\sources\e2013[cuver], e.g. c:\sources\e2013cu7
     #>
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
-    [ValidateSet('cu1', 'cu2', 'cu3', 'sp1','cu5','cu6','cu7','cu8','cu9','cu10')]$ex_cu,
+    [ValidateSet('cu1', 'cu2', 'cu3', 'sp1','cu5','cu6','cu7','cu8','cu9','cu10')][alias('ex_cu')]$e15_cu,
     <# schould we prestage users ? #>	
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
     [Parameter(ParameterSetName = "E15", Mandatory = $false)][switch]$nouser,
@@ -195,8 +199,6 @@ Specify if Networker Scenario sould be installed
     # [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$clusteredmdm,
     <# SCVMM on last Node ? #>	
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$SCVMM,
-    <# SCVMM Version #>	
-    [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][ValidateSet('SC2012_R2_SCVMM','SCTP3_SCVMM','SCTP4_SCVMM')]$SCVMM_VER = "SC2012_R2_SCVMM",
     <# Configure VMM ?#>
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$ConfigureVMM,
     <# Starting Node for Blank Nodes#>
@@ -238,7 +240,7 @@ Specify if Networker Scenario sould be installed
     <nw_ver>nw82</nw_ver>
     <master>2012R2UEFIMASTER</master>
     <sqlver>SQL2014</sqlver>
-    <ex_cu>cu6</ex_cu>
+    <e15_cu>cu6</e15_cu>
     <vmnet>2</vmnet>
     <BuildDomain>labbuildr</BuildDomain>
     <MySubnet>10.10.0.0</MySubnet>
@@ -597,30 +599,6 @@ Sources should be populated from a bases sources.zip
 #requires -module labtools 
 ###################################################
 ### VMware Master Script
-### Karsten Bott
-### 09.08 Added -action Switch
-### 11.08.added First Time VMware Start vor Master to be imported
-### 12.08.2013 Added vmx Evaluation upon Memory
-### 07.10.2013. Official release 1.0
-### 08.10.2013 Cosmetical firstrun.pass fix for onerroraction
-### 30.10.2013 Added SQL
-### 30.10.2013 Added Online Update
-### 30.10.2013 Added Console Logging
-### 30.10.2013 Function Cleanup, started re-writeing for Log Functions
-### 30.10.2013 changed checkuser to tes-user
-### 30.10.2013 Added Advanced Mount Script
-### 30.10.2013 New VHD for SQL, WAIK and SCVMM
-### 03.11.2013 Munt-Routine completly Wre-Written tocheck for valid Mount Mountdrives
-### 14.01.2014 Lots of Changes: Support for NMM Version, NW Versions and CU Versions. Starting / Stopping/Pausing/Resumiong of VM´s and many more
-### 06.03.2014 Major Release networker2go
-### 24.03.2014 Major release 2.5
-### 08.04.2014 Finished SQL 2014, included always on for 2014
-### 11.06.2014 Changed  Exchange Install Scripts for flexible DAG Creation, 1 to Multi Node DAG´s
-### see all new changeson git
-###################################################
-## COnstants to be moved to Params
-
-
 ###################################################
 [string]$Myself = $MyInvocation.MyCommand
 #$AddressFamily = 'IPv4'
@@ -628,6 +606,18 @@ $IPv4PrefixLength = '24'
 $myself = $Myself.TrimEnd(".ps1")
 $Starttime = Get-Date
 $Builddir = $PSScriptRoot
+try
+    {
+    $Current_labbuildr_branch = Get-Content  ($Builddir + "\labbuildr.branch") -ErrorAction Stop
+    }
+catch
+    {
+    $Current_labbuildr_branch = $branch
+    }
+If (!$PSCmdlet.MyInvocation.BoundParameters["branch"].IsPresent)
+    {
+    $branch = $Current_labbuildr_branch
+    }
 try
     {
     $verlabbuildr = New-Object System.Version (Get-Content  ($Builddir + "\labbuildr4.version") -ErrorAction Stop).Replace("-",".")
@@ -652,8 +642,6 @@ try
     {
     [datetime]$Latest_labbuildr_git = "07/11/2015"
     }
-
-
 try
     {
     [datetime]$Latest_labbuildr_scripts_git = Get-Content  ($Builddir + "\labbuildr-scripts-$branch.gitver") -ErrorAction Stop
@@ -708,7 +696,7 @@ $ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
 $latest_nmm = 'nmm8221'
 $latest_nw = 'nw8222'
 $latest_e16_cu = 'final'
-$latest_ex_cu = 'cu10'
+$latest_e15_cu = 'cu10'
 $latest_sqlver  = 'SQL2014SP1slip'
 $latest_master = '2012R2FallUpdate'
 $latest_sql_2012 = 'SQL2012SP2'
@@ -807,10 +795,23 @@ function update-fromGit
             [string]$Destination,
             [switch]$delete
             )
+        $Isnew = $false
         Write-Verbose "Using update-fromgit function for $repo"
         $Uri = "https://api.github.com/repos/$RepoLocation/$repo/commits/$branch"
         $Zip = ("https://github.com/$RepoLocation/$repo/archive/$branch.zip").ToLower()
-        $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head
+        try
+            {
+            $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head -ErrorAction Stop
+            }
+        Catch
+            {
+            Write-Warning "Error connecting to git"
+            if ($_.Exception.Response.StatusCode -match "Forbidden")
+                {
+                Write-Warning "Status inidicates that Connection Limit is exceeded"
+                }
+            exit
+            }
         [datetime]$latest_OnGit = $request.Headers.'Last-Modified'
                 Write-Verbose "We have $repo version $latest_local_Git, $latest_OnGit is online !"
                 if ($latest_local_Git -lt $latest_OnGit -or $force.IsPresent )
@@ -818,7 +819,7 @@ function update-fromGit
                     $Updatepath = "$Builddir\Update"
 					if (!(Get-Item -Path $Updatepath -ErrorAction SilentlyContinue))
 					        {
-						    $newDir = New-Item -ItemType Directory -Path "$Updatepath"
+						    $newDir = New-Item -ItemType Directory -Path "$Updatepath" | out-null
                             }
                     Write-Output "We found a newer Version for $repo on Git Dated $($request.Headers.'Last-Modified')"
                     if ($delete.IsPresent)
@@ -827,14 +828,13 @@ function update-fromGit
                         Remove-Item -Path $Destination -Recurse -ErrorAction SilentlyContinue
                         }
                     Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\$repo-$branch.zip" -ignoresize
-                    Expand-LABZip -zipfilename "$Builddir\update\$repo-$branch.zip" -destination $Destination -Folder $repo-$branch -verbose
-                    [bool]$Isnew = $true
+                    Expand-LABZip -zipfilename "$Builddir\update\$repo-$branch.zip" -destination $Destination -Folder $repo-$branch
+                    $Isnew = $true
                     $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\$repo-$branch.gitver") 
                     }
                 else 
                     {
-                    Status "No update required for $Repo, already newest version "
-                    [bool]$Isnew = $False
+                    Status "No update required for $repo on $branch, already newest version "                    
                     }
 return $Isnew
 }
@@ -1268,6 +1268,7 @@ switch ($PsCmdlet.ParameterSetName)
         $Latest_local_git = $Latest_SIOToolkit_git
         $Destination = "$Builddir\SIOToolKit"
         $Hasupdate = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination
+        Set-Content -Value $branch -Path (Join-Path $Builddir "labbuildr.branch")
 
         if ($ReloadProfile)
                     {
@@ -1277,7 +1278,9 @@ switch ($PsCmdlet.ParameterSetName)
                     pause
                     ./profile.ps1
                     }
-    return
+
+    return 
+    #$ReloadProfile
     }# end Updatefromgit
 			
     "Shortcut"
@@ -1288,16 +1291,25 @@ switch ($PsCmdlet.ParameterSetName)
     }# end shortcut
     "Version"
         {
-				Status "labbuildr version $major-$verlabbuildr $Edition on $branch"
+				Write-Host -ForegroundColor Magenta "labbuildr version $major-$Edition on branch $Current_labbuildr_branch"
+
                 if ($Latest_labbuildr_git)
                     {
                     Status "Git Release $Latest_labbuildr_git"
                     }
-                Status "vmxtoolkit version $major-$vervmxtoolkit $Edition"
                 if ($Latest_vmxtoolkit_git)
                     {
-                    Status "Git Release $Latest_vmxtoolkit_git"
+                    Status "vmxtoolkit Git Release $Latest_vmxtoolkit_git"
                     }
+                if ($Latest_labbuildr_scripts_git)
+                    {
+                    Status "scripts Git Release $Latest_labbuildr_scripts_git"
+                    }
+                if ($Latest_labtools_git)
+                    {
+                    Status "labtools Git Release $Latest_labtools_git"
+                    }
+
                 Write-Output '   Copyright 2014 Karsten Bott
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -1409,16 +1421,16 @@ if ($defaults.IsPresent)
                 $sqlver = $latest_sqlver
                 }
             }
-        if (!$ex_cu) 
+        if (!$e15_cu) 
             {
             try
                 {
-                $ex_cu = $Default.ex_cu
+                $e15_cu = $Default.e15_cu
                 }
             catch 
                 {
                 Write-Warning "No Master specified, trying default"
-                $ex_cu = $latest_ex_cu
+                $e15_cu = $latest_e15_cu
                 }
             }
         if (!$e16_cu) 
@@ -1560,7 +1572,7 @@ $IPv4Subnet = convert-iptosubnet $MySubnet
 if (!$BuildDomain) { $BuildDomain = $Default_BuildDomain }
 if (!$ScaleIOVer) {$ScaleIOVer = $latest_ScaleIOVer}
 if (!$SQLVER) {$SQLVER = $latest_sqlver}
-if (!$ex_cu) {$ex_cu = $latest_ex_cu}
+if (!$e15_cu) {$e15_cu = $latest_e15_cu}
 if (!$e16_cu) {$e16_cu = $latest_e16_cu}
 if (!$Master) {$Master = $latest_master}
 if (!$vmnet) {$vmnet = $Default_vmnet}
@@ -1611,7 +1623,7 @@ $config += ("<nmm_ver>$nmm_ver</nmm_ver>")
 $config += ("<nw_ver>$nw_ver</nw_ver>")
 $config += ("<master>$Master</master>")
 $config += ("<sqlver>$SQLVER</sqlver>")
-$config += ("<ex_cu>$ex_cu</ex_cu>")
+$config += ("<e15_cu>$e15_cu</e15_cu>")
 $config += ("<e16_cu>$e16_cu</e16_cu>")
 $config += ("<vmnet>$VMnet</vmnet>")
 $config += ("<BuildDomain>$BuildDomain</BuildDomain>")
@@ -1752,8 +1764,9 @@ If ($NumLogCPU -gt 4 -and $Computersize -gt 2)
 }
 # get-vmwareversion
 ####### Building required Software Versions Tabs
+$NW_Sourcedir = Join-Path $Sourcedir "Networker"
 $Sourcever = @()
-# $Sourcever = @("$nw_ver","$nmm_ver","E2013$ex_cu","$WAIKVER","$SQL2012R2")
+# $Sourcever = @("$nw_ver","$nmm_ver","E2013$e15_cu","$WAIKVER","$SQL2012R2")
 if (!($DConly.IsPresent))
 {
 	if ($Exchange2013.IsPresent) 
@@ -1802,20 +1815,6 @@ status "Version $($major).$Edition"
 #status "# running Labuildr Build $verlabbuildr"
 # status "# and vmxtoolkit   Build $vervmxtoolkit"
 
-<# Clear-Host
-status $Commentline
-status "# Welcome to labbuildr                                                                                                #"
-status "# Version $($major).$Edition                                                                                  #"
-status "# running Labuildr Build $verlabbuildr                                                                                     #"
-status "# and vmxtoolkit   Build $vervmxtoolkit                                                                                     #"
-
-status "# this is an automated Deployment for VMware Workstation VMs on Windows                                               #"
-status "# current supportet Guests are:                                                                                       #"
-status "# Exchange 2013/16 Standalone or DAG, SQL 2012SP1 and 2014, Always On, Hyper-V, SCVMM,SCOM Networker, Blank Nodes     #"
-status "# Available OS Masters are 2012, 2012R2, 2012R2Update and Techical Preview of vNext                                   #"
-status "# EMC Integration for Networker, OneFS, Avamar, DD, ScaleIO and other VADP´s                                          #"
-status "# Idea and Scripting by @HyperV_Guy                                                                                   #"
-status $Commentline  #>
 workorder "Building Proposed Workorder"
 If ($DAG.IsPresent)
     {
@@ -1860,19 +1859,60 @@ if ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG" -or $SPdbtyp
 	$AlwaysOn = $true
     # if ($NoNMM -eq $false) {status "Networker Modules will be installed on each Node"}
 }
-if ($NWServer.IsPresent -or $NW.IsPresent)
-    {
-<#    $url = "http://download.oracle.com/otn-pub/java/jdk/7u80-b15/jre-7u80-windows-x64.exe"
-    $FileName = Split-Path -Leaf -Path $Url
-    if (!(test-path  $Sourcedir\$FileName))
+#if ($NWServer.IsPresent -or $NW.IsPresent)
+##### exchange downloads section
+if ($Exchange2013.IsPresent)
+{
+    if (!$e15_cu)
         {
-        Write-Verbose "$FileName not found, trying Download"
-        if (!( get-prereq -DownLoadUrl $URL -destination $Sourcedir\$FileName -verbose ))
-            { 
-            write-warning "Error Downloading file $Url, Please check connectivity"
-            }
+        $e15_cu = $Latest_e15_cu
         }
-#>
+
+    If ($Master -gt '2012Z')
+        {
+        Write-Warning "Only master up 2012R2Fallupdate supported in this scenario"
+        exit
+        }
+    If (!(Receive-LABExchange -Exchange2013 -e15_cu $e15_cu -Destination $Sourcedir -unzip))
+        {
+        Write-warning "We could not receive Exchange 2013 $e15_cu"
+        return
+        }
+
+    $EX_Version = "E2013"
+    $Scenarioname = "Exchange"
+    $Prereqdir = "Attachments"
+    $attachments = (
+    "http://www.cisco.com/c/dam/en/us/solutions/collateral/data-center-virtualization/unified-computing/fle_vmware.pdf"
+    )
+    $Destination = Join-Path $Sourcedir $Prereqdir
+    if (!(Test-Path $Destination)){New-Item -ItemType Directory -Path $Destination | Out-Null }
+     foreach ($URL in $attachments)
+        {
+        $FileName = Split-Path -Leaf -Path $Url
+        if (!(test-path  "$Destination\$FileName"))
+            {
+            Write-Verbose "$FileName not found, trying Download"
+            if (!(Receive-LABBitsFile -DownLoadUrl $URL -destination $Sourcedir\$Prereqdir\$FileName))
+                { write-warning "Error Downloading file $Url, Please check connectivity"
+                  Write-Warning "Creating Dummy File"
+                  New-Item -ItemType file -Path "$Sourcedir\$Prereqdir\$FileName" | out-null
+                }
+            }
+
+        
+        }
+    
+	    if ($DAG.IsPresent)
+	        {
+		    Write-Host -ForegroundColor Yellow "We will form a $EX_Version $EXNodes-Node DAG"
+	        }
+
+}
+#########
+
+<#old
+    {
     
     $urls = ("ftp://ftp.adobe.com/pub/adobe/reader/win/Acrobat2015/1500630033/AcroRdr20151500630033_MUI.exe",
            "ftp://ftp.adobe.com/pub/adobe/reader/win/Acrobat2015/1500630097/AcroRdr2015Upd1500630097_MUI.msp")
@@ -1889,6 +1929,7 @@ if ($NWServer.IsPresent -or $NW.IsPresent)
                 }
         }
     }
+##### exchange 2013 download section
 if ($Exchange2013.IsPresent)
 {
     If ($Master -gt '2012Z')
@@ -1968,16 +2009,16 @@ if ($Exchange2013.IsPresent)
         Start-Process -FilePath "$Sourcedir\$Prereqdir\ExchangeMapiCdo.EXE" -ArgumentList "/x:$Sourcedir\$Prereqdir /q" -Wait
         }
 
-    if (Test-Path $Sourcedir/$EX_Version$ex_cu/setup.exe)
+    if (Test-Path $Sourcedir/$EX_Version$e15_cu/setup.exe)
         {
-        Write-Verbose "E15 $ex_cu Found"
+        Write-Verbose "E15 $e15_cu Found"
         }
         else
         {
-        Write-Warning "We need to Extract E15 $ex_cu, this may take a while"
-        # New-Item -ItemType Directory -Path $Sourcedir\$EX_Version$ex_cu | Out-Null
+        Write-Warning "We need to Extract E15 $e15_cu, this may take a while"
+        # New-Item -ItemType Directory -Path $Sourcedir\$EX_Version$e15_cu | Out-Null
         # }
-        Switch ($ex_cu)
+        Switch ($e15_cu)
 
             {
                 "CU1"
@@ -2025,14 +2066,14 @@ if ($Exchange2013.IsPresent)
         $FileName = Split-Path -Leaf -Path $Url
         if (!(test-path  $Sourcedir\$FileName))
             {
-            "We need to Download E15 $ex_cu, this may take a while"
+            "We need to Download E15 $e15_cu, this may take a while"
             if (!(get-prereq -DownLoadUrl $URL -destination $Sourcedir\$FileName))
                 { write-warning "Error Downloading file $Url, Please check connectivity"
                 exit
             }
         }
         Write-Verbose "Extracting $FileName"
-        Start-Process -FilePath "$Sourcedir\$FileName" -ArgumentList "/extract:$Sourcedir\$EX_Version$ex_cu /passive" -Wait
+        Start-Process -FilePath "$Sourcedir\$FileName" -ArgumentList "/extract:$Sourcedir\$EX_Version$e15_cu /passive" -Wait
             
     } #end else
     if (!(Test-Path $Sourcedir\attachments))
@@ -2043,13 +2084,66 @@ if ($Exchange2013.IsPresent)
             {
             Write-Verbose "Found attachments"
             }
-	    workorder "We are going to Install E15 2013 $ex_cu with Nodesize $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
+	    workorder "We are going to Install E15 2013 $e15_cu with Nodesize $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
 	    if ($DAG.IsPresent)
 	        {
 		    workorder "We will form a $EXNodes-Node DAG"
 	        }
 
 }
+#>
+##### exchange 2016 downloads section
+if ($Exchange2016.IsPresent)
+{
+    if (!$e16_cu)
+        {
+        $e16_cu = $Latest_e16_cu
+        }
+
+    If ($Master -gt '2012Z')
+        {
+        Write-Warning "Only master up 2012R2Fallupdate supported in this scenario"
+        exit
+        }
+    If (!(Receive-LABExchange -Exchange2016 -e16_cu $e16_cu -Destination $Sourcedir -unzip))
+        {
+        Write-warning "We could not receive Exchange 2016 $e16_cu"
+        return
+        }
+
+    $EX_Version = "E2016"
+    $Scenarioname = "Exchange"
+    $Prereqdir = "Attachments"
+    $attachments = (
+    "http://www.cisco.com/c/dam/en/us/solutions/collateral/data-center-virtualization/unified-computing/fle_vmware.pdf"
+    )
+    $Destination = Join-Path $Sourcedir $Prereqdir
+    if (!(Test-Path $Destination)){New-Item -ItemType Directory -Path $Destination | Out-Null }
+     foreach ($URL in $attachments)
+        {
+        $FileName = Split-Path -Leaf -Path $Url
+        if (!(test-path  "$Destination\$FileName"))
+            {
+            Write-Verbose "$FileName not found, trying Download"
+            if (!(Receive-LABBitsFile -DownLoadUrl $URL -destination $Sourcedir\$Prereqdir\$FileName))
+                { write-warning "Error Downloading file $Url, Please check connectivity"
+                  Write-Warning "Creating Dummy File"
+                  New-Item -ItemType file -Path "$Sourcedir\$Prereqdir\$FileName" | out-null
+                }
+            }
+
+        
+        }
+    
+	    if ($DAG.IsPresent)
+	        {
+		    Write-Host -ForegroundColor Yellow "We will form a $EXNodes-Node DAG"
+	        }
+
+}
+#########
+
+<########
 if ($Exchange2016.IsPresent)
 {
     If ($Master -gt '2012Z')
@@ -2129,7 +2223,7 @@ if ($Exchange2016.IsPresent)
         else
         {
         Write-Warning "We need to Extract $EX_Version $e16_cu, this may take a while"
-        # New-Item -ItemType Directory -Path $Sourcedir\$EX_Version$ex_cu | Out-Null
+        # New-Item -ItemType Directory -Path $Sourcedir\$EX_Version$e15_cu | Out-Null
         # }
         Switch ($e16_cu)
 
@@ -2169,6 +2263,9 @@ if ($Exchange2016.IsPresent)
 	        }
 
 }
+
+
+####>
 if ($NMM.IsPresent) { debug "Networker Modules $nmm_ver will be intalled by User selection" }
 if ($Sharepoint.IsPresent)
     {
@@ -2242,182 +2339,51 @@ if ($ConfigureVMM.IsPresent)
     {
     [switch]$SCVMM = $true
     }
-if ($scvmm.IsPresent)
+
+############## scvmm  download section
+if ($SCVMM.IsPresent)
   {
-    Write-Warning "Entering $SCVMM_VER Prereq Section"
+    Write-Warning "Entering SCVMM Prereq Section"
     [switch]$SQL=$true
-    $Prereqdir = "$SCVMM_VER"+"prereq"
-    Write-Verbose "We are now going to Test $SCVMM_VER Prereqs"
-    $DownloadUrls= (
-            "http://download.microsoft.com/download/E/2/1/E21644B5-2DF2-47C2-91BD-63C560427900/NDP452-KB2901907-x86-x64-AllOS-ENU.exe",
-            "http://download.microsoft.com/download/F/E/D/FEDB200F-DE2A-46D8-B661-D019DFE9D470/ENU/x64/SqlCmdLnUtils.msi",
-            "http://download.microsoft.com/download/F/E/D/FEDB200F-DE2A-46D8-B661-D019DFE9D470/ENU/x64/sqlncli.msi"
-            )
-    
-    Foreach ($URL in $DownloadUrls)
-    {
-    $FileName = Split-Path -Leaf -Path $Url
-    Write-Verbose "Testing $FileName in $Prereqdir"
-    if (!(test-path  "$Sourcedir\$Prereqdir\$FileName"))
+    $Prereqdir = "prereq"
+    If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCVMM -Destination $Sourcedir -unzip))
         {
-        Write-Verbose "Trying Download"
-        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$Prereqdir\$FileName"))
-            { 
-            write-warning "Error Downloading file $Url, Please check connectivity"
-            exit
-            }
-        }
-    }
-    
- 
-   ### 
-    switch ($SCvmm_VER)
-    {
-        "SC2012_R2_SCVMM"
-            {
-            If ($Master -gt '2012Z')
-                {
-                Write-Warning "Only master up 2012R2Fallupdate supported in this scenario"
-                exit
-                }
-            if ($SQLVER -gt "SQL2012SP1")
-                {
-                Write-Warning "SCOM can only be installed on SQL2012, Setting to SQL2012SP1"
-                $SQLVER = "SQL2012SP1"
-                }# end sqlver
-
-            $adkurl = "http://download.microsoft.com/download/6/A/E/6AEA92B0-A412-4622-983E-5B305D2EBE56/adk/adksetup.exe" # ADKSETUP 8.1
-            $URL = "http://care.dlservice.microsoft.com/dl/download/evalx/sc2012r2/SC2012_R2_SCVMM.exe"
-            }
-        "SCTP4_SCVMM"
-            {
-            if ($Master -lt "2016TP3")
-                {
-                Write-Warning "Master 2016TP3 or Later is required for $SCVMM_VER"
-                exit
-                }
-            $adkurl = "http://download.microsoft.com/download/8/1/9/8197FEB9-FABE-48FD-A537-7D8709586715/adk/adksetup.exe" #ADKsetup 10
-            $URL = "http://care.dlservice.microsoft.com/dl/download/7/0/A/70A7A007-ABCA-42E5-9C82-79CB98B7855E/SCTP4_SCVMM_EN.exe"
-
-            }
-        
-        "SCTP3_SCVMM"
-            {
-            if ($Master -lt "2016")
-                {
-                Write-Warning "Master 2016TP3 or Later is required for SCVMM TP3"
-                exit
-                }
-            $adkurl = "http://download.microsoft.com/download/8/1/9/8197FEB9-FABE-48FD-A537-7D8709586715/adk/adksetup.exe" #ADKsetup 10
-            $URL = "http://care.dlservice.microsoft.com/dl/download/F/A/A/FAA14AC2-720A-4B17-8250-75EEEA13B259/SCTP3_SCVMM_EN.exe"
-
-            }
-    }# end switch
-
-    Write-Verbose "Testing WAIK in $Sourcedir"
-    $FileName = Split-Path -Leaf -Path $adkurl
-    if (!(test-path  "$Sourcedir\$Prereqdir\Installers"))
-        {
-        # New-Item -ItemType Directory -Path "$Sourcedir\$Prereqdir\WAIK" -Force | Out-Null
-        Write-Verbose "Trying Download"
-        if (!(get-prereq -DownLoadUrl $adkurl -destination  "$Sourcedir\$Prereqdir\$FileName"))
-            { 
-            write-warning "Error Downloading file $adkurl, Please check connectivity"
-            exit
-            }
-        Write-Warning "Getting WAIK, Could take a While"
-        Start-Process -FilePath "$Sourcedir\$Prereqdir\$FileName" -ArgumentList "/quiet /layout $Sourcedir\$Prereqdir" -Wait
+        Write-warning "We could not receive scom"
+        return
         }
 
+    }# end SCOMPREREQ
 
 
-    $FileName = Split-Path -Leaf -Path $Url
-    Write-Verbose "Testing $SCVMM_VER"
-    if (!(test-path  "$Sourcedir\$SCVMM_VER"))
-        {
-        Write-Verbose "Trying Download"
-        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
-            { 
-            write-warning "Error Downloading file $Url, Please check connectivity"
-            exit
-            }
-        write-Warning "We are going to Extract $FileName, this may take a while"
-        Start-Process "$Sourcedir\$FileName" -ArgumentList "/SP- /dir=$Sourcedir\$SCVMM_VER /SILENT" -Wait
-        }
-    workorder "We are going to Install Hyper-V with $SCVMM_VER in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet and $SQLVER"
-    # exit
-    }# end SCVMMPREREQ
-############## SCOM Section
+############## SCOM  download section
 if ($SCOM.IsPresent)
   {
     Write-Warning "Entering SCOM Prereq Section"
     [switch]$SQL=$true
-    $Prereqdir = "$SCOM_VER"+"prereq"
-    Write-Verbose "We are now going to Test SCOM Prereqs"
-    
-            $DownloadUrls= (
-            'http://download.microsoft.com/download/F/B/7/FB728406-A1EE-4AB5-9C56-74EB8BDDF2FF/ReportViewer.msi',
-            "http://download.microsoft.com/download/F/E/D/FEDB200F-DE2A-46D8-B661-D019DFE9D470/ENU/x64/SQLSysClrTypes.msi"
-            )
-    
-            Foreach ($URL in $DownloadUrls)
-                {
-                $FileName = Split-Path -Leaf -Path $Url
-                Write-Verbose "Testing $FileName in $Prereqdir"
-                if (!(test-path  "$Sourcedir\$Prereqdir\$FileName"))
-                    {
-                    Write-Verbose "Trying Download"
-                    if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$Prereqdir\$FileName"))
-                        { 
-                        write-warning "Error Downloading file $Url, Please check connectivity"
-                        exit
-                        }
-                    }
-                }
-    
-    switch ($SCOM_VER)
-    {
-        "SC2012_R2_SCOM"
-            {
-            if ($SQLVER -gt "SQL2012SP1")
-                {
-                Write-Warning "SCOM can only be installed on SQL2012, Setting to SQL2012SP1"
-                $SQLVER = "SQL2012SP1"
-                }# end sqlver
-           
-            $URL = "http://care.dlservice.microsoft.com/dl/download/evalx/sc2012r2/$SCOM_VER.exe"
-            }
-        
-        "SCTP3_SCOM"
-            {
-            $URL = "http://care.dlservice.microsoft.com/dl/download/B/0/7/B07BF90E-2CC8-4538-A7D2-83BB074C49F5/SCTP3_SCOM_EN.exe"
-            }
-        "SCTP4_SCOM"
-            {
-            $URL = "http://care.dlservice.microsoft.com/dl/download/3/3/3/333022FC-3BB1-4406-8572-ED07950151D4/SCTP4_SCOM_EN.exe"
-            }
+    $Prereqdir = "prereq"
+    If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCOM -Destination $Sourcedir -unzip))
+        {
+        Write-warning "We could not receive scom"
+        return
+        }
 
+    }# end SCOMPREREQ
+############## SCVMM download section
+if ($SCVMM.IsPresent)
+  {
+    Write-Warning "Entering SCVMM Prereq Section"
+    [switch]$SQL=$true
+    $Prereqdir = "prereq"
+    If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCVMM -Destination $Sourcedir -unzip))
+        {
+        Write-warning "We could not receive scom"
+        return
+        }
 
-    }# end switch
-    $FileName = Split-Path -Leaf -Path $Url
-    Write-Verbose "Testing $SCOM_VER\"
-    if (!(test-path  "$Sourcedir\$SCOM_VER"))
-                {
-                Write-Verbose "Trying Download"
-                if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
-                    { 
-                    write-warning "Error Downloading file $Url, Please check connectivity"
-                    exit
-                    }
-                write-Warning "We are going to Extract $FileName, this may take a while"
-                Start-Process "$Sourcedir\$FileName" -ArgumentList "/SP- /dir=$Sourcedir\$SCOM_VER /SILENT" -Wait
-                }
-
-    workorder "We are going to Install SCOM with $SCOM_VER in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet and $SQLVER"
-    # exit
     }# end SCOMPREREQ
 #######
-##############
+
+#################
 if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
     {
 
@@ -2656,45 +2622,25 @@ if ($Panorama.IsPresent)
             }
         }
      }
+
+############## networker dowwnload section
+
 if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
     {
 
-    if ((Test-Path "$Sourcedir/$nw_ver/win_x64/networkr/networker.msi") -or (Test-Path "$Sourcedir/$nw_ver/win_x64/networkr/lgtoclnt-*.exe"))
+    if ((Test-Path "$NW_Sourcedir/$nw_ver/win_x64/networkr/networker.msi") -or (Test-Path "$NW_Sourcedir/$nw_ver/win_x64/networkr/lgtoclnt-8.5.0.0.exe"))
         {
         Write-Verbose "Networker $nw_ver found"
         }
-    else
+    elseif ($nw_ver -lt "nw84")
         {
+
         Write-Warning "We need to get $NW_ver, trying Automated Download"
-        if ($nw_ver -gt "nw76")
+        $NW_download_ok  =  receive-LABNetworker -nw_ver $nw_ver -arch win_x64 -Destination $NW_Sourcedir -unzip # $CommonParameter
+
+        if ($NW_download_ok)
             {
-            $nwdotver = $nw_ver -replace "nw",""
-            $nwdotver = $nwdotver.insert(1,'.')
-            $nwdotver = $nwdotver.insert(3,'.')
-            $nwdotver = $nwdotver.insert(5,'.')
-            $nwzip = $nw_ver -replace ".$"
-            $nwzip = $nwzip+'_win_x64.zip'
-            $url = "ftp://ftp.legato.com/pub/NetWorker/Cumulative_Hotfixes/$($nwdotver.Substring(0,3))/$nwdotver/$nwzip"
-            if ($url)
-            {
-            # $FileName = Split-Path -Leaf -Path $Url
-            $FileName = "$nw_ver.zip"
-            $Zipfilename = Join-Path $Sourcedir $FileName
-            $Destinationdir = Join-Path $Sourcedir $nw_ver
-            if (!(test-path  $Zipfilename ))
-                {
-                Write-Verbose "$FileName not found, trying Download"
-                if (!( Get-LABFTPFile -Source $URL -Target $Zipfilename -verbose -Defaultcredentials))
-                    { 
-                    write-warning "Error Downloading file $Url, 
-                    $url might not exist.
-                    Please check connectivity or download manually"
-                    break
-                    }
-                }
-            Write-Verbose $Zipfilename     
-            Expand-LABZip -zipfilename "$Zipfilename" -destination "$Destinationdir" -verbose
-            }
+            Write-Host -ForegroundColor Magenta "Received $nw_ver"
             }
         else
             {
@@ -2706,27 +2652,6 @@ if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
 }
 if ($NMM.IsPresent)
     {
-    <#
-    if ($nmm_ver -ge "nmm85")
-        { 
-        write-verbose "we need .Net Framework 4.51 or later"
-        $Prereqdir = "NMMPrereq"
-        $Url =  "http://download.microsoft.com/download/E/2/1/E21644B5-2DF2-47C2-91BD-63C560427900/NDP452-KB2901907-x86-x64-AllOS-ENU.exe"
-        $FileName = Split-Path -Leaf -Path $Url
-        Write-Verbose "Testing $FileName in $Prereqdir"
-        if (!(test-path  "$Sourcedir\$Prereqdir\$FileName"))
-        {
-        Write-Verbose "Trying Download"
-        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$Prereqdir\$FileName"))
-            { 
-            write-warning "Error Downloading file $Url, Please check connectivity"
-            exit
-            }
-        }
-    }
-    #>   
-         
-
     if ((Test-Path "$Sourcedir/$nmm_ver/win_x64/networkr/NetWorker Module for Microsoft.msi") -or (Test-Path "$Sourcedir/$nmm_ver/win_x64/networkr/NWVSS.exe"))
         {
         Write-Verbose "Networker NMM $nmm_ver found"
@@ -2734,7 +2659,7 @@ if ($NMM.IsPresent)
     else
         {
         Write-Warning "We need to get $NMM_ver, trying Automated Download"
-        # New-Item -ItemType Directory -Path $Sourcedir\$EX_Version$ex_cu | Out-Null
+        # New-Item -ItemType Directory -Path $Sourcedir\$EX_Version$e15_cu | Out-Null
         # }
         $URLS = ""
         # if ($nmm_ver -notin ('nmm822','nmm821','nmm82','nmm90.DA','nmm9001') -and 
@@ -3268,7 +3193,7 @@ switch ($PsCmdlet.ParameterSetName)
 			write-verbose "Setting Power Scheme"
 			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script powerconf.ps1 -interactive
 			write-verbose "Installing E15, this may take up to 60 Minutes ...."
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchange.ps1 -interactive -nowait -Parameter "$CommonParameter -ex_cu $ex_cu"
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchange.ps1 -interactive -nowait -Parameter "$CommonParameter -ex_cu $e15_cu"
             }
             }
         if ($EXnew)
@@ -3553,8 +3478,7 @@ switch ($PsCmdlet.ParameterSetName)
 			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
 			$IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\HyperV\"
             $In_Guest_UNC_SQLScriptDir = "$IN_Guest_UNC_Scriptroot\sql\"
-            $VMMScriptDir = "$IN_Guest_UNC_Scriptroot\VMM" 
-
+            $In_Guest_UNC_SCVMMScriptDir = "$IN_Guest_UNC_Scriptroot\scvmm\"
             Write-Verbose $IPv4Subnet
             write-verbose $Nodeip
             Write-Verbose $Nodename
@@ -3630,7 +3554,8 @@ switch ($PsCmdlet.ParameterSetName)
                         Write-Output " Installing single MDM"
                         invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
                         $mdmipa = "$IPv4Subnet.151"
-                        $mdmipb = "$IPv4Subnet.151"                        }
+                        $mdmipb = "$IPv4Subnet.151"
+                        }
                     write-verbose "installing JAVA"
 		            $Parm = "/s"
 		            $Execute = "\\vmware-host\Shared Folders\Sources\$LatestJava"
@@ -3696,16 +3621,16 @@ switch ($PsCmdlet.ParameterSetName)
             }
 		if ($SCVMM.IsPresent)
 		    {
-			write-verbose "Building SCVMM Setup Configruration"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script set-vmmconfig.ps1 -interactive
+			#write-verbose "Building SCVMM Setup Configruration"
+			#invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest -Script set-vmmconfig.ps1 -interactive
 			write-verbose "Installing SQL Binaries"
 			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $In_Guest_UNC_SQLScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -DefaultDBpath $CommonParameter" -interactive
 			write-verbose "Installing SCVMM PREREQS"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-vmmprereq.ps1 -Parameter "-scvmm_ver $scvmm_ver $CommonParameter"  -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $In_Guest_UNC_SCVMMScriptDir -Script install-vmmprereq.ps1 -Parameter "-scvmm_ver $scvmm_ver $CommonParameter"  -interactive
             checkpoint-progress -step vmmprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
 			write-verbose "Installing SCVMM"
             Write-Warning "Setup of VMM and Update Rollups in progress, could take up to 20 Minutes"
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-vmm.ps1 -Parameter "-scvmm_ver $scvmm_ver $CommonParameter" -interactive
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $In_Guest_UNC_SCVMMScriptDir -Script install-vmm.ps1 -Parameter "-scvmm_ver $scvmm_ver $CommonParameter" -interactive
             
             
             if ($ConfigureVMM.IsPresent)
@@ -3713,11 +3638,11 @@ switch ($PsCmdlet.ParameterSetName)
 			    Write-Verbose "Configuring VMM"
                 if ($Cluster.IsPresent)
                     {
-                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script configure-vmm.ps1 -Parameter "-Cluster" -interactive
+                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $In_Guest_UNC_SCVMMScriptDir -Script configure-vmm.ps1 -Parameter "-Cluster" -interactive
                     }
                     else
                     {
-                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script configure-vmm.ps1 -interactive
+                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $In_Guest_UNC_SCVMMScriptDir -Script configure-vmm.ps1 -interactive
                     }
                 }
             <#
@@ -4195,7 +4120,7 @@ switch ($PsCmdlet.ParameterSetName)
 
 	###################################################
 	status $Commentline
-	status "Creating $SCOM_VER Server $Nodename"
+	status "Creating $SC_Version Server $Nodename"
   	Write-Verbose $IPv4Subnet
     write-verbose $Nodename
     write-verbose $Nodeip
@@ -4225,7 +4150,7 @@ switch ($PsCmdlet.ParameterSetName)
 	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $In_Guest_UNC_SQLScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -DefaultDBpath" -interactive
 
         write-verbose "Building SCOM Server"
-        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script INSTALL-Scom.ps1 -interactive -parameter "-SCOM_VER $SCOM_VER $CommonParameter"
+        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script INSTALL-Scom.ps1 -interactive -parameter "-SC_Version $SC_Version $CommonParameter"
 #        Write-Host -ForegroundColor White "You cn now Connect to http://$($Nodeip):58080/APG/ with admin/changeme"
 	
 }
