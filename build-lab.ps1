@@ -128,7 +128,10 @@ Specify if Networker Scenario sould be installed
     IP-Addresses: .18
     #>
 	[Parameter(ParameterSetName = "SCOM", Mandatory = $true)][switch][alias('SC_OM')]$SCOM,
-    [Parameter(ParameterSetName = "HyperV", Mandatory = $false)]
+
+
+    [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCVMM", Mandatory = $false)]
     [ValidateSet('SC2012_R2','SCTP3','SCTP4')]$SC_Version = "SC2012_R2",
 
