@@ -1856,7 +1856,7 @@ if ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG" -or $SPdbtyp
 	$AlwaysOn = $true
     # if ($NoNMM -eq $false) {status "Networker Modules will be installed on each Node"}
 }
-if ($NWServer.IsPresent -or $NW.IsPresent)
+#if ($NWServer.IsPresent -or $NW.IsPresent)
 ##### exchange downloads section
 if ($Exchange2013.IsPresent)
 {
