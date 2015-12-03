@@ -174,7 +174,7 @@ Specify if Networker Scenario sould be installed
     CU Location is [Driveletter]:\sources\e2013[cuver], e.g. c:\sources\e2013cu7
     #>
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
-    [ValidateSet('cu1', 'cu2', 'cu3', 'sp1','cu5','cu6','cu7','cu8','cu9','cu10')]$ex_cu,
+    [ValidateSet('cu1', 'cu2', 'cu3', 'sp1','cu5','cu6','cu7','cu8','cu9','cu10')][alias('ex_cu')]$e15_cu,
     <# schould we prestage users ? #>	
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
     [Parameter(ParameterSetName = "E15", Mandatory = $false)][switch]$nouser,
@@ -237,7 +237,7 @@ Specify if Networker Scenario sould be installed
     <nw_ver>nw82</nw_ver>
     <master>2012R2UEFIMASTER</master>
     <sqlver>SQL2014</sqlver>
-    <ex_cu>cu6</ex_cu>
+    <e15_cu>cu6</e15_cu>
     <vmnet>2</vmnet>
     <BuildDomain>labbuildr</BuildDomain>
     <MySubnet>10.10.0.0</MySubnet>
@@ -693,7 +693,7 @@ $ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
 $latest_nmm = 'nmm8221'
 $latest_nw = 'nw8222'
 $latest_e16_cu = 'final'
-$latest_ex_cu = 'cu10'
+$latest_e15_cu = 'cu10'
 $latest_sqlver  = 'SQL2014SP1slip'
 $latest_master = '2012R2FallUpdate'
 $latest_sql_2012 = 'SQL2012SP2'
@@ -1418,16 +1418,16 @@ if ($defaults.IsPresent)
                 $sqlver = $latest_sqlver
                 }
             }
-        if (!$ex_cu) 
+        if (!$e15_cu) 
             {
             try
                 {
-                $ex_cu = $Default.ex_cu
+                $e15_cu = $Default.e15_cu
                 }
             catch 
                 {
                 Write-Warning "No Master specified, trying default"
-                $ex_cu = $latest_ex_cu
+                $e15_cu = $latest_e15_cu
                 }
             }
         if (!$e16_cu) 
@@ -1569,7 +1569,7 @@ $IPv4Subnet = convert-iptosubnet $MySubnet
 if (!$BuildDomain) { $BuildDomain = $Default_BuildDomain }
 if (!$ScaleIOVer) {$ScaleIOVer = $latest_ScaleIOVer}
 if (!$SQLVER) {$SQLVER = $latest_sqlver}
-if (!$ex_cu) {$ex_cu = $latest_ex_cu}
+if (!$e15_cu) {$e15_cu = $latest_e15_cu}
 if (!$e16_cu) {$e16_cu = $latest_e16_cu}
 if (!$Master) {$Master = $latest_master}
 if (!$vmnet) {$vmnet = $Default_vmnet}
@@ -1620,7 +1620,7 @@ $config += ("<nmm_ver>$nmm_ver</nmm_ver>")
 $config += ("<nw_ver>$nw_ver</nw_ver>")
 $config += ("<master>$Master</master>")
 $config += ("<sqlver>$SQLVER</sqlver>")
-$config += ("<ex_cu>$ex_cu</ex_cu>")
+$config += ("<e15_cu>$e15_cu</e15_cu>")
 $config += ("<e16_cu>$e16_cu</e16_cu>")
 $config += ("<vmnet>$VMnet</vmnet>")
 $config += ("<BuildDomain>$BuildDomain</BuildDomain>")
@@ -1761,8 +1761,9 @@ If ($NumLogCPU -gt 4 -and $Computersize -gt 2)
 }
 # get-vmwareversion
 ####### Building required Software Versions Tabs
+$NW_Sourcedir = Join-Path $Sourcedir "Networker"
 $Sourcever = @()
-# $Sourcever = @("$nw_ver","$nmm_ver","E2013$ex_cu","$WAIKVER","$SQL2012R2")
+# $Sourcever = @("$nw_ver","$nmm_ver","E2013$e15_cu","$WAIKVER","$SQL2012R2")
 if (!($DConly.IsPresent))
 {
 	if ($Exchange2013.IsPresent) 
@@ -1811,20 +1812,6 @@ status "Version $($major).$Edition"
 #status "# running Labuildr Build $verlabbuildr"
 # status "# and vmxtoolkit   Build $vervmxtoolkit"
 
-<# Clear-Host
-status $Commentline
-status "# Welcome to labbuildr                                                                                                #"
-status "# Version $($major).$Edition                                                                                  #"
-status "# running Labuildr Build $verlabbuildr                                                                                     #"
-status "# and vmxtoolkit   Build $vervmxtoolkit                                                                                     #"
-
-status "# this is an automated Deployment for VMware Workstation VMs on Windows                                               #"
-status "# current supportet Guests are:                                                                                       #"
-status "# Exchange 2013/16 Standalone or DAG, SQL 2012SP1 and 2014, Always On, Hyper-V, SCVMM,SCOM Networker, Blank Nodes     #"
-status "# Available OS Masters are 2012, 2012R2, 2012R2Update and Techical Preview of vNext                                   #"
-status "# EMC Integration for Networker, OneFS, Avamar, DD, ScaleIO and other VADP´s                                          #"
-status "# Idea and Scripting by @HyperV_Guy                                                                                   #"
-status $Commentline  #>
 workorder "Building Proposed Workorder"
 If ($DAG.IsPresent)
     {
@@ -1870,18 +1857,59 @@ if ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG" -or $SPdbtyp
     # if ($NoNMM -eq $false) {status "Networker Modules will be installed on each Node"}
 }
 if ($NWServer.IsPresent -or $NW.IsPresent)
-    {
-<#    $url = "http://download.oracle.com/otn-pub/java/jdk/7u80-b15/jre-7u80-windows-x64.exe"
-    $FileName = Split-Path -Leaf -Path $Url
-    if (!(test-path  $Sourcedir\$FileName))
+##### exchange downloads section
+if ($Exchange2013.IsPresent)
+{
+    if (!$e15_cu)
         {
-        Write-Verbose "$FileName not found, trying Download"
-        if (!( get-prereq -DownLoadUrl $URL -destination $Sourcedir\$FileName -verbose ))
-            { 
-            write-warning "Error Downloading file $Url, Please check connectivity"
-            }
+        $e15_cu = $Latest_e15_cu
         }
-#>
+
+    If ($Master -gt '2012Z')
+        {
+        Write-Warning "Only master up 2012R2Fallupdate supported in this scenario"
+        exit
+        }
+    If (!(Receive-LABExchange -Exchange2013 -e15_cu $e15_cu -Destination $Sourcedir -unzip))
+        {
+        Write-warning "We could not receive Exchange 2013 $e15_cu"
+        return
+        }
+
+    $EX_Version = "E2013"
+    $Scenarioname = "Exchange"
+    $Prereqdir = "Attachments"
+    $attachments = (
+    "http://www.cisco.com/c/dam/en/us/solutions/collateral/data-center-virtualization/unified-computing/fle_vmware.pdf"
+    )
+    $Destination = Join-Path $Sourcedir $Prereqdir
+    if (!(Test-Path $Destination)){New-Item -ItemType Directory -Path $Destination | Out-Null }
+     foreach ($URL in $attachments)
+        {
+        $FileName = Split-Path -Leaf -Path $Url
+        if (!(test-path  "$Destination\$FileName"))
+            {
+            Write-Verbose "$FileName not found, trying Download"
+            if (!(Receive-LABBitsFile -DownLoadUrl $URL -destination $Sourcedir\$Prereqdir\$FileName))
+                { write-warning "Error Downloading file $Url, Please check connectivity"
+                  Write-Warning "Creating Dummy File"
+                  New-Item -ItemType file -Path "$Sourcedir\$Prereqdir\$FileName" | out-null
+                }
+            }
+
+        
+        }
+    
+	    if ($DAG.IsPresent)
+	        {
+		    Write-Host -ForegroundColor Yellow "We will form a $EX_Version $EXNodes-Node DAG"
+	        }
+
+}
+#########
+
+<#old
+    {
     
     $urls = ("ftp://ftp.adobe.com/pub/adobe/reader/win/Acrobat2015/1500630033/AcroRdr20151500630033_MUI.exe",
            "ftp://ftp.adobe.com/pub/adobe/reader/win/Acrobat2015/1500630097/AcroRdr2015Upd1500630097_MUI.msp")
@@ -1898,6 +1926,7 @@ if ($NWServer.IsPresent -or $NW.IsPresent)
                 }
         }
     }
+##### exchange 2013 download section
 if ($Exchange2013.IsPresent)
 {
     If ($Master -gt '2012Z')
@@ -1977,16 +2006,16 @@ if ($Exchange2013.IsPresent)
         Start-Process -FilePath "$Sourcedir\$Prereqdir\ExchangeMapiCdo.EXE" -ArgumentList "/x:$Sourcedir\$Prereqdir /q" -Wait
         }
 
-    if (Test-Path $Sourcedir/$EX_Version$ex_cu/setup.exe)
+    if (Test-Path $Sourcedir/$EX_Version$e15_cu/setup.exe)
         {
-        Write-Verbose "E15 $ex_cu Found"
+        Write-Verbose "E15 $e15_cu Found"
         }
         else
         {
-        Write-Warning "We need to Extract E15 $ex_cu, this may take a while"
-        # New-Item -ItemType Directory -Path $Sourcedir\$EX_Version$ex_cu | Out-Null
+        Write-Warning "We need to Extract E15 $e15_cu, this may take a while"
+        # New-Item -ItemType Directory -Path $Sourcedir\$EX_Version$e15_cu | Out-Null
         # }
-        Switch ($ex_cu)
+        Switch ($e15_cu)
 
             {
                 "CU1"
@@ -2034,14 +2063,14 @@ if ($Exchange2013.IsPresent)
         $FileName = Split-Path -Leaf -Path $Url
         if (!(test-path  $Sourcedir\$FileName))
             {
-            "We need to Download E15 $ex_cu, this may take a while"
+            "We need to Download E15 $e15_cu, this may take a while"
             if (!(get-prereq -DownLoadUrl $URL -destination $Sourcedir\$FileName))
                 { write-warning "Error Downloading file $Url, Please check connectivity"
                 exit
             }
         }
         Write-Verbose "Extracting $FileName"
-        Start-Process -FilePath "$Sourcedir\$FileName" -ArgumentList "/extract:$Sourcedir\$EX_Version$ex_cu /passive" -Wait
+        Start-Process -FilePath "$Sourcedir\$FileName" -ArgumentList "/extract:$Sourcedir\$EX_Version$e15_cu /passive" -Wait
             
     } #end else
     if (!(Test-Path $Sourcedir\attachments))
@@ -2052,14 +2081,15 @@ if ($Exchange2013.IsPresent)
             {
             Write-Verbose "Found attachments"
             }
-	    workorder "We are going to Install E15 2013 $ex_cu with Nodesize $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
+	    workorder "We are going to Install E15 2013 $e15_cu with Nodesize $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
 	    if ($DAG.IsPresent)
 	        {
 		    workorder "We will form a $EXNodes-Node DAG"
 	        }
 
 }
-##### echange downloads section
+#>
+##### exchange 2016 downloads section
 if ($Exchange2016.IsPresent)
 {
     if (!$e16_cu)
@@ -2190,7 +2220,7 @@ if ($Exchange2016.IsPresent)
         else
         {
         Write-Warning "We need to Extract $EX_Version $e16_cu, this may take a while"
-        # New-Item -ItemType Directory -Path $Sourcedir\$EX_Version$ex_cu | Out-Null
+        # New-Item -ItemType Directory -Path $Sourcedir\$EX_Version$e15_cu | Out-Null
         # }
         Switch ($e16_cu)
 
@@ -2307,7 +2337,7 @@ if ($ConfigureVMM.IsPresent)
     [switch]$SCVMM = $true
     }
 
-############## SCOM Section
+############## scvmm  download section
 if ($SCVMM.IsPresent)
   {
     Write-Warning "Entering SCVMM Prereq Section"
@@ -2322,7 +2352,7 @@ if ($SCVMM.IsPresent)
     }# end SCOMPREREQ
 
 
-############## SCOM Section
+############## SCOM  download section
 if ($SCOM.IsPresent)
   {
     Write-Warning "Entering SCOM Prereq Section"
@@ -2335,7 +2365,7 @@ if ($SCOM.IsPresent)
         }
 
     }# end SCOMPREREQ
-############## SCVMM Section
+############## SCVMM download section
 if ($SCVMM.IsPresent)
   {
     Write-Warning "Entering SCVMM Prereq Section"
@@ -2589,45 +2619,25 @@ if ($Panorama.IsPresent)
             }
         }
      }
+
+############## networker dowwnload section
+
 if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
     {
 
-    if ((Test-Path "$Sourcedir/$nw_ver/win_x64/networkr/networker.msi") -or (Test-Path "$Sourcedir/$nw_ver/win_x64/networkr/lgtoclnt-*.exe"))
+    if ((Test-Path "$NW_Sourcedir/$nw_ver/win_x64/networkr/networker.msi") -or (Test-Path "$NW_Sourcedir/$nw_ver/win_x64/networkr/lgtoclnt-8.5.0.0.exe"))
         {
         Write-Verbose "Networker $nw_ver found"
         }
-    else
+    elseif ($nw_ver -lt "nw84")
         {
+
         Write-Warning "We need to get $NW_ver, trying Automated Download"
-        if ($nw_ver -gt "nw76")
+        $NW_download_ok  =  receive-LABNetworker -nw_ver $nw_ver -arch win_x64 -Destination $NW_Sourcedir -unzip # $CommonParameter
+
+        if ($NW_download_ok)
             {
-            $nwdotver = $nw_ver -replace "nw",""
-            $nwdotver = $nwdotver.insert(1,'.')
-            $nwdotver = $nwdotver.insert(3,'.')
-            $nwdotver = $nwdotver.insert(5,'.')
-            $nwzip = $nw_ver -replace ".$"
-            $nwzip = $nwzip+'_win_x64.zip'
-            $url = "ftp://ftp.legato.com/pub/NetWorker/Cumulative_Hotfixes/$($nwdotver.Substring(0,3))/$nwdotver/$nwzip"
-            if ($url)
-            {
-            # $FileName = Split-Path -Leaf -Path $Url
-            $FileName = "$nw_ver.zip"
-            $Zipfilename = Join-Path $Sourcedir $FileName
-            $Destinationdir = Join-Path $Sourcedir $nw_ver
-            if (!(test-path  $Zipfilename ))
-                {
-                Write-Verbose "$FileName not found, trying Download"
-                if (!( Get-LABFTPFile -Source $URL -Target $Zipfilename -verbose -Defaultcredentials))
-                    { 
-                    write-warning "Error Downloading file $Url, 
-                    $url might not exist.
-                    Please check connectivity or download manually"
-                    break
-                    }
-                }
-            Write-Verbose $Zipfilename     
-            Expand-LABZip -zipfilename "$Zipfilename" -destination "$Destinationdir" -verbose
-            }
+            Write-Host -ForegroundColor Magenta "Received $nw_ver"
             }
         else
             {
@@ -2639,27 +2649,6 @@ if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
 }
 if ($NMM.IsPresent)
     {
-    <#
-    if ($nmm_ver -ge "nmm85")
-        { 
-        write-verbose "we need .Net Framework 4.51 or later"
-        $Prereqdir = "NMMPrereq"
-        $Url =  "http://download.microsoft.com/download/E/2/1/E21644B5-2DF2-47C2-91BD-63C560427900/NDP452-KB2901907-x86-x64-AllOS-ENU.exe"
-        $FileName = Split-Path -Leaf -Path $Url
-        Write-Verbose "Testing $FileName in $Prereqdir"
-        if (!(test-path  "$Sourcedir\$Prereqdir\$FileName"))
-        {
-        Write-Verbose "Trying Download"
-        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$Prereqdir\$FileName"))
-            { 
-            write-warning "Error Downloading file $Url, Please check connectivity"
-            exit
-            }
-        }
-    }
-    #>   
-         
-
     if ((Test-Path "$Sourcedir/$nmm_ver/win_x64/networkr/NetWorker Module for Microsoft.msi") -or (Test-Path "$Sourcedir/$nmm_ver/win_x64/networkr/NWVSS.exe"))
         {
         Write-Verbose "Networker NMM $nmm_ver found"
@@ -2667,7 +2656,7 @@ if ($NMM.IsPresent)
     else
         {
         Write-Warning "We need to get $NMM_ver, trying Automated Download"
-        # New-Item -ItemType Directory -Path $Sourcedir\$EX_Version$ex_cu | Out-Null
+        # New-Item -ItemType Directory -Path $Sourcedir\$EX_Version$e15_cu | Out-Null
         # }
         $URLS = ""
         # if ($nmm_ver -notin ('nmm822','nmm821','nmm82','nmm90.DA','nmm9001') -and 
@@ -3201,7 +3190,7 @@ switch ($PsCmdlet.ParameterSetName)
 			write-verbose "Setting Power Scheme"
 			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script powerconf.ps1 -interactive
 			write-verbose "Installing E15, this may take up to 60 Minutes ...."
-			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchange.ps1 -interactive -nowait -Parameter "$CommonParameter -ex_cu $ex_cu"
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchange.ps1 -interactive -nowait -Parameter "$CommonParameter -ex_cu $e15_cu"
             }
             }
         if ($EXnew)
