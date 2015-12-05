@@ -1268,7 +1268,7 @@ switch ($PsCmdlet.ParameterSetName)
         $Latest_local_git = $Latest_SIOToolkit_git
         $Destination = "$Builddir\SIOToolKit"
         $Hasupdate = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination
-        Set-Content -Value $branch -Path (Join-Path $Builddir "labbuildr.branch")
+        $Branch | Set-Content -Path "$Builddir\labbuildr.branch" -Force -Verbose
 
         if ($ReloadProfile)
                     {
