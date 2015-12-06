@@ -684,6 +684,7 @@ $WAIKVER = "WAIK"
 $domainsuffix = ".local"
 $AAGDB = "AWORKS"
 $major = "6.0"
+$Edition = "StNicholas"
 $Default_vmnet = "vmnet2"
 $Default_BuildDomain = "labbuildr"
 $Default_Subnet = "192.168.2.0"
@@ -712,7 +713,6 @@ $DCNODE = "DCNODE"
 $NWNODE = "NWSERVER"
 $SPver = "SP2013SP1fndtn"
 $SPPrefix = "SP2013"
-$Edition = "Piranha"
 $Sleep = 10
 [string]$Sources = "Sources"
 $Sourcedirdefault = "c:\$Sources"
@@ -3596,9 +3596,8 @@ switch ($PsCmdlet.ParameterSetName)
 		########### leaving NMM Section ###################
     If ($newdeploy)
         {
-        Write-Warning " Trying New Cluster Deployment !! "
-        pause
-		if ($Cluster.IsPresent)
+        Write-Host -ForegroundColor Green "Trying New Cluster Deployment !! "
+        if ($Cluster.IsPresent)
 		{
 			write-host
 			write-verbose "Forming Hyper-V Cluster"
