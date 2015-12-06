@@ -901,8 +901,8 @@ function domainjoin
         Write-Warning "Preparing VMware Tools Upgrade by injecting tools CD ( update will start before next reboot of VM )"
         Start-Process 'C:\Program Files (x86)\VMware\VMware Workstation\vmrun.exe' -ArgumentList  "installTools $CloneVMX" -NoNewWindow
         }
-    Write-Verbose "Configuring Node and Features"
-	invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script configure-node.ps1 -Parameter "-nodeip $Nodeip -IPv4subnet $IPv4subnet -nodename $Nodename -IPv4PrefixLength $IPv4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -IPv6Prefix $IPv6Prefix -AddressFamily $AddressFamily $AddGateway -AddOnfeatures '$AddonFeatures' -Domain $BuildDomain $CommonParameter" -nowait -interactive
+    Write-Verbose "Configuring Node and Features and Joining Domain $BuildDomain"
+<#	invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script configure-node.ps1 -Parameter "-nodeip $Nodeip -IPv4subnet $IPv4subnet -nodename $Nodename -IPv4PrefixLength $IPv4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -IPv6Prefix $IPv6Prefix -AddressFamily $AddressFamily $AddGateway -AddOnfeatures '$AddonFeatures' -Domain $BuildDomain $CommonParameter" -nowait -interactive
 	write-verbose "Waiting for Pass 2 (Node Configured)"
     do {
         $ToolState = Get-VMXToolsState -config $CloneVMX
@@ -916,12 +916,13 @@ function domainjoin
         sleep $Sleep
     }
 	write-host
-	test-user Administrator
+	test-user Administrator #>
 	do
         {
         Write-Verbose "Joining Domain $BuildDomain"
-        $domainadd = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script add-todomain.ps1 -Parameter "-Domain $BuildDomain -domainsuffix $domainsuffix -subnet $IPv4subnet -IPV6Subnet $IPv6Prefix -AddressFamily $AddressFamily" -nowait -interactive # $CommonParameter
-	    # Write-Host $domainadd
+        $domainadd = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script configure-node.ps1 -Parameter "-nodeip $Nodeip -nodename $Nodename -Domain $BuildDomain -domainsuffix $domainsuffix -IPv4subnet $IPv4subnet -IPV6Subnet $IPv6Prefix -AddressFamily $AddressFamily -IPv4PrefixLength $IPv4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -IPv6Prefix $IPv6Prefix $AddGateway -AddOnfeatures '$AddonFeatures' $CommonParameter" -nowait -interactive # $CommonParameter
+	    
+# Write-Host $domainadd
         }
     until ($domainadd -match "success")
 
@@ -3599,6 +3600,7 @@ switch ($PsCmdlet.ParameterSetName)
     If ($newdeploy)
         {
         Write-Warning " Trying New Cluster Deployment !! "
+        pause
 		if ($Cluster.IsPresent)
 		{
 			write-host
