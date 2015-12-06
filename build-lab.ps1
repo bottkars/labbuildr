@@ -821,7 +821,7 @@ function update-fromGit
 					        {
 						    $newDir = New-Item -ItemType Directory -Path "$Updatepath" | out-null
                             }
-                    Write-Output "We found a newer Version for $repo on Git Dated $($request.Headers.'Last-Modified')"
+                    Write-Host -ForegroundColor Gray "We found a newer Version for $repo on Git Dated $($request.Headers.'Last-Modified')"
                     if ($delete.IsPresent)
                         {
                         Write-Verbose "Cleaning $Destination"
@@ -901,7 +901,7 @@ function domainjoin
         Write-Warning "Preparing VMware Tools Upgrade by injecting tools CD ( update will start before next reboot of VM )"
         Start-Process 'C:\Program Files (x86)\VMware\VMware Workstation\vmrun.exe' -ArgumentList  "installTools $CloneVMX" -NoNewWindow
         }
-    Write-Verbose "Configuring Node and Features and Joining Domain $BuildDomain"
+    Write-Host -ForegroundColor Magenta "Configuring Node and Features and Joining Domain $BuildDomain"
 <#	invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script configure-node.ps1 -Parameter "-nodeip $Nodeip -IPv4subnet $IPv4subnet -nodename $Nodename -IPv4PrefixLength $IPv4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -IPv6Prefix $IPv6Prefix -AddressFamily $AddressFamily $AddGateway -AddOnfeatures '$AddonFeatures' -Domain $BuildDomain $CommonParameter" -nowait -interactive
 	write-verbose "Waiting for Pass 2 (Node Configured)"
     do {
@@ -921,19 +921,17 @@ function domainjoin
         {
         Write-Verbose "Joining Domain $BuildDomain"
         $domainadd = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script configure-node.ps1 -Parameter "-nodeip $Nodeip -nodename $Nodename -Domain $BuildDomain -domainsuffix $domainsuffix -IPv4subnet $IPv4subnet -IPV6Subnet $IPv6Prefix -AddressFamily $AddressFamily -IPv4PrefixLength $IPv4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -IPv6Prefix $IPv6Prefix $AddGateway -AddOnfeatures '$AddonFeatures' $CommonParameter" -nowait -interactive # $CommonParameter
-	    
-# Write-Host $domainadd
         }
     until ($domainadd -match "success")
 
-    write-verbose "Waiting for Pass 3 (Domain Joined)"
+    Write-Host -ForegroundColor Gray "Waiting for Phase Domain Joined"
     do {
         $ToolState = Get-VMXToolsState -config $CloneVMX
         Write-Verbose $ToolState.State
         }
     until ($ToolState.state -match "running")
     Write-Verbose "Paranoia, checking shared folders second time"
-    Set-VMXSharedFolderState -VMXName $nodename -config $CloneVMX -enabled
+    $Folderstate = Set-VMXSharedFolderState -VMXName $nodename -config $CloneVMX -enabled
     Write-Verbose "Please Check inside VM for Network Warnings"
 	While ($FileOK = (&$vmrun -gu Administrator -gp Password123! fileExistsInGuest $CloneVMX $IN_Guest_LogDir\3.pass) -ne "The file exists.") { Write-Host -NoNewline "."; sleep $Sleep }
     invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script create-labshortcut.ps1 -interactive # -Parameter $CommonParameter
@@ -1043,7 +1041,7 @@ function test-domainsetup
 	# $myline = $Line.line.Trim('ethernet0.vnet = ')
 	# $MyVMnet = $myline.Replace('"', '')
 	status $MyVMnet
-	Write-Output $holdomain, $Domainip, $VMnet, $DomainGateway
+	Write-Host -ForegroundColor Gray $holdomain, $Domainip, $VMnet, $DomainGateway
 } #end 
 function test-user
 {
@@ -1311,7 +1309,7 @@ switch ($PsCmdlet.ParameterSetName)
                     Status "labtools Git Release $Latest_labtools_git"
                     }
 
-                Write-Output '   Copyright 2014 Karsten Bott
+                Write-Host -ForegroundColor Gray '   Copyright 2014 Karsten Bott
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -3066,7 +3064,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 			###################################################
 			If ($CloneOK)
 			{
-				write-verbose "Waiting System Ready"
+				Write-Host -ForegroundColor Gray "Waiting for firstboot finished"
 				test-user -whois Administrator
 				write-Verbose "Starting Customization"
 			    domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
@@ -3183,7 +3181,7 @@ switch ($PsCmdlet.ParameterSetName)
 		    If ($CloneOK)
             {
             $EXnew = $True
-			write-verbose "Waiting System Ready"
+			Write-Host -ForegroundColor Gray "Waiting for firstboot finished"
 			test-user -whois Administrator
 			write-Verbose "Starting Customization"
 			domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $EXAddressFamiliy -AddOnfeatures $AddonFeatures
@@ -3330,7 +3328,7 @@ switch ($PsCmdlet.ParameterSetName)
 		    If ($CloneOK)
                 {
                 $EXnew = $True
-			    write-verbose "Waiting System Ready"
+			    Write-Host -ForegroundColor Gray "Waiting for firstboot finished"
 			    test-user -whois Administrator
 			    write-Verbose "Starting Customization"
 			    domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $EXAddressFamiliy -AddOnfeatures $AddonFeatures
@@ -3501,7 +3499,7 @@ switch ($PsCmdlet.ParameterSetName)
 			
             If ($CloneOK)
 			    {
-                write-verbose "Waiting System Ready"
+                Write-Host -ForegroundColor Gray "Waiting for firstboot finished"
 				test-user -whois Administrator
 				write-Verbose "Starting Customization"
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
@@ -3517,19 +3515,19 @@ switch ($PsCmdlet.ParameterSetName)
                     switch ($HVNODE){
                 1
                     {
-                    Write-Output "Installing MDM"
+                    Write-Host -ForegroundColor Gray "Installing MDM"
                     invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role MDM -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive
                     }
                 2
                     {
                     if (!$singlemdm.IsPresent)
                         {
-                        Write-Output "Installing MDM"
+                        Write-Host -ForegroundColor Gray "Installing MDM"
                         invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role MDM -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive
                         }
                     else
                         {
-                        Write-Output "Installing single MDM"
+                        Write-Host -ForegroundColor Gray "Installing single MDM"
                         invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
                         }
                     
@@ -3545,14 +3543,14 @@ switch ($PsCmdlet.ParameterSetName)
 		            write-log "$origin $cmdresult"
                     if (!$singlemdm.IsPresent)
                         {                                        
-                        Write-Output " Installing TB"
+                        Write-Host -ForegroundColor Gray " Installing TB"
                         Invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role TB -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
                         $mdmipa = "$IPv4Subnet.151"
                         $mdmipb = "$IPv4Subnet.152"
                         }
                     else
                         {
-                        Write-Output " Installing single MDM"
+                        Write-Host -ForegroundColor Gray " Installing single MDM"
                         invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
                         $mdmipa = "$IPv4Subnet.151"
                         $mdmipb = "$IPv4Subnet.151"
@@ -3692,7 +3690,7 @@ switch ($PsCmdlet.ParameterSetName)
 			###################################################
 			If ($CloneOK)
 			{
-				write-verbose "Waiting System Ready"
+				Write-Host -ForegroundColor Gray "Waiting for firstboot finished"
 				test-user -whois Administrator
 				write-Verbose "Starting Customization"
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddonFeatures $AddonFeatures
@@ -3763,7 +3761,7 @@ switch ($PsCmdlet.ParameterSetName)
 			###################################################
 			If ($CloneOK)
 			{
-				write-verbose "Waiting System Ready"
+				Write-Host -ForegroundColor Gray "Waiting for firstboot finished"
 				test-user -whois Administrator
 				write-Verbose "Starting Customization"
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
@@ -3871,7 +3869,7 @@ switch ($PsCmdlet.ParameterSetName)
 			###################################################
 			If ($CloneOK)
 			{
-				write-verbose "Waiting System Ready"
+				Write-Host -ForegroundColor Gray "Waiting for firstboot finished"
 				test-user -whois Administrator
 				write-Verbose "Starting Customization"
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
@@ -3938,7 +3936,7 @@ switch ($PsCmdlet.ParameterSetName)
 			{
 				write-verbose "Copy Configuration files, please be patient"
 				copy-tovmx -Sourcedir $IN_Guest_UNC_NodeScriptDir
-				write-verbose "Waiting System Ready"
+				Write-Host -ForegroundColor Gray "Waiting for firstboot finished"
 				test-user -whois Administrator
 				write-Verbose "Starting Customization"
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
@@ -3984,7 +3982,7 @@ switch ($PsCmdlet.ParameterSetName)
 		###################################################
 		If ($CloneOK)
 		{
-			write-verbose "Waiting System Ready"
+			Write-Host -ForegroundColor Gray "Waiting for firstboot finished"
 			test-user -whois Administrator
 			write-Verbose "Starting Customization"
 			domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
@@ -4051,7 +4049,7 @@ switch ($PsCmdlet.ParameterSetName)
 	###################################################
 	If ($CloneOK)
 	{
-		write-verbose "Waiting System Ready"
+		Write-Host -ForegroundColor Gray "Waiting for firstboot finished"
 		test-user -whois Administrator
 		write-Verbose "Starting Customization"
 		domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddonFeatures $AddonFeatures
@@ -4090,7 +4088,7 @@ switch ($PsCmdlet.ParameterSetName)
 	###################################################
 	If ($CloneOK)
 	{
-		write-verbose "Waiting System Ready"
+		Write-Host -ForegroundColor Gray "Waiting for firstboot finished"
 		test-user -whois Administrator
 		write-Verbose "Starting Customization"
 		domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddonFeatures $AddonFeatures
@@ -4137,7 +4135,7 @@ switch ($PsCmdlet.ParameterSetName)
 	###################################################
 	If ($CloneOK)
 	{
-		write-verbose "Waiting System Ready"
+		Write-Host -ForegroundColor Gray "Waiting for firstboot finished"
 		test-user -whois Administrator
 		write-Verbose "Starting Customization"
 		domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddonFeatures $AddonFeatures
@@ -4199,7 +4197,7 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
 	###################################################
 	If ($CloneOK)
 	    {
-		write-verbose "Waiting System Ready"
+		Write-Host -ForegroundColor Gray
 		test-user -whois Administrator
 		write-Verbose "Starting Customization"
 		domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddonFeatures $AddonFeatures
