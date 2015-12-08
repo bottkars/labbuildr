@@ -74,7 +74,7 @@ $Guestpassword = "Password123!"
 $Rootuser = "root"
 $Guestuser = $Scenarioname.ToLower()
 $Scriptdir = "$Sourcedir\$($Scenarioname.ToLower())"
-if ($branch = 'release-2.4-coprhd')
+if ($branch -eq 'release-2.4-coprhd')
     {
     $IP = "$subnet.14"
     $Nodename = "CoprHD_Release"
