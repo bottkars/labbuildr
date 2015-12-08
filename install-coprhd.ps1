@@ -81,7 +81,7 @@ if ($branch -eq 'release-2.4-coprhd')
     } 
 else
     {
-    $ip="$subnet.245"
+    $ip = "$subnet.245"
     $Nodename = "CoprHD_Develop"
     }
 
