@@ -133,7 +133,7 @@ if (!(Test-path "$Sourcedir\$Scenarioname"))
         $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname $Nodeprefix -Scenario 6
         # $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
         $NodeClone | Set-VMXprocessor -Processorcount 4
-        $NodeClone | Set-VMXmemory -MemoryMB 8192l
+        $NodeClone | Set-VMXmemory -MemoryMB 6144
         $Config = $Nodeclone | Get-VMXConfig
         $Config = $Config -notmatch "ide1:0.fileName"
         $Config | Set-Content -Path $NodeClone.config 
