@@ -36,7 +36,7 @@ Param(
 <#Specify desired branch#>
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateSet('master','INTEGRATION-YODA-FOUNDATION','INTEGRATION-2.4.1-FOUNDATION','integration-2.4.1','VIPR-2.3-PATCH1-HF4','VIPR-2.3-PATCH1-HF3','VIPR-2.3-PATCH1-HF2','VIPR-2.3-PATCH1-HF1','bugfix-COP-17106','bugfix-COP-17153')]$branch = "master",
+[ValidateSet('release-2.4-coprhd','master','INTEGRATION-YODA-FOUNDATION','INTEGRATION-2.4.1-FOUNDATION','integration-2.4.1')]$branch = "master",
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
@@ -67,13 +67,23 @@ If ($Defaults.IsPresent)
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 
 $Scenarioname = "Coprhd"
+
 $Nodeprefix = "$($Scenarioname)Node"
 # $release = $release.tolower()
 $Guestpassword = "Password123!"
 $Rootuser = "root"
 $Guestuser = $Scenarioname.ToLower()
 $Scriptdir = "$Sourcedir\$($Scenarioname.ToLower())"
-
+if ($branch = 'release-2.4-coprhd')
+    {
+    $IP = "$subnet.14"
+    $Nodename = "CoprHD_Release"
+    } 
+else
+    {
+    $ip="$subnet.245"
+    $Nodename = "CoprHD_Develop"
+    }
 
 [uint64]$Disksize = 100GB
 $scsi = 0
@@ -102,10 +112,10 @@ if (!(Test-path "$Sourcedir\$Scenarioname"))
 
 
 
-        If (!(get-vmx $Nodeprefix$node))
+        If (!(get-vmx $Nodename))
         {
-        write-verbose " Creating $Nodeprefix$node"
-        $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node 
+        write-verbose " Creating $Nodename"
+        $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodename 
         If ($Node -eq 1){$Primary = $NodeClone}
         $Config = Get-VMXConfig -config $NodeClone.config
         Write-Verbose "Tweaking Config"
@@ -131,7 +141,6 @@ if (!(Test-path "$Sourcedir\$Scenarioname"))
         start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName
         $machinesBuilt += $($NodeClone.cloneName)
 
-        $ip="$subnet.245"
         do {
             $ToolState = Get-VMXToolsState -config $NodeClone.config
             Write-Verbose "VMware tools are in $($ToolState.State) state"
@@ -144,7 +153,7 @@ if (!(Test-path "$Sourcedir\$Scenarioname"))
         $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | out-null
         Write-Verbose "Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir
-        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -suse -device eno16777984 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $Rootuser -rootpassword $Guestpassword
+        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -suse -device eno16777984 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodename"  -rootuser $Rootuser -rootpassword $Guestpassword
         # $NodeClone | Invoke-VMXBash -Scriptblock "/sbin/rcnetwork restart" -Guestuser $Rootuser -Guestpassword $Guestpassword
         Write-Warning "Starting zypper Tasks, this may take a while"
         $Scriptblock = "zypper -n rm patterns-openSUSE-minimal_base-conflicts"
@@ -279,7 +288,7 @@ make install
 }
         else
         {
-        Write-Warning "Machine $Nodeprefix$Node already exists"
+        Write-Warning "Machine $Nodename already exists"
         break
         }
 
