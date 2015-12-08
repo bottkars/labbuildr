@@ -95,10 +95,12 @@ Write-verbose "Creating linked $Nodename of $MasterVMX"
 $Clone = $Snapshot | New-VMXLinkedClone -CloneName $Nodename -clonepath $Builddir
 write-verbose "starting customization of $($Clone.config)"
 $Content = $Clone | Get-VMXConfig
-$Content = $Content | where {$_ -NotMatch "memsize"}
-$Content = $Content | where {$_ -NotMatch "numvcpus"}
-$Content = $Content | where {$_ -NotMatch "sharedFolder"}
-$Content = $Content | where {$_ -NotMatch "svga.autodetecct"}
+$Content = $Content | where {$_ -notmatch "memsize"}
+$Content = $Content | where {$_ -notmatch "numvcpus"}
+$Content = $Content | where {$_ -notmatch "sharedFolder"}
+$Content = $Content | where {$_ -notmatch "svga.autodetecct"}
+$Content = $Content | where {$_ -notmatch "gui.applyHostDisplayScalingToGuest"}
+$Content += 'gui.applyHostDisplayScalingToGuest = "FALSE"'
 $Content += 'svga.autodetect = "TRUE" '
 $Content += 'sharedFolder0.present = "TRUE"'
 $Content += 'sharedFolder0.enabled = "TRUE"'
