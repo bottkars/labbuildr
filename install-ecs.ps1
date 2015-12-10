@@ -123,17 +123,21 @@ $Guestuser = "$($Szenarioname.ToLower())user"
 $Guestpassword  = "Password123!"
 
 
-$yumcachedir = join-path -Path $Sourcedir "ECS\yum"
+try
+    {
+    $yumcachedir = join-path -Path $Sourcedir "ECS\yum"
+    }
+catch [System.Management.Automation.DriveNotFoundException]
+    {
+    write-warning "Sourcedir not fount. Stick not inserted ?"
+    break
+    }
+
 ### checking for license file ###
 # "checkin for yum cache basdir"
 try
     {
     Test-Path $yumcachedir | Out-Null
-    }
-catch [System.Management.Automation.ItemNotFoundException]
-    {
-    write-warning "yum cache not found in sources, creating now"
-    New-Item  -ItemType Directory -Path $yumcachedir
     }
 
 $MasterVMX = get-vmx -path $MasterPath
