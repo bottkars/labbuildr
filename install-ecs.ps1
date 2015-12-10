@@ -125,66 +125,6 @@ $Guestpassword  = "Password123!"
 
 $yumcachedir = join-path -Path $Sourcedir "ECS\yum"
 ### checking for license file ###
-try
-    {
-    $ecslicense = Get-ChildItem "$Sourcedir\ecs\" -Recurse -Filter "license*.xml" -ErrorAction Stop | out-null
-    }
-catch [System.Management.Automation.ItemNotFoundException]
-    {
-    write-warning "ECS License Package not found, trying to download from EMC"
-    write-warning "Checking for Downloaded Package"
-                    $Uri = "http://www.emc.com/getecs"
-                    #$Uri = "http://www.emc.com/products-solutions/trial-software-download/ecs.htm"
-                    $request = Invoke-WebRequest -Uri $Uri # -UseBasicParsing 
-                    $DownloadLinks = $request.Links | where href -match "zip"
-                    foreach ($Link in $DownloadLinks)
-                        {
-                        $Url = $link.href
-                        $FileName = Split-Path -Leaf -Path $Url
-                        if (!(test-path  $Sourcedir\$FileName) -or $forcedownload.IsPresent)
-                        {
-                                    
-                        $ok = Get-labyesnoabort -title "Could not find $Filename containing license.xml locally" -message "Should we Download $FileName from ww.emc.com ?" 
-                        switch ($ok)
-                            {
-
-                            "0"
-                                {
-                                Write-Verbose "$FileName not found, trying Download"
-                                if (!( Get-LABFTPFile -Source $URL -Target $Sourcedir\$FileName -verbose -Defaultcredentials))
-                                    { 
-                                    write-warning "Error Downloading file $Url, Please check connectivity"
-                                    Remove-Item -Path $Sourcedir\$FileName -Verbose
-                                    }
-                                }
-                             "1"
-                             {}   
-                            default
-                                {
-                                Write-Verbose "User requested Abort"
-                                exit
-                                }
-                            }
-                        
-                        }
-
-                        if ((Test-Path "$Sourcedir\$FileName") -and (!($noextract.ispresent)))
-                            {
-                            Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\ECS\"
-                            $ecslicense = Get-ChildItem "$Sourcedir\ecs\" -Recurse -Filter "license*.xml"
-                            }
-                        else
-                            {
-                            if (!$noextract.IsPresent)
-                                {
-                                exit
-                                }
-                            }
-                        }
-    }
-
-
-$ecslicense = $ecslicense | where Directory -Match single
 # "checkin for yum cache basdir"
 try
     {
@@ -513,7 +453,6 @@ if ($uiconfig.ispresent)
 
     Write-Warning "Please wait up to 5 Minutes and Connect to https://$($ip):443
 Use root:ChangeMe for Login
-the license can be found in $($ecslicense.fullname)
 "
     }
 else
