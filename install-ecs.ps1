@@ -125,7 +125,7 @@ $Guestpassword  = "Password123!"
 
 try
     {
-    $yumcachedir = join-path -Path $Sourcedir "ECS\yum"
+    $yumcachedir = join-path -Path $Sourcedir "ECS\yum" -ErrorAction stop
     }
 catch [System.Management.Automation.DriveNotFoundException]
     {
