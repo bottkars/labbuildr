@@ -395,7 +395,7 @@ foreach ($Node in $machinesBuilt)
             }
         "Develop"
             {
-            $Scriptblock = "git clone -b develop --single-branch https://github.com/bottkars/ECS-CommunityEdition.git"
+            $Scriptblock = "git clone -b develop --single-branch https://github.com/EMCECS/ECS-CommunityEdition.git"
             }
         }
     Write-Verbose $Scriptblock
@@ -409,7 +409,8 @@ foreach ($Node in $machinesBuilt)
         }
 
     
-    
+    docker_image_name = "emccorp/ecs-software"
+
     Write-Warning "Installing ECS Singlenode, this may take a while ..."
     $Logfile =  "/home/ecsuser/ecsinst_step1.log"
 
