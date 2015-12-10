@@ -129,7 +129,7 @@ try
     }
 catch [System.Management.Automation.DriveNotFoundException]
     {
-    write-warning "Sourcedir not fount. Stick not inserted ?"
+    write-warning "Sourcedir not found. Stick not inserted ?"
     break
     }
 
@@ -139,7 +139,11 @@ try
     {
     Test-Path $yumcachedir | Out-Null
     }
-
+catch [System.Management.Automation.ItemNotFoundException]
+    {
+    write-warning "yum cache not found in sources, creating now"
+    New-Item  -ItemType Directory -Path $yumcachedir
+    }
 $MasterVMX = get-vmx -path $MasterPath
 if (!$MasterVMX)
     {
