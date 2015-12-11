@@ -438,7 +438,7 @@ $Scriptlets = ('echo "/dev/sdb1 /ecs/uuid-1 xfs defaults 0 0" >> /etc/fstab',
 foreach ($Scriptblock in $Scriptlets)
     {
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile /tmp/dockerstart.log
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
     }
 
 
