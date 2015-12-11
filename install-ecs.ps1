@@ -52,7 +52,7 @@ $Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$uiconfig,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateSet(100GB,500GB,520GB)][uint64]$Disksize = 100GB,
+[ValidateSet(150GB,500GB,520GB)][uint64]$Disksize = 520GB,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath = '.\CentOS7 Master',
@@ -426,8 +426,22 @@ foreach ($Node in $machinesBuilt)
     $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks sdb --ethadapter eno16777984 --hostname $($NodeClone.vmxname) &> /tmp/ecsinst_step1.log"  
    # $Expect = "/usr/bin/expect -c 'spawn /usr/bin/sudo -s $Scriptblock;expect `"*password*:`" { send `"Password123!\r`" }' &> /tmp/ecsinst.log"
 
+
+
+    Write-Host "Modifying startup"
+
+$Scriptlets = ('echo "/dev/sdb1 /ecs/uuid-1 xfs defaults 0 0" >> /etc/fstab',
+'systemctl enable docker.service',
+'echo "docker start ecsstandalone" >>/etc/rc.local',
+'chmod +x /etc/rc.d/rc.local')
+
+foreach ($Scriptblock in $Scriptlets)
+    {
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile /tmp/dockerstart.log
+    }
+
+
 <#
     if ($bugfix.IsPresent)
         {
