@@ -417,7 +417,7 @@ foreach ($Node in $machinesBuilt)
         }
 
     
-    docker_image_name = "emccorp/ecs-software"
+    # docker_image_name = "emccorp/ecs-software"
 
     Write-Warning "Installing ECS Singlenode, this may take a while ..."
     $Logfile =  "/home/ecsuser/ecsinst_step1.log"
