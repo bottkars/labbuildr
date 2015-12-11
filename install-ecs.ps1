@@ -393,9 +393,9 @@ foreach ($Node in $machinesBuilt)
     Write-Verbose "Clonig $Scenario" 
     switch ($Branch)
         {
-        "2.0"
+        default
             {
-            $Scriptblock = "git clone -b master https://github.com/EMCECS/ECS-CommunityEdition"
+            $Scriptblock = "git clone -b master https://github.com/EMCECS/ECS-CommunityEdition.git"
             }
         "2.1"
             {
