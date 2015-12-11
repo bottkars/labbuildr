@@ -37,11 +37,11 @@ $Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$FullClone,
 
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('12288','20480','30720','51200','65536')]$Memory = "20480",
+[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('12288','16384','20480','30720','51200','65536')]$Memory = "16384",
 
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateSet("2.0","2.1","Develop")]$Branch,
+[ValidateSet("2.0","2.1","Develop",'master')]$Branch = 'master',
 <#fixes the Docker -i issue from GiT#>
 #[switch]$bugfix,
 <#Adjusts some Timeouts#>

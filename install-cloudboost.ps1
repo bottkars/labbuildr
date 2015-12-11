@@ -24,7 +24,7 @@
 This will convert cloudboost ESX Template 
 .EXAMPLE
 .\install-cloudboost.ps1 -MasterPath .\cloudboost-ESXi5-5.1.0.6695 -Defaults  
-This will Install default Cloud Array
+This will Install default Cloud boost
 #>
 [CmdletBinding()]
 Param(
