@@ -25,7 +25,7 @@
 Param(
 ### import parameters
 <# for the Import, we specify the Path to the Sources. 
-Sources are the Root of the Extracted ScaleIO_VMware_SW_Download.zip
+Sources are the Root of the Extracted coprhd build.zip
 If not available, it will be downloaded from http://www.emc.com/scaleio
 The extracte OVA will be dehydrated to a VMware Workstation Master #>
 [Parameter(ParameterSetName = "import",Mandatory=$false)][String]
@@ -39,9 +39,6 @@ The extracte OVA will be dehydrated to a VMware Workstation Master #>
 [Parameter(ParameterSetName = "defaults",Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [String]$CoprHD_DevKit = ".\CoprHDDevKit-*",
-<# Starting Node #>
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
@@ -96,12 +93,11 @@ switch ($PsCmdlet.ParameterSetName)
         if (!($OVAPath = Get-ChildItem -Path "$Sourcedir\CoprHD\$CoprHD_DevKit" -recurse -Filter "*.ova" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
             {
                     write-warning "Checking for Downloaded Package"
-                    $Url = "devkit/ws/CH-coprhd-controller-coprhd-devkit/packaging/appliance-images/openSUSE/13.2/CoprHDDevKit/build/*zip*/build.zip"
+                    $Url = "https://build.coprhd.org/jenkins/job/CH-coprhd-controller-coprhd-devkit/ws/CH-coprhd-controller-coprhd-devkit/packaging/appliance-images/openSUSE/13.2/CoprHDDevKit/build/*zip*/build.zip"
                     $FileName = Split-Path -Leaf -Path $Url
-                        if (!(test-path  $Sourcedir\$FileName) -or $forcedownload.IsPresent)
+                    if (!(test-path  $Sourcedir\$FileName) -or $forcedownload.IsPresent)
                         {
-                                    
-                        $ok = Get-labyesnoabort -title "Could not find $Filename, we need to dowload from www.emc.com" -message "Should we Download $FileName from ww.emc.com ?" 
+                        $ok = Get-labyesnoabort -title "Could not find $Filename, we need to dowload from build.coprhd.org" -message "Should we Download $FileName" 
                         switch ($ok)
                             {
 
@@ -121,12 +117,11 @@ switch ($PsCmdlet.ParameterSetName)
                                 exit
                                 }
                             }
-                        
                         }
 
                         if ((Test-Path "$Sourcedir\$FileName") -and (!($noextract.ispresent)))
                             {
-                            Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\ScaleIO\$ScaleIO_Path"
+                            Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\CoprHD\$CoprHD_DevKit"
                             }
                         else
                             {
@@ -136,13 +131,9 @@ switch ($PsCmdlet.ParameterSetName)
                                 }
                             }
                         }
-            
-
-        }
-           
-        $OVAPath = Get-ChildItem -Path "$Sourcedir\ScaleIO\$ScaleIO_Path" -Recurse -Filter "*.ova"  -Exclude ".*" | Sort-Object -Descending
+        $OVAPath = Get-ChildItem -Path "$Sourcedir\CoprHD\$CoprHD_DevKit" -Recurse -Filter "*.ova"  -Exclude ".*" | Sort-Object -Descending
         $OVAPath = $OVApath[0]
-        Write-Warning "Creating ScaleIO Master for $($ovaPath.Basename), may take a while"
+        Write-Warning "Creating CoprHD DevKit$Sourcedir\CoprHD\$CoprHD_DevKit Master for $($ovaPath.Basename), may take a while"
         & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --name=$($ovaPath.Basename) $ovaPath.FullName $PSScriptRoot  #
         $MasterVMX = get-vmx -path ".\$($ovaPath.Basename)"
         if (!$MasterVMX.Template) 
