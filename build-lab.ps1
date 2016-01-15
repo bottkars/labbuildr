@@ -790,7 +790,7 @@ function update-fromGit
             [string]$Repo,
             [string]$RepoLocation,
             [string]$branch,
-            [string]$latest_local_Git,
+            [datetime]$latest_local_Git,
             [string]$Destination,
             [switch]$delete
             )
@@ -813,6 +813,7 @@ function update-fromGit
             }
         [datetime]$latest_OnGit = $request.Headers.'Last-Modified'
                 Write-Verbose "We have $repo version $latest_local_Git, $latest_OnGit is online !"
+                $latest_local_Git -lt $latest_OnGit
                 if ($latest_local_Git -lt $latest_OnGit -or $force.IsPresent )
                     {
                     $Updatepath = "$Builddir\Update"
