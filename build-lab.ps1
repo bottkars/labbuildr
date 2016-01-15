@@ -427,7 +427,7 @@ Version Of Networker Modules
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
-	[ValidateSet('nmm8221','nmm822','nmm8211','nmm8212','nmm8214','nmm8216','nmm8217','nmm8218','nmm822','nmm821','nmm300', 'nmm301', 'nmm2012', 'nmm3013', 'nmm82','nmm85','nmm85.BR1','nmm85.BR2','nmm85.BR3','nmm85.BR4','nmm90.DA','nmm9001')]
+	[ValidateSet('nmm8221','nmm822','nmm8211','nmm8212','nmm8214','nmm8216','nmm8217','nmm8218','nmm822','nmm821','nmm300', 'nmm301', 'nmm2012', 'nmm3013', 'nmm82','nmm85','nmm85.BR1','nmm85.BR2','nmm85.BR3','nmm85.BR4','nmm90.DA','nmm9001','nmm9002')]
 $nmm_ver,
 	
 <# Indicates to install Networker Server with Scenario #>
@@ -463,7 +463,20 @@ mus be extracted to [sourcesdir]\[nw_ver], ex. c:\sources\nw82
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
-    [ValidateSet('nw8222','nw8221','nw822','nw8218','nw8217','nw8216','nw8215','nw8214','nw8213','nw8212','nw8211','nw821','nw8205','nw8204','nw8203','nw8202','nw82','nw8116','nw8115','nw8114', 'nw8113','nw8112', 'nw811',  'nw8105','nw8104','nw8102', 'nw81','nw85','nw85.BR1','nw85.BR2','nw85.BR3','nw85.BR4','nw90.DA','nw9001','nwunknown')]
+    [ValidateSet('nw90.DA','nw9001','nw9002',
+    'nw8223','nw8222','nw8221','nw822',
+    'nw8218','nw8217','nw8216','nw8215','nw8214','nw8213','nw8212','nw8211','nw821',
+    'nw8206','nw8205','nw8204','nw8203','nw8202','nw82',
+    'nw8137','nw8136','nw8135','nw8134','nw8133','nw8132','nw8131','nw813',
+    'nw8127','nw8126','nw8125','nw8124','nw8123','nw8122','nw8121','nw812',
+    'nw8119','nw8118','nw8117','nw8116','nw8115','nw8114', 'nw8113','nw8112', 'nw811',
+    'nw8105','nw8104','nw8103','nw8102','nw81',
+    'nw81044','nw8043','nw8042','nw8041',
+    'nw8036','nw8035','nw81034','nw8033','nw8032','nw8031',
+    'nw8026','nw8025','nw81024','nw8023','nw8022','nw8021',
+    'nw8016','nw8015','nw81014','nw8013','nw8012',
+    'nw8007','nw8006','nw8005','nw81004','nw8003','nw8002','nw80',
+    'nwunknown')]
     $nw_ver,
 
 ### network Parameters ######
