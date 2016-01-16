@@ -1796,10 +1796,10 @@ if (!($DConly.IsPresent))
         }
 	if (($NMM.IsPresent) -and ($Blanknode -eq $false)) { $Sourcever += $nmm_ver }
 	# if ($NW.IsPresent) { $Sourcever += $nw_ver }
-	if ($NWServer.IsPresent -or $NW.IsPresent -or $NMM.IsPresent ) 
-        { 
-        $Sourcever += $nw_ver 
-        }
+	# if ($NWServer.IsPresent -or $NW.IsPresent -or $NMM.IsPresent ) 
+    #    { 
+    #    $Sourcever += $nw_ver 
+    #    }
 	if ($SQL.IsPresent -or $AlwaysOn.IsPresent) 
         {
         $Sourcever +=  $AAGDB #$SQLVER,
@@ -2640,17 +2640,14 @@ if ($Panorama.IsPresent)
 
 if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
     {
-
-    if ((Test-Path "$NW_Sourcedir/$nw_ver/win_x64/networkr/networker.msi") -or (Test-Path "$NW_Sourcedir/$nw_ver/win_x64/networkr/lgtoclnt-8.5.0.0.exe"))
+    if ((Test-Path "$NW_Sourcedir/$nw_ver/win_x64/networkr/networker.msi") -or (Test-Path "$NW_Sourcedir/$nw_ver/win_x64/networkr/lgtoclnt-*.exe"))
         {
         Write-Verbose "Networker $nw_ver found"
         }
-    elseif ($nw_ver -lt "nw84")
+    else #if ($nw_ver -lt "nw84")
         {
-
         Write-Warning "We need to get $NW_ver, trying Automated Download"
         $NW_download_ok  =  receive-LABNetworker -nw_ver $nw_ver -arch win_x64 -Destination $NW_Sourcedir -unzip # $CommonParameter
-
         if ($NW_download_ok)
             {
             Write-Host -ForegroundColor Magenta "Received $nw_ver"
