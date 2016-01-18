@@ -2660,7 +2660,8 @@ if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
 }
 if ($NMM.IsPresent)
     {
-    if ((Test-Path "$Sourcedir/$nmm_ver/win_x64/networkr/NetWorker Module for Microsoft.msi") -or (Test-Path "$Sourcedir/$nmm_ver/win_x64/networkr/NWVSS.exe"))
+    $NMM_Path = Join-Path $Sourcedir "Networker"
+    if ((Test-Path "$NMM_Path/$nmm_ver/win_x64/networkr/NetWorker Module for Microsoft.msi") -or (Test-Path "$NMM_Path/$nmm_ver/win_x64/networkr/NWVSS.exe"))
         {
         Write-Verbose "Networker NMM $nmm_ver found"
         }
