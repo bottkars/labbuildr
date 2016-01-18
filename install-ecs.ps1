@@ -538,24 +538,28 @@ else
     {
     #>
 $Methods = ('UploadLicense','CreateObjectVarray','CreateDataStore','InsertVDC','CreateObjectVpool','CreateNamespace')
- 
+$Namespace_Name = "ns1"
+$Pool_Name = "Pool_$Node" 
+$Replicaton_Group_Name = "RG_1"
+$Datastore_Name  = "DS1"
+$VDC_NAME = "VDC_$Node"
 
 foreach ( $Method in $Methods )
     {
     Write-Warning "running Method $Method, monitor tail -f /var/log/vipr/emcvipr-object/ssm.log"
-    $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=ns1 --ObjectVArray=OVA1 --ObjectVPool=OVP1 --UserName=$Guestuser --DataStoreName=ds1 --VDCName=vdc1 --MethodName=$Method" 
+    $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$Namespace_Name --ObjectVArray=$Pool_Name --ObjectVPool=$Replicaton_Group_Name --UserName=$Guestuser --DataStoreName=$Datastore_Name --VDCName=$VDC_NAME --MethodName=$Method" 
     Write-verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/$Method.log"
     }
 $Method = 'CreateUser'
 Write-Warning "running Method $Method"
-$Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=ns1 --ObjectVArray=OVA1 --ObjectVPool=OVP1 --UserName=$Guestuser --DataStoreName=ds1 --VDCName=vdc1 --MethodName=$Method;exit 0" 
+$Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$Namespace_Name --ObjectVArray=$Pool_Name --ObjectVPool=$Replicaton_Group_Name --UserName=$Guestuser --DataStoreName=$Datastore_Name --VDCName=$VDC_NAME --MethodName=$Method;exit 0" 
 Write-verbose $Scriptblock
 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/$Method.log"
 
 $Method = 'CreateSecretKey'
 Write-Warning "running Method $Method"
-$Scriptblock = "/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=ns1 --ObjectVArray=OVA1 --ObjectVPool=OVP1 --UserName=$Guestuser --DataStoreName=ds1 --VDCName=vdc1 --MethodName=$Method" 
+$Scriptblock = "/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$Namespace_Name --ObjectVArray=$Pool_Name --ObjectVPool=$Replicaton_Group_Name --UserName=$Guestuser --DataStoreName=$Datastore_Name --VDCName=$VDC_NAME --MethodName=$Method" 
 Write-verbose $Scriptblock
 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/$Method.log"
 }
