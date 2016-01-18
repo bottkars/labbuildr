@@ -1792,7 +1792,7 @@ if (!($DConly.IsPresent))
         $Scenarioname = "Exchange"
         $Scenario = 1
         }
-	if (($NMM.IsPresent) -and ($Blanknode -eq $false)) { $Sourcever += $nmm_ver }
+	#  if (($NMM.IsPresent) -and ($Blanknode -eq $false)) { $Sourcever += $nmm_ver }
 	# if ($NW.IsPresent) { $Sourcever += $nw_ver }
 	# if ($NWServer.IsPresent -or $NW.IsPresent -or $NMM.IsPresent ) 
     #    { 
@@ -2904,7 +2904,7 @@ If ($Java8_required)
     }
 if (!($SourceOK = test-source -SourceVer $Sourcever -SourceDir $Sourcedir))
 {
-	Write-Verbose "Sourcecomlete: $SourceOK"
+	Write-Verbose "Sourcecomplete: $SourceOK"
 	break
 }
 if ($DefaultGateway) {$AddGateway  = "-DefaultGateway $DefaultGateway"}
