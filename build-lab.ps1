@@ -798,8 +798,6 @@ function get-update
 ####
 function update-fromGit
 {
-
-
 	param (
             [string]$Repo,
             [string]$RepoLocation,
@@ -850,7 +848,7 @@ function update-fromGit
                     {
                     Status "No update required for $repo on $branch, already newest version "                    
                     }
-return $Isnew
+if ($Isnew) {return $true}
 }
 #####
 function Extract-Zip
