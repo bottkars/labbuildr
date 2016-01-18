@@ -37,11 +37,11 @@ $Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$FullClone,
 
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('12288','16384','20480','30720','51200','65536')]$Memory = "16384",
+[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('8192','12288','16384','20480','30720','51200','65536')]$Memory = "8192",
 
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateSet("2.0","2.1","Develop",'master')]$Branch = 'master',
+[ValidateSet("release-2.1","Develop",'master','feature-ecs-2.2')]$Branch = 'master',
 <#fixes the Docker -i issue from GiT#>
 #[switch]$bugfix,
 <#Adjusts some Timeouts#>
@@ -121,7 +121,6 @@ $Rootpassword  = "Password123!"
 
 $Guestuser = "$($Szenarioname.ToLower())user"
 $Guestpassword  = "Password123!"
-
 
 try
     {
@@ -371,6 +370,17 @@ foreach ($Node in $machinesBuilt)
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
+    Write-Warning "INSTALLING VERSIONLOCK"
+    $Scriptblock="yum install yum-plugin-versionlock -y"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+    
+    Write-Warning "locking vmware tools"
+    $Scriptblock="yum versionlock open-vm-tools"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+
+
     #### end ssh
     if ($update.IsPresent)
         {
@@ -386,26 +396,25 @@ foreach ($Node in $machinesBuilt)
 
     $Packages = "git tar wget"
     Write-Verbose "Checking for $Packages"
-    $Scriptblock = "yum install $Packages"
+    $Scriptblock = "yum install $Packages -y"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
     Write-Verbose "Clonig $Scenario" 
     switch ($Branch)
         {
+            "feature-ecs-2.2"
+            {
+            $Docker_imagename = "emccorp/ecs-software-2.2"
+            $Docker_imagetag = "2.2.0.0-b"
+            }
         default
             {
-            $Scriptblock = "git clone -b master https://github.com/EMCECS/ECS-CommunityEdition.git"
-            }
-        "2.1"
-            {
-            $Scriptblock = "git clone -b release-2.1 --single-branch https://github.com/EMCECS/ECS-CommunityEdition.git"
-            }
-        "Develop"
-            {
-            $Scriptblock = "git clone -b develop --single-branch https://github.com/EMCECS/ECS-CommunityEdition.git"
+            $Docker_imagename = "emccorp/ecs-software-2.1"
+            $Docker_Tag = "latest"
             }
         }
+    $Scriptblock = "git clone -b $Branch --single-branch https://github.com/EMCECS/ECS-CommunityEdition.git"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
     foreach ($remotehost in ('emccodevmstore001.blob.core.windows.net','registry-1.docker.io','index.docker.io'))
@@ -423,7 +432,14 @@ foreach ($Node in $machinesBuilt)
     $Logfile =  "/home/ecsuser/ecsinst_step1.log"
 
     # $Scriptblock = "/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks sdb --ethadapter eno16777984 --hostname $($NodeClone.vmxname)" 
-    $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks sdb --ethadapter eno16777984 --hostname $($NodeClone.vmxname) &> /tmp/ecsinst_step1.log"  
+    if ($Branch -match "feature-ecs-2.2")
+        {
+        $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks sdb --ethadapter eno16777984 --hostname $($NodeClone.vmxname) --imagename $Docker_imagename --imagetag $Docker_imagetag &> /tmp/ecsinst_step1.log"  
+        }
+    else
+        {
+        $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks sdb --ethadapter eno16777984 --hostname $($NodeClone.vmxname) &> /tmp/ecsinst_step1.log"  
+        }
    # $Expect = "/usr/bin/expect -c 'spawn /usr/bin/sudo -s $Scriptblock;expect `"*password*:`" { send `"Password123!\r`" }' &> /tmp/ecsinst.log"
 
     Write-Verbose $Scriptblock
@@ -513,7 +529,17 @@ if ($AdjustTimeouts.isPresent)
     Write-verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/SED.log" # -Confirm:$false -SleepSec 60
     }
+<#
+if ($Branch -eq "feature-ecs-2.2")
+    {
+    $Methods = ('UploadLicense','CreateObjectVarray','InsertVDC','CreateObjectVpool','CreateNamespace')
+    }
+else
+    {
+    #>
 $Methods = ('UploadLicense','CreateObjectVarray','CreateDataStore','InsertVDC','CreateObjectVpool','CreateNamespace')
+ 
+
 foreach ( $Method in $Methods )
     {
     Write-Warning "running Method $Method, monitor tail -f /var/log/vipr/emcvipr-object/ssm.log"
