@@ -2699,13 +2699,14 @@ if ($NMM.IsPresent)
                     {
                     $Zipfilename = "$NMM_scvmm_ver.zip"
                     }
-                $Zipfile = Join-Path $Sourcedir $Zipfilename
+                $Zipfile = Join-Path $NMM_Path $Zipfilename
                 if (!(test-path  $Zipfile))
                     {
                     Write-Verbose "$Zipfilename not found, trying Download"
                     if (!( Get-LABFTPFile -Source $URL -Target $Zipfile -verbose -Defaultcredentials))
                         { 
                         write-warning "Error Downloading file $Url, Please check connectivity"
+                        break
                         }
                     }
                 $Destinationdir =  "$($Zipfile.replace(".zip"," "))"
