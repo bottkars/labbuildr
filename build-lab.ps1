@@ -2640,7 +2640,7 @@ if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
     {
     if ((Test-Path "$NW_Sourcedir/$nw_ver/win_x64/networkr/networker.msi") -or (Test-Path "$NW_Sourcedir/$nw_ver/win_x64/networkr/lgtoclnt-*.exe"))
         {
-        Write-Verbose "Networker $nw_ver found"
+        Write-Host "Networker $nw_ver found"
         }
     else #if ($nw_ver -lt "nw84")
         {
