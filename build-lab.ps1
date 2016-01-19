@@ -3836,7 +3836,7 @@ switch ($PsCmdlet.ParameterSetName)
         if ($Cluster.IsPresent) {$AddonFeatures = "$AddonFeatures, Failover-Clustering, RSAT-Clustering, RSAT-Clustering-AutomationServer, RSAT-Clustering-CmdInterface, WVR"}
         if ($BlankHV.IsPresent) {$AddonFeatures = "$AddonFeatures, Hyper-V, RSAT-Hyper-V-Tools, Multipath-IO"}
         
-		foreach ($Node in ($Blankstart..$BlankNodes))
+		foreach ($Node in ($Blankstart..($BlankNodes+$Blankstart)))
 		{
 			###################################################
 			# Setup of a Blank Node
