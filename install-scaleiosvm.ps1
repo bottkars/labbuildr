@@ -79,7 +79,7 @@ The extracte OVA will be dehydrated to a VMware Workstation Master #>
 <# SDC only3#>
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "sdsonly",Mandatory=$false)][switch]$sdc,
-<# Configure automatically configures the Scalio Cluster and will always install 3 Nodes !  #>
+<# Configure automatically configures the ScaleIO Cluster and will always install 3 Nodes !  #>
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$configure,
 <# we use SingleMDM parameter with Configure for test and dev to Showcase ScaleIO und LowMem Machines #>
@@ -289,7 +289,7 @@ switch ($PsCmdlet.ParameterSetName)
                 write-host "Tweaking memory for $Nodeprefix$Node"
                 $memorytweak = $NodeClone | Set-VMXmemory -MemoryMB 1536
                 } 
-            Write-Verbose "Starting ScalioNode$Node"
+            Write-Verbose "Starting ScaleIONode$Node"
             # Set-VMXVnet -Adapter 0 -vnet vmnet2
             start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | out-null
             # $NodeClone | Set-VMXSharedFolderState -enabled
