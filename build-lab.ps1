@@ -2394,9 +2394,26 @@ if ($SCVMM.IsPresent)
     }# end SCOMPREREQ
 #######
 
+
+
 #################
 if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
-{
+    {
+    $AAGURL = "https://community.emc.com/servlet/JiveServlet/download/38-111250/AWORKS.zip"
+    $URL = $AAGURL
+    $FileName = Split-Path -Leaf -Path $Url
+    Write-Verbose "Testing $FileName in $Sourcedir"
+    if (!(test-path  "$Sourcedir\Aworks\AdventureWorks2012.bak"))
+        {
+        Write-Verbose "Trying Download"
+        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
+            { 
+            write-warning "Error Downloading file $Url, Please check connectivity"
+            exit
+            }
+        #New-Item -ItemType Directory -Path "$Sourcedir\Aworks" -Force
+        Extract-Zip -zipfilename $Sourcedir\$FileName -destination $Sourcedir
+        }
 
     if (!($SQL_OK = receive-labsql -SQLVER $SQLVER -Destination $Sourcedir -Product_Dir "SQL" -extract))
         {
@@ -4025,10 +4042,10 @@ switch ($PsCmdlet.ParameterSetName)
 			if ($NMM.IsPresent)
 			{
 				write-verbose "Install NWClient"
-				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_Scriptroot -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
 				write-verbose "Install NMM"
                 
-				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_Scriptroot -Script install-nmm.ps1 -interactive -Parameter $nmm_ver
+				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-nmm.ps1 -interactive -Parameter $nmm_ver
 			}# End NoNmm
 			Write-Verbose "Importing Database"
 			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script import-database.ps1 -interactive
