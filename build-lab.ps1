@@ -705,7 +705,7 @@ $Default_Subnet = "192.168.2.0"
 $Default_IPv6Prefix = "FD00::"
 $Default_IPv6PrefixLength = '8'
 $Default_AddressFamily = "IPv4"
-$latest_ScaleIOVer = '1.32-2451.4'
+$latest_ScaleIOVer = '1.32-3455.5'
 $ScaleIO_OS = "Windows"
 $ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
 $latest_nmm = 'nmm9002'
@@ -2396,6 +2396,15 @@ if ($SCVMM.IsPresent)
 
 #################
 if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
+{
+
+    if (!($SQL_OK = receive-labsql -SQLVER $SQLVER -Destination $Sourcedir -Product_Dir "SQL" -extract))
+        {
+        break
+        }
+
+}
+<#
     {
 
     $SQL2012_inst = "http://download.microsoft.com/download/4/C/7/4C7D40B9-BCF8-4F8A-9E76-06E9B92FE5AE/ENU/x64/SQLFULL_x64_ENU_Install.exe"
@@ -2614,7 +2623,7 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
                 }
             }
           } #end switch
-    }#end $SQLEXPRESS
+    }end SQL#>
 if ($Panorama.IsPresent)
     {
     $Targetir = "$Sourcedir/panorama"
