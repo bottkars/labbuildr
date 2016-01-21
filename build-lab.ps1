@@ -2357,9 +2357,13 @@ if ($SCVMM.IsPresent)
     Write-Warning "Entering SCVMM Prereq Section"
     [switch]$SQL=$true
     $Prereqdir = "prereq"
+    if ($SC_Version -match "2012")
+        {
+        $SQLVER = "SQL2012SP2"
+        }
     If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCVMM -Destination $Sourcedir -unzip))
         {
-        Write-warning "We could not receive scom"
+        Write-warning "We could not receive scvmm"
         return
         }
 
@@ -2372,6 +2376,11 @@ if ($SCOM.IsPresent)
     Write-Warning "Entering SCOM Prereq Section"
     [switch]$SQL=$true
     $Prereqdir = "prereq"
+    if ($SC_Version -match "2012")
+        {
+        $SQLVER = "SQL2012SP2"
+        }
+
     If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCOM -Destination $Sourcedir -unzip))
         {
         Write-warning "We could not receive scom"
@@ -2380,18 +2389,6 @@ if ($SCOM.IsPresent)
 
     }# end SCOMPREREQ
 ############## SCVMM download section
-if ($SCVMM.IsPresent)
-  {
-    Write-Warning "Entering SCVMM Prereq Section"
-    [switch]$SQL=$true
-    $Prereqdir = "prereq"
-    If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCVMM -Destination $Sourcedir -unzip))
-        {
-        Write-warning "We could not receive scom"
-        return
-        }
-
-    }# end SCOMPREREQ
 #######
 
 
