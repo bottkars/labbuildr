@@ -41,7 +41,7 @@ $Sourcedir = 'h:\sources',
 
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateSet("release-2.1","Develop",'master','feature-ecs-2.2')]$Branch = 'master',
+[ValidateSet("release-2.1","Develop",'master')]$Branch = 'master',
 <#fixes the Docker -i issue from GiT#>
 #[switch]$bugfix,
 <#Adjusts some Timeouts#>
@@ -244,6 +244,20 @@ foreach ($Node in $machinesBuilt)
     
     ##### Prepare
     $Logfile = "/tmp/1_prepare.log"
+
+    $Scriptblock =  "systemctl start NetworkManager"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  #-logfile $Logfile
+
+    $Scriptblock =  "/etc/init.d/network restart"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  #-logfile $Logfile
+
+    $Scriptblock =  "systemctl stop NetworkManager"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  #-logfile $Logfile
+
+
     Write-Warning "ssh into $ip with root:Password123! and Monitor $Logfile"
     write-verbose "Disabling IPv&"
     $Scriptblock = "echo 'net.ipv6.conf.all.disable_ipv6 = 1' >> /etc/sysctl.conf;sysctl -p"
@@ -403,15 +417,15 @@ foreach ($Node in $machinesBuilt)
     Write-Verbose "Clonig $Scenario" 
     switch ($Branch)
         {
-            "feature-ecs-2.2"
+            "release-2.1"
             {
-            $Docker_imagename = "emccorp/ecs-software-2.2"
-            $Docker_imagetag = "2.2.0.0-b"
+            $Docker_imagename = "emccorp/ecs-software-2.1"
+            $Docker_imagetag = "latest"
             }
         default
             {
-            $Docker_imagename = "emccorp/ecs-software-2.1"
-            $Docker_Tag = "latest"
+            $Docker_imagename = "emccorp/ecs-software-2.2"
+            $Docker_imagetag = "latest"
             }
         }
     $Scriptblock = "git clone -b $Branch --single-branch https://github.com/EMCECS/ECS-CommunityEdition.git"
