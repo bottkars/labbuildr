@@ -37,7 +37,7 @@ $Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$FullClone,
 
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('8192','12288','16384','20480','30720','51200','65536')]$Memory = "8192",
+[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('8192','12288','16384','20480','30720','51200','65536')]$Memory = "12288",
 
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
