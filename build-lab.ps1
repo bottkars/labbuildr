@@ -1267,13 +1267,17 @@ switch ($PsCmdlet.ParameterSetName)
         $Branch | Set-Content -Path "$Builddir\labbuildr.branch" -Force # -Verbose
 
         if ($ReloadProfile)
-                    {
-                    Remove-Item .\Update -Recurse -Confirm:$false
-				    status "Update Done"
-                    status "press any key for reloading Modules"
-                    pause
-                    ./profile.ps1
-                    }
+            {
+            Remove-Item .\Update -Recurse -Confirm:$false
+			status "Update Done"
+            status "press any key for reloading Modules"
+            pause
+            ./profile.ps1
+            }
+        else
+            {
+            ./build-lab.ps1
+            }
 
     return 
     #$ReloadProfile
