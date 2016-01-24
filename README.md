@@ -6,8 +6,7 @@ labbuildr 2016
 For the 2016 release, the following changes applied to labbuildr:
 
 - seperation of scripts to labbuildr-scripts
-  - this allows scripts to be used independant
-  - 
+  - this allows scripts to be used independant  
 - new scenarios
 - new 2016 Support
 - Support for Syctr TP4 ( SCOM and SCVMM )
@@ -17,8 +16,7 @@ Currently Prared for testing:
 - SCOM
 - SQL
 - Exchange 2016
-- Networker
-- 
+- Networker   
 Currently not tested / ported
 Always on, Sharepoint, SOFS, E2013
 ========
@@ -48,7 +46,6 @@ labbuildr deploys the folowing scenarios:
   - Standalone VM´s
   - Mastering ESXi Installs
   - Automating EMC ScaleIO Installs
-  - ....
  
 
   
