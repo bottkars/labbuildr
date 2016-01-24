@@ -2,6 +2,20 @@
 labbuildr 2016
 =======
 
+labbuildr is a Framework based upon vmxtookit.
+labbuildr allows on demand creation of lab environments
+labbuildr deploys the folowing scenarios:
+  - Exchange / Exchange DAG 2013
+  - SQL / SQL Always on 2012/2014
+  - Hyper-V
+  - Standalone VM´s
+  - Mastering ESXi Installs
+  - Automating EMC ScaleIO Installs
+ 
+
+  
+Labbuildr requires dowload of a prebuilt sources.vhd and prebuilt os masters.
+See https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released for details
 
 For the 2016 release, the following changes applied to labbuildr:
 
@@ -53,20 +67,7 @@ labbuildr --  |
 
 
 
-labbuildr is a Framework based upon vmxtookit.
-labbuildr allows on demand creation of lab environments
-labbuildr deploys the folowing scenarios:
-  - Exchange / Exchange DAG 2013
-  - SQL / SQL Always on 2012/2014
-  - Hyper-V
-  - Standalone VM´s
-  - Mastering ESXi Installs
-  - Automating EMC ScaleIO Installs
- 
 
-  
-Labbuildr requires dowload of a prebuilt sources.vhd and prebuilt os masters.
-See https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released for details
 Contributing   
 ==========
 Please contribute in any way to the project. Specifically, normalizing differnet image sizes, locations, and intance types would be easy adds to enhance the usefulness of the project.
