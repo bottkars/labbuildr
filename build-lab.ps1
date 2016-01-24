@@ -1287,11 +1287,12 @@ switch ($PsCmdlet.ParameterSetName)
     }# end shortcut
     "Version"
         {
-				Write-Host -ForegroundColor Magenta "labbuildr version $major-$Edition on branch $Current_labbuildr_branch"
+				Write-Host -ForegroundColor Magenta -NoNewline "labbuildr version $major-$Edition on branch : " 
+                Write-Host -ForegroundColor Cyan "$Current_labbuildr_branch"
 
                 if ($Latest_labbuildr_git)
                     {
-                    Status "Git Release $Latest_labbuildr_git"
+                    Status "labbuildr Git Release $Latest_labbuildr_git"
                     }
                 if ($Latest_vmxtoolkit_git)
                     {
