@@ -1,19 +1,19 @@
 
-labbuildr testing !
+labbuildr 2016
 =======
 
 this is the desting branch for the new labbuikdr version
 testing gets megred from develop once scenarios run fine !
 =======
 
-For the "piranha" release, the following changes applied to labbuildr:
+For the 2016 release, the following changes applied to labbuildr:
 
 - seperation of scripts to labbuildr-scripts
   - this allows scripts to be used independant
   - 
 - new scenarios
 - new 2016 Support
-- Support for Syctr TP3 ( SCOM and SCVMM )
+- Support for Syctr TP4 ( SCOM and SCVMM )
 - Support for Spaces Direct ( currently with Blank Nods Scenario )
 Currently Prared for testing:
 - Hyper-V
@@ -70,3 +70,15 @@ Unless required by applicable law or agreed to in writing, software distributed 
 Support
 ==========
 Please file bugs and issues at the Github issues page. The code and documentation are released with no warranties or SLAs and are intended to be supported through a community driven process.
+==========
+Installing
+
+´´´Powershell
+$Uri = "https://gist.githubusercontent.com/bottkars/410fe056809c38d96562/raw/install-labbuildr.ps1"
+$DownloadLocation = "$Env:USERPROFILE\Downloads"
+$File = Split-Path -Leaf $Uri
+$OutFile = Join-Path $DownloadLocation $File
+Invoke-WebRequest -Uri $Uri -OutFile $OutFile
+Unblock-File -Path $Outfile
+Invoke-Expression $OutFile
+´´´
