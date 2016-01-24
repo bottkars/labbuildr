@@ -18,16 +18,32 @@ Currently Prared for testing:
 - Exchange 2016
 - Networker   
 Currently not tested / ported
-Always on, Sharepoint, SOFS, E2013
+Always on, Sharepoint, SOFS, E2013   
+
+Update    
 ========
 to update from labbuildr harmony elese, run update for 3 times:
 build-lab.ps1 -updatefrom git
 build-lab.ps1 -updatefrom -branch develop
 build-lab.ps1 -update -branch testing
 
-to newly install, symply download labbuildr,labbuildr-scripts and vmxtoolkit
 
-Directory Structure
+Install    
+=========
+### Fully automated Installation from powershell
+````Powershell
+$Uri = "https://gist.githubusercontent.com/bottkars/410fe056809c38d96562/raw/install-labbuildr.ps1"
+$DownloadLocation = "$Env:USERPROFILE\Downloads"
+$File = Split-Path -Leaf $Uri
+$OutFile = Join-Path $DownloadLocation $File
+Invoke-WebRequest -Uri $Uri -OutFile $OutFile
+Unblock-File -Path $Outfile
+Invoke-Expression $OutFile
+````
+
+
+Directory Structure   
+=========
 
 labbuildr --  |    
               |--scripts    
@@ -43,37 +59,26 @@ labbuildr deploys the folowing scenarios:
   - Exchange / Exchange DAG 2013
   - SQL / SQL Always on 2012/2014
   - Hyper-V
-  - Standalone VM¬¥s
+  - Standalone VM¥s
   - Mastering ESXi Installs
   - Automating EMC ScaleIO Installs
  
 
   
-Labbuildr requires doewload of a prebuilt sources.vhd and prebuilt os masters.
+Labbuildr requires dowload of a prebuilt sources.vhd and prebuilt os masters.
 See https://community.emc.com/blogs/bottk/2014/06/16/announcement-labbuildr-released for details
-Contributing
+Contributing   
 ==========
 Please contribute in any way to the project. Specifically, normalizing differnet image sizes, locations, and intance types would be easy adds to enhance the usefulness of the project.
 
-Licensing
+Licensing   
 ==========
 Licensed under the Apache License, Version 2.0 (the License); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS"ù BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-Support
+Support   
 ==========
 Please file bugs and issues at the Github issues page. The code and documentation are released with no warranties or SLAs and are intended to be supported through a community driven process.
-==========
 
-<h2 id="Installation">Installation</h2>
-### Fully automated Installation from powershell
-````Powershell
-$Uri = "https://gist.githubusercontent.com/bottkars/410fe056809c38d96562/raw/install-labbuildr.ps1"
-$DownloadLocation = "$Env:USERPROFILE\Downloads"
-$File = Split-Path -Leaf $Uri
-$OutFile = Join-Path $DownloadLocation $File
-Invoke-WebRequest -Uri $Uri -OutFile $OutFile
-Unblock-File -Path $Outfile
-Invoke-Expression $OutFile
-````
+
