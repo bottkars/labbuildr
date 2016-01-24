@@ -1306,7 +1306,7 @@ switch ($PsCmdlet.ParameterSetName)
                     Status "labtools Git Release $Latest_labtools_git"
                     }
 
-                Write-Host -ForegroundColor Gray '   Copyright 2014 Karsten Bott
+                Write-Host -ForegroundColor Gray '   Copyright 2016 Karsten Bott
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
