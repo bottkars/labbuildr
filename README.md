@@ -2,9 +2,6 @@
 labbuildr 2016
 =======
 
-this is the desting branch for the new labbuikdr version
-testing gets megred from develop once scenarios run fine !
-=======
 
 For the 2016 release, the following changes applied to labbuildr:
 
@@ -63,17 +60,18 @@ Please contribute in any way to the project. Specifically, normalizing differnet
 
 Licensing
 ==========
-Licensed under the Apache License, Version 2.0 (the ‚ÄúLicense‚Äù); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+Licensed under the Apache License, Version 2.0 (the License); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an ‚ÄúAS IS‚Äù BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS"ù BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 Support
 ==========
 Please file bugs and issues at the Github issues page. The code and documentation are released with no warranties or SLAs and are intended to be supported through a community driven process.
 ==========
-Installing
 
-¥¥¥Powershell
+<h2 id="Installation">Installation</h2>
+### Fully automated Installation from powershell
+````Powershell
 $Uri = "https://gist.githubusercontent.com/bottkars/410fe056809c38d96562/raw/install-labbuildr.ps1"
 $DownloadLocation = "$Env:USERPROFILE\Downloads"
 $File = Split-Path -Leaf $Uri
@@ -81,4 +79,5 @@ $OutFile = Join-Path $DownloadLocation $File
 Invoke-WebRequest -Uri $Uri -OutFile $OutFile
 Unblock-File -Path $Outfile
 Invoke-Expression $OutFile
+````
 ¥¥¥
