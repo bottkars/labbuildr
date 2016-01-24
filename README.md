@@ -36,10 +36,10 @@ Always on, Sharepoint, SOFS, E2013
 
 Update    
 ========
-to update from labbuildr harmony elese, run update for 3 times:
-build-lab.ps1 -updatefrom git
-build-lab.ps1 -updatefrom -branch develop
-build-lab.ps1 -update -branch testing
+to update from labbuildr harmony release, run update for 3 times:   
+build-lab.ps1 -updatefromgit   
+build-lab.ps1 -updatefromgit -branch master      
+build-lab.ps1 -update -branch master   
 
 
 Install    
