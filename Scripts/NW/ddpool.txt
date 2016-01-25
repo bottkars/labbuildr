@@ -1,6 +1,0 @@
-﻿create type: NSR pool;
-devices: ddvenode1_nw85;
-label template: ddvenode1;
-media type required: Data Domain;
-name: ddvenode1;
-pool type: Backup;

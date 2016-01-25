@@ -28,13 +28,13 @@
 Param(
 
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$Defaults = $true,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateSet("vipr-2.3.0.0.828","vipr-2.2.1.0.1106")]$viprmaster = "vipr-2.3.0.0.828",
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateSet("vipr-2.3.0.0.828","vipr-2.2.1.0.1106","vipr-2.4.0.0.519")]$viprmaster = "vipr-2.4.0.0.519",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
 
 )
 
 $targetname = "vipr1"
-# $viprmaster = "vipr-2.2.1.0.1106"
+$ViprZip = "ViPR_Controller_Download.zip"
 $Viprver = $viprmaster.Replace("vipr-","")
 Write-Verbose $Viprver
 $ViprMajor = $Viprver.Substring(0,3)
@@ -83,7 +83,7 @@ foreach ($Disk in $Disks)
         if (!(Test-Path "$Sourcedir\ViPR*$ViprMajor*\vipr*controller-1+0.ova"))
             {
             Write-Warning "Vipr OVA for $Viprver not Found, we try for Zip Package in Sources"
-            if (!(Test-Path "$Sourcedir\$viprmaster.zip"))
+            if (!(Test-Path "$Sourcedir\$ViprZip"))
                 {
                 Write-Warning "Vipr Controller Download Package not found
                                we will try download"
@@ -99,12 +99,14 @@ foreach ($Disk in $Disks)
                 Get-LABFTPFile -Source $ViprURL -Defaultcredentials -Target "$Sourcedir\$viprmaster.zip" -Verbose
 
                 }
-            "2.3.0.0.828"
+            default
                 {
                 $ViprURL = "https://downloads.emc.com/emc-com/usa/ViPR/ViPR_Controller_Download.zip"
+                $ViprZip = Split-Path -Leaf $ViprURL
                 try
                     {
-                    $Request = Invoke-WebRequest $ViprURL -UseBasicParsing -Method Head
+                    # $Request = Invoke-WebRequest $ViprURL -UseBasicParsing -Method Head
+                    Start-BitsTransfer -DisplayName ViPR -Description "ViPR Controller" -Destination D:\Sources -Source  $ViprURL
                     }
                 catch [Exception] 
                     {
@@ -112,7 +114,7 @@ foreach ($Disk in $Disks)
                     Write-Warning $_.Exception
                     exit
                     }
-                
+                <#
                 $Length = $request.Headers.'content-length'
                 # Start-BitsTransfer -Source $ViprURL -Destination "$Sourcedir\$viprmaster.zip" -Verbose
                 try
@@ -130,17 +132,18 @@ foreach ($Disk in $Disks)
                     Write-Warning $_.Exception
                     exit
                     }
+                   
                 if ( (Get-ChildItem  "$Sourcedir\$viprmaster.zip").length -ne $Length)
                     {
                     Write-Warning "File size does not match"
                     Remove-Item "$Sourcedir\$viprmaster.zip" -Force
                     exit
-                    }                       
+                    }  #>                      
                 }
             }
 
              }
-            $Zipfiles = Get-ChildItem "$Sourcedir\$viprmaster.zip"
+            $Zipfiles = Get-ChildItem "$Sourcedir\$ViprZip"
             $Zipfiles = $Zipfiles| Sort-Object -Property Name -Descending
 		    $LatestZip = $Zipfiles[0].FullName
 	        write-verbose "We are going to extract $LatestZip now"    	

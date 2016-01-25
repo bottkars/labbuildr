@@ -4,7 +4,7 @@
 .DESCRIPTION
   install-scaleiosvm is  the a vmxtoolkit solutionpack for configuring and deploying scaleio svm´s
       
-      Copyright 2014 Karsten Bott
+      Copyright 2016 Karsten Bott
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -18,24 +18,14 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://github.com/bottkars/labbuildr/wiki/SolutionPacks#install-scaleiosvm  
+   https://github.com/bottkars/labbuildr/wiki/SolutionPacks#install-coprhddevkit 
 .EXAMPLE
-.\install-scaleiosvm.ps1 -Sourcedir d:\sources
-.EXAMPLE
-.\install-scaleiosvm.ps1 -configure -Defaults
-This will Install and Configure a 3-Node ScaleIO with default Configuration
-.EXAMPLE
-.\install-scaleiosvm.ps1 -SCALEIOMaster ".\ScaleIOVM_1.32.402.1" -configure -singlemdm
-This will Configure a SIO Cluster with 3 Nodes and Single MDM
-.EXAMPLE
-.\install-scaleiosvm.ps1 -SCALEIOMaster ".\ScaleIOVM_1.32.402.1" -Disks 3  -sds
-This will install a Single Node SDS
 #>
 [CmdletBinding(DefaultParametersetName = "import")]
 Param(
 ### import parameters
 <# for the Import, we specify the Path to the Sources. 
-Sources are the Root of the Extracted ScaleIO_VMware_SW_Download.zip
+Sources are the Root of the Extracted coprhd build.zip
 If not available, it will be downloaded from http://www.emc.com/scaleio
 The extracte OVA will be dehydrated to a VMware Workstation Master #>
 [Parameter(ParameterSetName = "import",Mandatory=$false)][String]
@@ -48,43 +38,19 @@ The extracte OVA will be dehydrated to a VMware Workstation Master #>
 <# The ScaleIO Master created from -sourcedir  #>
 [Parameter(ParameterSetName = "defaults",Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[Parameter(ParameterSetName = "sdsonly",Mandatory=$false)]
-[String]$SCALEIOMaster = ".\ScaleIOVM*",
-<# Number of Nodes, default to 3 #>
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
-[Parameter(ParameterSetName = "sdsonly",Mandatory=$false)][int32]$Nodes=3,
-<# Starting Node #>
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
-[Parameter(ParameterSetName = "sdsonly",Mandatory=$false)][int32]$Startnode = 1,
-<# Number of disks to add, default is 3#>
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "sdsonly",Mandatory=$false)]
-[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateRange(1,3)][int32]$Disks = 3,
+[String]$CoprHD_DevKit = ".\CoprHDDevKit-*",
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[Parameter(ParameterSetName = "sdsonly",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
+[ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
 <# Name of the domain, .local added#>
-[Parameter(ParameterSetName = "sdsonly",Mandatory=$false)]
 [Parameter(ParameterSetName = "install",Mandatory=$False)]
 [ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain = "labbuildr",
 
 <# VMnet to use#>
-[Parameter(ParameterSetName = "sdsonly",Mandatory=$false)]
 [Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$vmnet = "vmnet2",
-<# SDS only#>
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "sdsonly",Mandatory=$true)][switch]$sds,
-<# SDC only3#>
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "sdsonly",Mandatory=$false)][switch]$sdc,
-<# Configure automatically configures the ScaleIO Cluster and will always install 3 Nodes !  #>
+<# Configure automatically configures the Scalio Cluster and will always install 3 Nodes !  #>
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$configure,
-<# we use SingleMDM parameter with Configure for test and dev to Showcase ScaleIO und LowMem Machines #>
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$False)][switch]$singlemdm,
 <# Use labbuildr Defaults.xml #>
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
 <# Path to a Defaults.xml #>
@@ -93,14 +59,8 @@ The extracte OVA will be dehydrated to a VMware Workstation Master #>
 #requires -version 3.0
 #requires -module vmxtoolkit
 #requires -module labtools
-If ($singlemdm.IsPresent)
-    {
-    [switch]$configure = $true
-    }
 if ($configure.IsPresent)
     {
-    [switch]$sds = $true
-    [switch]$sdc = $true
     }
 If ($Defaults.IsPresent)
     {
@@ -112,8 +72,6 @@ If ($Defaults.IsPresent)
      $DefaultGateway = $labdefaults.DefaultGateway
      $Sourcedir = $labdefaults.Sourcedir
      }
-$ScaleIO_OS = "VMware"
-$ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
 
 switch ($PsCmdlet.ParameterSetName)
 {
@@ -132,21 +90,14 @@ switch ($PsCmdlet.ParameterSetName)
                 exit
                 }
             }
-        if (!($OVAPath = Get-ChildItem -Path "$Sourcedir\ScaleIO\$ScaleIO_Path" -recurse -Filter "*.ova" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
+        if (!($OVAPath = Get-ChildItem -Path "$Sourcedir\CoprHD\$CoprHD_DevKit" -recurse -Filter "*.ova" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
             {
                     write-warning "Checking for Downloaded Package"
-                    $Uri = "http://www.emc.com/products-solutions/trial-software-download/scaleio.htm"
-                    $request = Invoke-WebRequest -Uri $Uri -UseBasicParsing
-                    $DownloadLinks = $request.Links | where href -match "VMWARE"
-                    foreach ($Link in $DownloadLinks)
+                    $Url = "https://build.coprhd.org/jenkins/job/CH-coprhd-controller-coprhd-devkit/ws/CH-coprhd-controller-coprhd-devkit/packaging/appliance-images/openSUSE/13.2/CoprHDDevKit/build/*zip*/build.zip"
+                    $FileName = Split-Path -Leaf -Path $Url
+                    if (!(test-path  $Sourcedir\$FileName) -or $forcedownload.IsPresent)
                         {
-                        $Url = $link.href
-                        # $URL = "ftp://ftp.emc.com/Downloads/ScaleIO/ScaleIO_VMware_SW_Download.zip"
-                        $FileName = Split-Path -Leaf -Path $Url
-                        if (!(test-path  $Sourcedir\$FileName) -or $forcedownload.IsPresent)
-                        {
-                                    
-                        $ok = Get-labyesnoabort -title "Could not find $Filename, we need to dowload from www.emc.com" -message "Should we Download $FileName from ww.emc.com ?" 
+                        $ok = Get-labyesnoabort -title "Could not find $Filename, we need to dowload from build.coprhd.org" -message "Should we Download $FileName" 
                         switch ($ok)
                             {
 
@@ -166,12 +117,11 @@ switch ($PsCmdlet.ParameterSetName)
                                 exit
                                 }
                             }
-                        
                         }
 
                         if ((Test-Path "$Sourcedir\$FileName") -and (!($noextract.ispresent)))
                             {
-                            Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\ScaleIO\$ScaleIO_Path"
+                            Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\CoprHD\$CoprHD_DevKit"
                             }
                         else
                             {
@@ -181,13 +131,9 @@ switch ($PsCmdlet.ParameterSetName)
                                 }
                             }
                         }
-            
-
-        }
-           
-        $OVAPath = Get-ChildItem -Path "$Sourcedir\ScaleIO\$ScaleIO_Path" -Recurse -Filter "*.ova"  -Exclude ".*" | Sort-Object -Descending
+        $OVAPath = Get-ChildItem -Path "$Sourcedir\CoprHD\$CoprHD_DevKit" -Recurse -Filter "*.ova"  -Exclude ".*" | Sort-Object -Descending
         $OVAPath = $OVApath[0]
-        Write-Warning "Creating ScaleIO Master for $($ovaPath.Basename), may take a while"
+        Write-Warning "Creating CoprHD DevKit$Sourcedir\CoprHD\$CoprHD_DevKit Master for $($ovaPath.Basename), may take a while"
         & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --name=$($ovaPath.Basename) $ovaPath.FullName $PSScriptRoot  #
         $MasterVMX = get-vmx -path ".\$($ovaPath.Basename)"
         if (!$MasterVMX.Template) 
@@ -289,7 +235,7 @@ switch ($PsCmdlet.ParameterSetName)
                 write-host "Tweaking memory for $Nodeprefix$Node"
                 $memorytweak = $NodeClone | Set-VMXmemory -MemoryMB 1536
                 } 
-            Write-Verbose "Starting ScaleIONode$Node"
+            Write-Verbose "Starting ScalioNode$Node"
             # Set-VMXVnet -Adapter 0 -vnet vmnet2
             start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | out-null
             # $NodeClone | Set-VMXSharedFolderState -enabled

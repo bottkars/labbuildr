@@ -1,2 +1,0 @@
-﻿. type: NSR Data Domain;name: ddvenode1
-update SNMP community string: networker;

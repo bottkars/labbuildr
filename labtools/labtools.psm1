@@ -117,6 +117,25 @@ if (!(Test-Path $Defaultsfile))
     Save-LABdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
 }
 
+function Set-LABNoDomainCheck
+{
+	[CmdletBinding(HelpUri = "https://github.com/bottkars/LABbuildr/wiki/LABtools#Set-LABNoDomainCheck")]
+	param (
+	[Parameter(ParameterSetName = "1", Mandatory = $false,Position = 2)]$Defaultsfile=".\defaults.xml",
+    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 1)][switch]$enabled
+    )
+if (!(Test-Path $Defaultsfile))
+    {
+    Write-Warning "Creating New defaultsfile"
+    New-LABdefaults -Defaultsfile $Defaultsfile
+    }
+    $Defaults = Get-LABdefaults -Defaultsfile $Defaultsfile
+    $Defaults.NoDomainCheck = $enabled.IsPresent
+    Write-Verbose "Setting $NoDomainCheck"
+    Save-LABdefaults -Defaultsfile $Defaultsfile -Defaults $Defaults
+}
+
+
 function Set-LABpuppet
 {
 	[CmdletBinding(HelpUri = "https://github.com/bottkars/LABbuildr/wiki/LABtools#Set-LABpuppet")]
@@ -159,8 +178,8 @@ function Set-LABnmm
 {
 	[CmdletBinding(HelpUri = "https://github.com/bottkars/LABbuildr/wiki/LABtools#Set-LABnmm")]
 	param (
-	[Parameter(ParameterSetName = "1", Mandatory = $false,Position = 1)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
-    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 2)][switch]$NMM
+	[Parameter(ParameterSetName = "1", Mandatory = $false,Position = 2)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+    [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 1)][switch]$NMM
     )
     if (!(Test-Path $Defaultsfile))
     {
@@ -197,7 +216,7 @@ function Set-LABHostKey
 {
 	[CmdletBinding(HelpUri = "https://github.com/bottkars/LABbuildr/wiki/LABtools#Set-LABHostKey")]
 	param (
-	[Parameter(ParameterSetName = "1", Mandatory = $false,Position)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+	[Parameter(ParameterSetName = "1", Mandatory = $false,Position = 2)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
     [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 1)]$HostKey
     )
     if (!(Test-Path $Defaultsfile))
@@ -216,9 +235,8 @@ function Set-LABBuilddomain
 	[CmdletBinding(HelpUri = "https://github.com/bottkars/LABbuildr/wiki/LABtools#Set-LABBuilddomain")]
 	param (
 	[Parameter(ParameterSetName = "1", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
-    [ValidateLength(1,15)]
     [Parameter(ParameterSetName = "1", Mandatory = $true,Position = 1)]
-    [ValidatePattern("^[a-zA-Z\s]+$")][string]$builddomain
+	[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain
     )
     if (!(Test-Path $Defaultsfile))
     {
@@ -311,6 +329,7 @@ process
         $object | Add-Member -MemberType NoteProperty -Name NW_Ver -Value $Default.config.nw_ver
         $object | Add-Member -MemberType NoteProperty -Name NMM -Value $Default.config.nmm
         $object | Add-Member -MemberType NoteProperty -Name Masterpath -Value $Default.config.Masterpath
+        $object | Add-Member -MemberType NoteProperty -Name NoDomainCheck -Value $Default.config.NoDomainCheck
         $object | Add-Member -MemberType NoteProperty -Name Puppet -Value $Default.config.Puppet
         $object | Add-Member -MemberType NoteProperty -Name PuppetMaster -Value $Default.config.PuppetMaster
         $object | Add-Member -MemberType NoteProperty -Name HostKey -Value $Default.config.Hostkey
@@ -371,10 +390,10 @@ process {
         $xmlcontent += ("<Sourcedir>$($Defaults.Sourcedir)</Sourcedir>")
         $xmlcontent += ("<ScaleIOVer>$($Defaults.ScaleIOVer)</ScaleIOVer>")
         $xmlcontent += ("<Masterpath>$($Defaults.Masterpath)</Masterpath>")
+        $xmlcontent += ("<NoDomainCheck>$($Defaults.NoDomainCheck)</NoDomainCheck>")
         $xmlcontent += ("<Puppet>$($Defaults.Puppet)</Puppet>")
         $xmlcontent += ("<PuppetMaster>$($Defaults.PuppetMaster)</PuppetMaster>")
         $xmlcontent += ("<Hostkey>$($Defaults.HostKey)</Hostkey>")
-
         $xmlcontent += ("</config>")
         $xmlcontent | Set-Content $defaultsfile
         }
@@ -549,12 +568,18 @@ function New-LABdefaults
         $xmlcontent += ("<Sourcedir></Sourcedir>")
         $xmlcontent += ("<ScaleIOVer></ScaleIOVer>")
         $xmlcontent += ("<Masterpath></Masterpath>")
+        $xmlcontent += ("<NoDomainCheck></NoDomainCheck>")
         $xmlcontent += ("<Puppet></Puppet>")
         $xmlcontent += ("<PuppetMaster></PuppetMaster>")
         $xmlcontent += ("<HostKey></HostKey>")
         $xmlcontent += ("</config>")
         $xmlcontent | Set-Content $defaultsfile
      }
+
+
+
+
+
 
 function Start-LABScenario
     {

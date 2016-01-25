@@ -37,11 +37,11 @@ $Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$FullClone,
 
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('12288','20480','30720','51200','65536')]$Memory = "20480",
+[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('8192','12288','16384','20480','30720','51200','65536')]$Memory = "12288",
 
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateSet("2.0","2.1","Develop")]$Branch,
+[ValidateSet("release-2.1","Develop",'master')]$Branch = 'master',
 <#fixes the Docker -i issue from GiT#>
 #[switch]$bugfix,
 <#Adjusts some Timeouts#>
@@ -52,7 +52,7 @@ $Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$uiconfig,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateSet(100GB,500GB,520GB)][uint64]$Disksize = 520GB,
+[ValidateSet(150GB,500GB,520GB)][uint64]$Disksize = 520GB,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath = '.\CentOS7 Master',
@@ -65,7 +65,8 @@ $Sourcedir = 'h:\sources',
 [int32]$Startnode = 1,
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ipaddress]$subnet = "192.168.2.0",
-[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateLength(1,15)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
+[Parameter(ParameterSetName = "install",Mandatory=$False)]
+[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain = "labbuildr",
 [Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = "vmnet2",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
 
@@ -121,69 +122,17 @@ $Rootpassword  = "Password123!"
 $Guestuser = "$($Szenarioname.ToLower())user"
 $Guestpassword  = "Password123!"
 
-
-$yumcachedir = join-path -Path $Sourcedir "ECS\yum"
-### checking for license file ###
 try
     {
-    $ecslicense = Get-ChildItem "$Sourcedir\ecs\" -Recurse -Filter "license*.xml" -ErrorAction Stop | out-null
+    $yumcachedir = join-path -Path $Sourcedir "ECS\yum" -ErrorAction stop
     }
-catch [System.Management.Automation.ItemNotFoundException]
+catch [System.Management.Automation.DriveNotFoundException]
     {
-    write-warning "ECS License Package not found, trying to download from EMC"
-    write-warning "Checking for Downloaded Package"
-                    $Uri = "http://www.emc.com/getecs"
-                    #$Uri = "http://www.emc.com/products-solutions/trial-software-download/ecs.htm"
-                    $request = Invoke-WebRequest -Uri $Uri # -UseBasicParsing 
-                    $DownloadLinks = $request.Links | where href -match "zip"
-                    foreach ($Link in $DownloadLinks)
-                        {
-                        $Url = $link.href
-                        $FileName = Split-Path -Leaf -Path $Url
-                        if (!(test-path  $Sourcedir\$FileName) -or $forcedownload.IsPresent)
-                        {
-                                    
-                        $ok = Get-labyesnoabort -title "Could not find $Filename containing license.xml locally" -message "Should we Download $FileName from ww.emc.com ?" 
-                        switch ($ok)
-                            {
-
-                            "0"
-                                {
-                                Write-Verbose "$FileName not found, trying Download"
-                                if (!( Get-LABFTPFile -Source $URL -Target $Sourcedir\$FileName -verbose -Defaultcredentials))
-                                    { 
-                                    write-warning "Error Downloading file $Url, Please check connectivity"
-                                    Remove-Item -Path $Sourcedir\$FileName -Verbose
-                                    }
-                                }
-                             "1"
-                             {}   
-                            default
-                                {
-                                Write-Verbose "User requested Abort"
-                                exit
-                                }
-                            }
-                        
-                        }
-
-                        if ((Test-Path "$Sourcedir\$FileName") -and (!($noextract.ispresent)))
-                            {
-                            Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\ECS\"
-                            $ecslicense = Get-ChildItem "$Sourcedir\ecs\" -Recurse -Filter "license*.xml"
-                            }
-                        else
-                            {
-                            if (!$noextract.IsPresent)
-                                {
-                                exit
-                                }
-                            }
-                        }
+    write-warning "Sourcedir not found. Stick not inserted ?"
+    break
     }
 
-
-$ecslicense = $ecslicense | where Directory -Match single
+### checking for license file ###
 # "checkin for yum cache basdir"
 try
     {
@@ -194,7 +143,6 @@ catch [System.Management.Automation.ItemNotFoundException]
     write-warning "yum cache not found in sources, creating now"
     New-Item  -ItemType Directory -Path $yumcachedir
     }
-
 $MasterVMX = get-vmx -path $MasterPath
 if (!$MasterVMX)
     {
@@ -296,6 +244,20 @@ foreach ($Node in $machinesBuilt)
     
     ##### Prepare
     $Logfile = "/tmp/1_prepare.log"
+
+    $Scriptblock =  "systemctl start NetworkManager"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  #-logfile $Logfile
+
+    $Scriptblock =  "/etc/init.d/network restart"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  #-logfile $Logfile
+
+    $Scriptblock =  "systemctl stop NetworkManager"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  #-logfile $Logfile
+
+
     Write-Warning "ssh into $ip with root:Password123! and Monitor $Logfile"
     write-verbose "Disabling IPv&"
     $Scriptblock = "echo 'net.ipv6.conf.all.disable_ipv6 = 1' >> /etc/sysctl.conf;sysctl -p"
@@ -422,6 +384,17 @@ foreach ($Node in $machinesBuilt)
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
+    Write-Warning "INSTALLING VERSIONLOCK"
+    $Scriptblock="yum install yum-plugin-versionlock -y"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+    
+    Write-Warning "locking vmware tools"
+    $Scriptblock="yum versionlock open-vm-tools"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+
+
     #### end ssh
     if ($update.IsPresent)
         {
@@ -437,26 +410,25 @@ foreach ($Node in $machinesBuilt)
 
     $Packages = "git tar wget"
     Write-Verbose "Checking for $Packages"
-    $Scriptblock = "yum install $Packages"
+    $Scriptblock = "yum install $Packages -y"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
     Write-Verbose "Clonig $Scenario" 
     switch ($Branch)
         {
-        "2.0"
+            "release-2.1"
             {
-            $Scriptblock = "git clone -b master https://github.com/EMCECS/ECS-CommunityEdition"
+            $Docker_imagename = "emccorp/ecs-software-2.1"
+            $Docker_imagetag = "latest"
             }
-        "2.1"
+        default
             {
-            $Scriptblock = "git clone -b release-2.1 --single-branch https://github.com/EMCECS/ECS-CommunityEdition.git"
-            }
-        "Develop"
-            {
-            $Scriptblock = "git clone -b develop --single-branch https://github.com/bottkars/ECS-CommunityEdition.git"
+            $Docker_imagename = "emccorp/ecs-software-2.2"
+            $Docker_imagetag = "latest"
             }
         }
+    $Scriptblock = "git clone -b $Branch --single-branch https://github.com/EMCECS/ECS-CommunityEdition.git"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
     foreach ($remotehost in ('emccodevmstore001.blob.core.windows.net','registry-1.docker.io','index.docker.io'))
@@ -468,16 +440,40 @@ foreach ($Node in $machinesBuilt)
         }
 
     
-    
+    # docker_image_name = "emccorp/ecs-software"
+
     Write-Warning "Installing ECS Singlenode, this may take a while ..."
     $Logfile =  "/home/ecsuser/ecsinst_step1.log"
 
     # $Scriptblock = "/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks sdb --ethadapter eno16777984 --hostname $($NodeClone.vmxname)" 
-    $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks sdb --ethadapter eno16777984 --hostname $($NodeClone.vmxname) &> /tmp/ecsinst_step1.log"  
+    if ($Branch -match "feature-ecs-2.2")
+        {
+        $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks sdb --ethadapter eno16777984 --hostname $($NodeClone.vmxname) --imagename $Docker_imagename --imagetag $Docker_imagetag &> /tmp/ecsinst_step1.log"  
+        }
+    else
+        {
+        $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks sdb --ethadapter eno16777984 --hostname $($NodeClone.vmxname) &> /tmp/ecsinst_step1.log"  
+        }
    # $Expect = "/usr/bin/expect -c 'spawn /usr/bin/sudo -s $Scriptblock;expect `"*password*:`" { send `"Password123!\r`" }' &> /tmp/ecsinst.log"
 
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
+
+
+    Write-Host -ForegroundColor Magenta "Setting automatic startup of docker and ecs container"
+
+    $Scriptlets = ("echo '/dev/sdb1 /ecs/uuid-1 xfs defaults 0 0' `>> /etc/fstab",
+    "systemctl enable docker.service",
+    "echo 'docker start ecsstandalone' `>>/etc/rc.local",
+    'chmod +x /etc/rc.d/rc.local')
+
+    foreach ($Scriptblock in $Scriptlets)
+        {
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+        }
+
+
 <#
     if ($bugfix.IsPresent)
         {
@@ -512,7 +508,6 @@ if ($uiconfig.ispresent)
 
     Write-Warning "Please wait up to 5 Minutes and Connect to https://$($ip):443
 Use root:ChangeMe for Login
-the license can be found in $($ecslicense.fullname)
 "
     }
 else
@@ -548,23 +543,37 @@ if ($AdjustTimeouts.isPresent)
     Write-verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/SED.log" # -Confirm:$false -SleepSec 60
     }
+<#
+if ($Branch -eq "feature-ecs-2.2")
+    {
+    $Methods = ('UploadLicense','CreateObjectVarray','InsertVDC','CreateObjectVpool','CreateNamespace')
+    }
+else
+    {
+    #>
 $Methods = ('UploadLicense','CreateObjectVarray','CreateDataStore','InsertVDC','CreateObjectVpool','CreateNamespace')
+$Namespace_Name = "ns1"
+$Pool_Name = "Pool_$Node" 
+$Replicaton_Group_Name = "RG_1"
+$Datastore_Name  = "DS1"
+$VDC_NAME = "VDC_$Node"
+
 foreach ( $Method in $Methods )
     {
     Write-Warning "running Method $Method, monitor tail -f /var/log/vipr/emcvipr-object/ssm.log"
-    $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=ns1 --ObjectVArray=OVA1 --ObjectVPool=OVP1 --UserName=$Guestuser --DataStoreName=ds1 --VDCName=vdc1 --MethodName=$Method" 
+    $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$Namespace_Name --ObjectVArray=$Pool_Name --ObjectVPool=$Replicaton_Group_Name --UserName=$Guestuser --DataStoreName=$Datastore_Name --VDCName=$VDC_NAME --MethodName=$Method" 
     Write-verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/$Method.log"
     }
 $Method = 'CreateUser'
 Write-Warning "running Method $Method"
-$Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=ns1 --ObjectVArray=OVA1 --ObjectVPool=OVP1 --UserName=$Guestuser --DataStoreName=ds1 --VDCName=vdc1 --MethodName=$Method;exit 0" 
+$Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$Namespace_Name --ObjectVArray=$Pool_Name --ObjectVPool=$Replicaton_Group_Name --UserName=$Guestuser --DataStoreName=$Datastore_Name --VDCName=$VDC_NAME --MethodName=$Method;exit 0" 
 Write-verbose $Scriptblock
 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/$Method.log"
 
 $Method = 'CreateSecretKey'
 Write-Warning "running Method $Method"
-$Scriptblock = "/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=ns1 --ObjectVArray=OVA1 --ObjectVPool=OVP1 --UserName=$Guestuser --DataStoreName=ds1 --VDCName=vdc1 --MethodName=$Method" 
+$Scriptblock = "/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$Namespace_Name --ObjectVArray=$Pool_Name --ObjectVPool=$Replicaton_Group_Name --UserName=$Guestuser --DataStoreName=$Datastore_Name --VDCName=$VDC_NAME --MethodName=$Method" 
 Write-verbose $Scriptblock
 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/$Method.log"
 }
