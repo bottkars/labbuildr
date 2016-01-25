@@ -24,7 +24,7 @@
     build-lab.ps1 -createshortcut
     Creates a Desktop Shortcut for labbuildr
 .EXAMPLE
-    PS F:\labbuildr_beta> .\build-lab.ps1 -HyperV -ScaleIO -clusteredmdm -Disks 3 -defaults -SCVMM -ConfigureVMM -Sourcedir G:\Sources
+    PS F:\labbuildr .\build-lab.ps1 -HyperV -ScaleIO -clusteredmdm -Disks 3 -defaults -SCVMM -ConfigureVMM -Sourcedir G:\Sources
     installs a Hyper-V Cluster with 3 Nodes, ScaleIO MDM, SDS,SDC deployed, SCVMM will be deployed on node 3
 .EXAMPLE
     .\build-lab.ps1 -defaults -DConly -NW  
