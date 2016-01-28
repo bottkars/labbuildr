@@ -3325,15 +3325,20 @@ switch ($PsCmdlet.ParameterSetName)
         $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features"
         if ($Cluster.IsPresent) {$AddonFeatures = "$AddonFeatures, Failover-Clustering, RSAT-Clustering, RSAT-Clustering-AutomationServer, RSAT-Clustering-CmdInterface, WVR"}
         if ($BlankHV.IsPresent) {$AddonFeatures = "$AddonFeatures, Hyper-V, RSAT-Hyper-V-Tools, Multipath-IO"}
+        $Blank_End = (($Blankstart+$BlankNodes)-1)
+
+		foreach ($Node in ($Blankstart..$Blank_End))
         
-		foreach ($Node in ($Blankstart..($BlankNodes+($Blankstart-1))))
 		{
 			###################################################
 			# Setup of a Blank Node
 			# Init
-            $NodePrefix = "Gennode"
-			$Nodeip = "$IPv4Subnet.18$Node"
-			$Nodename = "$NodePrefix$Node"
+            $Node_range = 180
+            $Node_byte = $Node_range+$node
+            $Nodeip = "$IPv4Subnet.$Node_byte"
+            $Nodeprefix = "Node"
+            $NamePrefix = "GEN"
+		    $Nodename = "$NamePrefix$NodePrefix$Node"
 			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
             $ClusterIP = "$IPv4Subnet.180"
 			###################################################
