@@ -806,6 +806,7 @@ function update-fromGit
             [string]$Destination,
             [switch]$delete
             )
+        $branch =  $branch.ToLower()
         $Isnew = $false
         Write-Verbose "Using update-fromgit function for $repo"
         $Uri = "https://api.github.com/repos/$RepoLocation/$repo/commits/$branch"
