@@ -408,37 +408,65 @@ foreach ($Node in $machinesBuilt)
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
-    $Packages = "git tar wget"
+    $Packages = "git tar wget docker"
     Write-Verbose "Checking for $Packages"
     $Scriptblock = "yum install $Packages -y"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
-    Write-Verbose "Clonig $Scenario" 
-    switch ($Branch)
-        {
-            "release-2.1"
-            {
-            $Docker_imagename = "emccorp/ecs-software-2.1"
-            $Docker_imagetag = "latest"
-            }
-        default
-            {
-            $Docker_imagename = "emccorp/ecs-software-2.2"
-            $Docker_imagetag = "latest"
-            }
-        }
-    $Scriptblock = "git clone -b $Branch --single-branch https://github.com/EMCECS/ECS-CommunityEdition.git"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
-    foreach ($remotehost in ('emccodevmstore001.blob.core.windows.net','registry-1.docker.io','index.docker.io'))
+        foreach ($remotehost in ('emccodevmstore001.blob.core.windows.net','registry-1.docker.io','index.docker.io'))
         {
         Write-warning "resolving $remotehost" 
         $Scriptblock = "nslookup $remotehost"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
         }
+    Write-Verbose "Checking for offline container on $Sourcedir"
+    Write-Verbose "Clonig $Scenario" 
+    switch ($Branch)
+        {
+            "release-2.1"
+            {
+            $Docker_imagename = "emccorp/ecs-software-2.1"
+            $Docker_image = "ecs-software-2.1"
+            $Docker_imagetag = "latest"
+            }
+        default
+            {
+            $Docker_image = "ecs-software-2.2"
+            $Docker_imagename = "emccorp/ecs-software-2.2"
+            $Docker_imagetag = "latest"
+            }
+        }
+    $Scriptblock = "systemctl start docker.service"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
+
+
+if (!(Test-Path "$Sourcedir\docker\$Docker_image.tgz"))
+    {
+    New-Item -ItemType Directory "$Sourcedir\docker" -ErrorAction SilentlyContinue | Out-Null
+    Write-Verbose "Creating Offline Image for ECS $Docker_imagename"
+    $Scriptblock = "docker pull $Docker_imagename"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+
+    $Scriptblock = "docker save $($Docker_imagename):latest | gzip -c >  /mnt/hgfs/Sources/docker/$Docker_image.tgz"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword # -logfile $Logfile
+    }
+else
+    {
+    $Scriptblock = "gunzip -c /mnt/hgfs/Sources/docker/$Docker_image.tgz | docker load"
+    Write-Verbose "Creating docker fs layer from offline Image"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+    }
+
+    $Scriptblock = "git clone -b $Branch --single-branch https://github.com/EMCECS/ECS-CommunityEdition.git"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
     
     # docker_image_name = "emccorp/ecs-software"
 
