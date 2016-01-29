@@ -53,9 +53,6 @@ $Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateSet(150GB,500GB,520GB)][uint64]$Disksize = 520GB,
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath = '.\CentOS7 Master',
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [int32]$Nodes=1,
@@ -124,7 +121,7 @@ $Guestpassword  = "Password123!"
 
 try
     {
-    $yumcachedir = join-path -Path $Sourcedir "ECS\yum" -ErrorAction stop
+    $yumcachedir = join-path -Path $Sourcedir "$OS\yum" -ErrorAction stop
     }
 catch [System.Management.Automation.DriveNotFoundException]
     {
@@ -143,12 +140,21 @@ catch [System.Management.Automation.ItemNotFoundException]
     write-warning "yum cache not found in sources, creating now"
     New-Item  -ItemType Directory -Path $yumcachedir
     }
-$MasterVMX = get-vmx -path $MasterPath
-if (!$MasterVMX)
+
+$Required_Master = "CentOS7 Master"
+$OS = ($Required_Master.Split(" "))[0]
+###### checking master Present
+if (!($MasterVMX = get-vmx $Required_Master))
     {
-    Write-Warning "No Centos Master found.... exiting now"
+    Write-Warning "Required Master $Required_Master not found
+    please download and extraxt $Required_Master to .\$Required_Master
+    see: 
+    ------------------------------------------------
+    get-help $($MyInvocation.MyCommand.Name) -online
+    ------------------------------------------------"
     exit
     }
+
 if (!$MasterVMX.Template) 
             {
             write-verbose "Templating Master VMX"
@@ -170,7 +176,7 @@ if (!$MasterVMX.Template)
         write-verbose "Creating $Nodeprefix$node"
         If ($FullClone.IsPresent)
             {
-            Write-Warning "Creating full Clone of $($MasterVMX.vmxname), doing full sync now"
+            Write-Host -ForegroundColor Magenta "Creating full Clone of $($MasterVMX.vmxname), doing full sync now"
             $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$Node
             }
         else
@@ -258,7 +264,7 @@ foreach ($Node in $machinesBuilt)
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  #-logfile $Logfile
 
 
-    Write-Warning "ssh into $ip with root:Password123! and Monitor $Logfile"
+    Write-Host -ForegroundColor Magenta "ssh into $ip with root:Password123! and Monitor $Logfile"
     write-verbose "Disabling IPv&"
     $Scriptblock = "echo 'net.ipv6.conf.all.disable_ipv6 = 1' >> /etc/sysctl.conf;sysctl -p"
     Write-Verbose $Scriptblock
@@ -268,14 +274,14 @@ foreach ($Node in $machinesBuilt)
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  #-logfile $Logfile
 
-    write-Warning "Setting Kernel Parameters"
+    Write-Host -ForegroundColor Magenta "Setting Kernel Parameters"
     $Scriptblock = "echo 'kernel.pid_max=655360' >> /etc/sysctl.conf;sysctl -w kernel.pid_max=655360"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile 
 
     if ($EMC_ca.IsPresent)
         {
-        Write-Warning "Copying EMC CA Certs"
+        Write-Host -ForegroundColor Magenta "Copying EMC CA Certs"
         $files = Get-ChildItem -Path "$Sourcedir\EMC_ca"
         foreach ($File in $files)
             {
@@ -369,7 +375,7 @@ foreach ($Node in $machinesBuilt)
     ### preparing yum
     $file = "/etc/yum.conf"
     $Property = "cachedir"
-    $Scriptblock = "grep -q '^$Property' $file && sed -i 's\^$Property=/var*.\$Property=/mnt/hgfs/Sources/ECS/\' $file || echo '$Property=/mnt/hgfs/Sources/ECS/yum/`$basearch/`$releasever/' >> $file"
+    $Scriptblock = "grep -q '^$Property' $file && sed -i 's\^$Property=/var*.\$Property=/mnt/hgfs/Sources/$OS/\' $file || echo '$Property=/mnt/hgfs/Sources/$OS/yum/`$basearch/`$releasever/' >> $file"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
@@ -379,17 +385,17 @@ foreach ($Node in $machinesBuilt)
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
-    Write-Warning "Generating Yum Cache on $Sourcedir"
+    Write-Host -ForegroundColor Magenta "Generating Yum Cache on $Sourcedir"
     $Scriptblock="yum makecache"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
-    Write-Warning "INSTALLING VERSIONLOCK"
+    Write-Host -ForegroundColor Magenta "INSTALLING VERSIONLOCK"
     $Scriptblock="yum install yum-plugin-versionlock -y"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
     
-    Write-Warning "locking vmware tools"
+    Write-Host -ForegroundColor Magenta "locking vmware tools"
     $Scriptblock="yum versionlock open-vm-tools"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
@@ -416,7 +422,7 @@ foreach ($Node in $machinesBuilt)
 
         foreach ($remotehost in ('emccodevmstore001.blob.core.windows.net','registry-1.docker.io','index.docker.io'))
         {
-        Write-warning "resolving $remotehost" 
+        Write-Host -ForegroundColor Magenta "resolving $remotehost" 
         $Scriptblock = "nslookup $remotehost"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
@@ -470,7 +476,7 @@ else
     
     # docker_image_name = "emccorp/ecs-software"
 
-    Write-Warning "Installing ECS Singlenode, this may take a while ..."
+    Write-Host -ForegroundColor Magenta "Installing ECS Singlenode, this may take a while ..."
     $Logfile =  "/home/ecsuser/ecsinst_step1.log"
 
     # $Scriptblock = "/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks sdb --ethadapter eno16777984 --hostname $($NodeClone.vmxname)" 
@@ -505,7 +511,7 @@ else
 <#
     if ($bugfix.IsPresent)
         {
-        Write-Warning "Now adjusting some settings......"
+        Write-Host -ForegroundColor Magenta "Now adjusting some settings......"
 
         $DockerScripblock = ("/usr/bin/sudo -s docker exec -t  ecsstandalone cp /opt/storageos/conf/cm.object.properties /opt/storageos/conf/cm.object.properties.old",
         "docker exec -t ecsstandalone cp /opt/storageos/ecsportal/conf/application.conf /opt/storageos/ecsportal/conf/application.conf.old",
@@ -534,13 +540,13 @@ else
 if ($uiconfig.ispresent)
     {
 
-    Write-Warning "Please wait up to 5 Minutes and Connect to https://$($ip):443
+    Write-Host -ForegroundColor Magenta "Please wait up to 5 Minutes and Connect to https://$($ip):443
 Use root:ChangeMe for Login
 "
     }
 else
 	{
-Write-Warning "Starting ECS Install Step 2 for creation of Datacenters and Containers.
+Write-Host -ForegroundColor Magenta "Starting ECS Install Step 2 for creation of Datacenters and Containers.
 This might take up to 45 Minutes
 Approx. 2000 Objects are to be created
 you may chek the opject count with your bowser at http://$($IP):9101/stats/dt/DTInitStat"
@@ -548,7 +554,7 @@ you may chek the opject count with your bowser at http://$($IP):9101/stats/dt/DT
 #$Scriptblock = "/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$($BuildDomain)ns1 --ObjectVArray=$($BuildDomain)OVA1 --ObjectVPool=$($BuildDomain)OVP1 --UserName=$Guestuser --DataStoreName=$($BuildDomain)ds1 --VDCName=vdc1 --MethodName= &> /tmp/ecsinst_step2.log" 
 # curl --insecure https://192.168.2.211:443
     
-Write-Warning "waiting for Webserver to accept logins"
+Write-Host -ForegroundColor Magenta "waiting for Webserver to accept logins"
 
 $Scriptblock = "curl -i -k https://$($ip):4443/login -u root:ChangeMe"
 Write-verbose $Scriptblock
@@ -566,7 +572,7 @@ in /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py
 #>
 if ($AdjustTimeouts.isPresent)
     {
-    Write-Warning "Adjusting Timeouts"
+    Write-Host -ForegroundColor Magenta "Adjusting Timeouts"
     $Scriptblock = "/usr/bin/sudo -s sed -i -e 's\30, 60, InsertVDC\300, 300, InsertVDC\g' /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py"
     Write-verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/SED.log" # -Confirm:$false -SleepSec 60
@@ -588,22 +594,22 @@ $VDC_NAME = "VDC_$Node"
 
 foreach ( $Method in $Methods )
     {
-    Write-Warning "running Method $Method, monitor tail -f /var/log/vipr/emcvipr-object/ssm.log"
+    Write-Host -ForegroundColor Magenta "running Method $Method, monitor tail -f /var/log/vipr/emcvipr-object/ssm.log"
     $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$Namespace_Name --ObjectVArray=$Pool_Name --ObjectVPool=$Replicaton_Group_Name --UserName=$Guestuser --DataStoreName=$Datastore_Name --VDCName=$VDC_NAME --MethodName=$Method" 
     Write-verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/$Method.log"
     }
 $Method = 'CreateUser'
-Write-Warning "running Method $Method"
+Write-Host -ForegroundColor Magenta "running Method $Method"
 $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$Namespace_Name --ObjectVArray=$Pool_Name --ObjectVPool=$Replicaton_Group_Name --UserName=$Guestuser --DataStoreName=$Datastore_Name --VDCName=$VDC_NAME --MethodName=$Method;exit 0" 
 Write-verbose $Scriptblock
 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/$Method.log"
 
 $Method = 'CreateSecretKey'
-Write-Warning "running Method $Method"
+Write-Host -ForegroundColor Magenta "running Method $Method"
 $Scriptblock = "/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$Namespace_Name --ObjectVArray=$Pool_Name --ObjectVPool=$Replicaton_Group_Name --UserName=$Guestuser --DataStoreName=$Datastore_Name --VDCName=$VDC_NAME --MethodName=$Method" 
 Write-verbose $Scriptblock
 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/$Method.log"
 }
-Write-Warning "Success !?"
+Write-Host -ForegroundColor Magenta "Success !?"
 
