@@ -105,20 +105,6 @@ $Rootpassword  = "Password123!"
 
 $Guestuser = "$($Szenarioname.ToLower())user"
 $Guestpassword  = "Password123!"
-
-try
-    {
-    $yumcachedir = join-path -Path $Sourcedir "$OS\yum" -ErrorAction stop
-    }
-catch [System.Management.Automation.DriveNotFoundException]
-    {
-    write-warning "Sourcedir not found. Stick not inserted ?"
-    break
-    }
-
-
-[uint64]$Disksize = 100GB
-$Node_requires = "git"
 $Required_Master = "CentOS7 Master"
 $OS = ($Required_Master.Split(" "))[0]
 ###### checking master Present
@@ -134,9 +120,20 @@ if (!($MasterVMX = get-vmx $Required_Master))
     }
 ####
 
-##### cecking for linux binaries
-$Sourcedir_replace = $Sourcedir.Replace("\","\\")
-Write-Verbose $Sourcedir_replace
+
+try
+    {
+    $yumcachedir = join-path -Path $Sourcedir "$OS\cache\yum" -ErrorAction stop
+    }
+catch [System.Management.Automation.DriveNotFoundException]
+    {
+    write-warning "Sourcedir not found. Stick not inserted ?"
+    break
+    }
+
+
+[uint64]$Disksize = 100GB
+$Node_requires = "git"
 if (!$MasterVMX.Template) 
             {
             write-verbose "Templating Master VMX"
