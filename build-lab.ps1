@@ -52,7 +52,7 @@ param (
 	[Parameter(ParameterSetName = "update",Mandatory = $false, HelpMessage = "this will update labbuildr from latest git commit")][switch]$Update,
     <#
     run build-lab update    #>
-	[Parameter(ParameterSetName = "update",Mandatory = $false, HelpMessage = "select a branch to update from")][ValidateSet('master','testing','develop')]$branch  = "testing",
+	[Parameter(ParameterSetName = "update",Mandatory = $false, HelpMessage = "select a branch to update from")][ValidateSet('master','testing','develop')]$branch,
     <# 
     create deskop shortcut
     #>	
@@ -626,12 +626,32 @@ try
     }
 catch
     {
-    $Current_labbuildr_branch = $branch
+    Write-Warning "no prevoius branch"
+    If (!$PSCmdlet.MyInvocation.BoundParameters['branch'].IsPresent)
+        {
+        $Current_labbuildr_branch = "master"
+        }
+    else
+        {
+        $Current_labbuildr_branch = $branch
+        }
     }
 If (!$PSCmdlet.MyInvocation.BoundParameters["branch"].IsPresent)
+     {
+     $PSCmdlet.MyInvocation.BoundParameters["branch"].IsPresent
+     # $branch = $Current_labbuildr_branch
+     }
+$PSCmdlet.MyInvocation.BoundParameters['update'].IsPresent
+Write-Verbose "Branch = $branch"
+Write-Verbose "Current Branch = $Current_labbuildr_branch"
+if ([String]::IsNullOrEmpty($PSCmdlet.MyInvocation.BoundParameters['branch']))
     {
     $branch = $Current_labbuildr_branch
     }
+Write-Verbose "Branch = $branch"
+Write-Verbose "Current Branch = $Current_labbuildr_branch"
+pause
+
 try
     {
     $verlabbuildr = New-Object System.Version (Get-Content  ($Builddir + "\labbuildr4.version") -ErrorAction Stop).Replace("-",".")
