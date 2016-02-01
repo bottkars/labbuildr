@@ -440,5 +440,7 @@ $json = '{
 
 #>
 
-    Write-Host -ForegroundColor Magenta "Login to the VM´s with root/Password123!"
+    Write-Host -ForegroundColor Magenta "Login to the VM´s with root/Password123! or with Pagent Auth
+    go to http://$($ip):5050 for mesos admin
+    go to http://$($ip):8080 for marathon admin"
     
