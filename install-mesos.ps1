@@ -62,7 +62,7 @@ $IPOffset = 5
 $Szenarioname = "Mesos"
 $Nodeprefix = "$($Szenarioname)Node"
 $scsi = 0
-
+$Scriptdir = $PSScriptRoot
 If ($Defaults.IsPresent)
     {
     $labdefaults = Get-labDefaults
