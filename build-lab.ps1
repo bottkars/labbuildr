@@ -641,7 +641,6 @@ If (!$PSCmdlet.MyInvocation.BoundParameters["branch"].IsPresent)
      $PSCmdlet.MyInvocation.BoundParameters["branch"].IsPresent
      # $branch = $Current_labbuildr_branch
      }
-$PSCmdlet.MyInvocation.BoundParameters['update'].IsPresent
 Write-Verbose "Branch = $branch"
 Write-Verbose "Current Branch = $Current_labbuildr_branch"
 if ([String]::IsNullOrEmpty($PSCmdlet.MyInvocation.BoundParameters['branch']))
@@ -650,7 +649,6 @@ if ([String]::IsNullOrEmpty($PSCmdlet.MyInvocation.BoundParameters['branch']))
     }
 Write-Verbose "Branch = $branch"
 Write-Verbose "Current Branch = $Current_labbuildr_branch"
-pause
 
 try
     {
