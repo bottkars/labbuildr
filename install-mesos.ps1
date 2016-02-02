@@ -41,6 +41,7 @@ Param(
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [int32]$Startnode = 1,
+[switch]$rexray,
 
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 
@@ -61,8 +62,15 @@ $Start = "1"
 $IPOffset = 5
 $Szenarioname = "Mesos"
 $Nodeprefix = "$($Szenarioname)Node"
-$scsi = 0
+$Rexray_script = "curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -"
+$DVDCLI_script = "curl -sSL https://dl.bintray.com/emccode/dvdcli/install | sh -"
+$Isolator =  "https://github.com/emccode/mesos-module-dvdi/releases/download/v0.4.0/libmesos_dvdi_isolator-0.26.0.so"
+$Isolator_file = Split-Path -Leaf $Isolator
+$Isolator_script = "wget $Isolator -O /usr/lib/$Isolator_file"
 $Scriptdir = $PSScriptRoot
+
+
+
 If ($Defaults.IsPresent)
     {
     $labdefaults = Get-labDefaults
@@ -146,6 +154,28 @@ if (!$MasterVMX.Template)
         $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
         }
 ####Build Machines#
+
+
+if ($rexray.IsPresent)
+    {
+    Write-Warning "Searching for ScaleIO SDC Binaries in $Sourcedir\Scaleio, this may take a while"
+    $sdc_rpm = Get-ChildItem -Path $Sourcedir -Filter "EMC-ScaleIO-sdc-*el7.x86_64.rpm" -Recurse | Sort-Object -Descending
+    If ($sdc_rpm)
+        {
+        $autoinstall_sdc = $true
+        $sdc_rpm = $sdc_rpm[0].FullName
+        Write-Verbose "Found sdc rpm $sdc_rpm"
+        
+        $sdc_rpm = $sdc_rpm -replace "\\","/"
+        $linux_source = $Sourcedir -replace "\\","/"
+        $sdc_rpm = $sdc_rpm -replace $linux_source
+        $sdc_rpm = "/mnt/hgfs/Sources$sdc_rpm"
+        }
+    else
+        {
+        Write-Warning "sdc Binaries not found for $OS, skipping autoinstall of RexRay for ScaleIO"
+        }
+    }
     $machinesBuilt = @()
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         {
@@ -222,7 +252,7 @@ if (!$MasterVMX.Template)
 
     $Scriptblock =  "systemctl start NetworkManager"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  #-logfile $Logfile
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword #| ft -AutoSize vmxname,scriptblock #-logfile $Logfile
 
     $Scriptblock =  "/etc/init.d/network restart"
     Write-Verbose $Scriptblock
@@ -343,7 +373,30 @@ if (!$MasterVMX.Template)
     $Scriptblock = "echo '$node_num' > /var/lib/zookeeper/myid"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5
-    
+    if ($rexray.IsPresent)
+        {
+        if ($autoinstall_sdc)
+            {
+            Write-Verbose "trying rexray and ScaleIO SDC Install"
+            if ($SIO = Get-LABSIOConfig)
+                {
+                Write-Host -ForegroundColor Magenta "Found ScaleIO Config, using Values to autoconfigure RexRay and SDC"
+                $Scriptblock = "export MDM_IP=$($SIO.mdm_ipa),$($SIO.mdm_ipb);yum install $sdc_rpm -y"
+                }
+            else
+                {
+                Write-Host -ForegroundColor Magenta "No ScaleIO Config found, installing SDC without mdm connection"
+                $Scriptblock = "yum install $sdc_rpm -y"
+                Write-Verbose $Scriptblock
+                }
+            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+
+            }
+        else
+            {
+            Write-Warning "SDC Binaries not found, plese install manually"
+            }
+        }
     $ZK = "zk://"
     foreach ($mesos_Node in $machinesBuilt)
         {
@@ -383,7 +436,69 @@ if (!$MasterVMX.Template)
 
 
     }
+if ($rexray.IsPresent)
+    {
+    foreach ($Node in $machinesBuilt)
+        {
+        $NodeClone = get-vmx $Node
+        Write-Verbose "trying rexray Install"
+        $Scriptblock = "$Rexray_script;$DVDCLI_script;$Isolator_script"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+        <#
+        $Scriptblock = "echo 'com_emccode_mesos_DockerVolumeDriverIsolator' > /etc/mesos-slave/isolation;echo 'file:///usr/lib/dvdi-mod.json' > /etc/mesos-slave/modules"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5
+        
+       
+        $Scriptname = "dvdi-mod.json" 
+        $dvdi_mod_json="{
+   `"libraries`": [
+     {
+       `"file`": `"/usr/lib/$Isolator_file`",
+       `"modules`": [
+         {
+           `"name`": `"com_emccode_mesos_DockerVolumeDriverIsolator`"
+         }
+       ]
+     }
+   ]
+ }
+"
+            $dvdi_mod_json | Set-Content -Path "$Scriptdir\$Scriptname" 
+            convert-VMXdos2unix -Sourcefile $Scriptdir\$Scriptname -Verbose
+            $NodeClone | copy-VMXfile2guest -Sourcefile $Scriptdir\$Scriptname -targetfile "/usr/lib/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword
 
+
+volume:
+ mount:
+  preempt: true
+ unmount:
+  ignoreUsedCount: true
+ #>
+
+        if ($SIO = Get-LABSIOConfig)
+            {
+            $scriptname = "config.yml"
+            $yml = "rexray:
+ storageDrivers:
+  - ScaleIO
+ScaleIO:
+  endpoint: https://$($SIO.gateway_ip):443/api
+  insecure: true
+  userName: admin
+  password: Password123!
+  systemName: $($SIO.system_name)
+  protectionDomainName: $($SIO.pd_name)
+  storagePoolName: $($SIO.pool_name)
+"       
+            $yml | Set-Content -Path $Scriptdir\$scriptname
+            convert-VMXdos2unix -Sourcefile $Scriptdir\$Scriptname -Verbose
+            $NodeClone | copy-VMXfile2guest -Sourcefile $Scriptdir\$Scriptname -targetfile "/etc/rexray/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword
+            $Scriptblock = "systemctl enable rexray;systemctl start rexray"
+        }
+    }
+}
 
     foreach ($Node in $machinesBuilt)
         {
@@ -402,12 +517,12 @@ if (!$MasterVMX.Template)
     foreach ($Node in $machinesBuilt)
         {
         $NodeClone = get-vmx $Node
-        
-        
         $Scriptblock = "echo 'docker,mesos' > /etc/mesos-slave/containerizers;echo '5mins' > /etc/mesos-slave/executor_registration_timeout;systemctl restart mesos-slave"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5
         }
+
+
 
 
 $scriptname = "labbuildr-demo.json"
@@ -444,3 +559,37 @@ $json = '{
     go to http://$($ip):5050 for mesos admin
     go to http://$($ip):8080 for marathon admin"
     
+
+
+
+    <#
+    find the sdc software ( only once )
+    install rexray
+    curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -
+
+            if ($sdc.IsPresent)
+            {
+            Write-Verbose "trying SDC Install"
+            $NodeClone | Invoke-VMXBash -Scriptblock "export MDM_IP=$mdm_ip;rpm -Uhv /root/install/EMC-ScaleIO-sdc*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
+            }
+
+
+
+rexray:
+ storageDrivers:
+  - ScaleIO
+ScaleIO:
+  endpoint: https://192.168.2.193:443/api
+  insecure: true
+  userName: admin
+  password: Password123!
+  systemName: ScaleIO@EMCDEBlog
+  protectionDomainName: PD_EMCDEBlog
+  storagePoolName: PoolEMCDEBlog
+[root@mesosnode1 ~]#
+
+
+
+
+
+#>
