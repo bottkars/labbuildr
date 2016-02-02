@@ -3032,6 +3032,9 @@ switch ($PsCmdlet.ParameterSetName)
                 
                 if ($ScaleIO.IsPresent)
                     {
+                    $SIO_ProtectionDomainName = "PD_$BuildDomain"
+                    $SIO_StoragePoolName = "SP_$BuildDomain"
+                    $SIO_SystemName = "ScaleIO@$BuildDomain"
                     switch ($HVNODE){
                 1
                     {
@@ -3075,6 +3078,9 @@ switch ($PsCmdlet.ParameterSetName)
                         $mdmipa = "$IPv4Subnet.151"
                         $mdmipb = "$IPv4Subnet.151"
                         }
+                    Write-Host -ForegroundColor Magenta "generating SIO Config File"
+                    Set-LABSIOConfig -mdm_ipa $mdmipa -mdm_ipb $mdmipb -gateway_ip "$IPv4Subnet.153" -system_name $SIO_SystemName -pool_name $SIO_StoragePoolName -pd_name $SIO_ProtectionDomainName
+
                     write-verbose "installing JAVA"
 		            $Parm = "/s"
 		            $Execute = "\\vmware-host\Shared Folders\Sources\$LatestJava"
