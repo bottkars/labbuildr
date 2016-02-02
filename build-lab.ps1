@@ -1058,7 +1058,7 @@ function test-domainsetup
 	# $myline = $Line.line.Trim('ethernet0.vnet = ')
 	# $MyVMnet = $myline.Replace('"', '')
 	status $MyVMnet
-	Write-Host -ForegroundColor Gray $holdomain, $Domainip, $VMnet, $DomainGateway
+	Write-Output -ForegroundColor Gray $holdomain, $Domainip, $VMnet, $DomainGateway
 } #end 
 function test-user
 {
