@@ -112,8 +112,25 @@ If ($Defaults.IsPresent)
      $DefaultGateway = $labdefaults.DefaultGateway
      $Sourcedir = $labdefaults.Sourcedir
      }
+[System.Version]$subnet = $Subnet.ToString()
+$Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
+$rootuser = "root"
+$rootpassword = "admin"
+$MDMPassword = "Password123!"
+[uint64]$Disksize = 100GB
+$scsi = 0
 $ScaleIO_OS = "VMware"
 $ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
+$Devicename = "$Location"+"_Disk_$Driveletter"
+$VolumeName = "Volume_$Location"
+$ProtectionDomainName = "PD_$BuildDomain"
+$StoragePoolName = "SP_$BuildDomain"
+$SystemName = "ScaleIO@$BuildDomain"
+$FaultSetName = "Rack_"
+$mdm_ipa  = "$subnet.191"
+$mdm_ipb  = "$subnet.192"
+$tb_ip = "$subnet.193"
+
 
 switch ($PsCmdlet.ParameterSetName)
 {
@@ -134,7 +151,8 @@ switch ($PsCmdlet.ParameterSetName)
             }
         if (!($OVAPath = Get-ChildItem -Path "$Sourcedir\ScaleIO\$ScaleIO_Path" -recurse -Filter "*.ova" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
             {
-                    write-warning "Checking for Downloaded Package"
+                    write-warning "No ScaleIO OVA found, Checking for Downloaded Package"
+                    <#
                     $Uri = "http://www.emc.com/products-solutions/trial-software-download/scaleio.htm"
                     $request = Invoke-WebRequest -Uri $Uri -UseBasicParsing
                     $DownloadLinks = $request.Links | where href -match "VMWARE"
@@ -181,7 +199,8 @@ switch ($PsCmdlet.ParameterSetName)
                                 }
                             }
                         }
-            
+            #>
+                    Receive-LABScaleIO -Destination $Sourcedir -arch VMware -unzip
 
         }
            
@@ -205,13 +224,6 @@ switch ($PsCmdlet.ParameterSetName)
             }
         $Mastervmxlist = get-vmx $SCALEIOMaster | Sort-Object -Descending
         $MasterVMX = $Mastervmxlist[0]   
-        [System.Version]$subnet = $Subnet.ToString()
-        $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
-        $rootuser = "root"
-        $rootpassword = "admin"
-        $MDMPassword = "Password123!"
-        [uint64]$Disksize = 100GB
-        $scsi = 0
         $Nodeprefix = "ScaleIONode"
         If ($configure.IsPresent -and $Nodes -lt 3)
             {
@@ -221,11 +233,11 @@ switch ($PsCmdlet.ParameterSetName)
         If ($singlemdm.IsPresent)
             {
             Write-Warning "Single MDM installations with MemoryTweaking  are only for Test Deployments and Memory Contraints/Manager Laptops :-)"
-            $mdm_ip="$subnet.191"
+            $mdm_ip="$mdm_ipa"
             }
         else
             {
-            $mdm_ip="$subnet.191,$subnet.192"
+            $mdm_ip="$mdm_ipa,$mdm_ipb"
             }
         
         if (!$MasterVMX.Template) 
@@ -346,12 +358,12 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
                     Write-Verbose "trying TB Install"
                     $NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-tb*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
                     Write-Verbose "Adding MDM to Gateway Server Config File"
-                    $sed = "sed -i 's\mdm.ip.addresses=.*\mdm.ip.addresses=$subnet.191;$Subnet.192\' /opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classes/gatewayUser.properties" 
+                    $sed = "sed -i 's\mdm.ip.addresses=.*\mdm.ip.addresses=$mdm_ipa;$mdm_ipb\' /opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classes/gatewayUser.properties" 
                     }
                 else
                     {
                     Write-Verbose "Adding MDM to Gateway Server Config File"
-                    $sed = "sed -i 's\mdm.ip.addresses=.*\mdm.ip.addresses=$subnet.191;$Subnet.191\' /opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classes/gatewayUser.properties" 
+                    $sed = "sed -i 's\mdm.ip.addresses=.*\mdm.ip.addresses=$mdm_ipa;$mdm_ipa\' /opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classes/gatewayUser.properties" 
                     }
                 Write-Verbose $sed
                 $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
@@ -377,34 +389,37 @@ if ($configure.IsPresent)
     $Logfile = "/tmp/configure_sio.log"
     write-host "Configuring ScaleIO"
     $mdmconnect = "scli --login --username admin --password $MDMPassword --mdm_ip $mdm_ip"
-    $StoragePoolName = "Pool$BuildDomain"
-    $SystemName = "ScaleIO@$BuildDomain"
-    $ProtectionDomainName = "PD_$BuildDomain"
+
     if ($Primary)
         {
         Write-Verbose "We are now creating the ScaleIO Grid"
-        $sclicmd =  "scli --add_primary_mdm --primary_mdm_ip $subnet.191 --mdm_management_ip $subnet.191 --accept_license"
+        $sclicmd =  "scli --add_primary_mdm --primary_mdm_ip $mdm_ipa --mdm_management_ip $mdm_ipa --accept_license"
         Write-Verbose $sclicmd
         $Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
 
-        $sclicmd =  "scli --login --username admin --password admin --mdm_ip $subnet.191;scli --set_password --old_password admin --new_password $MDMPassword  --mdm_ip $subnet.191"
+        $sclicmd =  "scli --login --username admin --password admin --mdm_ip $mdm_ipa;scli --set_password --old_password admin --new_password $MDMPassword  --mdm_ip $mdm_ipa"
         Write-Verbose $sclicmd
         $Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
 
         if (!$singlemdm.IsPresent)
             {
-            $sclicmd = "$mdmconnect;scli --add_secondary_mdm --mdm_ip $subnet.191 --secondary_mdm_ip $subnet.192 --mdm_ip $subnet.191"
+            $sclicmd = "$mdmconnect;scli --add_secondary_mdm --mdm_ip $mdm_ipa --secondary_mdm_ip $mdm_ipb --mdm_ip $mdm_ipa"
             Write-Verbose $sclicmd
             $Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile 
             
-            $sclicmd = "$mdmconnect;scli --add_tb --tb_ip $subnet.193 --mdm_ip $subnet.191"
+            $sclicmd = "$mdmconnect;scli --add_tb --tb_ip $tb_ip --mdm_ip $mdm_ipa"
             Write-Verbose $sclicmd
             $Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
             
-            $sclicmd = "$mdmconnect;scli --switch_to_cluster_mode --mdm_ip $subnet.191"
+            $sclicmd = "$mdmconnect;scli --switch_to_cluster_mode --mdm_ip $mdm_ipa"
             Write-Verbose $sclicmd
             $Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
             }
+        else
+            {
+            $mdm_ipb = $mdm_ipa
+            }
+        Set-LABSIOConfig -mdm_ipa $mdm_ipa -mdm_ipb $mdm_ipb -gateway_ip $tb_ip -system_name $SystemName -pool_name $StoragePoolName -pd_name $ProtectionDomainName 
         $sclicmd = "scli --add_protection_domain --protection_domain_name $ProtectionDomainName --mdm_ip $mdm_ip"
         $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
         $sclicmd = "scli --add_storage_pool --storage_pool_name $StoragePoolName --protection_domain_name $ProtectionDomainName --mdm_ip $mdm_ip"
@@ -420,7 +435,7 @@ if ($configure.IsPresent)
             Write-Verbose $sclicmd
             $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
             }
-    write-host "Connect with ScaleIO UI to $subnet.191 admin/Password123!"
+    write-host "Connect with ScaleIO UI to $mdm_ipa admin/Password123!"
     }
 
 write-host "Login to the VM´s with root/admin"

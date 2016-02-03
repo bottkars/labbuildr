@@ -68,7 +68,7 @@ $Isolator =  "https://github.com/emccode/mesos-module-dvdi/releases/download/v0.
 $Isolator_file = Split-Path -Leaf $Isolator
 $Isolator_script = "wget $Isolator -O /usr/lib/$Isolator_file"
 $Scriptdir = $PSScriptRoot
-
+$SIO = Get-LABSIOConfig
 
 
 If ($Defaults.IsPresent)
@@ -378,7 +378,7 @@ if ($rexray.IsPresent)
         if ($autoinstall_sdc)
             {
             Write-Verbose "trying rexray and ScaleIO SDC Install"
-            if ($SIO = Get-LABSIOConfig)
+            if ($SIO)
                 {
                 Write-Host -ForegroundColor Magenta "Found ScaleIO Config, using Values to autoconfigure RexRay and SDC"
                 $Scriptblock = "export MDM_IP=$($SIO.mdm_ipa),$($SIO.mdm_ipb);yum install $sdc_rpm -y"
@@ -551,47 +551,53 @@ $json = '{
         convert-VMXdos2unix -Sourcefile $Scriptdir\$Scriptname -Verbose
         $NodeClone | copy-VMXfile2guest -Sourcefile $Scriptdir\$Scriptname -targetfile "/root/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword
         $Scriptblock = "sh /root/$Scriptname &> /tmp/$Scriptname.log"
-
-
         $Scriptblock = "curl -X POST http://$($ip):8080/v2/apps -d @/root/$scriptname -H 'Content-type: application/json'"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5
 
 #>
 
+if ($rexray.IsPresent -and $SIO)
+    {
+    Write-Host -ForegroundColor Magenta "We are now trying to start a Postgres Container with Rex-Ray/ScaleIO  an Marathon" 
+    $scriptname = "postgres-demo.json"
+$json = '
+{
+    "id": "postgres-demo",
+    "container": {
+        "docker": {
+            "image": "postgres",
+            "network": "BRIDGE",
+            "portMappings": [{
+                "containerPort": 5432,
+                "hostPort": 0,
+                "protocol": "tcp"
+            }],
+            "parameters": [
+                {"key": "volume-driver","value": "rexray" },
+                {"key": "volume","value": "pg-data:/var/lib/postgresql/data" },
+                {"key": "env","value": "PGDATA:/var/lib/postgresql/data/pg-data" },
+                {"key": "env","value": "POSTGRES_PASSWORD=Password123!" }]
+        }
+    },
+    "args": ["postgres"],
+    "cpus": 0.8,
+    "mem": 32.0,
+    "instances": 1
+}
+'       
+        $json | Set-Content -Path $Scriptdir\$scriptname
+        convert-VMXdos2unix -Sourcefile $Scriptdir\$Scriptname -Verbose
+        $NodeClone | copy-VMXfile2guest -Sourcefile $Scriptdir\$Scriptname -targetfile "/root/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword
+        $Scriptblock = "sh /root/$Scriptname &> /tmp/$Scriptname.log"
+        $Scriptblock = "curl -X POST http://$($ip):8080/v2/apps -d @/root/$scriptname -H 'Content-type: application/json'"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5
+}
     Write-Host -ForegroundColor Magenta "Login to the VM´s with root/Password123! or with Pagent Auth
     go to http://$($ip):5050 for mesos admin
     go to http://$($ip):8080 for marathon admin"
     
-
-
-
-    <#
-    find the sdc software ( only once )
-    install rexray
-    curl -sSL https://dl.bintray.com/emccode/rexray/install | sh -
-
-            if ($sdc.IsPresent)
-            {
-            Write-Verbose "trying SDC Install"
-            $NodeClone | Invoke-VMXBash -Scriptblock "export MDM_IP=$mdm_ip;rpm -Uhv /root/install/EMC-ScaleIO-sdc*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
-            }
-
-
-
-rexray:
- storageDrivers:
-  - ScaleIO
-ScaleIO:
-  endpoint: https://192.168.2.193:443/api
-  insecure: true
-  userName: admin
-  password: Password123!
-  systemName: ScaleIO@EMCDEBlog
-  protectionDomainName: PD_EMCDEBlog
-  storagePoolName: PoolEMCDEBlog
-[root@mesosnode1 ~]#
-
 
 
 
