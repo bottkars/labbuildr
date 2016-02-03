@@ -2,7 +2,7 @@
 .Synopsis
    .\install-ddve.ps1 -MasterPath F:\labbuildr\ddve-5.6.0.3-485123\
 .DESCRIPTION
-  install-ddve only applies to internal Testers of the Virtual DDVe
+  install-ddve only applies to Testers of the Virtual DDVe
   install-ddve is a 2 Step Process.
   Once DDVE is downloaded via feedbckcentral, run 
   1.) ( only once )
@@ -134,7 +134,7 @@ switch ($PsCmdlet.ParameterSetName)
         $Nodeprefix = "DDvENode"
         if (!$MasterVMX)
             {
-            $MasterVMX = get-vmx Ddve-5*
+            $MasterVMX = get-vmx Ddve-5.7*
             iF ($MasterVMX)
                 {
                 $MasterVMX = $MasterVMX | Sort-Object -Descending
@@ -300,7 +300,9 @@ switch ($PsCmdlet.ParameterSetName)
             Write-Verbose "Configuring NIC1"
             # $Netadater1 = $NodeClone | Set-VMXVnet -Adapter 1 -vnet vmnet8
             $Netadater1 = $NodeClone | Set-VMXNetworkAdapter -Adapter 1 -ConnectionType nat -AdapterType vmxnet3
-            $Netadater1connected = $NodeClone | Connect-VMXNetworkAdapter -Adapter 1
+            # $Netadater1connected = $NodeClone | Connect-VMXNetworkAdapter -Adapter 1
+            $Netadater1connected = $NodeClone | Disconnect-VMXNetworkAdapter -Adapter 1
+            
             $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
                 $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
             Write-Verbose "Configuring Memory to $memsize"
@@ -320,12 +322,46 @@ switch ($PsCmdlet.ParameterSetName)
             }
 
         }
-    Write-Warning "
+    Write-host
+    Write-host -ForegroundColor Yellow "
+Now Configure DDVE 5.7 ( for earlier versions see end )
+Go to VMware Console an wait for system to boot"
+    Write-host -ForegroundColor Magenta "
     Please login with 
-    username:sysadmin 
-    password: abc123
+    localhost login : sysadmin 
+    Password: changeme
+    Change the Password or type no
+
+    Answer yes for GUI Wizard
+    Answer yes for Configure Network at this time
+    Answer No for DHCP
+    Enter $Nodeprefix$Node.$BuildDomain.local as hostname
+    Enter $BuildDomain.local as DNSDomainname
 
 
+    (The orde of the next command and Devicenames may vary from Version to Version )
+Ethernet Port ethV1
+    Enter NO for Enable Ethernet ethV1
+Ethernet Port ethV1
+    Enter Yes for Enable Ethernet Port ethV0
+    Enter NO for DHCP
+    Enter IP Address for ethV0:
+    $subnet.2$Node as IP Address
+    enter the netmask for ethV0:
+    255.255.25.0
+Default Gateway    
+    Enter $DefaultGateway for Gateway IP Address
+    Leave IPv6 Gateway Blank
+DNS Server
+    Enter $subnet.10 as DNS Server
+    Enter Save to Save
+
+Open Your webbrowser to Configure Licences and Features !!!
+"
+Write-Host -ForegroundColor Yellow "     
+    NOTE !!!!!!
+    +++++++++++++DDVE 5.5.1.4 and 5.6 ( feedbackcentral ) do not have WEB UI enabled by default ! +++++++++++++
+    special Instructions for DDVE 5.5.1 to 5.6
     When the Wizard starts, press Ctrl-C
 
     enter 'storage add dev3'
@@ -333,27 +369,6 @@ switch ($PsCmdlet.ParameterSetName)
     enter 'filesys enable'
     enter 'adminaccess enable http' ( for DDVE 5.5.1 and above )    
     enter 'config setup'
-
-    Answer yes for GUI Wizard
-    Answer yes for Configure Network
-    Answer No for DHCP
-    Enter $Nodeprefix$Node.$BuildDomain.local as hostname
-    Enter $BuildDomain.local as DNSDomainname
-    (The orde of the next command and Devicenames may vary from Version to Version )
-    Enter yes for Enable Ethernet eth1
-    Enter yes for DHCP
-    Enter Yes for Enable Ethernet Port ethV0
-    Enter NO for DHCP
-    Enter $subnet.2$Node as IP Address
-    Leave Subnet to default
-    
-    Enter $DefaultGateway for Gateway IP Address
-    Leave IPv6 Gateway Blank
-    Enter $subnet.10 as DNS Server
-    Enter Save to Save
-     
-    NOTE !!!!!!
-    +++++++++++++DDVE 5.5.1.4 and 5.6 ( feedbackcentral ) do not have WEB UI enabled by default ! +++++++++++++
     +++++++++++++make sure you did 'adminaccess enable http' from above !!!!                      +++++++++++++
     "
     }# end default
