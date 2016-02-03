@@ -32,7 +32,7 @@ Param(
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath = '.\OpenSuse',
+[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath,
 <#Specify desired branch#>
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
@@ -49,7 +49,7 @@ $Node = 1
 #requires -version 3.0
 #requires -module vmxtoolkit
 $Range = "24"
-
+$Builddir = $PSScriptRoot
 
 If ($Defaults.IsPresent)
     {
@@ -61,13 +61,14 @@ If ($Defaults.IsPresent)
      $Gateway = $labdefaults.Gateway
      $DefaultGateway = $labdefaults.Defaultgateway
      $DNS1 = $labdefaults.DNS1
+     $MasterPath = $labdefaults.MasterPath
      }
 
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
-
+$OS = "OpenSuse"
 $Scenarioname = "Coprhd"
-
+$MasterPath = Join-Path $MasterPath $OS
 $Nodeprefix = "$($Scenarioname)Node"
 # $release = $release.tolower()
 $Guestpassword = "Password123!"
@@ -115,7 +116,7 @@ if (!(Test-path "$Sourcedir\$Scenarioname"))
         If (!(get-vmx $Nodename))
         {
         write-verbose " Creating $Nodename"
-        $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodename 
+        $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodename -clonepath $Builddir
         If ($Node -eq 1){$Primary = $NodeClone}
         $Config = Get-VMXConfig -config $NodeClone.config
         Write-Verbose "Tweaking Config"
@@ -216,7 +217,7 @@ type=NONE
 EOF
 "
 # cachedir = /var/cache/zypp
-    $Scriptblock = "sed '\|# cachedir = /var/cache/zypp|icachedir = /mnt/hgfs/Sources/CoprHD/zypp/\n' /etc/zypp/zypp.conf -i"
+    $Scriptblock = "sed '\|# cachedir = /var/cache/zypp|icachedir = /mnt/hgfs/Sources/$OS/zypp/\n' /etc/zypp/zypp.conf -i"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
 
@@ -237,6 +238,13 @@ EOF
         Write-Warning "When creating local Repo Cache, this might take a while first time!"
         $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
 #### Install Prereqs
+        if ($branch -match "master")
+            {$require_java8 = $true
+            $Java8 ="
+update-alternatives --set java /usr/lib64/jvm/jre-1.8.0-openjdk/bin/java OR update-alternatives --config  java
+update-alternatives --set javac /usr/lib64/jvm/java-1.8.0-openjdk/bin/javac OR update-alternatives --config  javac
+"            
+            }
         $Scriptname = "inst_pre.sh" 
         $Content ="#!/bin/bash
 zypper --gpg-auto-import-keys refresh
@@ -246,6 +254,8 @@ zypper -n install -r suse-13.2-scalpel4k gradle
 zypper -n install -r suse-13.2-seife sipcalc
 zypper -n install -r suse-13.2-python python-cjson
 zypper -n install -r suse-13.1-cesarizu apache-maven
+zypper --non-interactive --no-gpg-checks install --details --no-recommends --force-resolution java-1_8_0-openjdk java-1_8_0-openjdk-devel
+$Java8
 "
         $Content | Set-Content -Path $Scriptdir\$Scriptname
         convert-VMXdos2unix -Sourcefile $Scriptdir\$Scriptname -Verbose
