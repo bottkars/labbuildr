@@ -88,8 +88,14 @@ else
 
 [uint64]$Disksize = 100GB
 $scsi = 0
+if (!(Test-Path $MasterPath))
+    {
+    Write-Warning "no OpenSuse Master found. Please download from
+    https://github.com/bottkars/labbuildr/wiki/Master"
+    exit
+    }
 #$Node = "1"
-if (!($MasterVMX = get-vmx -path $MasterPath\$OS))
+if (!($MasterVMX = get-vmx -path $MasterPath))
     {
     Write-Warning "no OpenSuse Master found. Please download from
     https://github.com/bottkars/labbuildr/wiki/Master"
