@@ -30,7 +30,7 @@ Param(
 #[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 #[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateRange(1,3)][int32]$Disks = 1,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('4096','8192','12288','16384','20480','30720','51200','65536')]$Memory = "4096",
+[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('1024','2048','3072','4096','8192','12288','16384','20480','30720','51200','65536')]$Memory = "4096",
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
@@ -442,7 +442,7 @@ if ($rexray.IsPresent)
         {
         $NodeClone = get-vmx $Node
         Write-Verbose "trying rexray Install"
-        $Scriptblock = "$Rexray_script;$DVDCLI_script;$Isolator_script"
+        $Scriptblock = "$Rexray_script" #;$DVDCLI_script;$Isolator_script"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
         <#
@@ -481,6 +481,7 @@ volume:
             {
             $scriptname = "config.yml"
             $yml = "rexray:
+ loglevel: info
  storageDrivers:
   - ScaleIO
 ScaleIO:
@@ -496,6 +497,9 @@ ScaleIO:
             convert-VMXdos2unix -Sourcefile $Scriptdir\$Scriptname -Verbose
             $NodeClone | copy-VMXfile2guest -Sourcefile $Scriptdir\$Scriptname -targetfile "/etc/rexray/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword
             $Scriptblock = "systemctl enable rexray;systemctl start rexray"
+            Write-Verbose $Scriptblock
+            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5
+
         }
     }
 }
