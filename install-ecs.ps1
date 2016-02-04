@@ -78,6 +78,7 @@ $Start = "1"
 $IPOffset = 5
 $Szenarioname = "ECS"
 $Nodeprefix = "$($Szenarioname)Node"
+
 $scsi = 0
 If ($Defaults.IsPresent)
     {
@@ -168,6 +169,7 @@ if (!$MasterVMX.Template)
         If (!(get-vmx $Nodeprefix$node))
         {
         write-verbose "Creating $Nodeprefix$node"
+        $ECSName = "$Nodeprefix$Node".ToLower()
         If ($FullClone.IsPresent)
             {
             Write-Warning "Creating full Clone of $($MasterVMX.vmxname), doing full sync now"
@@ -481,11 +483,11 @@ else
     # $Scriptblock = "/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks sdb --ethadapter eno16777984 --hostname $($NodeClone.vmxname)" 
     if ($Branch -match "feature-ecs-2.2")
         {
-        $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks sdb --ethadapter eno16777984 --hostname $($NodeClone.vmxname) --imagename $Docker_imagename --imagetag $Docker_imagetag &> /tmp/ecsinst_step1.log"  
+        $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks sdb --ethadapter eno16777984 --hostname $ECSName --imagename $Docker_imagename --imagetag $Docker_imagetag &> /tmp/ecsinst_step1.log"  
         }
     else
         {
-        $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks sdb --ethadapter eno16777984 --hostname $($NodeClone.vmxname) &> /tmp/ecsinst_step1.log"  
+        $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks sdb --ethadapter eno16777984 --hostname $ECSName &> /tmp/ecsinst_step1.log"  
         }
    # $Expect = "/usr/bin/expect -c 'spawn /usr/bin/sudo -s $Scriptblock;expect `"*password*:`" { send `"Password123!\r`" }' &> /tmp/ecsinst.log"
 
