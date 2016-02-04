@@ -195,9 +195,12 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
             Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
             $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
             }
+    write-verbose "Setting int-b"
+    Set-VMXNetworkAdapter -Adapter 1 -ConnectionType hostonly -AdapterType e1000 -config $NodeClone.Config | out-null
+    Disconnect-VMXNetworkAdapter -Adapter 1 -config $NodeClone.Config
     write-verbose "Setting ext-1"
-    Set-VMXNetworkAdapter -Adapter 1 -ConnectionType custom -AdapterType e1000 -config $NodeClone.Config | out-null
-    Set-VMXVnet -Adapter 1 -vnet $vmnet -config $NodeClone.Config | out-null
+    Set-VMXNetworkAdapter -Adapter 2 -ConnectionType custom -AdapterType e1000 -config $NodeClone.Config | out-null
+    Set-VMXVnet -Adapter 2 -vnet $vmnet -config $NodeClone.Config | out-null
     $Scenario = Set-VMXscenario -config $NodeClone.Config -Scenarioname $Nodeprefix -Scenario 6
     $ActivationPrefrence = Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node 
     # Set-VMXVnet -Adapter 0 -vnet vmnet2
