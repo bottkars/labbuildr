@@ -342,6 +342,7 @@ node_id=vipr1"
 
     $Scriptname = "build_coprhd.sh"
 $content = "#!/bin/bash
+$Java8
 git clone -b $branch https://github.com/CoprHD/coprhd-controller.git /root/coprhd-controller
 cd /root/coprhd-controller   
 make clobber BUILD_TYPE=oss rpm"
@@ -355,12 +356,19 @@ make clobber BUILD_TYPE=oss rpm"
     Write-Warning "Compiling CoprHD from $Scriptname for $branch may take a While. you may tail -f /tmp/$Scriptname.log"
     $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
 
-    $Scriptblock = "/bin/rpm -Uhv /root/coprhd-controller/build/RPMS/x86_64/storageos*.x86_64.rpm"
+    $Scriptblock = "/bin/rpm -Uhv /root/coprhd-controller/build/RPMS/x86_64/storageos*.x86_64.rpm" #;/sbin/shutdown -r now"
     Write-Verbose $Scriptblock
-    Write-Warning "Installing CoprHD RPM
+    $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword 
+
+
+
+    Write-Host -ForegroundColor Magenta "Installed CoprHD RPM
     StorageOS may take 5 Minutes to boot
     please Visit https://$ip for Configuration
-    Login with root:ChangeMe"
-    $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
+    Login with root:ChangeMe
+    For Console login use labbuildr:$($Guestpassword) and su
+    A reboot may be required
+    "
+
 #>
 
