@@ -121,8 +121,8 @@ Specify if Networker Scenario sould be installed
     #>
 	[Parameter(ParameterSetName = "SRM", Mandatory = $true)][switch][alias('srm')]$ViPRSRM,
     [Parameter(ParameterSetName = "SRM")]
-    [ValidateSet('3.7.0.0','3.6.0.3')]
-    $SRM_VER='3.7.0.0',
+    [ValidateSet('3.7.1.0','3.7.0.0','3.6.0.3')]
+    $SRM_VER='3.7.1.0')
     <#
     Selects the Microsoft System Center Binary Install
     IP-Addresses: .18
