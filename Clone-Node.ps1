@@ -146,16 +146,21 @@ $content += 'memsize = "16384"'
 $Content += 'numvcpus = "4"'
 }
 }
-
+if ($HyperV){
+#$Content = $Clone | Get-VMXConfig
+$Content = $Content | where {$_ -notmatch "guestOS"}
+$Content += 'guestOS = "winhyperv"'
+}
+$Content = $Content | where {$_ -notmatch "gui.exitAtPowerOff"}
+$Content += 'gui.exitAtPowerOff = "TRUE"'
+$Content = $Content | where {$_ -notmatch "virtualHW.version"}
+$Content += 'virtualHW.version = "'+"$($Global:vmwareversion.Major)"+'"'
 Set-Content -Path $Clone.config -Value $content -Force
-(get-content $Clone.config) | foreach-object {$_ -replace 'gui.exitAtPowerOff = "FALSE"','gui.exitAtPowerOff = "TRUE"'} | set-content $Clone.Config
 $Clone | Set-VMXMainMemory -usefile:$false
 $Clone | Set-VMXDisplayName -DisplayName $Displayname
-if ($HyperV){
-($Clone | Get-VMXConfig) | foreach-object {$_ -replace 'guestOS = "windows8srv-64"', 'guestOS = "winhyperv"' } | set-content $Clone.config
-($Clone | Get-VMXConfig) | foreach-object {$_ -replace 'guestOS = "windows9srv-64"', 'guestOS = "winhyperv"' } | set-content $Clone.config
+#($Clone | Get-VMXConfig) | foreach-object {$_ -replace 'guestOS = "windows8srv-64"', 'guestOS = "winhyperv"' } | set-content $Clone.config
+#($Clone | Get-VMXConfig) | foreach-object {$_ -replace 'guestOS = "windows9srv-64"', 'guestOS = "winhyperv"' } | set-content $Clone.config
 
-}
 $Clone | Set-VMXAnnotation -builddate -Line1 "This is node $Nodename for domain $Domainname"-Line2 "Adminpasswords: Password123!" -Line3 "Userpasswords: Welcome1"
 ######### next commands will be moved in vmrunfunction soon 
 # KB , 06.10.2013 ##
