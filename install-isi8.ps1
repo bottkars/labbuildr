@@ -196,11 +196,11 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
             $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
             }
     write-verbose "Setting int-b"
-    Set-VMXNetworkAdapter -Adapter 1 -ConnectionType hostonly -AdapterType e1000 -config $NodeClone.Config | out-null
-    Disconnect-VMXNetworkAdapter -Adapter 1 -config $NodeClone.Config
+    Set-VMXNetworkAdapter -Adapter 2 -ConnectionType hostonly -AdapterType e1000 -config $NodeClone.Config | out-null
+    # Disconnect-VMXNetworkAdapter -Adapter 1 -config $NodeClone.Config
     write-verbose "Setting ext-1"
-    Set-VMXNetworkAdapter -Adapter 2 -ConnectionType custom -AdapterType e1000 -config $NodeClone.Config | out-null
-    Set-VMXVnet -Adapter 2 -vnet $vmnet -config $NodeClone.Config | out-null
+    Set-VMXNetworkAdapter -Adapter 1 -ConnectionType custom -AdapterType e1000 -config $NodeClone.Config | out-null
+    Set-VMXVnet -Adapter 1 -vnet $vmnet -config $NodeClone.Config | out-null
     $Scenario = Set-VMXscenario -config $NodeClone.Config -Scenarioname $Nodeprefix -Scenario 6
     $ActivationPrefrence = Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node 
     # Set-VMXVnet -Adapter 0 -vnet vmnet2
@@ -220,14 +220,19 @@ Assign internal Addresses from .41 to .56 according to your Subnet
         Cluster Name  ...........: isi2go
         Interface int-a
         Netmask int-a............: 255.255.255.0
-        Internal Low IP .........: your vmnet1 .41
+        Int-a Low IP .........: x.x.x.41
+        Int-a high IP ........: x.x.x.56
+        Interface int-b
+        Netmask int-b............: 255.255.255.0
+        Int-b Low IP .........: y.y.y.41
+        Int-b high IP ........: y.y.y.56
         Interface ext-1
         Netmask ext-1............: 255.255.255.0
         External Low IP .........: $Subnet.41
         External High IP ........: $Subnet.56
         Default Gateway..........: $DefaultGateway
         Configure Smartconnect
-        martconnect Zone Name...:  onefs.$BuildDomain.local
+        smartconnect Zone Name...:  onefs.$BuildDomain.local
         smartconnect Service IP :  $Subnet.40
         Configure DNS Settings
         DNS Server...............: $Subnet.10
