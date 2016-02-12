@@ -1848,7 +1848,7 @@ If ($DAG.IsPresent)
 if ($Blanknode.IsPresent)
 {
 	workorder "We are going to Install $BlankNodes Blank Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
-    if (!$DefaultGateway.IsPresent)
+    if (!($DefaultGateway.IsPresent))
         {
         $DefaultGateway = "$IPv4Subnet.4"
         }
