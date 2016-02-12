@@ -1848,10 +1848,7 @@ If ($DAG.IsPresent)
 if ($Blanknode.IsPresent)
 {
 	workorder "We are going to Install $BlankNodes Blank Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
-    if (!($DefaultGateway.IsPresent))
-        {
-        $DefaultGateway = "$IPv4Subnet.4"
-        }
+
     workorder "The Gateway will be $DefaultGateway"
 	if ($VTbit) { write-verbose "Virtualization will be enabled in the Nodes" }
 	if ($Cluster.IsPresent) { write-verbose "The Nodes will be Clustered" }
