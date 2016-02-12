@@ -1450,7 +1450,7 @@ if ($defaults.IsPresent)
                 }
             catch 
                 {
-                Write-Warning "No Master specified, trying default"
+                Write-Warning "No Exchange 2013 CU Specified, setting $latest_e15_cu"
                 $e15_cu = $latest_e15_cu
                 }
             }
@@ -1462,7 +1462,7 @@ if ($defaults.IsPresent)
                 }
             catch 
                 {
-                Write-Warning "No e16_cu specified, trying default"
+                Write-Warning "No Exchange 2016 CU Specified, setting $latest_e16_cu"
                 $e16_cu = $latest_e16_cu
                 }
             }
@@ -1848,7 +1848,11 @@ If ($DAG.IsPresent)
 if ($Blanknode.IsPresent)
 {
 	workorder "We are going to Install $BlankNodes Blank Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
-    if ($DefaultGateway.IsPresent){ workorder "The Gateway will be $DefaultGateway"}
+    if (!$DefaultGateway.IsPresent)
+        {
+        $DefaultGateway = "$IPv4Subnet.4"
+        }
+    workorder "The Gateway will be $DefaultGateway"
 	if ($VTbit) { write-verbose "Virtualization will be enabled in the Nodes" }
 	if ($Cluster.IsPresent) { write-verbose "The Nodes will be Clustered" }
 }
