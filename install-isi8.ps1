@@ -33,7 +33,7 @@ Param(
 [Parameter(ParameterSetName = "install", Mandatory=$False)][ValidateRange(3,6)][int32]$Disks = 5,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install", Mandatory=$False)][ValidateSet(36GB,72GB,146GB)][uint64]$Disksize = 36GB,
-[Parameter(ParameterSetName = "install", Mandatory=$False)]$Subnet = "10.10.0",
+[Parameter(ParameterSetName = "install", Mandatory=$False)]$Subnet = "192.168.2",
 [Parameter(ParameterSetName = "install", Mandatory=$False)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install", Mandatory=$false)]$MasterPath,
@@ -58,14 +58,15 @@ If ($Defaults.IsPresent)
      }
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
-try
+
+if (!($Sourcedir))
     {
-    Test-Path $Sourcedir
+    $Sourcedir = "C:\Sources"
     }
-catch [Exception] 
+if (!(Test-Path $Sourcedir))
     {
     Write-Host "we need a Sourcedir to Continue
-    Creating now
+    Creating now in $Sourcedir
     "
     $new_Sourcedir = New-Item -ItemType Directory -Path $Sourcedir -Force | Out-Null
     #break
@@ -73,13 +74,13 @@ catch [Exception]
                 
 If (!$MasterPath)
     {
-    write-warning "No master Specified, rule is Pic Any now"
+    Write-Host -Foregroundcolor Magenta "No master Specified, rule is Pic Any available Isilon Master now"
     $MasterVMXs = get-vmx -vmxname "ISIMaster*"
     if ($Mastervmxs)
             {
             $Mastervmxs = $MasterVMXs | Sort-Object -Descending
             $MasterVMX = $MasterVMXs[0]
-            Write-Verbose "We Found MasterVMX $MasterVMX.VMXname"
+            Write-Verbose "We Found Isilon MasterVMX $MasterVMX.VMXname"
             }
      else
             {
@@ -100,20 +101,25 @@ else
     
 If (!$MasterVMX)
     {
-    Write-Warning "No Valid Master Found"
-    Write-Warning "we will check for any available Sourcemaster to create a MasterVMX"
+    Write-Host -Foregroundcolor Magenta "No Valid Isilon Master Found"
+    Write-Host -Foregroundcolor Magenta "we will check for any available Isilon Sourcemaster to create a MasterVMX"
 
     if (!(Test-Path (Join-Path $Sourcedir $sourcemaster )))
             { 
             if (!(Test-Path (Join-path $Sourcedir "EMC*isilon*onefs*.zip")))
                 {
-                write-warning "No Sourcemaster or Package Found, we need to download ONEFS Simulator from EMC"
+                Write-Host -Foregroundcolor Magenta "No Sourcemaster or Package Found, we need to download ONEFS Simulator from EMC"
                 $request = invoke-webrequest http://www.emc.com/products-solutions/trial-software-download/isilon.htm?PID=SWD_isilon_trialsoftware
                 $Link = $request.Links | where OuterText -eq Download
                 $DownloadLink = $link.href
                 $Targetfile = (Join-Path $Sourcedir (Split-Path -Leaf $DownloadLink))
-                Receive-LABBitsFile -DownLoadUrl $DownloadLink -Destination $Targetfile
+                if (!(Receive-LABBitsFile -DownLoadUrl $DownloadLink -Destination $Targetfile))
+                    {
+                    Write-Warning "Failure downloading file, exit now ... "
+                    break
+                    }
                 }
+            
             $Targetfile = (Get-ChildItem -Path  (Join-path $Sourcedir "EMC*isilon*onefs*.zip"))[0]
             Expand-LABZip -zipfilename $Targetfile.FullName -destination $Sourcedir -verbose
             }
@@ -121,7 +127,7 @@ If (!$MasterVMX)
         Write-Verbose "Isisourcepath = $ISISourcepath"
         If (!(Test-Path $ISISourcepath))
             {
-            Write-Warning "No Valid Sourcemaster found"
+            Write-Host -Foregroundcolor Magenta "No Valid Sourcemaster found"
             }
         $ISISources = Get-Item -Path $ISISourcepath
         $ISISources = $ISISources | Sort-Object -Descending
@@ -148,7 +154,7 @@ If (!$MasterVMX)
 
         Copy-Item ($Bootdisk.FullName,$ISIJournal.FullName,$vmxfile.FullName ) -Destination $MasterPath
         $Mastervmx = get-vmx -path $MasterPath
-        Write-Verbose "Tweaking VMX File"
+        Write-Host -ForegroundColor magenta "Tweaking Master VMX File"
         $Config = Get-VMXConfig -config $MasterVMX.Config
         $Config = $Config -notmatch "SCSI0:"
         $Config = $Config -notmatch "ide0:0.fileName"
@@ -183,12 +189,12 @@ if (!$Basesnap)
 
 foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     {
-    Write-Verbose "Checking VM $Nodeprefix$node already Exists"
+    Write-Host -ForegroundColor Magenta "Checking VM $Nodeprefix$node already Exists"
     If (!(get-vmx $Nodeprefix$node))
     {
-    write-verbose "Creating clone $Nodeprefix$node"
+    Write-Host -ForegroundColor Magenta " ==>Creating clone $Nodeprefix$node"
     $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$node 
-    Write-Verbose "Creating Disks"
+    Write-Host -ForegroundColor Magenta " ==>Creating Disks"
     $SCSI = 0
     foreach ($LUN in (1..$Disks))
             {
