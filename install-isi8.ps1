@@ -38,7 +38,8 @@ Param(
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install", Mandatory=$false)]$MasterPath,
 [Parameter(ParameterSetName = "install", Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
-[Parameter(ParameterSetName = "install", Mandatory=$false)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir
+[Parameter(ParameterSetName = "install", Mandatory=$false)]$Sourcedir
+#[Parameter(ParameterSetName = "install", Mandatory=$false)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir
 )
 #requires -version 3.0
 #requires -module vmxtoolkit 
@@ -63,9 +64,11 @@ try
     }
 catch [Exception] 
     {
-    Write-Output "we need a Sourcedir to Continue
-    Consider using -Defaults"
-    break
+    Write-Host "we need a Sourcedir to Continue
+    Creating now
+    "
+    $new_Sourcedir = New-Item -ItemType Directory -Path $Sourcedir -Force | Out-Null
+    #break
     }
                 
 If (!$MasterPath)
@@ -76,7 +79,7 @@ If (!$MasterPath)
             {
             $Mastervmxs = $MasterVMXs | Sort-Object -Descending
             $MasterVMX = $MasterVMXs[0]
-            Write-Verbose " We Found MasterVMX $MasterVMX.VMXname"
+            Write-Verbose "We Found MasterVMX $MasterVMX.VMXname"
             }
      else
             {
