@@ -105,7 +105,7 @@ If (!$MasterVMX)
             if (!(Test-Path (Join-path $Sourcedir "EMC*isilon*onefs*.zip")))
                 {
                 write-warning "No Sourcemaster or Package Found, we need to download ONEFS Simulator from EMC"
-                $request = invoke-webrequest http://www.emc.com/getisilon
+                $request = invoke-webrequest http://www.emc.com/products-solutions/trial-software-download/isilon.htm?PID=SWD_isilon_trialsoftware
                 $Link = $request.Links | where OuterText -eq Download
                 $DownloadLink = $link.href
                 $Targetfile = (Join-Path $Sourcedir (Split-Path -Leaf $DownloadLink))
@@ -133,7 +133,7 @@ If (!$MasterVMX)
         $ISIJournal = Get-ChildItem -path $ISISource -Filter "isi-journal.vmdk"
         Write-Verbose "Found Journal $($ISIJournal.fullname)"
 
-        $vmxfile = Get-ChildItem -path $ISISource -Filter "b*.vmx"
+        $vmxfile = Get-ChildItem -path $ISISource -Filter "b*.vmx" | where { $_.FullName -NotMatch "vmxf" }
         Write-Verbose "Found VMXfile $($vmxfile.fullname)"
 
         $Masterpath = ".\ISIMaster$Isiverlatest"
