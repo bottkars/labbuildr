@@ -1188,7 +1188,7 @@ function invoke-postsection
 	invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$IN_Guest_UNC_NodeScriptDir" -Script powerconf.ps1 -interactive # $CommonParameter
 	write-verbose "Configuring UAC"
     invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$IN_Guest_UNC_NodeScriptDir" -Script set-uac.ps1 -interactive # $CommonParameter
-    if ($Default.Puppet)
+    if ($LabDefaults.Puppet)
         {
         invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$IN_Guest_UNC_Scriptroot\Node" -Script install-puppetagent.ps1 -Parameter "-Puppetmaster $Puppetmaster" -interactive # $CommonParameter
         }
@@ -1362,14 +1362,27 @@ if ($defaults.IsPresent)
     if (Test-Path $Builddir\defaults.xml)
         {
         status "Loading defaults from $Builddir\defaults.xml"
-        $Default = Get-LABDefaults
+        $LabDefaults = Get-LABDefaults
         }
-        $DefaultGateway = $Default.DefaultGateway
+       if (!($default))
+                {
+                try
+                    {
+                    $LabDefaults = Get-labDefaults -Defaultsfile ".\defaults.xml.example"
+                    }
+                catch
+                    {
+                Write-Warning "no  defaults or example defaults found, exiting now"
+                exit
+                    }
+        Write-Host -ForegroundColor Magenta "Using generic defaults from labbuildr"
+        }
+        $DefaultGateway = $LabDefaults.DefaultGateway
         if (!$nmm_ver)
             {
             try
                 {
-                $nmm_ver = $Default.nmm_ver
+                $nmm_ver = $LabDefaults.nmm_ver
                 }
             catch
             [System.Management.Automation.ValidationMetadataException]
@@ -1383,7 +1396,7 @@ if ($defaults.IsPresent)
             {
             try
                 {
-                $nw_ver = $Default.nw_ver
+                $nw_ver = $LabDefaults.nw_ver
                 }
             catch
             [System.Management.Automation.ValidationMetadataException]
@@ -1396,7 +1409,7 @@ if ($defaults.IsPresent)
             {
             try
                 {
-                $Masterpath = $Default.Masterpath
+                $Masterpath = $LabDefaults.Masterpath
                 }
             catch
                 {
@@ -1409,7 +1422,7 @@ if ($defaults.IsPresent)
             {
             try
                 {
-                $Sourcedir = $Default.Sourcedir
+                $Sourcedir = $LabDefaults.Sourcedir
                 }
             catch [System.Management.Automation.ParameterBindingException]
                 {
@@ -1422,7 +1435,7 @@ if ($defaults.IsPresent)
             {
             try
                 {
-                $master = $Default.master
+                $master = $LabDefaults.master
                 }
             catch 
                 {
@@ -1434,7 +1447,7 @@ if ($defaults.IsPresent)
             {   
             try
                 {
-                $sqlver = $Default.sqlver
+                $sqlver = $LabDefaults.sqlver
                 }
             catch 
                 {
@@ -1446,7 +1459,7 @@ if ($defaults.IsPresent)
             {
             try
                 {
-                $e15_cu = $Default.e15_cu
+                $e15_cu = $LabDefaults.e15_cu
                 }
             catch 
                 {
@@ -1458,7 +1471,7 @@ if ($defaults.IsPresent)
             {
             try
                 {
-                $e16_cu = $Default.e16_cu
+                $e16_cu = $LabDefaults.e16_cu
                 }
             catch 
                 {
@@ -1470,7 +1483,7 @@ if ($defaults.IsPresent)
             {
             try
                 {
-                $ScaleIOVer = $Default.ScaleIOVer
+                $ScaleIOVer = $LabDefaults.ScaleIOVer
                 }
             catch 
                 {
@@ -1482,7 +1495,7 @@ if ($defaults.IsPresent)
             {
             try
                 {
-                $vmnet = $Default.vmnet
+                $vmnet = $LabDefaults.vmnet
                 }
             catch 
                 {
@@ -1494,7 +1507,7 @@ if ($defaults.IsPresent)
             {
             try
                 {
-                $BuildDomain = $Default.BuildDomain
+                $BuildDomain = $LabDefaults.BuildDomain
                 }
             catch 
                 {
@@ -1506,7 +1519,7 @@ if ($defaults.IsPresent)
             {
             try
                 {
-                $MySubnet = $Default.mysubnet
+                $MySubnet = $LabDefaults.mysubnet
                 }
             catch 
                 {
@@ -1518,7 +1531,7 @@ if ($defaults.IsPresent)
             {
             try
                 {
-                $vmnet = $Default.vmnet
+                $vmnet = $LabDefaults.vmnet
                 }
             catch 
                 {
@@ -1530,7 +1543,7 @@ if ($defaults.IsPresent)
             {
             try
                 {
-                $AddressFamily = $Default.AddressFamily
+                $AddressFamily = $LabDefaults.AddressFamily
                 }
             catch 
                 {
@@ -1542,7 +1555,7 @@ if ($defaults.IsPresent)
             {
             try
                 {
-                $IPv6Prefix = $Default.IPv6Prefix
+                $IPv6Prefix = $LabDefaults.IPv6Prefix
                 }
             catch 
                 {
@@ -1554,7 +1567,7 @@ if ($defaults.IsPresent)
             {
             try
                 {
-                $IPv6PrefixLength = $Default.IPv6PrefixLength
+                $IPv6PrefixLength = $LabDefaults.IPv6PrefixLength
                 }
             catch 
                 {
@@ -1564,7 +1577,7 @@ if ($defaults.IsPresent)
             }
         if (!($MyInvocation.BoundParameters.Keys.Contains("Gateway")))
             {
-            if ($Default.Gateway -eq "true")
+            if ($LabDefaults.Gateway -eq "true")
                 {
                 $Gateway = $true
                 [switch]$NW = $True
@@ -1573,14 +1586,14 @@ if ($defaults.IsPresent)
             }
         if (!($MyInvocation.BoundParameters.Keys.Contains("NoDomainCheck")))
             {
-            if ($Default.NoDomainCheck -eq "true")
+            if ($LabDefaults.NoDomainCheck -eq "true")
                 {
                 [switch]$NoDomainCheck = $true
                 }
             }
         if (!($MyInvocation.BoundParameters.Keys.Contains("NMM")))
             {
-            if ($Default.NMM -eq "true")
+            if ($LabDefaults.NMM -eq "true")
                 {
                 $nmm = $true
                 $nw = $true
@@ -1598,13 +1611,13 @@ if (!$e16_cu) {$e16_cu = $latest_e16_cu}
 if (!$Master) {$Master = $latest_master}
 if (!$vmnet) {$vmnet = $Default_vmnet}
 if (!$IPv6PrefixLength){$IPv6PrefixLength = $Default_IPv6PrefixLength}
-if (!$Default.DNS1)
+if (!$LabDefaults.DNS1)
     {
     $DNS1 = "$IPv4Subnet.10"
     } 
 else 
     {
-    $DNS1 = $Default.DNS1
+    $DNS1 = $LabDefaults.DNS1
     }
 write-verbose "After defaults !!!! "
 Write-Verbose "Sourcedir : $Sourcedir"
@@ -1660,9 +1673,9 @@ $config += ("<DNS1>$($DNS1)</DNS1>")
 $config += ("<NMM>$($NMM.IsPresent)</NMM>")
 $config += ("<Masterpath>$Masterpath</Masterpath>")
 $config += ("<NoDomainCheck>$NoDomainCheck</NoDomainCheck>")
-$config += ("<Puppet>$($Default.Puppet)</Puppet>")
-$config += ("<PuppetMaster>$($Default.PuppetMaster)</PuppetMaster>")
-$config += ("<Hostkey>$($Default.HostKey)</Hostkey>")
+$config += ("<Puppet>$($LabDefaults.Puppet)</Puppet>")
+$config += ("<PuppetMaster>$($LabDefaults.PuppetMaster)</PuppetMaster>")
+$config += ("<Hostkey>$($LabDefaults.HostKey)</Hostkey>")
 $config += ("</config>")
 $config | Set-Content $defaultsfile
 }
@@ -2314,9 +2327,9 @@ if ($ScaleIO.IsPresent)
 } #end ScaleIO
 ##### puppet stuff
 ############
-if ($default.Puppet)
+if ($LabDefaults.Puppet)
     {
-    If ($Default.Puppetmaster -match "Enterprise")
+    If ($LabDefaults.Puppetmaster -match "Enterprise")
     {
         $Puppetmaster  = "PuppetENMaster1"
     }
