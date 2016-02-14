@@ -67,7 +67,6 @@ If ($Defaults.IsPresent)
             }
         Write-Host -ForegroundColor Magenta "Using generic defaults from labbuildr"
         }
-    Pause
      $vmnet = $labdefaults.vmnet
      $subnet = $labdefaults.MySubnet
      $BuildDomain = $labdefaults.BuildDomain
