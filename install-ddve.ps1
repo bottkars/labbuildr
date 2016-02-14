@@ -3,17 +3,14 @@
    .\install-ddve.ps1 -MasterPath F:\labbuildr\ddve-5.6.0.3-485123\
 .DESCRIPTION
   install-ddve only applies to Testers of the Virtual DDVe
-  install-ddve is a 2 Step Process.
+  install-ddve is a 1 Step Process.
   Once DDVE is downloaded via feedbckcentral, run 
-  1.) ( only once )
-   .\install-ddve.ps1 -ovf G:\Sources\ddve-5.6.0.3-485123\ddve-5.6.0.3-485123.ovf
+   .\install-ddve.ps1 -defauls
    This creates a DDVE Master in your labbuildr directory.
-  2.)
-  .\install-ddve.ps1 -MasterPath .\ddve-5.6.0.3-485123\ -Defaults
-  This installs a DDVE using the defaults file and the just extracted ddve Master
+   This installs a DDVE using the defaults file and the just extracted ddve Master
     
       
-      Copyright 2014 Karsten Bott
+      Copyright 2016 Karsten Bott
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -27,7 +24,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://inside.emc.com/people/bottk/blog/2015/07/22/labbuildrnew-solutionpack-install-ddveps1
+   https://github.com/bottkars/labbuildr/wiki/SolutionPacks#install-ddve
 .EXAMPLE
     Importing the ovf template
  .\install-ddve.ps1 -ovf G:\Sources\ddve-5.6.0.3-485123\ddve-5.6.0.3-485123.ovf
