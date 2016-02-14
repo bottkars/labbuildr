@@ -1,14 +1,14 @@
 <config>
 <nmm_ver></nmm_ver>
 <nmm>False</nmm>
-<nw_ver>nw90.DA</nw_ver>
+<nw_ver></nw_ver>
 <master>2012R2FallUpdate</master>
 <sqlver>SQL2014</sqlver>
 <e15_cu></e15_cu>
-<e16_cu>Preview1</e16_cu>
+<e16_cu></e16_cu>
 <vmnet>vmnet2</vmnet>
 <vlanID></vlanID>
-<BuildDomain>EMCDEBlog</BuildDomain>
+<BuildDomain>labbuildr</BuildDomain>
 <MySubnet>192.168.2.0</MySubnet>
 <AddressFamily>IPv4</AddressFamily>
 <IPV6Prefix>FD00::</IPV6Prefix>
