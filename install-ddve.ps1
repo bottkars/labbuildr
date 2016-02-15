@@ -3,17 +3,14 @@
    .\install-ddve.ps1 -MasterPath F:\labbuildr\ddve-5.6.0.3-485123\
 .DESCRIPTION
   install-ddve only applies to Testers of the Virtual DDVe
-  install-ddve is a 2 Step Process.
+  install-ddve is a 1 Step Process.
   Once DDVE is downloaded via feedbckcentral, run 
-  1.) ( only once )
-   .\install-ddve.ps1 -ovf G:\Sources\ddve-5.6.0.3-485123\ddve-5.6.0.3-485123.ovf
+   .\install-ddve.ps1 -defauls
    This creates a DDVE Master in your labbuildr directory.
-  2.)
-  .\install-ddve.ps1 -MasterPath .\ddve-5.6.0.3-485123\ -Defaults
-  This installs a DDVE using the defaults file and the just extracted ddve Master
+   This installs a DDVE using the defaults file and the just extracted ddve Master
     
       
-      Copyright 2014 Karsten Bott
+      Copyright 2016 Karsten Bott
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -27,7 +24,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://inside.emc.com/people/bottk/blog/2015/07/22/labbuildrnew-solutionpack-install-ddveps1
+   https://github.com/bottkars/labbuildr/wiki/SolutionPacks#install-ddve
 .EXAMPLE
     Importing the ovf template
  .\install-ddve.ps1 -ovf G:\Sources\ddve-5.6.0.3-485123\ddve-5.6.0.3-485123.ovf
@@ -59,7 +56,7 @@
 [CmdletBinding(DefaultParametersetName = "default")]
 Param(
 [Parameter(ParameterSetName = "import",Mandatory=$true)][String]
-[ValidateScript({ Test-Path -Path $_ -Filter *.ov* -PathType Leaf -ErrorAction SilentlyContinue })]$ovf,
+[ValidateScript({ Test-Path -Path $_ -Filter *.ova -PathType Leaf -ErrorAction SilentlyContinue })]$ovf,
 [Parameter(ParameterSetName = "import",Mandatory=$false)][String]$mastername,
 
 #[Parameter(ParameterSetName = "install",Mandatory=$true)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath,
@@ -105,10 +102,11 @@ switch ($PsCmdlet.ParameterSetName)
         {
         if (!($mastername)) 
             {
-            $mastername = (Split-Path -Leaf $ovf).Replace(".ovf","")
+            $OVFfile = Get-Item $ovf
+            $mastername = $OVFfile.BaseName
             }
         & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $ovf $PSScriptRoot #
-        Write-Output "Use install-ddve -Masterpath .\$Mastername"
+        Write-Host -ForegroundColor Magenta  "Use install-ddve.ps1 -Masterpath .\$Mastername -Defaults"
         }
 
      default
@@ -116,6 +114,19 @@ switch ($PsCmdlet.ParameterSetName)
         If ($Defaults.IsPresent)
             {
             $labdefaults = Get-labDefaults
+            if (!($labdefaults))
+                {
+                try
+                    {
+                    $labdefaults = Get-labDefaults -Defaultsfile ".\defaults.xml.example"
+                    }
+                catch
+                    {
+                Write-Warning "no  defaults or example defaults found, exiting now"
+                exit
+                    }
+            Write-Host -ForegroundColor Magenta "Using generic defaults from labbuildr"
+            }
             $vmnet = $labdefaults.vmnet
             $subnet = $labdefaults.MySubnet
             $BuildDomain = $labdefaults.BuildDomain
@@ -151,13 +162,13 @@ switch ($PsCmdlet.ParameterSetName)
 
         if (!$MasterVMX)
             {
-            write-warning "Could not find DDVEMaster"
+            write-Host -ForegroundColor Magenta "Could not find existing DDVEMaster"
             if ($Defaults.IsPresent)
                 {
-                Write-Warning "Trying Latest OVF fom $Sourcedir"
+                Write-Host -ForegroundColor Magenta "Trying Latest OVF fom $Sourcedir"
                 try
                     {
-                    $OVFpath =Join-Path $Sourcedir "ddve-*\*.ov*" -ErrorAction Stop
+                    $OVFpath =Join-Path $Sourcedir "ddve-*.ov*" -ErrorAction Stop
                     }
                 catch [System.Management.Automation.DriveNotFoundException] 
                     {
@@ -173,9 +184,9 @@ switch ($PsCmdlet.ParameterSetName)
                         }
                     else 
                         {
-                        Write-Warning "testing OVF"
+                        Write-Host -ForegroundColor Magenta "testing OVA File"
                         $OVFfile = $OVFfile[0]
-                        $mastername = (Split-Path -Leaf $OVFfile).Replace(".ovf","")
+                        $mastername = $OVFfile.BaseName
                         & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $OVFfile.FullName $PSScriptRoot #
                         if ($LASTEXITCODE -ne 0)
                             {
@@ -203,7 +214,7 @@ switch ($PsCmdlet.ParameterSetName)
 
         if (!$Basesnap) 
             {
-            write-verbose "Tweaking Base VMX"
+            Write-Host -ForegroundColor Magenta "Tweaking Base VMX"
             $config = Get-VMXConfig -config $MasterVMX.config
             $config = $config -notmatch "virtualhw.version"
             $config += 'virtualhw.version = "9"'
@@ -228,8 +239,8 @@ switch ($PsCmdlet.ParameterSetName)
             Write-Verbose "Checking VM $Nodeprefix$node already Exists"
             If (!(get-vmx -path $Nodeprefix$node))
                 {
-                write-verbose "Creating clone $Nodeprefix$node"
-                $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXlinkedClone -CloneName $Nodeprefix$node -Clonepath "$Builddir"
+                write-Host -ForegroundColor Magenta "Creating clone $Nodeprefix$node"
+                $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXlinkedClone -CloneName $Nodeprefix$node -Clonepath "$Builddir" 
                 switch ($DDvESize)
                     {
                 "0.5TB"
@@ -271,6 +282,7 @@ switch ($PsCmdlet.ParameterSetName)
 
             }
             $scsi = 0
+            Write-Host -ForegroundColor Magenta "Adding Disks"
             foreach ($LUN in (2..($NumDisks+1)))
                     {
                     $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
@@ -304,13 +316,13 @@ switch ($PsCmdlet.ParameterSetName)
             $Netadater1connected = $NodeClone | Disconnect-VMXNetworkAdapter -Adapter 1
             
             $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
-                $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
+            $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
             Write-Verbose "Configuring Memory to $memsize"
             $Memory = $NodeClone | Set-VMXmemory -MemoryMB $memsize
             Write-Verbose "Configuring $Numcpu CPUs"
             $Processor = $nodeclone | Set-VMXprocessor -Processorcount $Numcpu
             Write-Verbose "Starting VM $($NodeClone.Clonename)"
-            $NodeClone | start-vmx
+            $NodeClone | start-vmx | Out-Null
             if ($configure.IsPresent)
                 {
                 $ip="$subnet.2$Node"
@@ -323,22 +335,18 @@ switch ($PsCmdlet.ParameterSetName)
 
         }
     Write-host
-    Write-host -ForegroundColor Yellow "
-Now Configure DDVE 5.7 ( for earlier versions see end )
+    Write-host -ForegroundColor Magenta "****** To Configure  DDVE 5.7 ******
 Go to VMware Console an wait for system to boot"
     Write-host -ForegroundColor Magenta "
     Please login with 
     localhost login : sysadmin 
     Password: changeme
     Change the Password or type no
-
     Answer yes for GUI Wizard
     Answer yes for Configure Network at this time
     Answer No for DHCP
     Enter $Nodeprefix$Node.$BuildDomain.local as hostname
     Enter $BuildDomain.local as DNSDomainname
-
-
     (The orde of the next command and Devicenames may vary from Version to Version )
 Ethernet Port ethV1
     Enter NO for Enable Ethernet ethV1
@@ -358,8 +366,8 @@ DNS Server
 
 Open Your webbrowser to Configure Licences and Features !!!
 "
-Write-Host -ForegroundColor Yellow "     
-    NOTE !!!!!!
+<#
+Write-Host -ForegroundColor DarkYellow "NOTE !!!!!!
     +++++++++++++DDVE 5.5.1.4 and 5.6 ( feedbackcentral ) do not have WEB UI enabled by default ! +++++++++++++
     special Instructions for DDVE 5.5.1 to 5.6
     When the Wizard starts, press Ctrl-C
@@ -371,6 +379,7 @@ Write-Host -ForegroundColor Yellow "
     enter 'config setup'
     +++++++++++++make sure you did 'adminaccess enable http' from above !!!!                      +++++++++++++
     "
+#>
     }# end default
 }
 
