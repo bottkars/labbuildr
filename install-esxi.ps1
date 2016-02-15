@@ -32,40 +32,89 @@
 #>
 [CmdletBinding()]
 Param(
-
-[Parameter(Mandatory=$false)][int32]$Nodes =1,
-[Parameter(Mandatory=$false)][int32]$Startnode = 1,
-[Parameter(Mandatory=$False)][int32]$Disks = 1,
-[Parameter(Mandatory=$False)][ValidateSet(36GB,72GB,146GB)][uint64]$Disksize = 146GB,
+[Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory = $false)][int32]$Nodes =1,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory = $false)][int32]$Startnode = 1,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory = $false)][int32]$Disks = 1,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet(36GB,72GB,146GB)][uint64]$Disksize = 146GB,
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
-[Parameter(Mandatory=$true)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet,
-<# If not using standard labbuildr, specigy the driveletter for your sources directory#>
-[Parameter(Mandatory=$False)][ValidateLength(1,1)][Validatepattern('[A-Z]')][String]$Driveletter,
-[Parameter(Mandatory=$true)]
+[Parameter(ParameterSetName = "install",Mandatory=$true)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet,
+[Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain = "labbuildr",
-[Parameter(Mandatory=$false)][ValidateScript({Test-Path -Path $_ -PathType Leaf -Include "ESX*labbuildr-ks.iso"})]$esxiso,
-[Parameter(Mandatory=$true)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$ESXIMasterPath,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateScript({Test-Path -Path $_ -PathType Leaf -Include "VMware-VMvisor-Installer*labbuildr-ks*.iso"})]$esxiso,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(Mandatory=$false)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$ESXIMasterPath = ".\esximaster",
  <# NFS Parameter configures the NFS Default Datastore from DCNODE#>
-[Parameter(Mandatory=$false)][switch]$nfs,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory = $false)][switch]$nfs,
 <# future use, initializes nfs on DC#>
-[Parameter(Mandatory=$false)][switch]$initnfs,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory = $false)][switch]$initnfs,
 <# should we use a differnt vmnet#>
-[Parameter(Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
 <# injects the kdriver for recoverpoint #>
-[Parameter(Mandatory = $false)][switch]$kdriver
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory = $false)][switch]$kdriver,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory = $false)][switch]$esxui,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
 
 )
 
 #requires -version 3.0
 #requires -module vmxtoolkit 
+
+
+If ($Defaults.IsPresent)
+    {
+     $labdefaults = Get-labDefaults
+     if (!($labdefaults))
+        {
+        try
+            {
+            $labdefaults = Get-labDefaults -Defaultsfile ".\defaults.xml.example"
+            }
+        catch
+            {
+            Write-Warning "no  defaults or example defaults found, exiting now"
+            exit
+            }
+        Write-Host -ForegroundColor Magenta "Using generic defaults from labbuildr"
+        }
+     $vmnet = $labdefaults.vmnet
+     $subnet = $labdefaults.MySubnet
+     $BuildDomain = $labdefaults.BuildDomain
+     if (!$Sourcedir)
+            {
+            try
+                {
+                $Sourcedir = $labdefaults.Sourcedir
+                }
+            catch [System.Management.Automation.ParameterBindingException]
+                {
+                Write-Warning "No sources specified, trying default"
+                $Sourcedir = "C:\Sources"
+                }
+            }
+
+     #$Sourcedir = $labdefaults.Sourcedir
+     $Gateway = $labdefaults.Gateway
+     $DefaultGateway = $labdefaults.Defaultgateway
+     $DNS1 = $labdefaults.DNS1
+     $MasterPath = $labdefaults.MasterPath
+     }
+
+
+
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 write-verbose "Subnet will be $subnet"
-if (!($Driveletter)) {$Driveletter = $env:SystemDrive.Substring(0,1)}
-# $Driveletter = $Driveletter.Substring(0,1)
-$Mountroot = $Driveletter.ToUpper() + ":"
-[string]$Sources = "Sources"
-$Sourcedir = "$Mountroot\$Sources"
 $Nodeprefix = "ESXiNode"
 $MasterVMX = get-vmx -path $ESXIMasterPath
 $Password = "Password123!"
@@ -102,31 +151,52 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     Write-Verbose "Checking VM $Nodeprefix$node already Exists"
     If (!(get-vmx $Nodeprefix$node))
     {
-    # $Config = $config | ForEach-Object { $_ -replace "lsilogic" , "pvscsi" }
-    Write-Verbose "Creating Kickstart CD"
+    Write-Host -ForegroundColor Magenta "Creating VM $Nodeprefix$Node"
     Write-Verbose "Clearing out old content"
     if (Test-Path .\iso\ks) { Remove-Item -Path .\iso\ks -Recurse }
     $KSDirectory = New-Item -ItemType Directory .\iso\KS
     
     $Content = Get-Content .\Scripts\ESX\KS.CFG
     ####modify $content
-    $Content = $Content | where {$_ -NotMatch "network"}
-    $Content += "network --bootproto=static --device=vmnic0 --ip=$subnet.8$Node --netmask=255.255.255.0 --gateway=$Subnet.103 --nameserver=$Subnet.10 --hostname=$Nodeprefix$node.$Builddomain.local"
+    #$Content = $Content | where {$_ -NotMatch "network"}
+    $Content += "network --bootproto=static --device=vmnic0 --ip=$subnet.8$Node --netmask=255.255.255.0 --gateway=$DefaultGateway --nameserver=$DNS1 --hostname=$Nodeprefix$node.$Builddomain.local"
     $Content += "keyboard German"
     
         foreach ( $Disk in 1..$Disks)
         {
-        write-Verbose "Customizing Datastore$Disk"
+        Write-Host -ForegroundColor Magenta " ==>Customizing Datastore$Disk"
         $Content += "partition Datastore$Disk@$Nodeprefix$node --ondisk=mpx.vmhba1:C0:T$Disk"+":L0"
         }
+    $Content += Get-Content .\Scripts\ESX\KS_PRE.cfg
+    $Content += "echo 'network --bootproto=static --device=vmnic0 --ip=$subnet.8$Node --netmask=255.255.255.0 --gateway=$DefaultGateway --nameserver=$DNS1 --hostname=$Nodeprefix$node.$Builddomain.local' /tmp/networkconfig" 
 
-
-    $Content += Get-Content .\Scripts\ESX\KS_POST.cfg
-    ### everything here goes to post
-    
-    if ($kdriver.IsPresent)
+    if ($esxui.IsPresent)
         {
-                write-verbose "injecting K-Driver"
+        $Content += Get-Content .\Scripts\ESX\KS_POST.cfg
+        $Post_section = $true
+        ### everything here goes to post
+        Write-Host -ForegroundColor Magenta " ==>injecting ESX-UI"
+        try 
+            {
+            $Drivervib = Get-ChildItem "$Sourcedir\ESX\esxui*.vib" -ErrorAction Stop
+            }
+ 
+        catch [Exception] 
+            {
+            Write-Warning "could not copy ESXUI, please make sure to have Package in $Sourcedir"
+            write-host $_.Exception.Message
+            break
+            }
+        $Drivervib| Sort-Object -Descending | Select-Object -First 1 | Copy-Item -Destination .\iso\KS\ESXUI.VIB
+        $Content += "cp -a /vmfs/volumes/mpx.vmhba32:C0:T0:L0/KS/ESXUI.VIB /vmfs/volumes/Datastore1@$Nodeprefix$node"
+        }
+        if ($kdriver.IsPresent)
+        {
+        if (!$Post_section)
+            {
+            $Content += Get-Content .\Scripts\ESX\KS_POST.cfg
+            }
+        Write-Host -ForegroundColor Magenta " ==>injecting K-Driver"
         try 
             {
             $Drivervib = Get-ChildItem "$Sourcedir\ESX\kdriver_RPESX-00.4.2*.vib" -ErrorAction Stop
@@ -141,12 +211,20 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         $Drivervib| Sort-Object -Descending | Select-Object -First 1 | Copy-Item -Destination .\iso\KS\KDRIVER.VIB
         $Content += "cp -a /vmfs/volumes/mpx.vmhba32:C0:T0:L0/KS/KDRIVER.VIB /vmfs/volumes/Datastore1@$Nodeprefix$node"
         }
+
     $Content += Get-Content .\Scripts\ESX\KS_FIRSTBOOT.cfg
     if ($kdriver.IsPresent)
         {
         $Content += "esxcli software acceptance set --level=CommunitySupported"
         $Content += "esxcli software vib install -v /vmfs/volumes/Datastore1@$Nodeprefix$node/KDRIVER.VIB"
         }
+    if ($esxui.IsPresent)
+        {
+        $Content += "esxcli software acceptance set --level=CommunitySupported"
+        $Content += "esxcli software vib install -v /vmfs/volumes/Datastore1@$Nodeprefix$node/ESXUI.VIB"
+        }
+
+    #$Content += "esxcli software acceptance set --level=CommunitySupported"
     $Content += "cp /var/log/hostd.log /vmfs/volumes/Datastore1@$Nodeprefix$node/firstboot-hostd.log"
     $Content += "cp /var/log/esxi_install.log /vmfs/volumes/Datastore1@$Nodeprefix$node/firstboot-esxi_install.log" 
     $Content += Get-Content .\Scripts\ESX\KS_REBOOT.cfg
@@ -181,18 +259,15 @@ if ($nfs.IsPresent)
     write-verbose "Config : $($Nodeclone.config)"
     
     $Config = Get-VMXConfig -config $NodeClone.config
-    
-    
-    
-   
     IF (!(Test-Path $VMWAREpath\mkisofs.exe))
         {
         Write-Warning "VMware ISO Tools not found, exiting"
         }
 
-        Write-Verbose "Node Clonepath =  $($NodeClone.Path)"
-    .$VMWAREpath\mkisofs.exe -o "$($NodeClone.path)\ks.iso"  "$Builddir\iso" #  | Out-Null
-    $LASTEXITCODE
+    Write-Verbose "Node Clonepath =  $($NodeClone.Path)"
+    Write-Host -ForegroundColor Magenta " ==>Creating Kickstart CD"
+
+    .$VMWAREpath\mkisofs.exe -o "$($NodeClone.path)\ks.iso"  "$Builddir\iso"   | Out-Null
     switch ($LASTEXITCODE)
         {
             2
@@ -202,17 +277,16 @@ if ($nfs.IsPresent)
                 }
         }
     $config = $config | where {$_ -NotMatch "ide1:0"}
-    
-    write-verbose "injecting kickstart CDROM"
+    Write-Host -ForegroundColor Magenta " ==>injecting kickstart CDROM"
     $config += 'ide1:0.present = "TRUE"'
     $config += 'ide1:0.fileName = "ks.iso"'
     $config += 'ide1:0.deviceType = "cdrom-image"'
-    write-verbose "injecting $esxiso CDROM"
+    Write-Host -ForegroundColor Magenta " ==>injecting $esxiso CDROM"
     $config = $config | where {$_ -NotMatch "ide0:0"}
     $config += 'ide0:0.present = "TRUE"'
     $config += 'ide0:0.fileName = "'+$esxiso+'"'
     $config += 'ide0:0.deviceType = "cdrom-image"'
-    Write-Verbose "Creating Disks"
+    Write-Host -ForegroundColor Magenta " ==>Creating Disks"
     foreach ($Disk in 1..$Disks)
         {
      if ($Disk -le 6)
@@ -259,28 +333,28 @@ if ($nfs.IsPresent)
         Write-Verbose "SCSI$($Scsi):$lun"
         $Diskname = "SCSI$SCSI"+"_LUN$LUN.vmdk"
         $Diskpath = "$($NodeClone.Path)\$Diskname"
-        Write-Verbose "Creating Disk #$Disk with $Diskname and a size of $($Disksize/1GB) GB"
-        & $VMWAREpath\vmware-vdiskmanager.exe -c -s $Disksize -a lsilogic -t 0 $Diskpath 2>> error.txt | Out-Null
+        Write-Host -ForegroundColor Magenta " ==>Creating Disk #$Disk with $Diskname and a size of $($Disksize/1GB) GB"
+        & $VMWAREpath\vmware-vdiskmanager.exe -c -s "$($Disksize/1GB)GB" -a lsilogic -t 0 $Diskpath 2>> error.txt | Out-Null
         $AddDrives  = @('scsi'+$scsi+':'+$LUN+'.present = "TRUE"')
         $AddDrives += @('scsi'+$scsi+':'+$LUN+'.deviceType = "disk"')
         $AddDrives += @('scsi'+$scsi+':'+$LUN+'.fileName = "'+$Diskname+'"')
         $AddDrives += @('scsi'+$scsi+':'+$LUN+'.mode = "persistent"')
         $AddDrives += @('scsi'+$scsi+':'+$LUN+'.writeThrough = "false"')
         $Config += $AddDrives
-        $Config
         }
     
-    $Config | set-Content -Path $NodeClone.Config
-    write-verbose "Setting NICs"
+    $Config | set-Content -Path $NodeClone.Config 
+    Write-Host -ForegroundColor Magenta " ==>Setting NICs"
     #Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config
     if ($vmnet)
          {
           Write-Verbose "Configuring NIC 2 and 3 for $vmnet"
     #      Set-VMXNetworkAdapter -Adapter 1 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config 
          write-verbose "Setting NIC0"
-         Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType e1000 -config $NodeClone.Config
+         Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType e1000 -config $NodeClone.Config | Out-Null
     #     get-vmxconfig -config $NodeClone.Config
-         Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config 
+         Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config  | Out-Null
+
     #     Set-VMXVnet -Adapter 2 -vnet $vmnet -config $NodeClone.Config
     #      get-vmxconfig -config $NodeClone.Config
         }
@@ -288,12 +362,18 @@ if ($nfs.IsPresent)
     $ActivationPrefrence = Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node 
     Write-Verbose "Starting $Nodeprefix$node"
     # Set-VMXVnet -Adapter 0 -vnet vmnet2
-    Set-VMXDisplayName -config $NodeClone.Config -Value "$($NodeClone.CloneName)@$Builddomain"
-    start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName
+    Set-VMXDisplayName -config $NodeClone.Config -Value "$($NodeClone.CloneName)@$Builddomain" | Out-Null
+    Write-Host -ForegroundColor Magenta " ==>Starting $($NodeClone.CloneName)"
+    start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
+    Write-Host -ForegroundColor Magenta "The ESX Build may take 2 Minutes ... "
+    if ($esxui)
+        {
+        Write-Host -ForegroundColor Magenta "Connect to ESX UI Using https://$subnet.8$Node/ui"
+        }
     } # end check vm
     else
     {
-    Write-Verbose "VM $Nodeprefix$node already exists"
+    Write-Warning "VM $Nodeprefix$node already exists"
     }
     }
 
