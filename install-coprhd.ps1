@@ -32,7 +32,7 @@ Param(
 [Parameter(ParameterSetName = "install",Mandatory=$false)]$Sourcedir,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath,
+$MasterPath,
 <#Specify desired branch#>
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
@@ -88,6 +88,10 @@ If ($Defaults.IsPresent)
      $DefaultGateway = $labdefaults.Defaultgateway
      $DNS1 = $labdefaults.DNS1
      $MasterPath = $labdefaults.MasterPath
+     If (!$MasterPath)
+        {
+        $MasterPath = $PSScriptRoot
+        }
      }
 
 [System.Version]$subnet = $Subnet.ToString()
