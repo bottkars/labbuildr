@@ -158,14 +158,14 @@ if (!(Test-path "$Sourcedir\Openstack"))
             Write-Verbose "Building new Disk $Diskname"
             $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
             Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
-            $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
+            $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI | Out-Null
             }
         write-verbose "Setting NIC0 to HostOnly"
-        Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config #| Out-Null
+        Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config | Out-Null
         if ($vmnet)
             {
             Write-Verbose "Configuring NIC 0 for $vmnet"
-            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config # | Out-Null
+            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config | Out-Null
             Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config | Out-Null
             }
         $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.CloneName)@$BuildDomain"
@@ -273,6 +273,9 @@ if (!(Test-path "$Sourcedir\Openstack"))
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
 ####
+    $Scriptblock = "[ ! -d /root/.ssh ] && mkdir /root/.ssh"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
 
     if ($Hostkey)
         {
