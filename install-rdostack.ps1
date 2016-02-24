@@ -131,7 +131,7 @@ if (!(Test-path "$Sourcedir\Openstack"))
         {
         If (!(get-vmx $Nodeprefix$node))
         {
-        write-verbose " Creating $Nodeprefix$node"
+        write-Host -ForegroundColor Magenta "==> Creating $Nodeprefix$node"
         $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node 
         If ($Node -eq $Start)
             {$Primary = $NodeClone
@@ -139,7 +139,7 @@ if (!(Test-path "$Sourcedir\Openstack"))
                 {
                 $DefaultGateway = "$subnet.$Range$Start"
                 $DNS1 = $DefaultGateway
-                Write-Verbose "Setting $DefaultGateway as Lab Defaultgateway"
+                write-Host -ForegroundColor Magenta "==> Setting $DefaultGateway as Lab Defaultgateway"
                 Set-labDefaultGateway -DefaultGateway $DefaultGateway
                 Set-labDNS1 -DNS1 $DefaultGateway
                 $NodeClone | Set-VMXNetworkAdapter -Adapter 1 -ConnectionType nat -AdapterType vmxnet3          
@@ -150,21 +150,21 @@ if (!(Test-path "$Sourcedir\Openstack"))
             $DefaultGateway = "$subnet.$Range.$Node"
             }
         $Config = Get-VMXConfig -config $NodeClone.config
-        Write-Verbose "Tweaking Config"
-        Write-Verbose "Creating Disks"
+        write-Host -ForegroundColor Magenta "==> Tweaking Config"
+        write-Host -ForegroundColor Magenta "==> Creating Disks"
         foreach ($LUN in (1..$Disks))
             {
             $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-            Write-Verbose "Building new Disk $Diskname"
+            write-Host -ForegroundColor Magenta "==> Building new Disk $Diskname"
             $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-            Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
+            write-Host -ForegroundColor Magenta "==> Adding Disk $Diskname to $($NodeClone.VMXname)"
             $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI | Out-Null
             }
-        write-verbose "Setting NIC0 to HostOnly"
+        write-Host -ForegroundColor Magenta "==> Setting NIC0 to HostOnly"
         Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config | Out-Null
         if ($vmnet)
             {
-            Write-Verbose "Configuring NIC 0 for $vmnet"
+            write-Host -ForegroundColor Magenta "==> Configuring NIC 0 for $vmnet"
             Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config | Out-Null
             Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config | Out-Null
             }
@@ -176,7 +176,7 @@ if (!(Test-path "$Sourcedir\Openstack"))
         $Config = $Nodeclone | Get-VMXConfig
         $Config = $Config -notmatch "ide1:0.fileName"
         $Config | Set-Content -Path $NodeClone.config 
-        Write-Verbose "Starting $Nodeprefix$Node"
+        write-Host -ForegroundColor Magenta "==> Starting $Nodeprefix$Node"
         start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
         $machinesBuilt += $($NodeClone.cloneName)
     }
@@ -195,122 +195,122 @@ if (!(Test-path "$Sourcedir\Openstack"))
             sleep 5
             }
         until ($ToolState.state -match "running")
-        Write-Verbose "Setting Shared Folders"
+        write-Host -ForegroundColor Magenta "==> Setting Shared Folders"
         $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
-        Write-verbose "Cleaning Shared Folders"
+        write-Host -ForegroundColor Magenta "==> Cleaning Shared Folders"
         $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources
-        Write-Verbose "Adding Shared Folders"        
+        write-Host -ForegroundColor Magenta "==> Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
         $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device eno16777984 -Peerdns -DNS1 $DNS1 -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
         if ($IsGateway.IsPresent -and $NodeClone.vmxname -eq $Primary.clonename )
             {
             $Natdevice = "eno33557248"
-            $NodeClone | Set-VMXLinuxNetwork -dhcp -device $Natdevice -rootuser $Rootuser -rootpassword $Guestpassword
-            write-verbose "Installing NAT"
+            $NodeClone | Set-VMXLinuxNetwork -dhcp -device $Natdevice -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
+            write-Host -ForegroundColor Magenta "==> Installing NAT"
             $Scriptblock = "yum -y install dnsmasq"
             Write-Verbose $Scriptblock
-            $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
+            $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword | Out-Null
 
             $Scriptblock = "chkconfig dnsmasq on && systemctl restart dnsmasq.service"
             Write-Verbose $Scriptblock
-            $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
+            $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword | Out-Null
         
             $Scriptblock = "/sbin/iptables --table nat -A POSTROUTING -o $Natdevice -j MASQUERADE"
             Write-Verbose $Scriptblock
-            $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
+            $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword | Out-Null
         
             $Scriptblock = "echo 'net.ipv4.ip_forward = 1' >> /etc/sysctl.d/98-forward.conf"
             Write-Verbose $Scriptblock
-            $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
+            $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword | Out-Null
             }
 
 
-    write-verbose "Setting Timezone"
+    write-Host -ForegroundColor Magenta "==> Setting Timezone"
     $Scriptblock = "timedatectl set-timezone $DefaultTimezone"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-    write-verbose "Setting Hostname"
+    write-Host -ForegroundColor Magenta "==> Setting Hostname"
     $Scriptblock = "hostnamectl set-hostname $($NodeClone.vmxname)"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
 
     write-warning "trying to fetch RDO"
     $myrepo="/mnt/hgfs/Sources/Openstack/openstack-$release/"
-    write-verbose "installing openstack repo location"
+    write-Host -ForegroundColor Magenta "==> installing openstack repo location"
     $Scriptblock = "yum install -y https://repos.fedorapeople.org/repos/openstack/openstack-$release/rdo-release-$release-1.noarch.rpm"
-    $NodeClone |Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
-    write-verbose "downloading openstack files"
+    $NodeClone |Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+    write-Host -ForegroundColor Magenta "==> downloading openstack files"
     $Scriptblock = "reposync -l --repoid=openstack-$release --download_path=/mnt/hgfs/Sources/Openstack --downloadcomps --download-metadata -n"
-    $NodeClone |Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
-    write-verbose "creating openstack repository"
+    $NodeClone |Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+    write-Host -ForegroundColor Magenta "==> creating openstack repository"
     $Scriptblock = "createrepo $myrepo"
-    $NodeClone |Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
-    write-verbose "creating local Repository"
+    $NodeClone |Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword | Out-Null
+    write-Host -ForegroundColor Magenta "==> creating local Repository"
     $baseurl="file://$myrepo"
     $File = "/etc/yum.repos.d/rdo-release.repo"
     $Property = "baseurl"
     $Scriptblock = "sed -i '/.*$Property.*/ c\$Property=$baseurl' $file"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
+    $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword | Out-Null
     $Property = "gpgcheck"
     $Scriptblock = "sed -i '/.*$Property.*/ c\$Property=0' $file"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword
-    write-verbose "installing packstack"
+    $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword | Out-Null
+    write-Host -ForegroundColor Magenta "==> installing RDO OpenSTack $release"
 
     $Scriptblock = "yum install -y openstack-packstack $Node_requires"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 ### generate user ssh keys
     $Scriptblock ="/usr/bin/ssh-keygen -t rsa -N '' -f /home/$Guestuser/.ssh/id_rsa"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword | Out-Null
 
     
     $Scriptblock = "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys;chmod 0600 ~/.ssh/authorized_keys"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword | Out-Null
 <####
     $Scriptblock = "[ ! -d /root/.ssh ] && mkdir /root/.ssh"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 #>   
     $Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword 
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null 
 
     if ($Hostkey)
         {
         $Scriptblock = "echo 'ssh-rsa $Hostkey' >> /root/.ssh/authorized_keys"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         }
     
     $Scriptblock = "cat /home/stack/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
     
 
     $Scriptblock = "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys;chmod 0600 /root/.ssh/authorized_keys"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
     $Scriptblock = "{ echo -n '$($NodeClone.vmxname) '; cat /etc/ssh/ssh_host_rsa_key.pub; } >> ~/.ssh/known_hosts"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
     $Scriptblock = "{ echo -n 'localhost '; cat /etc/ssh/ssh_host_rsa_key.pub; } >> ~/.ssh/known_hosts"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
  #### end ssh
     Write-Warning "Installing AllInOne Openstack.... this will take a While !!!
     you might open putty to $ip and tail -f /tmp/inst_openstack.log"
 
     $Scriptblock = "/usr/bin/packstack --allinone"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile /tmp/inst_openstack.log
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile /tmp/inst_openstack.log | Out-Null
 }
     
 
