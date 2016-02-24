@@ -34,7 +34,7 @@ Param(
 [int32]$Nodes=1,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateSet('juno','kilo')]$release="juno",
+[ValidateSet('juno','kilo','liberty')]$release="juno",
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [int32]$Startnode = 1,
