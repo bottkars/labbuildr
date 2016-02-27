@@ -17,7 +17,7 @@ import-module .\vmxtoolkit -Force
 import-module .\labtools -Force
 try
     {
-    Get-ChildItem .\defaults.xml -ErrorAction Stop
+    Get-ChildItem .\defaults.xml -ErrorAction Stop | Out-Null
     }
 catch
     [System.Management.Automation.ItemNotFoundException]
