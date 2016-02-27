@@ -15,6 +15,14 @@ $Userinterface.WindowSize = $size
 clear-host
 import-module .\vmxtoolkit -Force
 import-module .\labtools -Force
+try
+    {
+    Get-ChildItem .\defaults.xml
+    }
+catch
+    {
+    Copy-Item .\defaults.xml.example .\defaults.xml
+    }
 $Defaults = Get-labdefaults
 
 .\Build-lab.ps1
