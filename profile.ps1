@@ -17,10 +17,12 @@ import-module .\vmxtoolkit -Force
 import-module .\labtools -Force
 try
     {
-    Get-ChildItem .\defaults.xml
+    Get-ChildItem .\defaults.xml -ErrorAction Stop
     }
 catch
+    [System.Management.Automation.ItemNotFoundException]
     {
+    Write-Host -ForegroundColor Yellow "no defaults.xml found, using labbuildr default settings"
     Copy-Item .\defaults.xml.example .\defaults.xml
     }
 $Defaults = Get-labdefaults
