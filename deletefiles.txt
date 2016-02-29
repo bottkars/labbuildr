@@ -10,4 +10,5 @@
 .\get-*.ps1
 .\deletefiles.txt
 .\install-isi8.ps1
+.\install-rdostack.ps1
 .\Install\
