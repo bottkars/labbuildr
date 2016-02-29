@@ -2494,7 +2494,7 @@ else
         Write-Verbose "Press any key to Continue Cloning"
         Pause
         }
-
+    Set-LABDNS1 -DNS1 "$IPv4Subnet.10"
 	$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 0 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Size 'L' -Sourcedir $Sourcedir"
 	
 	###################################################

@@ -9,3 +9,5 @@
 .\install-scaleio.ps1
 .\get-*.ps1
 .\deletefiles.txt
+.\install-isi8.ps1
+.\Install\
