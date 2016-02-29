@@ -18,7 +18,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://community.emc.com/blogs/bottk/
+   https://github.com/bottkars/labbuildr/wiki/SolutionPacks#install-openstack
 .EXAMPLE
 
 #>
