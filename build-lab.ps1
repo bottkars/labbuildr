@@ -1364,7 +1364,7 @@ if ($defaults.IsPresent)
         status "Loading defaults from $Builddir\defaults.xml"
         $LabDefaults = Get-LABDefaults
         }
-       if (!($default))
+       if (!($LabDefaults))
                 {
                 try
                     {
