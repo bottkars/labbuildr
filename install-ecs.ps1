@@ -41,7 +41,7 @@ $Sourcedir = 'h:\sources',
 
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateSet("release-2.1","Develop",'master')]$Branch = 'master',
+[ValidateSet("release-2.1","Develop",'master','2.2.0.1')]$Branch = 'master',
 <#Adjusts some Timeouts#>
 [switch]$AdjustTimeouts,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
@@ -152,21 +152,31 @@ if (!($MasterVMX = get-vmx $Required_Master))
             $Docker_imagename = "emccorp/ecs-software-2.1"
             $Docker_image = "ecs-software-2.1"
             $Docker_imagetag = "latest"
+            $Git_Branch = $Branch
+
+            }
+        "2.2.0.1"
+            {
+            $Docker_image = "ecs-software-2.2"
+            $Docker_imagename = "emccorp/ecs-software-2.2"
+            $Docker_imagetag = "2.2.0.1"
+            $Git_Branch = "master"
             }
         default
             {
             $Docker_image = "ecs-software-2.2"
             $Docker_imagename = "emccorp/ecs-software-2.2"
             $Docker_imagetag = "latest"
+            $Git_Branch = "master"
             }
         }
 
 
 if ($offline.IsPresent)
     {
-    if (!(Test-Path "$Sourcedir\docker\$Docker_image.tgz"))
+    if (!(Test-Path "$Sourcedir\docker\$Docker_image_$Docker_imagetag.tgz"))
         {
-        Write-Warning "No offline image $Sourcedir\docker\$Docker_image.tgz is present, exit now"
+        Write-Warning "No offline image $Sourcedir\docker\$Docker_image_$Docker_imagetag.tgz is present, exit now"
         exit
         }
     }
@@ -477,32 +487,32 @@ foreach ($Node in $machinesBuilt)
 
 
 
-if (!(Test-Path "$Sourcedir\docker\$Docker_image.tgz") -and !($offline.IsPresent))
+if (!(Test-Path "$Sourcedir\docker\$($Docker_image)_$Docker_imagetag.tgz") -and !($offline.IsPresent))
     {
     Write-Host -ForegroundColor Magenta " ==>Pulling $Docker_image from Dockerhub ..."
     New-Item -ItemType Directory "$Sourcedir\docker" -ErrorAction SilentlyContinue | Out-Null
-    $Scriptblock = "docker pull $Docker_imagename"
+    $Scriptblock = "docker pull $($Docker_imagename):$Docker_imagetag"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
     Write-Host -ForegroundColor Magenta " ==>Creating Offline Image for ECS $Docker_imagename"
-    $Scriptblock = "docker save $($Docker_imagename):latest | gzip -c >  /mnt/hgfs/Sources/docker/$Docker_image.tgz"
+    $Scriptblock = "docker save $($Docker_imagename):$Docker_imagetag | gzip -c >  /mnt/hgfs/Sources/docker/$($Docker_image_Docker)_$imagetag.tgz"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword # -logfile $Logfile
     }
 else 
     {
-    if (!(Test-Path "$Sourcedir\docker\$Docker_image.tgz"))
+    if (!(Test-Path "$Sourcedir\docker\$($Docker_image)_$Docker_imagetag.tgz"))
         {
         Write-Warning "no docker Image available, exiting now ..."
         exit
         }
-    $Scriptblock = "gunzip -c /mnt/hgfs/Sources/docker/$Docker_image.tgz | docker load"
+    $Scriptblock = "gunzip -c /mnt/hgfs/Sources/docker/$($Docker_image)_$Docker_imagetag.tgz | docker load"
     Write-Verbose "Creating docker fs layer from offline Image"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
     [switch]$offline_available = $true
     }
-    $Scriptblock = "git clone -b $Branch --single-branch https://github.com/EMCECS/ECS-CommunityEdition.git"
+    $Scriptblock = "git clone -b $Git_Branch --single-branch https://github.com/EMCECS/ECS-CommunityEdition.git"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
     # docker_image_name = "emccorp/ecs-software"
@@ -516,7 +526,7 @@ else
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
       #  }
-    if ($Branch -match "feature-ecs-2.2")
+    if ($Branch -match "2.2.0.1")
         {
         $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks sdb --ethadapter eno16777984 --hostname $ECSName --imagename $Docker_imagename --imagetag $Docker_imagetag &> /tmp/ecsinst_step1.log"  
         }
