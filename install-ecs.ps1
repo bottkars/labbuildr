@@ -106,10 +106,20 @@ If ($Defaults.IsPresent)
      $Gateway = $labdefaults.Gateway
      $DefaultGateway = $labdefaults.Defaultgateway
      $DNS1 = $labdefaults.DNS1
+     $DNS2 = $labdefaults.DNS2
+
      }
-If (!$DNS1)
+If (!$DNS1 -and !$DNS2)
     {
     Write-Warning "DNS Server not Set, exiting now"
+    }
+If (!$DNS2 -and $DNS1)
+    {
+    $DNS2 = $DNS1
+    }
+If (!$DNS1 -and $DNS2)
+    {
+    $DNS1 = $DNS2
     }
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
@@ -269,7 +279,7 @@ foreach ($Node in $machinesBuilt)
         $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | Out-Null
         Write-Verbose "Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
-        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device eno16777984 -Peerdns -DNS1 $DNS1 -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
+        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device eno16777984 -Peerdns -DNS1 $DNS1 -DNS2 $DNS2 -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
     
 
     $Logfile = "/tmp/1_prepare.log"
@@ -376,7 +386,7 @@ foreach ($Node in $machinesBuilt)
     
     if ($Hostkey)
             {
-            $Scriptblock = "echo 'ssh-rsa $Hostkey' >> /root/.ssh/authorized_keys"
+            $Scriptblock = "echo '$Hostkey' >> /root/.ssh/authorized_keys"
             Write-Verbose $Scriptblock
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
             }
