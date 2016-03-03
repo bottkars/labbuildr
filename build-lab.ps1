@@ -951,6 +951,7 @@ function domainjoin
     $Folderstate = Set-VMXSharedFolderState -VMXName $nodename -config $CloneVMX -enabled
     Write-Verbose "Please Check inside VM for Network Warnings"
 	While ($FileOK = (&$vmrun -gu Administrator -gp Password123! fileExistsInGuest $CloneVMX $IN_Guest_LogDir\3.pass) -ne "The file exists.") { Write-Host -NoNewline "."; sleep $Sleep }
+    Write-Host "Done"
     invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script create-labshortcut.ps1 -interactive # -Parameter $CommonParameter
 }
 function status
@@ -2307,8 +2308,11 @@ if ($ScaleIO.IsPresent)
         #### will be moved to receive-labopenssl
         if ($ScaleIO_Major -ge 2)
             {
-            Write-Host -ForegroundColor Magenta "Getting OpenSSL"
-            Start-BitsTransfer -Destination $Sourcedir -Source https://slproweb.com/download/Win64OpenSSL_Light-1_0_1s.exe -Description "OpenSSL for ScaleIO"
+            Write-Host -ForegroundColor Magenta "Checking for OpenSSL"
+            if (!(test-path "$Sourcedir\Win64OpenSSL_Light-1_0_1s.exe"))
+                {
+                Start-BitsTransfer -Destination $Sourcedir -Source https://slproweb.com/download/Win64OpenSSL_Light-1_0_1s.exe -Description "OpenSSL for ScaleIO"
+                }
             }
         Write-Verbose "Checking Diskspeed"
         $URL = "https://gallery.technet.microsoft.com/DiskSpd-a-robust-storage-6cd2f223/file/132882/1/Diskspd-v2.0.15.zip"
@@ -2546,7 +2550,8 @@ else
 		status  "Domain Setup Finished"
 		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script dns.ps1 -Parameter "-IPv4subnet $IPv4Subnet -IPv4Prefixlength $IPV4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily  -IPV6Prefix $IPV6Prefix $CommonParameter"  -interactive
 		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script add-serviceuser.ps1 -interactive
-	    write-verbose "Setting Password Policies"
+	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script create-labshortcut.ps1 -interactive # -Parameter $CommonParameter
+        write-verbose "Setting Password Policies"
 		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir  -Script pwpolicy.ps1 -interactive
         invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script set-winrm.ps1 -interactive
         if ($NW.IsPresent)
@@ -3115,7 +3120,7 @@ switch ($PsCmdlet.ParameterSetName)
                                         2
                                             {
                                             Write-Host -ForegroundColor Gray " ==> Installing MDM as TB"
-                                            Invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role MDM -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
+                                            Invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role TB -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
                                             }
                                         }
                                 $mdmipa = "$IPv4Subnet.151"

@@ -87,7 +87,7 @@ return $false
 else
 {
 $Displayname = "$Nodename@$Domainname"
-Write-Host -ForegroundColor Gray "Creating Linked Clone $Nodename from $MasterVMX, VMsize is $Size"
+Write-Host -ForegroundColor DarkCyan " ==> Creating Linked Clone $Nodename from $MasterVMX, VMsize is $Size"
 Write-verbose "Creating linked $Nodename of $MasterVMX"
 # while (!(Get-ChildItem $MasterVMX)) {
 # write-Host "Try Snapshot"
@@ -240,15 +240,16 @@ elseif(!$Isilon.IsPresent)
 
 $Clone | Set-VMXToolsReminder -enabled:$false
 
-Write-Host -ForegroundColor DarkCyan "Booting into Machine Customization, this may take a while"
+Write-Host -ForegroundColor DarkCyan " ==> Booting into Machine Customization, this may take a while"
 $Clone | Start-VMX
 if (!$Isilon.IsPresent)
     {
-    Write-Host -ForegroundColor Gray "Enabling Shared Folders"
+    Write-Host -ForegroundColor DarkCyan " ==> Enabling Shared Folders"
     $Clone | Set-VMXSharedFolderState -enabled
     # $Clone | Write-Host -ForegroundColor Gray
     $Clone | Set-VMXSharedFolder -add -Sharename Scripts -Folder "$Builddir\Scripts"
     Write-verbose "Waiting for Pass 1 (sysprep Finished)"
+    Write-Host -ForegroundColor DarkCyan " ==> Waiting for Sysprep finished"
     test-user -whois Administrator
     } #end not isilon
 return,[bool]$True
