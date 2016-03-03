@@ -3063,6 +3063,16 @@ switch ($PsCmdlet.ParameterSetName)
                     $SIO_ProtectionDomainName = "PD_$BuildDomain"
                     $SIO_StoragePoolName = "SP_$BuildDomain"
                     $SIO_SystemName = "ScaleIO@$BuildDomain"
+                    if ($singlemdm.IsPresent)
+                        {
+                        $mdmipa = "$IPv4Subnet.151"
+                        $mdmipb = "$IPv4Subnet.151"
+                        }
+                    else
+                        {
+                        $mdmipa = "$IPv4Subnet.151"
+                        $mdmipb = "$IPv4Subnet.152"
+                        }
                     switch ($HVNODE)
                         {
                         1
@@ -3072,7 +3082,7 @@ switch ($PsCmdlet.ParameterSetName)
                                 invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-openssl.ps1 -interactive
                                 }
                             Write-Host -ForegroundColor Gray " ==> Installing MDM as Manager"
-                            invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role MDM -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive
+                            invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role MDM -disks $Disks -ScaleIOVer $ScaleIOVer -mdmipa $mdmipa -mdmipb $mdmipb" -interactive
                             }
                         2
                             {
@@ -3084,21 +3094,21 @@ switch ($PsCmdlet.ParameterSetName)
                             if (!$singlemdm.IsPresent)
                                 {
                                 Write-Host -ForegroundColor Gray " ==> Installing MDM as Manager"
-                                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role MDM -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive
+                                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role MDM -disks $Disks -ScaleIOVer $ScaleIOVer  -mdmipa $mdmipa -mdmipb $mdmipb" -interactive
                                 }
                             else
                                 {
                                 Write-Host -ForegroundColor Gray " == > Installing single MDM"
-                                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
+                                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer  -mdmipa $mdmipa -mdmipb $mdmipb" -interactive 
                                 }
                     
                             }
-                            3
+                        3
+                            {
+                            if ($ScaleIO_Major -ge 2)
                                 {
-                                if ($ScaleIO_Major -ge 2)
-                                    {
-                                    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-openssl.ps1 -interactive
-                                    }
+                                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-openssl.ps1 -interactive
+                                }
 
 		                        <#do
 		                            {
@@ -3108,30 +3118,26 @@ switch ($PsCmdlet.ParameterSetName)
 		                        until ($VMrunErrorCondition -notcontains $cmdresult)
 		                        write-log "$origin $cmdresult"
 #>
-                                if (!$singlemdm.IsPresent)
+                            if (!$singlemdm.IsPresent)
+                                {
+                                switch ($scaleio_major)
                                     {
-                                    switch ($scaleio_major)
-                                        {
-                                        1
-                                            {                        
-                                            Write-Host -ForegroundColor Gray " ==>Installing TB"
-                                            Invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role TB -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
-                                            }
-                                        2
-                                            {
-                                            Write-Host -ForegroundColor Gray " ==> Installing MDM as TB"
-                                            Invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role TB -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
-                                            }
+                                    1
+                                        {                        
+                                        Write-Host -ForegroundColor Gray " ==>Installing TB"
+                                        Invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role TB -disks $Disks -ScaleIOVer $ScaleIOVer -mdmipa $mdmipa -mdmipb $mdmipb" -interactive 
                                         }
-                                $mdmipa = "$IPv4Subnet.151"
-                                $mdmipb = "$IPv4Subnet.152"
+                                    2
+                                        {
+                                        Write-Host -ForegroundColor Gray " ==> Installing MDM as TB"
+                                        Invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role TB -disks $Disks -ScaleIOVer $ScaleIOVer -mdmipa $mdmipa -mdmipb $mdmipb" -interactive 
+                                        }
+                                    }
                                 }
                             else
                                 {
                                 Write-Host -ForegroundColor Gray " ==>  Installing single MDM"
-                                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
-                                $mdmipa = "$IPv4Subnet.151"
-                                $mdmipb = "$IPv4Subnet.151"
+                                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer -mdmipa $mdmipa -mdmipb $mdmipb" -interactive 
                                 }
                             Write-Host -ForegroundColor Magenta "generating SIO Config File"
                             Set-LABSIOConfig -mdm_ipa $mdmipa -mdm_ipb $mdmipb -gateway_ip "$IPv4Subnet.153" -system_name $SIO_SystemName -pool_name $SIO_StoragePoolName -pd_name $SIO_ProtectionDomainName
@@ -3156,7 +3162,7 @@ switch ($PsCmdlet.ParameterSetName)
                                 {
                                 invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-openssl.ps1 -interactive
                                 }
-                            invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer" -interactive 
+                                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer -mdmipa $mdmipa -mdmipb $mdmipb" -interactive 
                             }
                         }
                     }
