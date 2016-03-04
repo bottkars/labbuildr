@@ -176,7 +176,7 @@ if ($offline.IsPresent)
     {
     if (!(Test-Path "$Sourcedir\docker\$Docker_image_$Docker_imagetag.tgz"))
         {
-        Write-Warning "No offline image $Sourcedir\docker\$Docker_image_$Docker_imagetag.tgz is present, exit now"
+        Write-Warning "No offline image "$Sourcedir\docker\$($Docker_image)_$Docker_imagetag.tgz" is present, exit now"
         exit
         }
     }
@@ -495,7 +495,7 @@ if (!(Test-Path "$Sourcedir\docker\$($Docker_image)_$Docker_imagetag.tgz") -and 
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
     Write-Host -ForegroundColor Magenta " ==>Creating Offline Image for ECS $Docker_imagename"
-    $Scriptblock = "docker save $($Docker_imagename):$Docker_imagetag | gzip -c >  /mnt/hgfs/Sources/docker/$($Docker_image_Docker)_$imagetag.tgz"
+    $Scriptblock = "docker save $($Docker_imagename):$Docker_imagetag | gzip -c >  /mnt/hgfs/Sources/docker/$($Docker_image)_$Docker_imagetag.tgz"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword # -logfile $Logfile
     }
