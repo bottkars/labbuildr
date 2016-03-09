@@ -147,7 +147,7 @@ if (!($MasterVMX = get-vmx $Required_Master))
     }
     switch ($Branch)
         {
-            "release-2.1"
+         "release-2.1"
             {
             $Docker_imagename = "emccorp/ecs-software-2.1"
             $Docker_image = "ecs-software-2.1"
@@ -502,7 +502,7 @@ if (!(Test-Path "$Sourcedir\docker\$($Docker_image)_$Docker_imagetag.tgz") -and 
     $Scriptblock = "docker pull $($Docker_imagename):$Docker_imagetag"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
-    Write-Host -ForegroundColor Magenta " ==>Creating Offline Image for ECS $Docker_imagename"
+    Write-Host -ForegroundColor Magenta " ==>Creating Offline Image for ECS $($Docker_imagename):$Docker_imagetag"
     $Scriptblock = "docker save $($Docker_imagename):$Docker_imagetag | gzip -c >  /mnt/hgfs/Sources/docker/$($Docker_image)_$Docker_imagetag.tgz"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword # -logfile $Logfile
@@ -532,8 +532,7 @@ else
     $Scriptblock = "sed -i 's\$Property$\#$Property$\' $file"
     # sed -i 's\docker_pull_func(docker_image_name)$\#docker_pull_func(docker_image_name)\' /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py"
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
-
-      #  }
+      <#  }
     if ($Branch -match "2.2.0.1")
         {
         $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks sdb --ethadapter eno16777984 --hostname $ECSName --imagename $Docker_imagename --imagetag $Docker_imagetag &> /tmp/ecsinst_step1.log"  
@@ -542,8 +541,9 @@ else
         {
         $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks sdb --ethadapter eno16777984 --hostname $ECSName &> /tmp/ecsinst_step1.log"  
         }
-   # $Expect = "/usr/bin/expect -c 'spawn /usr/bin/sudo -s $Scriptblock;expect `"*password*:`" { send `"Password123!\r`" }' &> /tmp/ecsinst.log"
-
+#>
+    
+    $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks sdb --ethadapter eno16777984 --hostname $ECSName --imagename $Docker_imagename --imagetag $Docker_imagetag &> /tmp/ecsinst_step1.log"  
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
 
