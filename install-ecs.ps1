@@ -41,7 +41,7 @@ $Sourcedir = 'h:\sources',
 
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateSet("release-2.1","Develop",'master','2.2.0.1')]$Branch = 'master',
+[ValidateSet("release-2.1","Develop",'master','2.2.0.1','2.2.0.2')]$Branch = 'master',
 <#Adjusts some Timeouts#>
 [switch]$AdjustTimeouts,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
@@ -155,18 +155,11 @@ if (!($MasterVMX = get-vmx $Required_Master))
             $Git_Branch = $Branch
 
             }
-        "2.2.0.1"
-            {
-            $Docker_image = "ecs-software-2.2"
-            $Docker_imagename = "emccorp/ecs-software-2.2"
-            $Docker_imagetag = "2.2.0.1"
-            $Git_Branch = "master"
-            }
         default
             {
             $Docker_image = "ecs-software-2.2"
             $Docker_imagename = "emccorp/ecs-software-2.2"
-            $Docker_imagetag = "latest"
+            $Docker_imagetag = $Branch
             $Git_Branch = "master"
             }
         }
