@@ -497,7 +497,7 @@ foreach ($Node in $machinesBuilt)
 
 if (!(Test-Path "$Sourcedir\docker\$($Docker_image)_$Docker_imagetag.tgz") -and !($offline.IsPresent))
     {
-    Write-Host -ForegroundColor Magenta " ==>Pulling $Docker_image from Dockerhub ..."
+    Write-Host -ForegroundColor Magenta " ==>Pulling $($Docker_imagename):$Docker_imagetag from Dockerhub ..."
     New-Item -ItemType Directory "$Sourcedir\docker" -ErrorAction SilentlyContinue | Out-Null
     $Scriptblock = "docker pull $($Docker_imagename):$Docker_imagetag"
     Write-Verbose $Scriptblock
