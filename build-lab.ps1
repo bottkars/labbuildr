@@ -463,7 +463,7 @@ mus be extracted to [sourcesdir]\[nw_ver], ex. c:\sources\nw82
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
-    [ValidateSet('nw90.DA','nw9001','nw9002',
+    [ValidateSet('nw90.DA','nw9001','nw9002','nw9003','nw9004',
     'nw8223','nw8222','nw8221','nw822',
     'nw8218','nw8217','nw8216','nw8215','nw8214','nw8213','nw8212','nw8211','nw821',
     'nw8206','nw8205','nw8204','nw8203','nw8202','nw82',
