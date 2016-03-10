@@ -49,7 +49,7 @@ The extracte OVA will be dehydrated to a VMware Workstation Master #>
 [Parameter(ParameterSetName = "defaults",Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "sdsonly",Mandatory=$false)]
-[String]$SCALEIOMaster = ".\ScaleIOVM*",
+[String]$SCALEIOMaster = ".\ScaleIOVM_2*",
 <# Number of Nodes, default to 3 #>
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
@@ -93,6 +93,7 @@ The extracte OVA will be dehydrated to a VMware Workstation Master #>
 #requires -version 3.0
 #requires -module vmxtoolkit
 #requires -module labtools
+$ScaleIO_tag = "ScaleIOVM_2*"
 If ($singlemdm.IsPresent)
     {
     [switch]$configure = $true
@@ -149,62 +150,14 @@ switch ($PsCmdlet.ParameterSetName)
                 exit
                 }
             }
-        if (!($OVAPath = Get-ChildItem -Path "$Sourcedir\ScaleIO\$ScaleIO_Path" -recurse -Filter "*.ova" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
+        if (!($OVAPath = Get-ChildItem -Path "$Sourcedir\ScaleIO\$ScaleIO_Path" -recurse -Include "$ScaleIO_tag.ova" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
             {
                     write-warning "No ScaleIO OVA found, Checking for Downloaded Package"
-                    <#
-                    $Uri = "http://www.emc.com/products-solutions/trial-software-download/scaleio.htm"
-                    $request = Invoke-WebRequest -Uri $Uri -UseBasicParsing
-                    $DownloadLinks = $request.Links | where href -match "VMWARE"
-                    foreach ($Link in $DownloadLinks)
-                        {
-                        $Url = $link.href
-                        # $URL = "ftp://ftp.emc.com/Downloads/ScaleIO/ScaleIO_VMware_SW_Download.zip"
-                        $FileName = Split-Path -Leaf -Path $Url
-                        if (!(test-path  $Sourcedir\$FileName) -or $forcedownload.IsPresent)
-                        {
-                                    
-                        $ok = Get-labyesnoabort -title "Could not find $Filename, we need to dowload from www.emc.com" -message "Should we Download $FileName from ww.emc.com ?" 
-                        switch ($ok)
-                            {
-
-                            "0"
-                                {
-                                Write-Verbose "$FileName not found, trying Download"
-                                Get-LABHttpFile -SourceURL $URL -TarGetFile $Sourcedir\$FileName -verbose
-                                $Downloadok = $true
-                                }
-                             "1"
-                                {
-                                break
-                                }   
-                             "2"
-                                {
-                                Write-Verbose "User requested Abort"
-                                exit
-                                }
-                            }
-                        
-                        }
-
-                        if ((Test-Path "$Sourcedir\$FileName") -and (!($noextract.ispresent)))
-                            {
-                            Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\ScaleIO\$ScaleIO_Path"
-                            }
-                        else
-                            {
-                            if (!$noextract.IsPresent)
-                                {
-                                exit
-                                }
-                            }
-                        }
-            #>
                     Receive-LABScaleIO -Destination $Sourcedir -arch VMware -unzip
 
         }
            
-        $OVAPath = Get-ChildItem -Path "$Sourcedir\ScaleIO\$ScaleIO_Path" -Recurse -Filter "*.ova"  -Exclude ".*" | Sort-Object -Descending
+        $OVAPath = Get-ChildItem -Path "$Sourcedir\ScaleIO\$ScaleIO_Path" -Recurse -include "$ScaleIO_tag.ova"  -Exclude ".*" | Sort-Object -Descending
         $OVAPath = $OVApath[0]
         Write-Warning "Creating ScaleIO Master for $($ovaPath.Basename), may take a while"
         & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --name=$($ovaPath.Basename) $ovaPath.FullName $PSScriptRoot  #
@@ -224,7 +177,20 @@ switch ($PsCmdlet.ParameterSetName)
             "
             exit
             }
+        if ($SCALEIOMaster -notmatch $ScaleIO_tag)
+            {
+            Write-Warning "Master must math $ScaleIO_tag"
+            exit
+            }
         $Mastervmxlist = get-vmx $SCALEIOMaster | Sort-Object -Descending
+        if (!($Mastervmxlist))
+            {
+            Write-Warning "!!!!! No ScaleIO Master found Ffor $ScaleIO_tag
+            please run .\install-scaleiosvm.ps1 -import to download / create Master
+            "
+            exit
+
+            }
         $MasterVMX = $Mastervmxlist[0]   
         $Nodeprefix = "ScaleIONode"
         If ($configure.IsPresent -and $Nodes -lt 3)
@@ -346,13 +312,16 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         If (!$DefaultGateway) {$DefaultGateway = $Ip}
         write-host -ForegroundColor Magenta " ==>Configuring $Nodeprefix$node with $ip"
         $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device eth0 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node" -suse -rootuser $rootuser -rootpassword $rootpassword 
+        Write-Host -ForegroundColor Magenta "Installing GPG Key"
         $NodeClone | Invoke-VMXBash -Scriptblock "rpm --import /root/install/RPM-GPG-KEY-ScaleIO" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
+        Write-Host -ForegroundColor Magenta "Installing OpenSSL Cert"
+        $NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-openssl*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
         if (!($PsCmdlet.ParameterSetName -eq "sdsonly"))
             {
             if (($Node -in 1..2 -and (!$singlemdm)) -or ($Node -eq 1))
                 {
-                Write-Host -ForegroundColor Magenta " ==>trying MDM Install"
-                $NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-mdm*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
+                Write-Host -ForegroundColor Magenta " ==>trying MDM Install as manager"
+                $NodeClone | Invoke-VMXBash -Scriptblock "export MDM_ROLE_IS_MANAGER=1;rpm -Uhv /root/install/EMC-ScaleIO-mdm*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
                 }
             
             if ($Node -eq 3)
@@ -362,8 +331,10 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
                 $NodeClone | Invoke-VMXBash -Scriptblock "export SIO_GW_KEYTOOL=/usr/java/default/bin/;export GATEWAY_ADMIN_PASSWORD='Password123!';rpm -Uhv --nodeps  /root/install/EMC-ScaleIO-gateway*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
                 if (!$singlemdm)
                     {
-                    Write-Host -ForegroundColor Magenta " ==>trying TB Install"
-                    $NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-tb*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
+                    Write-Host -ForegroundColor Magenta " ==>trying MDM Install as tiebreaker"
+                    $NodeClone | Invoke-VMXBash -Scriptblock "export MDM_ROLE_IS_MANAGER=0;rpm -Uhv /root/install/EMC-ScaleIO-mdm*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
+                    #Write-Host -ForegroundColor Magenta " ==>trying TB Install"
+                    #$NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-tb*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
                     Write-Host -ForegroundColor Magenta " ==>adding MDM to Gateway Server Config File"
                     $sed = "sed -i 's\mdm.ip.addresses=.*\mdm.ip.addresses=$mdm_ipa;$mdm_ipb\' /opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classes/gatewayUser.properties" 
                     }
@@ -382,7 +353,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         if ($sds.IsPresent)
             {
             Write-Host -ForegroundColor Magenta " ==>trying SDS Install"
-            $NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-sds*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
+            $NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-sds-*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
             }
         if ($sdc.IsPresent)
             {
@@ -401,7 +372,7 @@ if ($configure.IsPresent)
         {
         Write-Host -ForegroundColor Magenta "We are now creating the ScaleIO Grid"
         Write-Host -ForegroundColor Magenta " ==>adding Primary MDM $mdm_ipa"
-        $sclicmd =  "scli --add_primary_mdm --primary_mdm_ip $mdm_ipa --mdm_management_ip $mdm_ip --accept_license"
+        $sclicmd =  "scli  --create_mdm_cluster --master_mdm_ip $mdm_ipa  --master_mdm_management_ip $mdm_ipa --approve_certificate --accept_license;sleep 3"
         Write-Verbose $sclicmd
         $Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
 
@@ -412,18 +383,18 @@ if ($configure.IsPresent)
 
         if (!$singlemdm.IsPresent)
             {
-            Write-Host -ForegroundColor Magenta " ==>adding secondary MDM $mdm_ipb"
-            $sclicmd = "$mdmconnect;scli --add_secondary_mdm --mdm_ip $mdm_ipa --secondary_mdm_ip $mdm_ipb --mdm_ip $mdm_ipa"
+            Write-Host -ForegroundColor Magenta " ==>adding standby MDM $mdm_ipb"
+            $sclicmd = "$mdmconnect;scli --add_standby_mdm --mdm_role manager --new_mdm_ip $mdm_ipb --mdm_ip $mdm_ipa"
             Write-Verbose $sclicmd
             $Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile 
-            
+
             Write-Host -ForegroundColor Magenta " ==>adding tiebreaker $tb_ip"
-            $sclicmd = "$mdmconnect;scli --add_tb --tb_ip $tb_ip --mdm_ip $mdm_ipa"
+            $sclicmd = "$mdmconnect; scli --add_standby_mdm --mdm_role tb  --new_mdm_ip $tb_ip --mdm_ip $mdm_ipa"
             Write-Verbose $sclicmd
             $Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
             
             Write-Host -ForegroundColor Magenta " ==>switching to cluster mode"
-            $sclicmd = "$mdmconnect;scli --switch_to_cluster_mode --mdm_ip $mdm_ipa"
+            $sclicmd = "$mdmconnect;scli --switch_cluster_mode --cluster_mode 3_node --add_slave_mdm_ip $mdm_ipb --add_tb_ip $tb_ip  --mdm_ip $mdm_ipa"
             Write-Verbose $sclicmd
             $Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
             }
