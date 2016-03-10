@@ -28,7 +28,7 @@
 Param(
 
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$Defaults = $true,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateSet("vipr-2.3.0.0.828","vipr-2.2.1.0.1106","vipr-2.4.0.0.519")]$viprmaster = "vipr-2.4.0.0.519",
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateSet('vipr-2.3.0.0.828','vipr-2.2.1.0.1106','vipr-2.4.0.0.519','vipr-2.4.1.0.220')]$viprmaster = "vipr-2.4.1.0.220",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
 
 )
@@ -37,7 +37,7 @@ $targetname = "vipr1"
 $ViprZip = "ViPR_Controller_Download.zip"
 $Viprver = $viprmaster.Replace("vipr-","")
 Write-Verbose $Viprver
-$ViprMajor = $Viprver.Substring(0,3)
+$ViprMajor = $Viprver.Substring(0,5)
 Measure-Command {
 If ($Defaults.IsPresent)
     {
@@ -80,7 +80,7 @@ foreach ($Disk in $Disks)
     {
     if (!(Test-Path -Path "$masterpath\*$Disk.vmdk"))
         {
-        if (!(Test-Path "$Sourcedir\ViPR*$ViprMajor*\vipr*controller-1+0.ova"))
+        if (!(test-path "$Sourcedir\Vipr*\$viprmaster-controller-1+0.ova"))
             {
             Write-Warning "Vipr OVA for $Viprver not Found, we try for Zip Package in Sources"
             if (!(Test-Path "$Sourcedir\$ViprZip"))
@@ -106,7 +106,7 @@ foreach ($Disk in $Disks)
                 try
                     {
                     # $Request = Invoke-WebRequest $ViprURL -UseBasicParsing -Method Head
-                    Start-BitsTransfer -DisplayName ViPR -Description "ViPR Controller" -Destination D:\Sources -Source  $ViprURL
+                    Start-BitsTransfer -DisplayName ViPR -Description "ViPR Controller" -Destination $Sourcedir -Source  $ViprURL
                     }
                 catch [Exception] 
                     {
@@ -149,10 +149,10 @@ foreach ($Disk in $Disks)
 	        write-verbose "We are going to extract $LatestZip now"    	
             Expand-LABZip -zipfilename $LatestZip -destination $Sourcedir
             }
-            $Viprova = Get-ChildItem "$Sourcedir\ViPR*$ViprMajor*\$($viprmaster)-controller-1+0.ova" -ErrorAction SilentlyContinue
-            $Viprova = $Viprova| Sort-Object -Property Name -Descending
-		    $LatestViprOVA = $Viprova[0].FullName
-            $LatestVipr = $Viprova[0].Name.Replace("-controller-1+0.ova","")
+            $Viprova = Get-Item "$Sourcedir\Vipr*\$viprmaster-controller-1+0.ova" -filter "*.ova" -ErrorAction SilentlyContinue
+            $Viprova = $Viprova| Sort-Object -Property Name -Descending | Select-Object -Last 1
+		    $LatestViprOVA = $Viprova.FullName
+            $LatestVipr = $Viprova.Name.Replace("-controller-1+0.ova","")
             $LatestViprLic = Get-ChildItem -Path "$Sourcedir\ViPRC*$ViprMajor*\*" -Filter *.lic
             Write-Warning "We found $LatestVipr"
             $masterpath = "$Sourcedir\$LatestVipr"
