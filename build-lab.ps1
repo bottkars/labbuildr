@@ -2218,7 +2218,7 @@ if ($ScaleIO.IsPresent)
     catch
         {
         Write-Host -ForegroundColor Gray " ==> we did not find ScaleIO $ScaleIOVer, we will check local zip/try to download latest version!"
-        Receive-LABScaleIO -Destination $Sourcedir -arch Windows -unzip -Confirm:$true
+        Receive-LABScaleIO -Destination $Sourcedir -arch Windows -unzip -Confirm:$false
         }
         #### will be moved to receive-labopenssl
         if ($ScaleIO_Major -ge 2)
