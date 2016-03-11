@@ -1613,6 +1613,8 @@ if (!$SQLVER) {$SQLVER = $latest_sqlver}
 if (!$e15_cu) {$e15_cu = $latest_e15_cu}
 if (!$e16_cu) {$e16_cu = $latest_e16_cu}
 if (!$Master) {$Master = $latest_master}
+if (!$nmm_ver) {$nmm_ver= $latest_nmm}
+if (!$nw_ver) {$nw_ver= $latest_nw}
 if (!$vmnet) {$vmnet = $Default_vmnet}
 if (!$IPv6PrefixLength){$IPv6PrefixLength = $Default_IPv6PrefixLength}
 if (!$LabDefaults.DNS1)
