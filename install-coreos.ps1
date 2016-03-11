@@ -169,7 +169,7 @@ switch ($PsCmdlet.ParameterSetName)
     $User_data= "#cloud-config
 hostname: $($nodeclone.clonename)
 ssh_authorized_keys:
-    - ssh-rsa $($Hostkey)
+    - $($Hostkey)
 write_files:
     - path: /etc/systemd/network/static.network
       permissions: 0644

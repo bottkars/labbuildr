@@ -226,7 +226,7 @@ if (!$MasterVMX.Template)
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-        $Scriptblock = "echo 'ssh-rsa $Hostkey' >> /home/$Guestuser/.ssh/authorized_keys"
+        $Scriptblock = "echo '$Hostkey' >> /home/$Guestuser/.ssh/authorized_keys"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword | Out-Null
         }

@@ -236,11 +236,11 @@ if (!(Test-path "$Sourcedir\Openstack"))
     if ($Hostkey)
         {
         write-Host -ForegroundColor Magenta "      ==> Adding public ssh keys for Host"
-        $Scriptblock = "echo 'ssh-rsa $Hostkey' >> /root/.ssh/authorized_keys"
+        $Scriptblock = "echo '$Hostkey' >> /root/.ssh/authorized_keys"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-        $Scriptblock = "echo 'ssh-rsa $Hostkey' >> /home/$Guestuser/.ssh/authorized_keys"
+        $Scriptblock = "echo '$Hostkey' >> /home/$Guestuser/.ssh/authorized_keys"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword | Out-Null
         }
