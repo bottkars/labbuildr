@@ -2189,8 +2189,8 @@ if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
 }
 if ($NMM.IsPresent)
     {
-    $NMM_Path = Join-Path $Sourcedir "Networker"
-    if ((Test-Path "$NMM_Path/$nmm_ver/win_x64/networkr/NetWorker Module for Microsoft.msi") -or (Test-Path "$NMM_Path/$nmm_ver/win_x64/networkr/NWVSS.exe"))
+
+    if ((Test-Path "$NW_Sourcedir/$nmm_ver/win_x64/networkr/NetWorker Module for Microsoft.msi") -or (Test-Path "$NW_Sourcedir/$nmm_ver/win_x64/networkr/NWVSS.exe"))
         {
         Write-Verbose "Networker NMM $nmm_ver found"
         }
@@ -2198,56 +2198,8 @@ if ($NMM.IsPresent)
         {
         Write-Host -ForegroundColor Gray " ==> We need to get $NMM_ver, trying Automated Download"
         $Nmm_download_ok  =  receive-LABnmm -nmm_ver $nmm_ver -Destination $NW_Sourcedir -unzip # $CommonParameterReceive-LABnmm -
-        <# New-Item -ItemType Directory -Path $Sourcedir\$EX_Version$e15_cu | Out-Null
-        # }
-        $URLS = ""
-        # if ($nmm_ver -notin ('nmm822','nmm821','nmm82','nmm90.DA','nmm9001') -and 
-        if ($nmm_ver -gt 'nmm_82')
-            {
-            $nmmdotver = $nmm_ver -replace "nmm",""
-            $nmmdotver = $nmmdotver.insert(1,'.')
-            $nmmdotver = $nmmdotver.insert(3,'.')
-            $nmmdotver = $nmmdotver.insert(5,'.')
-            $nmmzip = $nmm_ver -replace ".$"
-            $nmmzip = $nmmzip+'_win_x64.zip'
-            $scvmmzip = $nmmzip -replace "nmm","scvmm"
-            Write-Verbose "$scvmmzip"
-            $urls = ("ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/$($nmmdotver.Substring(0,5))/$nmmdotver/$nmmzip",
-                     "ftp://ftp.legato.com/pub/NetWorker/NMM/Cumulative_Hotfixes/$($nmmdotver.Substring(0,5))/$nmmdotver/$scvmmzip")
-            }
-
-        if ($urls)
-            {
-            foreach ($url in $urls)
-                {
-                $FileName = Split-Path -Leaf -Path $Url
-                if ($FileName -match "nmm")
-                    {
-                    $Zipfilename = "$nmm_ver.zip"
-                    }
-                if ($FileName -match "scvmm")
-                    {
-                    $Zipfilename = "$NMM_scvmm_ver.zip"
-                    }
-                $Zipfile = Join-Path $NMM_Path $Zipfilename
-                if (!(test-path  $Zipfile))
-                    {
-                    Write-Verbose "$Zipfilename not found, trying Download"
-                    if (!( Get-LABFTPFile -Source $URL -Target $Zipfile -verbose -Defaultcredentials))
-                        { 
-                        Write-Warning "Error Downloading file $Url, Please check connectivity"
-                        break
-                        }
-                    }
-                $Destinationdir =  "$($Zipfile.replace(".zip"," "))"
-                Write-Verbose $Destinationdir
-                Expand-LABZip -zipfilename $Zipfile -destination $Destinationdir
-                }
-            }
-      
-      #>
       }
-}
+    }
 ####SACELIO Downloader #####
 if ($ScaleIO.IsPresent)
     {
