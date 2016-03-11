@@ -1,11 +1,11 @@
 <config>
-<nmm_ver></nmm_ver>
+<nmm_ver>nmm9004</nmm_ver>
 <nmm>False</nmm>
-<nw_ver></nw_ver>
+<nw_ver>nw9004</nw_ver>
 <master>2012R2FallUpdate</master>
 <sqlver>SQL2014</sqlver>
-<e15_cu></e15_cu>
-<e16_cu></e16_cu>
+<e15_cu>cu11</e15_cu>
+<e16_cu>final</e16_cu>
 <vmnet>vmnet2</vmnet>
 <vlanID></vlanID>
 <BuildDomain>labbuildr</BuildDomain>
@@ -16,8 +16,9 @@
 <Gateway>False</Gateway>
 <DefaultGateway>192.168.2.4</DefaultGateway>
 <DNS1>192.168.2.4</DNS1>
+<DNS2>192.168.2.10</DNS1>
 <Sourcedir>C:\Sources</Sourcedir>
-<ScaleIOVer></ScaleIOVer>
+<ScaleIOVer>2.0-5014.0</ScaleIOVer>
 <Masterpath></Masterpath>
 <NoDomainCheck></NoDomainCheck>
 <Puppet></Puppet>
