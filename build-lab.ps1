@@ -2197,7 +2197,7 @@ if ($NMM.IsPresent)
     else
         {
         Write-Host -ForegroundColor Gray " ==> We need to get $NMM_ver, trying Automated Download"
-        $Nmm_download_ok  =  receive-LABnmmr -nmm_ver $nmm_ver -Destination $NW_Sourcedir -unzip # $CommonParameterReceive-LABnmm -
+        $Nmm_download_ok  =  receive-LABnmm -nmm_ver $nmm_ver -Destination $NW_Sourcedir -unzip # $CommonParameterReceive-LABnmm -
         <# New-Item -ItemType Directory -Path $Sourcedir\$EX_Version$e15_cu | Out-Null
         # }
         $URLS = ""
