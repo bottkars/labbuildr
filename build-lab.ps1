@@ -427,7 +427,10 @@ Version Of Networker Modules
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
-	[ValidateSet('nmm8221','nmm822','nmm8211','nmm8212','nmm8214','nmm8216','nmm8217','nmm8218','nmm822','nmm821','nmm300', 'nmm301', 'nmm2012', 'nmm3013', 'nmm82','nmm85','nmm85.BR1','nmm85.BR2','nmm85.BR3','nmm85.BR4','nmm90.DA','nmm9001','nmm9002')]
+	#[ValidateSet('nmm8221','nmm822','nmm8211','nmm8212','nmm8214','nmm8216','nmm8217','nmm8218','nmm822','nmm821','nmm300', 'nmm301', 'nmm2012', 'nmm3013', 'nmm82','nmm85','nmm85.BR1','nmm85.BR2','nmm85.BR3','nmm85.BR4','nmm90.DA','nmm9001','nmm9002')]
+    [ValidateSet('nmm90.DA','nmm9001','nmm9002','nmm9003','nmm9004',
+    'nmm8221','nmm8222','nmm8223','nmm8224','nmm8225',
+    'nmm8218','nmm8217','nmm8216','nmm8214','nmm8212','nmm821')]
     $nmm_ver,
 	
 <# Indicates to install Networker Server with Scenario #>
@@ -723,11 +726,11 @@ $Default_Subnet = "192.168.2.0"
 $Default_IPv6Prefix = "FD00::"
 $Default_IPv6PrefixLength = '8'
 $Default_AddressFamily = "IPv4"
-$latest_ScaleIOVer = '1.32-3455.5'
+$latest_ScaleIOVer = '2.0-5014.0'
 $ScaleIO_OS = "Windows"
 $ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
-$latest_nmm = 'nmm9002'
-$latest_nw = 'nw9002'
+$latest_nmm = 'nmm9004'
+$latest_nw = 'nw9004'
 $latest_e16_cu = 'final'
 $latest_e15_cu = 'cu11'
 $latest_sqlver  = 'SQL2014SP1slip'
@@ -2192,7 +2195,8 @@ if ($NMM.IsPresent)
     else
         {
         Write-Host -ForegroundColor Gray " ==> We need to get $NMM_ver, trying Automated Download"
-        # New-Item -ItemType Directory -Path $Sourcedir\$EX_Version$e15_cu | Out-Null
+        $Nmm_download_ok  =  receive-LABnmmr -nmm_ver $nmm_ver -Destination $NW_Sourcedir -unzip # $CommonParameterReceive-LABnmm -
+        <# New-Item -ItemType Directory -Path $Sourcedir\$EX_Version$e15_cu | Out-Null
         # }
         $URLS = ""
         # if ($nmm_ver -notin ('nmm822','nmm821','nmm82','nmm90.DA','nmm9001') -and 
@@ -2238,6 +2242,8 @@ if ($NMM.IsPresent)
                 Expand-LABZip -zipfilename $Zipfile -destination $Destinationdir
                 }
             }
+      
+      #>
       }
 }
 ####SACELIO Downloader #####
@@ -2258,51 +2264,6 @@ if ($ScaleIO.IsPresent)
     catch
         {
         Write-Host -ForegroundColor Gray " ==> we did not find ScaleIO $ScaleIOVer, we will check local zip/try to download latest version!"
-        <#
-        $Uri = "http://www.emc.com/products-solutions/trial-software-download/scaleio.htm"
-        $request = Invoke-WebRequest -Uri $Uri -UseBasicParsing
-        $DownloadLinks = $request.Links | where href -match $ScaleIO_OS
-        foreach ($Link in $DownloadLinks)
-            {
-            $Url = $link.href
-            $FileName = Split-Path -Leaf -Path $Url
-            if (!(test-path  $Sourcedir\$FileName) -or $forcedownload.IsPresent)
-                {
-                $ok = Get-labyesnoabort -title "Could not find $Filename, we need to dowload from www.emc.com" -message "Should we Download $FileName from www.emc.com ?" 
-                switch ($ok)
-                    {
-
-                    "0"
-                        {
-                        Write-Verbose "$FileName not found, trying Download"
-                        Get-LABHttpFile -SourceURL $URL -TarGetFile $Sourcedir\$FileName -verbose
-                        $Downloadok = $true
-                        }
-             
-                        "1"
-                        {
-                        break
-                        }   
-                        "2"
-                        {
-                        Write-Verbose "User requested Abort"
-                        exit
-                        }
-                    }
-                        
-                }#end if
-            Else
-                {
-            Write-Host -ForegroundColor Gray " ==> Found $Sourcedir\$FileName, using this one unless -forcedownload is specified ! "
-                }
-            }
-            if (Test-Path "$Sourcedir\$FileName")
-            {
-                Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\ScaleIO\$ScaleIO_Path"
-            }
-
-        } 
-        #>
         Receive-LABScaleIO -Destination $Sourcedir -arch Windows -unzip -Confirm:$true
         }
         #### will be moved to receive-labopenssl
