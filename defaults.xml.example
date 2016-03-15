@@ -16,7 +16,7 @@
 <Gateway>False</Gateway>
 <DefaultGateway>192.168.2.4</DefaultGateway>
 <DNS1>192.168.2.4</DNS1>
-<DNS2>192.168.2.10</DNS1>
+<DNS2>192.168.2.10</DNS2>
 <Sourcedir>C:\Sources</Sourcedir>
 <ScaleIOVer>2.0-5014.0</ScaleIOVer>
 <Masterpath></Masterpath>
