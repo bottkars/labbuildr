@@ -4,8 +4,8 @@
 <nw_ver>nw9004</nw_ver>
 <master>2012R2FallUpdate</master>
 <sqlver>SQL2014</sqlver>
-<e15_cu>cu11</e15_cu>
-<e16_cu>final</e16_cu>
+<e15_cu>cu12</e15_cu>
+<e16_cu>cu1</e16_cu>
 <vmnet>vmnet2</vmnet>
 <vlanID></vlanID>
 <BuildDomain>labbuildr</BuildDomain>
