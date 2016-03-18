@@ -1015,10 +1015,10 @@ function test-dcrunning
 	if (Test-Path "$Builddir\$DCNODE\$DCNODE.vmx")
 	{
 		if ((get-vmx $DCNODE).state -ne "running")
-		{
+		    {
 			status "Domaincontroller not running, we need to start him first"
-			get-vmx $DCNODE | Start-vmx  
-		}
+			get-vmx $DCNODE | Start-vmx 
+		    }
 	}#end if
 	else
 	{
@@ -1043,6 +1043,7 @@ function test-dcrunning
 function test-domainsetup
 {
 	test-dcrunning
+    get-vmx $DCNODE | Set-VMXSharedFolderState -Enabled
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing Domain Name ...: "
 	# copy-vmxguesttohost -Guestpath "$Scripts\domain.txt" -Hostpath "$Builddir\domain.txt" -Guest $DCNODE
 	$holdomain = Get-Content "$Builddir\$Scripts\$DCNODE\domain.txt"
