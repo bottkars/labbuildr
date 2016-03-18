@@ -1017,7 +1017,7 @@ function test-dcrunning
 		if ((get-vmx $DCNODE).state -ne "running")
 		    {
 			status "Domaincontroller not running, we need to start him first"
-			get-vmx $DCNODE | Start-vmx 
+			$Started = get-vmx $DCNODE | Start-vmx 
 		    }
 	}#end if
 	else
