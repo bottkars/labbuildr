@@ -1017,6 +1017,7 @@ function test-dcrunning
 		if ((get-vmx $DCNODE).state -ne "running")
 		    {
 			status "Domaincontroller not running, we need to start him first"
+            Write-Host -ForegroundColor Gray " ==> Starting DCNODE"
 			$Started = get-vmx $DCNODE | Start-vmx 
 		    }
 	}#end if
@@ -1043,6 +1044,7 @@ function test-dcrunning
 function test-domainsetup
 {
 	test-dcrunning
+    Write-Host -ForegroundColor Gray " ==> testing shared folders on DCNODE"
     $enable_Folders =  get-vmx $DCNODE | Set-VMXSharedFolderState -Enabled
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing Domain Name ...: "
 	# copy-vmxguesttohost -Guestpath "$Scripts\domain.txt" -Hostpath "$Builddir\domain.txt" -Guest $DCNODE
