@@ -1043,7 +1043,7 @@ function test-dcrunning
 function test-domainsetup
 {
 	test-dcrunning
-    get-vmx $DCNODE | Set-VMXSharedFolderState -Enabled
+    $enable_Folders =  get-vmx $DCNODE | Set-VMXSharedFolderState -Enabled
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing Domain Name ...: "
 	# copy-vmxguesttohost -Guestpath "$Scripts\domain.txt" -Hostpath "$Builddir\domain.txt" -Guest $DCNODE
 	$holdomain = Get-Content "$Builddir\$Scripts\$DCNODE\domain.txt"
