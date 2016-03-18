@@ -2804,8 +2804,20 @@ switch ($PsCmdlet.ParameterSetName)
                 checkpoint-progress -step exprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
 			    Write-Host -ForegroundColor Magenta " ==> Setting Power Scheme"
 			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script powerconf.ps1 -interactive
-			    Write-Host -ForegroundColor Magenta " ==> Installing e16, this may take up to 60 Minutes ...."
-			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchange.ps1 -interactive -nowait -Parameter "$CommonParameter -ex_cu $e16_cu"
+			    Switch ($e16_cu)
+                        {
+                        "final"
+                            {
+                            $install_from = "exe"
+                            }
+                        default
+                            {
+                            $install_from = "iso"
+                            }
+                        }
+
+                Write-Host -ForegroundColor Magenta " ==> Installing e16 $e16_cu fro $install_from, this may take up to 60 Minutes ...."
+			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchange.ps1 -interactive -nowait -Parameter "$CommonParameter -ex_cu $e16_cu -install_from $install_from"
                 }
             }
         if ($EXnew)
