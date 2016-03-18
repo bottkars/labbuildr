@@ -177,7 +177,8 @@ Specify if Networker Scenario sould be installed
     CU Location is [Driveletter]:\sources\e2013[cuver], e.g. c:\sources\e2013cu7
     #>
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
-    [ValidateSet('cu1', 'cu2', 'cu3', 'sp1','cu5','cu6','cu7','cu8','cu9','cu10','CU11')][alias('ex_cu')]$e15_cu,
+    [ValidateSet('cu1', 'cu2', 'cu3', 'sp1','cu5','cu6','cu7','cu8','cu9','cu10','CU11','cu12')]
+    [alias('ex_cu')]$e15_cu,
     <# schould we prestage users ? #>	
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
     [Parameter(ParameterSetName = "E15", Mandatory = $false)][switch]$nouser,
@@ -732,7 +733,7 @@ $ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
 $latest_nmm = 'nmm9004'
 $latest_nw = 'nw9004'
 $latest_e16_cu = 'final'
-$latest_e15_cu = 'cu11'
+$latest_e15_cu = 'cu12'
 $latest_sqlver  = 'SQL2014SP1slip'
 $latest_master = '2012R2FallUpdate'
 $latest_sql_2012 = 'SQL2012SP2'
