@@ -168,7 +168,8 @@ Specify if Networker Scenario sould be installed
     CU Location is [Driveletter]:\sources\e2016[cuver], e.g. c:\sources\e2016Preview1
     #>
 	[Parameter(ParameterSetName = "E16", Mandatory = $false)]
-    [ValidateSet('Preview1','final')]$e16_cu,
+    [ValidateSet('cu1','final')]
+    $e16_cu,
 <#
     Determines Exchange CU Version to be Installed
     Valid Versions are:
@@ -732,7 +733,7 @@ $ScaleIO_OS = "Windows"
 $ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
 $latest_nmm = 'nmm9004'
 $latest_nw = 'nw9004'
-$latest_e16_cu = 'final'
+$latest_e16_cu = 'cu1'
 $latest_e15_cu = 'cu12'
 $latest_sqlver  = 'SQL2014SP1slip'
 $latest_master = '2012R2FallUpdate'
