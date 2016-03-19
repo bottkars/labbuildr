@@ -722,6 +722,7 @@ $domainsuffix = ".local"
 $AAGDB = "AWORKS"
 $major = "2016"
 $Edition = "Spring"
+$Default_attachement = "https://www.emc.com/collateral/solution-overview/h12476-so-hybrid-cloud.pdf"
 $Default_vmnet = "vmnet2"
 $Default_BuildDomain = "labbuildr"
 $Default_Subnet = "192.168.2.0"
@@ -1979,9 +1980,7 @@ if ($Exchange2016.IsPresent)
     $EX_Version = "E2016"
     $Scenarioname = "Exchange"
     $Prereqdir = "Attachments"
-    $attachments = (
-    "http://www.cisco.com/c/dam/en/us/solutions/collateral/data-center-virtualization/unified-computing/fle_vmware.pdf"
-    )
+    $attachments = ($Default_attachement)
     $Destination = Join-Path $Sourcedir $Prereqdir
     if (!(Test-Path $Destination)){New-Item -ItemType Directory -Path $Destination | Out-Null }
      foreach ($URL in $attachments)
