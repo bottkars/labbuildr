@@ -2301,10 +2301,12 @@ if ($NW.IsPresent -or $NWServer.IsPresent)
         {
         Write-Host -ForegroundColor Gray " ==> no reader Patch found"
         }
-
-        $Acroread_Patch = $Acroread_Patch | Sort-Object -Property Name -Descending
-		$Latest_AcroreadPatch = $Acroread_Patch[0].Name
-		write-verbose "Found Adobe $Latest_Acroread"
+        if ($Acroread_Patch)
+            {
+            $Acroread_Patch = $Acroread_Patch | Sort-Object -Property Name -Descending
+		    $Latest_AcroreadPatch = $Acroread_Patch[0].Name
+		    write-verbose "Found Adobe $Latest_Acroread"
+            }
 
 	##### 
     $Java7_required = $True
