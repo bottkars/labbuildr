@@ -41,7 +41,7 @@ $Sourcedir = 'h:\sources',
 
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateSet("release-2.1","Develop",'master','latest','2.2.0.1','2.2.0.2')]$Branch = 'master',
+[ValidateSet("release-2.1","Develop",'master','latest','2.2.0.1','2.2.0.2','2.2.0.3')]$Branch = 'master',
 <#Adjusts some Timeouts#>
 [switch]$AdjustTimeouts,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
