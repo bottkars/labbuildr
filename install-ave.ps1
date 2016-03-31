@@ -100,6 +100,7 @@ switch ($PsCmdlet.ParameterSetName)
         If ($Defaults.IsPresent)
             {
             $labdefaults = Get-labDefaults
+            $Hostkey = $labdefaults.HostKey
             $vmnet = $labdefaults.vmnet
             $subnet = $labdefaults.MySubnet
             $BuildDomain = $labdefaults.BuildDomain
@@ -107,13 +108,14 @@ switch ($PsCmdlet.ParameterSetName)
             $Gateway = $labdefaults.Gateway
             $DefaultGateway = $labdefaults.Defaultgateway
             $DNS1 = $labdefaults.DNS1
+            $DNS2 = $labdefaults.DNS2
             $configure = $true
             }
 
 
-        if (!$MasterVMX)
+        if (!($MasterVMX=get-vmx AVEmaster))
             {
-            $MasterVMX = get-vmx -Path AVE-7*
+            $MasterVMX = get-vmx -name AVE-7*
             iF ($MasterVMX)
                 {
                 $MasterVMX = $MasterVMX | Sort-Object -Descending
@@ -292,7 +294,7 @@ switch ($PsCmdlet.ParameterSetName)
     Write-Verbose "Configuring Disks"
     $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/perl /usr/local/avamar/bin/ave-part.pl" -Guestuser $rootuser -Guestpassword changeme -Verbose | Out-Null
     Write-Verbose "rebooting VM $($NodeClone.Clonename)"
-    we do not use shutdown since toolstate does not reset
+#    we do not use shutdown since toolstate does not reset
     $NodeClone | Stop-VMX | Out-Null
     $NodeClone | start-vmx | Out-Null
     do {
@@ -301,18 +303,19 @@ switch ($PsCmdlet.ParameterSetName)
         sleep 10
         }
     until ($ToolState.state -match "running")
-
-    
     }
     $NodeClone | Invoke-VMXBash -Scriptblock "yast2 lan edit id=0 ip=$IP netmask=255.255.255.0 prefix=24 verbose" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
     $NodeClone | Invoke-VMXBash -Scriptblock "hostname $($NodeClone.CloneName)" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
-    $Scriptblock = "echo 'default "+$subnet+".103 - -' > /etc/sysconfig/network/routes"
+    $Scriptblock = "echo 'default "+$DefaultGateway+" - -' > /etc/sysconfig/network/routes"
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock  -Guestuser $rootuser -Guestpassword $rootpassword -Verbose  | Out-Null
     $sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SEARCHLIST=\`"\`"/NETCONFIG_DNS_STATIC_SEARCHLIST=\`""+$BuildDomain+".local\`"/g' /etc/sysconfig/network/config" 
     $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
     $sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SERVERS=\`"\`"/NETCONFIG_DNS_STATIC_SERVERS=\`""+$subnet+".10\`"/g' /etc/sysconfig/network/config"
     $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
     $NodeClone | Invoke-VMXBash -Scriptblock "/sbin/netconfig -f update" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
+    $Scriptblock = "echo '$ip $($Nodeprefix)$($Node) $($Nodeprefix)$($Node).$($BuildDomain).local'  >> /etc/hosts"
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
+
     $Scriptblock = "echo '"+$Nodeprefix+$Node+"."+$BuildDomain+".local'  > /etc/HOSTNAME"
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
     $NodeClone | Invoke-VMXBash -Scriptblock "/etc/init.d/network restart" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
@@ -322,6 +325,17 @@ switch ($PsCmdlet.ParameterSetName)
         sleep 10
         }
     until ($ToolState.state -match "running")
+    if ($Hostkey)
+        {
+        $Scriptblock = "echo '$Hostkey' >> /root/.ssh/authorized_keys2"
+        Write-Verbose $Scriptblock
+        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $rootpassword
+        $Scriptblock = "echo '$Hostkey' >> /home/admin/.ssh/authorized_keys2"
+        Write-Verbose $Scriptblock
+        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $rootpassword
+
+        }
+
     # Write-Verbose "Starting Avamar Installer, this may take a while"
     # $NodeClone | Invoke-VMXBash -Scriptblock "/bin/sh /usr/local/avamar/src/avinstaller-bootstrap-7.1.1-141.sles11_64.x86_64.run" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
     Write-Host "Trying to connect to https://$subnet.3$($Node):7543/avi/avigui.html to complete the Installation"
