@@ -53,6 +53,10 @@ Param(
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][int32]$Startnode = 1,
 
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$dedupe,
+
+
 [Parameter(ParameterSetName = "install", Mandatory = $true)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = "vmnet2"
 
 
@@ -73,6 +77,18 @@ switch ($PsCmdlet.ParameterSetName)
         # $Mymaster = Get-Item $ovf
         $Mastername = $Mymaster.Basename
         & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck  --name=$mastername $ovf $PSScriptRoot #
+        switch ($LASTEXITCODE)
+            {
+                1
+                    {
+                    Write-Warning "There was an error creating the Template"
+                    exit
+                    }
+                default
+                    {
+                    Write-Host "Templyte creation succeded with $LASTEXITCODE"
+                    }
+                }
         $Content = Get-Content $PSScriptRoot\$mastername\$mastername.vmx
         $Content = $Content-notmatch 'snapshot.maxSnapshots'
         $Content | Set-Content $PSScriptRoot\$mastername\$mastername.vmx
@@ -111,17 +127,17 @@ default
     if (!$Basesnap) 
         {
 
-        Write-Verbose "Tweaking VMX File"
+        Write-Host -ForegroundColor Magenta " ==>Tweaking VMX File"
         $Config = Get-VMXConfig -config $MasterVMX.Config
         $Config = $Config -notmatch 'snapshot.maxSnapshots'
         $Config | set-Content -Path $MasterVMX.Config
 
 
-        Write-verbose "Base snap does not exist, creating now"
+        Write-Host -ForegroundColor Magenta " ==>Base snap does not exist, creating now"
         $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
         if (!$MasterVMX.Template) 
             {
-            write-verbose "Templating Master VMX"
+            Write-Host -ForegroundColor Magenta " ==>Templating Master VMX"
             $template = $MasterVMX | Set-VMXTemplate
             }
 
@@ -130,35 +146,41 @@ default
 
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         {
-        Write-Verbose "Checking VM $Nodeprefix$node already Exists"
+        Write-Host -ForegroundColor Magenta " ==>Checking VM $Nodeprefix$node already Exists"
         If (!(get-vmx $Nodeprefix$node))
             {
-            write-verbose "Creating clone $Nodeprefix$node"
+            Write-Host -ForegroundColor Magenta " ==>Creating clone $Nodeprefix$node"
             $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$node 
-            Write-Verbose "Creating Disks"
+            Write-Host -ForegroundColor Magenta " ==>Creating Disks"
             $SCSI = 0
             foreach ($LUN in (2..(1+$Cachevols)))
                 {
                 $Diskname =  "SCSI$SCSI"+"_LUN$LUN"+"_$Cachevolsize.vmdk"
-                Write-Verbose "Building new Disk $Diskname"
+                Write-Host -ForegroundColor Magenta " ==>Building new Disk $Diskname"
                 $Newdisk = New-VMXScsiDisk -NewDiskSize $Cachevolsize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-                Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
+                Write-Host -ForegroundColor Magenta " ==>Adding Disk $Diskname to $($NodeClone.VMXname)"
                 $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
                 }
-            Write-Verbose "Setting ext-0"
-            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config
-            Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config 
-            $Scenario = Set-VMXscenario -config $NodeClone.Config -Scenarioname $Nodeprefix -Scenario 6
-            $ActivationPrefrence = Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node 
+            Write-Host -ForegroundColor Magenta " ==>Setting ext-0"
+            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config  | Out-Null
+            Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config  | Out-Null
+            $Scenario = Set-VMXscenario -config $NodeClone.Config -Scenarioname $Nodeprefix -Scenario 6  | Out-Null
+            $ActivationPrefrence = Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node  | Out-Null
             # Set-VMXVnet -Adapter 0 -vnet vmnet2
-            write-verbose "Setting Display Name $($NodeClone.CloneName)@$Builddomain"
-            Set-VMXDisplayName -config $NodeClone.Config -Displayname "$($NodeClone.CloneName)@$Builddomain" 
-            Write-Verbose "Starting $Nodeprefix$node"
-            start-vmx -Path $NodeClone.config -VMXName $NodeClone.CloneName
+            Write-Host -ForegroundColor Magenta " ==>Setting Display Name $($NodeClone.CloneName)@$Builddomain"
+            Set-VMXDisplayName -config $NodeClone.Config -Displayname "$($NodeClone.CloneName)@$Builddomain"  | Out-Null
+            if ($dedupe)
+                {
+                Write-Host -ForegroundColor Magenta " ==>Aligning Memory and cache for DeDupe"
+                $NodeClone | Set-VMXmemory -MemoryMB 9216 | Out-Null
+                $NodeClone | Set-VMXprocessor -Processorcount 4 | Out-Null
+                } 
+            Write-Host -ForegroundColor Magenta " ==>Starting $Nodeprefix$node"
+            start-vmx -Path $NodeClone.config -VMXName $NodeClone.CloneName  | Out-Null
             } # end check vm
         else
             {
-            Write-Verbose "VM $Nodeprefix$node already exists"
+            Write-Warning "VM $Nodeprefix$node already exists"
             }
         }#end foreach
     write-Warning "Login to Cloudarray with admin / password"
