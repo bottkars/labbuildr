@@ -118,7 +118,8 @@ switch ($PsCmdlet.ParameterSetName)
             }
         $OutContent | Set-Content -Path $Importfile.FullName
         & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $Importfile.FullName $PSScriptRoot #
-        Write-Output "Use install-ave -Master $mastername"
+        Write-Output "Use install-ave -MasterPath $mastername"
+        #
         }
 
      default
