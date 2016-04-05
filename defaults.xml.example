@@ -1,7 +1,7 @@
 <config>
-<nmm_ver>nmm9004</nmm_ver>
+<nmm_ver>nmm9005</nmm_ver>
 <nmm>False</nmm>
-<nw_ver>nw9004</nw_ver>
+<nw_ver>nw9005</nw_ver>
 <master>2012R2FallUpdate</master>
 <sqlver>SQL2014</sqlver>
 <e15_cu>cu12</e15_cu>
