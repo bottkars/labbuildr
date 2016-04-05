@@ -92,7 +92,7 @@ switch ($PsCmdlet.ParameterSetName)
         $Content = Get-Content $PSScriptRoot\$mastername\$mastername.vmx
         $Content = $Content-notmatch 'snapshot.maxSnapshots'
         $Content | Set-Content $PSScriptRoot\$mastername\$mastername.vmx
-        write-Warning "Now run .\install-cloudarray.ps1 -MasterPath .\$mastername -Defaults " 
+        write-host -ForegroundColor Magenta "Now run .\install-cloudarray.ps1 -MasterPath .\$mastername -Defaults " 
         }
 default
     {
