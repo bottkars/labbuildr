@@ -90,14 +90,40 @@ switch ($PsCmdlet.ParameterSetName)
 {
     "import"
         {
-        $Importfile = Get-ChildItem $ovf
+        Write-Host -ForegroundColor Magenta " ==>Validating OVF"
+        try
+            {
+            $Importfile = Get-ChildItem $ovf -ErrorAction SilentlyContinue
+            }
+        catch
+            {
+            Write-Warning "$ovf is no valiud ovf / ova location"
+            exit
+            }
+
         if ($Importfile.extension -eq ".ova")
             {
-            Expand-LAB7Zip -Archive $Importfile.FullName -destination $Importfile.DirectoryName
+            $OVA_Destination = join-path $Importfile.DirectoryName $Importfile.BaseName
+            Write-Host -ForegroundColor Magenta " ==>Extraxting from OVA Package $Importfile"
+            Expand-LAB7Zip -Archive $Importfile.FullName -destination $OVA_Destination
+            $Importfile = Get-ChildItem -Path $OVA_Destination -Filter "*.ovf" 
             }
-        $Importfile = Get-ChildItem -Filter "*.ovf" -Path $Importfile.DirectoryName
-        if (!($mastername)) {$mastername = $Importfile.BaseName}
+        try
+            {
+            Write-Host -ForegroundColor Magenta " ==>Validating OVF from OVA Package"
+            $Importfile = Get-ChildItem -Filter "*.ovf" -Path $Importfile.DirectoryName -ErrorAction SilentlyContinue
+            }
+        catch
+            {
+            Write-Warning "we could not find a ovf file at $($Importfile.Directoryname)"
+            exit
+            }
+        if (!($mastername)) 
+            {
+            $mastername = $Importfile.BaseName
+            }
         ## tweak ovf
+        Write-Host -ForegroundColor Magenta " ==>Adjusting OVF file for VMwARE Workstation"
         $content = Get-Content -Path $Importfile.FullName
         $Out_Line = $true
         $OutContent = @()
@@ -117,9 +143,26 @@ switch ($PsCmdlet.ParameterSetName)
                 }
             }
         $OutContent | Set-Content -Path $Importfile.FullName
-        & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $Importfile.FullName $PSScriptRoot #
-        Write-Output "Use install-ave -MasterPath $mastername"
-        #
+        Write-Host -ForegroundColor Magenta " ==>Checkin for VM $mastername"
+
+        if (Get-VMX $mastername)
+            {
+            Write-Warning "Base VM $mastername already exists, please delete first"
+            exit
+            }
+        else
+            {
+            Write-Host -ForegroundColor Magenta " ==>Importing Base VM"
+            if ((import-VMXOVATemplate -OVA $Importfile.FullName -Name $mastername -acceptAllEulas).success -eq $true)
+                {
+                Write-Host "Use install-ave -MasterName $mastername"
+                }
+            else
+                {
+                Write-Host "Error importing Base VM. Already Exists ?"
+                exit
+                }
+            }
         }
 
      default
@@ -218,6 +261,7 @@ switch ($PsCmdlet.ParameterSetName)
             $content = Get-Content $MasterVMX.config
             $content = $content -notmatch "independent_persistent"
             $content | Set-Content $MasterVMX.config
+            $MasterVMX | Get-VMXScsiDisk | where lun -ne 0 | Remove-VMXScsiDisk
             Write-verbose "Base snap does not exist, creating now"
             $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
             }
@@ -276,12 +320,12 @@ switch ($PsCmdlet.ParameterSetName)
                  }
             
                  foreach ($LUN in (1..$NumDisks))
-                  {
-                   $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-                   Write-Verbose "Building new Disk $Diskname"
+                    {
+                    $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
+                    Write-Verbose "Building new Disk $Diskname"
                     $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-                 Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
-                   $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
+                    Write-Verbose "Adding Disk $Diskname to $($NodeClone.clonename)"
+                    $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
                    }
         
     Write-Verbose "Configuring NIC"
