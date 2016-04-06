@@ -155,7 +155,7 @@ switch ($PsCmdlet.ParameterSetName)
             Write-Host -ForegroundColor Magenta " ==>Importing Base VM"
             if ((import-VMXOVATemplate -OVA $Importfile.FullName -Name $mastername -acceptAllEulas).success -eq $true)
                 {
-                Write-Host "Use install-ave -MasterName $mastername"
+                Write-Host -ForegroundColor Gray "[Preparation of Template done, please run $($MyInvocation.MyCommand) -MasterPath $mastername]"
                 }
             else
                 {
