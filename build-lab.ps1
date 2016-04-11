@@ -2394,6 +2394,7 @@ if (test-vmx $DCNODE)
         {
 	    test-user -whois Administrator
 	    write-verbose "Verifiying Domainsetup"
+        $EnableFolders = get-vmx .\DCNODE | Set-VMXSharedFolderState -enabled
 	    $Checkdom = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$IN_Guest_UNC_Scriptroot\$DCNODE" -Script checkdom.ps1 # $CommonParameter
 	    $BuildDomain, $RunningIP, $VMnet, $MyGateway = test-domainsetup
 	    $IPv4Subnet = convert-iptosubnet $RunningIP
