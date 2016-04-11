@@ -1907,6 +1907,18 @@ if ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG" -or $SPdbtyp
     # if ($NoNMM -eq $false) {status "Networker Modules will be installed on each Node"}
 }
 #if ($NWServer.IsPresent -or $NW.IsPresent)
+
+#################################################
+## Download Sewction       ######################
+#################################################
+Write-Verbose "Entering Download Section"
+if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+    {
+    write-host "Press enter to Continue to Automatic Downloads or ctrl-c to exit"
+    Pause
+    }
+Write-Host -ForegroundColor Magenta "==> Entering Download Section"
+
 ##### exchange downloads section
 if ($Exchange2013.IsPresent)
 {
@@ -2271,8 +2283,7 @@ else
     }
 Write-Verbose "Pupppetmaster will be $Puppetmaster"
 }
-##end Autodownloaders
-##########################################
+
 if ($nw.IsPresent -and !$NoDomainCheck.IsPresent) { workorder "Networker $nw_ver Node will be installed" }
 write-verbose "Checking Environment"
 if ($NW.IsPresent -or $NWServer.IsPresent)
@@ -2360,6 +2371,9 @@ If ($Java8_required)
         Write-Verbose "Got $LatestJava"
         }
     }
+##end Autodownloaders
+##########################################
+Write-Host -ForegroundColor Magenta "==> end download section"
 if (!($SourceOK = test-source -SourceVer $Sourcever -SourceDir $Sourcedir))
 {
 	Write-Verbose "Sourcecomplete: $SourceOK"
