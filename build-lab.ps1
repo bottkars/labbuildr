@@ -1017,7 +1017,7 @@ function test-dcrunning
 	{
 		if ((get-vmx $DCNODE).state -ne "running")
 		    {
-			status "Domaincontroller not running, we need to start him first"
+			Write-Host -ForegroundColor White  "Domaincontroller not running, we need to start him first"
             Write-Host -ForegroundColor Gray " ==> Starting DCNODE"
 			$Started = get-vmx $DCNODE | Start-vmx 
 		    }
@@ -1050,24 +1050,24 @@ function test-domainsetup
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing Domain Name ...: "
 	# copy-vmxguesttohost -Guestpath "$Scripts\domain.txt" -Hostpath "$Builddir\domain.txt" -Guest $DCNODE
 	$holdomain = Get-Content "$Builddir\$Scripts\$DCNODE\domain.txt"
-	status $holdomain
+	Write-Host -ForegroundColor White  $holdomain
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing Subnet.........: "
 	#copy-vmxguesttohost -Guestpath "C:\$Scripts\ip.txt" -Hostpath "$Builddir\ip.txt" -Guest $DCNODE
 	$DomainIP = Get-Content "$Builddir\$Scripts\$DCNODE\ip.txt"
 	$IPv4subnet = convert-iptosubnet $DomainIP
-	status $ipv4Subnet
+	Write-Host -ForegroundColor White  $ipv4Subnet
 
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing Default Gateway: "
 	#copy-vmxguesttohost -Guestpath "C:\$Scripts\Gateway.txt" -Hostpath "$Builddir\Gateway.txt" -Guest $DCNODE
 	$DomainGateway = Get-Content "$Builddir\$Scripts\$DCNODE\Gateway.txt"
-	status $DomainGateway
+	Write-Host -ForegroundColor White  $DomainGateway
 
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing VMnet .........: "
     $MyVMnet = (get-vmx .\DCNODE | Get-VMXNetwork).network
 	# $Line = Select-String -Pattern "ethernet0.vnet" -Path "$Builddir\$DCNODE\$DCNODE.vmx"
 	# $myline = $Line.line.Trim('ethernet0.vnet = ')
 	# $MyVMnet = $myline.Replace('"', '')
-	status $MyVMnet
+	Write-Host -ForegroundColor White  $MyVMnet
 	Write-Output $holdomain, $Domainip, $VMnet, $DomainGateway
 } #end 
 function test-user
@@ -1252,7 +1252,7 @@ switch ($PsCmdlet.ParameterSetName)
 				if (Get-Item $Builddir\$deletefile -ErrorAction SilentlyContinue)
 				    {
 					Remove-Item -Path $Builddir\$deletefile -Recurse -ErrorAction SilentlyContinue
-					status "deleted $deletefile"
+					Write-Host -ForegroundColor White  "deleted $deletefile"
 					write-log "deleted $deletefile"
 					}
 			    }
@@ -1299,8 +1299,8 @@ switch ($PsCmdlet.ParameterSetName)
         if ($ReloadProfile)
             {
             Remove-Item .\Update -Recurse -Confirm:$false
-			status "Update Done"
-            status "press any key for reloading Modules"
+			Write-Host -ForegroundColor White  "Update Done"
+            Write-Host -ForegroundColor White  "press any key for reloading Modules"
             pause
             ./profile.ps1
             }
@@ -1315,7 +1315,7 @@ switch ($PsCmdlet.ParameterSetName)
 			
     "Shortcut"
         {
-				status "Creating Desktop Shortcut for $Buildname"
+				Write-Host -ForegroundColor White  "Creating Desktop Shortcut for $Buildname"
 				createshortcut
                 return
     }# end shortcut
@@ -1331,19 +1331,19 @@ Write-Host
                     }
                 if ($Latest_labbuildr_git)
                     {
-                    Status "labbuildr Git Release $Latest_labbuildr_git"
+                    Write-Host -ForegroundColor White "labbuildr Git Release $Latest_labbuildr_git"
                     }
                 if ($Latest_vmxtoolkit_git)
                     {
-                    Status "vmxtoolkit Git Release $Latest_vmxtoolkit_git"
+                    Write-Host -ForegroundColor White  "vmxtoolkit Git Release $Latest_vmxtoolkit_git"
                     }
                 if ($Latest_labbuildr_scripts_git)
                     {
-                    Status "scripts Git Release $Latest_labbuildr_scripts_git"
+                    Write-Host -ForegroundColor White  "scripts Git Release $Latest_labbuildr_scripts_git"
                     }
                 if ($Latest_labtools_git)
                     {
-                    Status "labtools Git Release $Latest_labtools_git"
+                    Write-Host -ForegroundColor White  "labtools Git Release $Latest_labtools_git"
                     }
 
                 Write-Host -ForegroundColor Gray '   Copyright 2016 Karsten Bott
@@ -1376,7 +1376,7 @@ if ($defaults.IsPresent)
     {
     if (Test-Path $Builddir\defaults.xml)
         {
-        status "Loading defaults from $Builddir\defaults.xml"
+        Write-Host -ForegroundColor White  "Loading defaults from $Builddir\defaults.xml"
         $LabDefaults = Get-LABDefaults
         }
        if (!($LabDefaults))
@@ -1667,7 +1667,7 @@ if (!$AddressFamily){$AddressFamily = "IPv4" }
 if ($savedefaults.IsPresent)
 {
 $defaultsfile = New-Item -ItemType file $Builddir\defaults.xml -Force
-Status "saving defaults to $Builddir\defaults.xml"
+Write-Host -ForegroundColor White  "saving defaults to $Builddir\defaults.xml"
 $config =@()
 $config += ("<config>")
 $config += ("<nmm_ver>$nmm_ver</nmm_ver>")
@@ -1811,7 +1811,7 @@ If ($NumLogCPU -gt 4 -and $Computersize -le 2)
 }
 If ($NumLogCPU -gt 4 -and $Computersize -gt 2)
 {
-	Status "Excellent, Running $mySelf on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logical CPU and $Totalmemory GB Memory"
+	Write-Host -ForegroundColor White  "Excellent, Running $mySelf on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logical CPU and $Totalmemory GB Memory"
 }
 # get-vmwareversion
 ####### Building required Software Versions Tabs
@@ -1862,9 +1862,9 @@ if (!($DConly.IsPresent))
         $Scenario = 4
 	}
 } # end not dconly
-status "Version $($major).$Edition"
-#status "# running Labuildr Build $verlabbuildr"
-# status "# and vmxtoolkit   Build $vervmxtoolkit"
+Write-Host -ForegroundColor White  "Version $($major).$Edition"
+#Write-Host -ForegroundColor White  "# running Labuildr Build $verlabbuildr"
+# Write-Host -ForegroundColor White  "# and vmxtoolkit   Build $vervmxtoolkit"
 
 workorder "Building Proposed Workorder"
 If ($DAG.IsPresent)
@@ -1909,7 +1909,7 @@ if ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG" -or $SPdbtyp
 {
 	workorder "We are going to Install an SQL Always On Cluster with $AAGNodes Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet"
 	$AlwaysOn = $true
-    # if ($NoNMM -eq $false) {status "Networker Modules will be installed on each Node"}
+    # if ($NoNMM -eq $false) {Write-Host -ForegroundColor White  "Networker Modules will be installed on each Node"}
 }
 #if ($NWServer.IsPresent -or $NW.IsPresent)
 
@@ -2300,7 +2300,7 @@ if ($NW.IsPresent -or $NWServer.IsPresent)
         }
 	if (!($Acroread = Get-ChildItem -Path $Sourcedir -Filter 'a*rdr*.exe'))
 	    {
-		status "Adobe reader not found ...."
+		Write-Host -ForegroundColor White  "Adobe reader not found ...."
 	    }
 	else
 	    {
@@ -2393,7 +2393,7 @@ $Nodename = $DCNODE
 $CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
 if (test-vmx $DCNODE)
 {
-	status "Domaincontroller already deployed, Comparing Workorder Parameters with Running Environment"
+	Write-Host -ForegroundColor White  "Domaincontroller already deployed, Comparing Workorder Parameters with Running Environment"
 	test-dcrunning
     if ( $AddressFamily -match 'IPv4' )
         {
@@ -2465,7 +2465,7 @@ else
         Write-Host -ForegroundColor Gray " ==> Building DC for Domain $BuildDomain, this may take a while"
         invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script new-dc.ps1 -Parameter "-dcname $DCName -Domain $BuildDomain -IPv4subnet $IPv4subnet -IPv4Prefixlength $IPv4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -IPv6Prefix $IPv6Prefix  -AddressFamily $AddressFamily $AddGateway $CommonParameter" -interactive -nowait
    
-        status "Preparing Domain"
+        Write-Host -ForegroundColor White  "Preparing Domain"
         if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
             {
             write-verbose "verbose enabled, Please press any key within VM $Dcname"
@@ -2485,10 +2485,10 @@ else
             }
 
 		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script finish-domain.ps1 -Parameter "-domain $BuildDomain -domainsuffix $domainsuffix $CommonParameter" -interactive -nowait
-		status "Creating Domain $BuildDomain"
+		Write-Host -ForegroundColor White  "Creating Domain $BuildDomain"
 		While ($FileOK = (&$vmrun -gu Administrator -gp Password123! fileExistsInGuest $CloneVMX $IN_Guest_LogDir\3.pass) -ne "The file exists.") { Write-Host -NoNewline "."; sleep $Sleep }
 		write-host
-		status  "Domain Setup Finished"
+		Write-Host -ForegroundColor White   "Domain Setup Finished"
 		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script dns.ps1 -Parameter "-IPv4subnet $IPv4Subnet -IPv4Prefixlength $IPV4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily  -IPV6Prefix $IPV6Prefix $AddGateway $CommonParameter"  -interactive
 		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script add-serviceuser.ps1 -interactive
 	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script create-labshortcut.ps1 -interactive # -Parameter $CommonParameter
@@ -2515,7 +2515,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 {
 		# we need a DC, so check it is running
 		test-dcrunning
-		status "Avalanching SQL Install on $AAGNodes Always On Nodes"
+		Write-Host -ForegroundColor White  "Avalanching SQL Install on $AAGNodes Always On Nodes"
         $ListenerIP = "$IPv4Subnet.169"
         $IN_Guest_UNC_ScenarioScriptDir = Join-Path $IN_Guest_UNC_Scriptroot "AAG"
         $In_Guest_UNC_SQLScriptDir = Join-Path $IN_Guest_UNC_Scriptroot "SQL"
@@ -2547,8 +2547,8 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
             pause
             }
 			# Clone Base Machine
-			status $Commentline
-			status "Creating $Nodename with IP $Nodeip for Always On Availability Group"
+			Write-Host -ForegroundColor White  $Commentline
+			Write-Host -ForegroundColor White  "Creating $Nodename with IP $Nodeip for Always On Availability Group"
 			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $AAGNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -sql"
 			###################################################
 			If ($CloneOK)
@@ -2590,8 +2590,8 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
             {
                 if ($NMM.IsPresent)
                     {
-				    status "Installing Networker $nmm_ver an NMM $nmm_ver on all Nodes"
-					status $CloneVMX
+				    Write-Host -ForegroundColor White  "Installing Networker $nmm_ver an NMM $nmm_ver on all Nodes"
+					Write-Host -ForegroundColor White  $CloneVMX
 					Write-Host -ForegroundColor Magenta " ==> Install NWClient"
 					invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
                     Write-Host -ForegroundColor Magenta " ==> Install NMM"
@@ -2605,7 +2605,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
                     }# end else nmm
 				}
            # 
-			status "Done"			
+			Write-Host -ForegroundColor White  "Done"			
 		}# end cloneok
 	} # End Switchblock AAG
 switch ($PsCmdlet.ParameterSetName)
@@ -2662,7 +2662,7 @@ switch ($PsCmdlet.ParameterSetName)
                 pause
                 }
 		    test-dcrunning
-		    status $Commentline
+		    Write-Host -ForegroundColor White  $Commentline
 		    workorder "Creating E15 Host $Nodename with IP $Nodeip in Domain $BuildDomain"
 		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -AddDisks -Disks 3 -Disksize 500GB -Size $Exchangesize -Sourcedir $Sourcedir "
 
@@ -2692,7 +2692,7 @@ switch ($PsCmdlet.ParameterSetName)
             $CloneVMX = (get-vmx $Nodename).config
             # 
 			test-user -whois Administrator
-            status "Waiting for Pass 4 (E15 Installed) for $Nodename"
+            Write-Host -ForegroundColor White  "Waiting for Pass 4 (E15 Installed) for $Nodename"
             #$EXSetupStart = Get-Date
 			    While ($FileOK = (&$vmrun -gu $BuildDomain\Administrator -gp Password123! fileExistsInGuest $CloneVMX $IN_Guest_LogDir\exchange.pass) -ne "The file exists.")
 			    {
@@ -2810,7 +2810,7 @@ switch ($PsCmdlet.ParameterSetName)
                 }
             $Exchangesize = "XXL"
 		    test-dcrunning
-		    status $Commentline
+		    Write-Host -ForegroundColor White  $Commentline
 		    workorder "Creating $EX_Version Host $Nodename with IP $Nodeip in Domain $BuildDomain"
 		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -AddDisks -Disks 3 -Disksize 500GB -Size $Exchangesize -Sourcedir $Sourcedir "
 		    ###################################################
@@ -2852,7 +2852,7 @@ switch ($PsCmdlet.ParameterSetName)
             $CloneVMX = (get-vmx $Nodename).config
             # 
 			test-user -whois Administrator
-            status "Waiting for Pass 4 (e16 Installed) for $Nodename"
+            Write-Host -ForegroundColor White  "Waiting for Pass 4 (e16 Installed) for $Nodename"
             #$EXSetupStart = Get-Date
 			    While ($FileOK = (&$vmrun -gu $BuildDomain\Administrator -gp Password123! fileExistsInGuest $CloneVMX "$IN_Guest_LogDir\exchange.pass") -ne "The file exists.")
 			    {
@@ -2990,9 +2990,9 @@ switch ($PsCmdlet.ParameterSetName)
                 }
 			###################################################
 			# Clone BAse Machine
-			status $Commentline
-			status "Creating Hyper-V Node  $Nodename"
-			# status "Hyper-V Development is still not finished and untested, be careful"
+			Write-Host -ForegroundColor White  $Commentline
+			Write-Host -ForegroundColor White  "Creating Hyper-V Node  $Nodename"
+			# Write-Host -ForegroundColor White  "Hyper-V Development is still not finished and untested, be careful"
 			test-dcrunning
 			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $HVNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir $cloneparm"
 			
@@ -3226,8 +3226,8 @@ switch ($PsCmdlet.ParameterSetName)
 			
 			
 			# Clone Base Machine
-			status $Commentline
-			status "Creating SOFS Node Host $Nodename with IP $Nodeip"
+			Write-Host -ForegroundColor White  $Commentline
+			Write-Host -ForegroundColor White  "Creating SOFS Node Host $Nodename with IP $Nodeip"
 			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir "
 			
 			###################################################
@@ -3298,8 +3298,8 @@ switch ($PsCmdlet.ParameterSetName)
 
 			test-dcrunning
 			# Clone Base Machine
-			status $Commentline
-			status "Creating Host $Nodename with IP $Nodeip"
+			Write-Host -ForegroundColor White  $Commentline
+			Write-Host -ForegroundColor White  "Creating Host $Nodename with IP $Nodeip"
 		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $SPSize -Sourcedir $Sourcedir $cloneparm"
 			###################################################
 			If ($CloneOK)
@@ -3324,8 +3324,8 @@ switch ($PsCmdlet.ParameterSetName)
                     }
                 if ($NMM.IsPresent)
                     {
-				    status "Installing Networker $nmm_ver an NMM $nmm_ver on all Nodes"
-					status $CloneVMX
+				    Write-Host -ForegroundColor White  "Installing Networker $nmm_ver an NMM $nmm_ver on all Nodes"
+					Write-Host -ForegroundColor White  $CloneVMX
 					Write-Host -ForegroundColor Gray " ==> Install NWClient"
 					invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_Scriptroot -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
                     Write-Host -ForegroundColor Gray " ==> Install NMM"
@@ -3404,8 +3404,8 @@ switch ($PsCmdlet.ParameterSetName)
 			
 			
 			# Clone Base Machine
-			status $Commentline
-			status "Creating Blank Node Host $Nodename with IP $Nodeip"
+			Write-Host -ForegroundColor White  $Commentline
+			Write-Host -ForegroundColor White  "Creating Blank Node Host $Nodename with IP $Nodeip"
 			if ($VTbit)
 			{
 				$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir -SharedDisk $cloneparm"
@@ -3476,8 +3476,8 @@ switch ($PsCmdlet.ParameterSetName)
 
 			test-dcrunning
 			if ($SpaceNodes -gt 1) {$AddonFeatures = "Failover-Clustering, RSAT-Clustering"}
-			status $Commentline
-			status "Creating Storage Spaces Node Host $Nodename with IP $Nodeip"
+			Write-Host -ForegroundColor White  $Commentline
+			Write-Host -ForegroundColor White  "Creating Storage Spaces Node Host $Nodename with IP $Nodeip"
 			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -AddOnfeatures $AddonFeature"
 			###################################################
 			If ($CloneOK)
@@ -3524,8 +3524,8 @@ switch ($PsCmdlet.ParameterSetName)
              }
         if ($Cluster.IsPresent) {$AddonFeatures = ("$AddonFeatures", "Failover-Clustering")}
 		test-dcrunning
-		status $Commentline
-		status "Creating $SQLVER Node $Nodename with IP $Nodeip"
+		Write-Host -ForegroundColor White  $Commentline
+		Write-Host -ForegroundColor White  "Creating $SQLVER Node $Nodename with IP $Nodeip"
 		$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -sql"
 		###################################################
 		If ($CloneOK)
@@ -3580,8 +3580,8 @@ switch ($PsCmdlet.ParameterSetName)
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NodePrefix"
     [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features,Web-Mgmt-Console, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI" 
 	###################################################
-	status $Commentline
-	status "Creating Panorama Server $Nodename"
+	Write-Host -ForegroundColor White  $Commentline
+	Write-Host -ForegroundColor White  "Creating Panorama Server $Nodename"
   	Write-Verbose $IPv4Subnet
     write-verbose $Nodename
     write-verbose $Nodeip
@@ -3619,8 +3619,8 @@ switch ($PsCmdlet.ParameterSetName)
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NodePrefix"
     [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS" 
 	###################################################
-	status $Commentline
-	status "Creating SRM Server $Nodename"
+	Write-Host -ForegroundColor White  $Commentline
+	Write-Host -ForegroundColor White  "Creating SRM Server $Nodename"
   	Write-Verbose $IPv4Subnet
     write-verbose $Nodename
     write-verbose $Nodeip
@@ -3666,8 +3666,8 @@ switch ($PsCmdlet.ParameterSetName)
     $In_Guest_UNC_SQLScriptDir = "$IN_Guest_UNC_Scriptroot\sql\"
 
 	###################################################
-	status $Commentline
-	status "Creating $SC_Version Server $Nodename"
+	Write-Host -ForegroundColor White  $Commentline
+	Write-Host -ForegroundColor White  "Creating $SC_Version Server $Nodename"
   	Write-Verbose $IPv4Subnet
     write-verbose $Nodename
     write-verbose $Nodeip
@@ -3709,7 +3709,7 @@ switch ($PsCmdlet.ParameterSetName)
     "Isilon" {
         Write-Host -ForegroundColor Gray " ==> Calling Isilon Installer"
         Invoke-Expression -Verbose "$Builddir\install-isi.ps1 -Nodes $isi_nodes -Disks 4 -Disksize 36GB -defaults "
-        status "Isilon Setup done"
+        Write-Host -ForegroundColor White  "Isilon Setup done"
         } # end isilon
 }
 if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
@@ -3723,8 +3723,8 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
     [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features"
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NWNODE" 
 	###################################################
-	status $Commentline
-	status "Creating Networker Server $Nodename"
+	Write-Host -ForegroundColor White  $Commentline
+	Write-Host -ForegroundColor White  "Creating Networker Server $Nodename"
   	Write-Verbose $IPv4Subnet
     write-verbose $Nodename
     write-verbose "Node has ip: $Nodeip"
@@ -3768,7 +3768,7 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
 		While (([string]$UserLoggedOn = (&$vmrun -gu Administrator -gp Password123! listProcessesInGuest $CloneVMX)) -notmatch "nsrd.exe") { write-host -NoNewline "." }
 		Write-Host -ForegroundColor Gray " ==> Creating Networker users"
 		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script nsruserlist.ps1 -interactive
-		status "Creating AFT Device"
+		Write-Host -ForegroundColor White  "Creating AFT Device"
 		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script create-nsrdevice.ps1 -interactive -Parameter "-AFTD AFTD1"
         If ($DefaultGateway -match $Nodeip){
                 Write-Host -ForegroundColor Gray " ==> Opening Firewall on Networker Server for your Client"
@@ -3785,7 +3785,7 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
 } #Networker End
 $endtime = Get-Date
 $Runtime = ($endtime - $Starttime).TotalMinutes
-status "Finished Creation of $mySelf in $Runtime Minutes "
-status "Deployed VM´s in Scenario $Scenarioname"
+Write-Host -ForegroundColor White  "Finished Creation of $mySelf in $Runtime Minutes "
+Write-Host -ForegroundColor White  "Deployed VM´s in Scenario $Scenarioname"
 get-vmx | where scenario -match $Scenarioname | ft vmxname,state,activationpreference
 return
