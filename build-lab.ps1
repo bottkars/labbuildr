@@ -1323,7 +1323,11 @@ switch ($PsCmdlet.ParameterSetName)
         {
 				Write-Host -ForegroundColor Magenta -NoNewline "labbuildr version $major-$Edition on branch : " 
                 Write-Host -ForegroundColor Cyan "$Current_labbuildr_branch"
-
+                If ($branch -ne "master")
+                    {
+                    Write-Warning "you are on $branch, considered experimental
+                    ==> recommended action is running '.\build-lab.ps1 -update -branch master -force'"
+                    }
                 if ($Latest_labbuildr_git)
                     {
                     Status "labbuildr Git Release $Latest_labbuildr_git"
