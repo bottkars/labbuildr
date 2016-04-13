@@ -224,6 +224,7 @@ switch ($PsCmdlet.ParameterSetName)
 
 ####Build Machines#
     Write-Host -ForegroundColor Magenta "Starting Avalanche install For Scaleio Nodes..."
+    $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
     Measure-Command -Expression {
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         {
@@ -432,8 +433,9 @@ if ($configure.IsPresent)
     }
 
 write-host "Login to the VM´s with root/admin"
-
-}#end measuer
+$StopWatch.Stop()
+Write-host -ForegroundColor White "ScaleIO Deployment took $($StopWatch.Elapsed.ToString())"
+#end measuer
 } #end default
 }#end switch 
 
