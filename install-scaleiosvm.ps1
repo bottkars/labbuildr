@@ -2,7 +2,7 @@
 .Synopsis
    .\install-scaleiosvm.ps1 
 .DESCRIPTION
-  install-scaleiosvm is  the a vmxtoolkit solutionpack for configuring and deploying scaleio svm´s
+  install-scaleiosvm is  the a vmxtoolkit solutionpack for configuring and deploying scaleio 2.0 svm´s
       
       Copyright 2014 Karsten Bott
 
@@ -25,10 +25,10 @@
 .\install-scaleiosvm.ps1 -configure -Defaults
 This will Install and Configure a 3-Node ScaleIO with default Configuration
 .EXAMPLE
-.\install-scaleiosvm.ps1 -SCALEIOMaster ".\ScaleIOVM_1.32.402.1" -configure -singlemdm
+.\install-scaleiosvm.ps1 -Defaults -configure -singlemdm
 This will Configure a SIO Cluster with 3 Nodes and Single MDM
 .EXAMPLE
-.\install-scaleiosvm.ps1 -SCALEIOMaster ".\ScaleIOVM_1.32.402.1" -Disks 3  -sds
+.\install-scaleiosvm.ps1 -Disks 3  -sds
 This will install a Single Node SDS
 #>
 [CmdletBinding(DefaultParametersetName = "import")]
