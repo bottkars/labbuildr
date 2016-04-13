@@ -225,7 +225,6 @@ switch ($PsCmdlet.ParameterSetName)
 ####Build Machines#
     Write-Host -ForegroundColor Magenta "Starting Avalanche install For Scaleio Nodes..."
     $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
-    Measure-Command -Expression {
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         {
         write-host -ForegroundColor Magenta " ==>Checking presence of $Nodeprefix$node"
