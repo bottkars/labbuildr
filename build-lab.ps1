@@ -1326,7 +1326,8 @@ switch ($PsCmdlet.ParameterSetName)
                 If ($branch -ne "master")
                     {
                     Write-Warning "you are on $branch, considered experimental
-                    ==> recommended action is running '.\build-lab.ps1 -update -branch master -force'"
+==> recommended action is running '.\build-lab.ps1 -update -branch master -force'"
+Write-Host
                     }
                 if ($Latest_labbuildr_git)
                     {
