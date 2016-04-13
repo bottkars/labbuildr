@@ -294,7 +294,7 @@ to remove all Nodes"
 
 }
 $Logfile = "/tmp/install_sio.log"
-write-host -ForegroundColor Magenta "Configuring Nodes, this may take a while
+Write-Host -ForegroundColor Magenta " ==>Configuring Nodes, this may take a while
 logging to $Logfile
 "
 
@@ -312,9 +312,9 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         If (!$DefaultGateway) {$DefaultGateway = $Ip}
         write-host -ForegroundColor Magenta " ==>Configuring $Nodeprefix$node with $ip"
         $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device eth0 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node" -suse -rootuser $rootuser -rootpassword $rootpassword 
-        Write-Host -ForegroundColor Magenta "Installing GPG Key"
+        Write-Host -ForegroundColor Magenta " ==>Installing GPG Key"
         $NodeClone | Invoke-VMXBash -Scriptblock "rpm --import /root/install/RPM-GPG-KEY-ScaleIO" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
-        Write-Host -ForegroundColor Magenta "Installing OpenSSL Cert"
+        Write-Host -ForegroundColor Magenta " ==>Installing OpenSSL Cert"
         $NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-openssl*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile
         if (!($PsCmdlet.ParameterSetName -eq "sdsonly"))
             {
@@ -402,7 +402,7 @@ if ($configure.IsPresent)
             {
             $mdm_ipb = $mdm_ipa
             }
-        Write-Host -ForegroundColor Magenta "Storing locally"
+        Write-Host -ForegroundColor Magenta "Storing SIO Confiuration locally"
 
         Set-LABSIOConfig -mdm_ipa $mdm_ipa -mdm_ipb $mdm_ipb -gateway_ip $tb_ip -system_name $SystemName -pool_name $StoragePoolName -pd_name $ProtectionDomainName 
         
