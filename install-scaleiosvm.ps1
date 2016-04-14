@@ -370,7 +370,7 @@ if ($configure.IsPresent)
 
     if ($Primary)
         {
-        Write-Host -ForegroundColor Magenta "We are now creating the ScaleIO Grid"
+        Write-Host -ForegroundColor Magenta "We are now creating the ScaleIO Cluster"
         Write-Host -ForegroundColor Magenta " ==>adding Primary MDM $mdm_ipa"
         $sclicmd =  "scli  --create_mdm_cluster --master_mdm_ip $mdm_ipa  --master_mdm_management_ip $mdm_ipa --approve_certificate --accept_license;sleep 3"
         Write-Verbose $sclicmd
@@ -397,6 +397,21 @@ if ($configure.IsPresent)
             $sclicmd = "$mdmconnect;scli --switch_cluster_mode --cluster_mode 3_node --add_slave_mdm_ip $mdm_ipb --add_tb_ip $tb_ip  --mdm_ip $mdm_ipa"
             Write-Verbose $sclicmd
             $Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+            <#
+            Write-Host -ForegroundColor Magenta " ==>approving Certificates" 
+            $sclicmd = "scli --approve_all_mdm_certificates --mdm_ip $mdm_ip"
+            Write-Verbose $sclicmd
+            $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+            #>
+            Write-Host -ForegroundColor Magenta " ==>Changing management IP´s on $mdm_ipb" 
+            $sclicmd = "scli --modify_management_ip --new_mdm_management_ip $mdm_ip --target_mdm_ip $mdm_ipb --allow_duplicate_management_ips --i_am_sure --mdm_ip $mdm_ip"
+            Write-Verbose $sclicmd
+            $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+
+            Write-Host -ForegroundColor Magenta " ==>Changing management IP´s on $mdm_ipa" 
+            $sclicmd = "scli --modify_management_ip --new_mdm_management_ip $mdm_ip --target_mdm_ip $mdm_ipa --allow_duplicate_management_ips --i_am_sure --mdm_ip $mdm_ip"
+            Write-Verbose $sclicmd
+            $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
             }
         else
             {
@@ -406,7 +421,7 @@ if ($configure.IsPresent)
 
         Set-LABSIOConfig -mdm_ipa $mdm_ipa -mdm_ipb $mdm_ipb -gateway_ip $tb_ip -system_name $SystemName -pool_name $StoragePoolName -pd_name $ProtectionDomainName 
         
-        
+
         Write-Host -ForegroundColor Magenta " ==>adding protection domain $ProtectionDomainName"
         $sclicmd = "scli --add_protection_domain --protection_domain_name $ProtectionDomainName --mdm_ip $mdm_ip"
         $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
