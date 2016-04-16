@@ -168,6 +168,7 @@ if ($SIOGateway.IsPresent)
         required action : expand ScaleIO Gateway ZipFile"
         break
         }
+    }
 $Sourcedir_replace = $Sourcedir.Replace("\","\\")
 Write-Verbose $SIOGatewayrpm
 Write-Verbose $Sourcedir_replace
