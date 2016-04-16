@@ -111,49 +111,8 @@ if (!($MasterVMX = get-vmx $Required_Master))
 write-warning "Checking for Downloaded RPM Packages"
 if (!($rpmpath  = Get-ChildItem -Path "$Sourcedir\ScaleIO\$ScaleIO_Path" -Recurse -Filter "*.el7.x86_64.rpm" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
     {
-    write-warning "Checking for Downloaded Package"
-    $Uri = "http://www.emc.com/products-solutions/trial-software-download/scaleio.htm"
-    $request = Invoke-WebRequest -Uri $Uri -UseBasicParsing
-    $DownloadLinks = $request.Links | where href -match $ScaleIO_OS
-    foreach ($Link in $DownloadLinks)
-        {
-        $Url = $link.href
-        $FileName = Split-Path -Leaf -Path $Url
-        if (!(test-path  $Sourcedir\$FileName) -or $forcedownload.IsPresent)
-            {
-                        $ok = Get-labyesnoabort -title "Could not find $Filename, we need to dowload from www.emc.com" -message "Should we Download $FileName from www.emc.com ?" 
-                        switch ($ok)
-                            {
-
-                            "0"
-                                {
-                                Write-Verbose "$FileName not found, trying Download"
-                                Receive-LABBitsFile -DownLoadUrl $URL -destination $Sourcedir\$FileName -verbose 
-                                $Downloadok = $true
-                                }
-             
-                             "1"
-                                {
-                             break
-                                }   
-                             "2"
-                                {
-                                Write-Verbose "User requested Abort"
-                                exit
-                                }
-                            }
-                        
-                        }
-        Else
-            {
-            Write-Warning "Found $Sourcedir\$FileName, using this one unless -forcedownload is specified ! "
-            }
-        }
-    if (Test-Path "$Sourcedir\$FileName")
-        {
-            Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\ScaleIO\$ScaleIO_Path"
-        }
-}
+    Receive-LABScaleIO -Destination $Sourcedir -arch linux -unzip
+    }
 if ($SIOGateway.IsPresent)
     {
     $SIOGatewayrpm = Get-ChildItem -Path "$Sourcedir\ScaleIO\" -Recurse -Filter "EMC-ScaleIO-gateway-*noarch.rpm"  -Exclude ".*" -ErrorAction SilentlyContinue
@@ -164,8 +123,9 @@ if ($SIOGateway.IsPresent)
         }
     Catch
         {
-        Write-Warning "ScaleIO Gatewa RPM not found in $Sourcedir\ScaleIO\
-        required action : expand ScaleIO Gateway ZipFile"
+        Write-Warning "ScaleIO Gateway RPM not found in $Sourcedir\ScaleIO\
+        if using 2.x, the Zip files are Packed recursively
+        manual action required: expand ScaleIO Gateway ZipFile"
         break
         }
     }
