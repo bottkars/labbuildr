@@ -128,7 +128,7 @@ if (!($rpmpath  = Get-ChildItem -Path "$Sourcedir\ScaleIO\$ScaleIO_Path" -Recurs
                             "0"
                                 {
                                 Write-Verbose "$FileName not found, trying Download"
-                                Get-LABHttpFile -SourceURL $URL -TarGetFile $Sourcedir\$FileName -verbose
+                                Receive-LABBitsFile -DownLoadUrl $URL -destination $Sourcedir\$FileName -verbose 
                                 $Downloadok = $true
                                 }
              
