@@ -154,8 +154,20 @@ if (!($rpmpath  = Get-ChildItem -Path "$Sourcedir\ScaleIO\$ScaleIO_Path" -Recurs
             Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\ScaleIO\$ScaleIO_Path"
         }
 }
-$SIOGatewayrpm = Get-ChildItem -Path "$Sourcedir\ScaleIO\" -Recurse -Filter "EMC-ScaleIO-gateway-*noarch.rpm"  -Exclude ".*" -ErrorAction SilentlyContinue
-$SIOGatewayrpm = $SIOGatewayrpm[-1].FullName
+if ($SIOGateway.IsPresent)
+    {
+    $SIOGatewayrpm = Get-ChildItem -Path "$Sourcedir\ScaleIO\" -Recurse -Filter "EMC-ScaleIO-gateway-*noarch.rpm"  -Exclude ".*" -ErrorAction SilentlyContinue
+
+    try
+        {
+        $SIOGatewayrpm = $SIOGatewayrpm[-1].FullName 
+        }
+    Catch
+        {
+        Write-Warning "ScaleIO Gatewa RPM not found in $Sourcedir\ScaleIO\
+        required action : expand ScaleIO Gateway ZipFile"
+        break
+        }
 $Sourcedir_replace = $Sourcedir.Replace("\","\\")
 Write-Verbose $SIOGatewayrpm
 Write-Verbose $Sourcedir_replace
