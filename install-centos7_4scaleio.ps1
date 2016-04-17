@@ -109,13 +109,13 @@ if (!($MasterVMX = get-vmx $Required_Master))
 
 ##### cecking for linux binaries
 write-warning "Checking for Downloaded RPM Packages"
-if (!($rpmpath  = Get-ChildItem -Path "$Sourcedir\ScaleIO\$ScaleIO_Path" -Recurse -Filter "*.el7.x86_64.rpm" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
+if (!($rpmpath  = Get-ChildItem -Path "$Sourcedir\ScaleIO\" -Recurse -Filter "*x86_64.rpm" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
     {
     Receive-LABScaleIO -Destination $Sourcedir -arch linux -unzip
     }
 if ($SIOGateway.IsPresent)
     {
-    $SIOGatewayrpm = Get-ChildItem -Path "$Sourcedir\ScaleIO\" -Recurse -Filter "EMC-ScaleIO-gateway-*noarch.rpm"  -Exclude ".*" -ErrorAction SilentlyContinue
+    $SIOGatewayrpm = Get-ChildItem -Path "$Sourcedir\ScaleIO\" -Recurse -Filter "EMC-ScaleIO-gateway*.rpm"  -Exclude ".*" -ErrorAction SilentlyContinue
 
     try
         {
