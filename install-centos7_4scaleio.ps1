@@ -107,8 +107,10 @@ if (!($MasterVMX = get-vmx $Required_Master))
     }
 ####
 
+
+$StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
 ##### cecking for linux binaries
-write-warning "Checking for Downloaded RPM Packages"
+write-Host -ForegroundColor White "Checking for Downloaded RPM Packages"
 if (!($rpmpath  = Get-ChildItem -Path "$Sourcedir\ScaleIO\" -Recurse -Filter "*x86_64.rpm" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
     {
     Receive-LABScaleIO -Destination $Sourcedir -arch linux -unzip
@@ -139,48 +141,55 @@ Write-Verbose $SIOGatewayrpm
 
 if (!$MasterVMX.Template) 
             {
-            write-verbose "Templating Master VMX"
+            Write-Host -ForegroundColor Magenta " ==> Templating Master VMX"
             $template = $MasterVMX | Set-VMXTemplate
             }
         $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
         if (!$Basesnap) 
         {
-         Write-verbose "Base snap does not exist, creating now"
+         Write-Host -ForegroundColor Magenta " ==> Base snap does not exist, creating now"
         $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
         }
 ####Build Machines#
-    $machinesBuilt = @()
+  $machinesBuilt = @()
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         {
-        If (!(get-vmx $Nodeprefix$node))
+        Write-Host -ForegroundColor White "Checking for $Nodeprefix$node"
+        If (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue))
         {
-        write-verbose " Creating $Nodeprefix$node"
+        Write-Host -ForegroundColor Magenta "==>Creating $Nodeprefix$node"
         $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node 
         If ($Node -eq 1){$Primary = $NodeClone}
         $Config = Get-VMXConfig -config $NodeClone.config
-        Write-Verbose "Tweaking Config"
-        Write-Verbose "Creating Disks"
+        Write-Host -ForegroundColor Magenta " ==> Tweaking Config"
+        Write-Host -ForegroundColor Magenta " ==> Creating Disks"
         foreach ($LUN in (1..$Disks))
             {
             $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-            Write-Verbose "Building new Disk $Diskname"
+            Write-Host -ForegroundColor Magenta " ==> Building new Disk $Diskname"
             $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-            Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
+            Write-Host -ForegroundColor Magenta " ==> Adding Disk $Diskname to $($NodeClone.VMXname)"
             $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
             }
-        write-verbose "Setting NIC0 to HostOnly"
+        Write-Host -ForegroundColor Magenta " ==> Setting NIC0 to HostOnly"
         $Netadapter = Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config
         if ($vmnet)
             {
-            Write-Verbose "Configuring NIC 0 for $vmnet"
-            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config  | Out-Null
-            Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config   | Out-Null
+            Write-Host -ForegroundColor Magenta " ==> Configuring NIC 0 for $vmnet"
+            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config -WarningAction SilentlyContinue | Out-Null
+            Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config | Out-Null
             }
+
         $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.CloneName)@$BuildDomain"
-            $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
+        $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
+        if ($node -eq 3)
+            {
+            Write-Host -ForegroundColor Magenta " ==> Setting Gateway Memory to 3 GB"
+            $NodeClone | Set-VMXmemory -MemoryMB 3072 | Out-Null
+            }
         $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname CentOS -Scenario 7
         $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
-        Write-Verbose "Starting CentosNode$Node"
+        Write-Host -ForegroundColor Magenta " ==> Starting CentosNode$Node"
         start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
         $machinesBuilt += $($NodeClone.cloneName)
     }
@@ -189,44 +198,46 @@ if (!$MasterVMX.Template)
         write-Warning "Machine $Nodeprefix$node already Exists"
         }
     }
+    Write-Host -ForegroundColor White "Starting Node Configuration"
     foreach ($Node in $machinesBuilt)
         {
         $Node_num = $node -replace $Nodeprefix
         $ip="$subnet.22$($Node[-1])"
         $NodeClone = get-vmx $Node
+        Write-Host -ForegroundColor Magenta "==> Configuring $($NodeClone.vmxname)"
         do {
             $ToolState = Get-VMXToolsState -config $NodeClone.config
             Write-Verbose "VMware tools are in $($ToolState.State) state"
             sleep 5
             }
         until ($ToolState.state -match "running")
-        Write-Verbose "Setting Shared Folders"
+        Write-Host -ForegroundColor Magenta " ==> Setting Shared Folders"
         $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
         $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | Out-Null
-        Write-Verbose "Adding Shared Folders"        
+        Write-Host -ForegroundColor Magenta " ==> Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
         $Scriptblock = "systemctl disable iptables.service"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
     
         $Scriptblock = "systemctl stop iptables.service"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
             
         $Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword 
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
     
         if ($Hostkey)
             {
             $Scriptblock = "echo '$Hostkey' >> /root/.ssh/authorized_keys"
             Write-Verbose $Scriptblock
-            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
             }
 
         $Scriptblock = "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys;chmod 0600 /root/.ssh/authorized_keys"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
         If ($DefaultGateway)
             {
@@ -236,7 +247,7 @@ if (!$MasterVMX.Template)
             {
             $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $ip -device eno16777984 -Peerdns -DNS1 $DNS1 -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $rootuser -rootpassword $Guestpassword | Out-Null
             }
-        Write-Verbose "Nodenumber : $Node_num"
+        Write-Host -ForegroundColor Magenta " ==> Installing Required RPM´s on $Nodeprefix$Node_num"
         Switch ($Node_num)
             {
             {$_ -in (1,2)}
@@ -254,17 +265,19 @@ if (!$MasterVMX.Template)
             }
         $Scriptblock = "yum install $requires -y"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/yum-requires.log
-    
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/yum-requires.log | Out-Null
         if ($node[-1] -eq "3" -and $SIOGateway.ispresent)
             {
+            Write-Host -ForegroundColor Magenta " ==> Installing ScaleIO Gatewy RPM on $Nodeprefix$Node_num"
             $Scriptblock = "export GATEWAY_ADMIN_PASSWORD='Password123!';rpm -Uhv --nodeps $SIOGatewayrpm"
             Write-Verbose $Scriptblock
-            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile /tmp/SIOGateway.log
+            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile /tmp/SIOGateway.log  | Out-Null
             } 
 
     
     
     }
-    write-Warning "Login to the VM´s with root/Password123!"
+    $StopWatch.Stop()
+Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
+write-Host -ForegroundColor White "Login to the VM´s with root/Password123!"
     
