@@ -268,7 +268,7 @@ if (!$MasterVMX.Template)
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/yum-requires.log | Out-Null
         if ($node[-1] -eq "3" -and $SIOGateway.ispresent)
             {
-            Write-Host -ForegroundColor Magenta " ==> Installing ScaleIO Gatewy RPM on $Nodeprefix$Node_num"
+            Write-Host -ForegroundColor Magenta " ==> Installing ScaleIO Gateway RPM on $Nodeprefix$Node_num"
             $Scriptblock = "export GATEWAY_ADMIN_PASSWORD='Password123!';rpm -Uhv --nodeps $SIOGatewayrpm"
             Write-Verbose $Scriptblock
             $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile /tmp/SIOGateway.log  | Out-Null
