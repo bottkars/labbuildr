@@ -185,7 +185,7 @@ switch ($PsCmdlet.ParameterSetName)
         $Mastervmxlist = get-vmx $SCALEIOMaster | Sort-Object -Descending
         if (!($Mastervmxlist))
             {
-            Write-Warning "!!!!! No ScaleIO Master found Ffor $ScaleIO_tag
+            Write-Warning "!!!!! No ScaleIO Master found for $ScaleIO_tag
             please run .\install-scaleiosvm.ps1 -import to download / create Master
             "
             exit
@@ -229,9 +229,9 @@ switch ($PsCmdlet.ParameterSetName)
         {
         write-host -ForegroundColor Magenta " ==>Checking presence of $Nodeprefix$node"
 
-        if (!(get-vmx $Nodeprefix$node))
+        if (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue ))
             {   
-            write-verbose "Creating $Nodeprefix$node"
+            write-host -ForegroundColor Magenta "==>Creating $Nodeprefix$node"
 
             $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node 
             If ($Node -eq 1){$Primary = $NodeClone}
@@ -243,19 +243,19 @@ switch ($PsCmdlet.ParameterSetName)
             foreach ($LUN in (1..$Disks))
                 {
                 $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-                Write-Verbose "Building new Disk $Diskname"
+                write-host -ForegroundColor Magenta " ==>Building new Disk $Diskname"
                 $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-                Write-Verbose "adding Disk $Diskname to $($NodeClone.VMXname)"
+                write-host -ForegroundColor Magenta " ==>adding Disk $Diskname to $($NodeClone.VMXname)"
                 $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI 
                 }
-            write-verbose "Setting NIC0 to HostOnly"
+            write-host -ForegroundColor Magenta " ==>Setting NIC0 to HostOnly"
             Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config | out-null
             if ($vmnet)
                 {
-                Write-Verbose "Configuring NIC 0 for $vmnet"
-                Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config | out-null
-                Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config | out-null
-                Write-Verbose "Disconnecting Nic1 and Nic2"
+                write-host -ForegroundColor Magenta " ==>Configuring NIC 0 for $vmnet"
+                Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config -WarningAction SilentlyContinue | out-null
+                Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config -WarningAction SilentlyContinue | out-null
+                write-host -ForegroundColor Magenta " ==>Disconnecting Nic1 and Nic2"
                 Disconnect-VMXNetworkAdapter -Adapter 1 -config $NodeClone.Config | out-null
                 Disconnect-VMXNetworkAdapter -Adapter 2 -config $NodeClone.Config | out-null
                 }
