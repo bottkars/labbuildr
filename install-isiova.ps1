@@ -24,6 +24,12 @@
 #>
 [CmdletBinding()]
 Param(
+[Parameter(ParameterSetName = "install", Mandatory=$false)]
+[Parameter(ParameterSetName = "import",Mandatory=$false)][String]
+[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir,
+[Parameter(ParameterSetName = "import",Mandatory=$false)][switch]$forcedownload,
+[Parameter(ParameterSetName = "import",Mandatory=$false)][switch]$noextract,
+[Parameter(ParameterSetName = "import",Mandatory=$true)][switch]$import,
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install", Mandatory=$false)][int32]$Nodes =3,
@@ -37,13 +43,53 @@ Param(
 [Parameter(ParameterSetName = "install", Mandatory=$False)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install", Mandatory=$false)]$MasterPath,
-[Parameter(ParameterSetName = "install", Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
-[Parameter(ParameterSetName = "install", Mandatory=$false)]$Sourcedir
+[Parameter(ParameterSetName = "install", Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2"
 #[Parameter(ParameterSetName = "install", Mandatory=$false)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir
 )
 #requires -version 3.0
 #requires -module vmxtoolkit 
+$Product = "ISILON"
+$Product_tag = "EMC_Isilon_OneFS_*_Simulator"
 
+switch ($PsCmdlet.ParameterSetName)
+{
+    "import"
+        {
+        Try 
+            {
+            test-Path $Sourcedir
+            } 
+        Catch 
+            { 
+            Write-Verbose $_ 
+            Write-Warning "We need a Valid Sourcedir, trying Defaults"
+            if (!($Sourcedir = (Get-labDefaults).Sourcedir))
+                {
+                exit
+                }
+            }
+        if (!($OVAPath = Get-ChildItem -Path "$Sourcedir\$Product" -recurse -Include "$Product_tag.ova" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
+            {
+                    write-warning "No $Product OVA found, Checking for Downloaded Package"
+                    Receive-LABISIlon -Destination $Sourcedir -unzip
+
+        }
+           
+        $OVAPath = Get-ChildItem -Path "$Sourcedir\$Product" -Recurse -include "$Product_tag.ova"  -Exclude ".*" | Sort-Object -Descending
+        $OVAPath = $OVApath[0]
+        Write-Warning "Creating $Product Master for $($ovaPath.Basename), may take a while"
+        
+        & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --name=$($ovaPath.Basename) $ovaPath.FullName $PSScriptRoot  #
+        $MasterVMX = get-vmx -path ".\$($ovaPath.Basename)"
+        if (!$MasterVMX.Template) 
+            {
+            write-verbose "Templating Master VMX"
+            $MasterVMX | Set-VMXTemplate
+            }
+        Write-Host -ForegroundColor White "Please run $($MyInvocation.MyCommand) -MasterPath .\EMC_Isilon_OneFS_8.0.0.0_Simulator\ -Defaults"
+        }
+    default
+{
 $Nodeprefix = "ISINode"
 If ($Defaults.IsPresent)
     {
@@ -59,19 +105,7 @@ If ($Defaults.IsPresent)
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 
-if (!($Sourcedir))
-    {
-    $Sourcedir = "C:\Sources"
-    }
-if (!(Test-Path $Sourcedir))
-    {
-    Write-Host "we need a Sourcedir to Continue
-    Creating now in $Sourcedir
-    "
-    $new_Sourcedir = New-Item -ItemType Directory -Path $Sourcedir -Force | Out-Null
-    #break
-    }
-                
+               
 If (!$MasterPath)
     {
     Write-Host -Foregroundcolor Magenta "No master Specified, rule is Pic Any available Isilon Master now"
@@ -84,94 +118,17 @@ If (!$MasterPath)
             }
      else
             {
-            $sourcemaster = "8*.vga"
+            $sourcemaster = Get-ChildItem $Sourcedir  "*8.*" -Exclude "*.ova"
             }
     }
-else
+    else
             {
             If (!($MasterVMX = get-vmx -path $MasterPath))
                 {
                 Write-Verbose "$MasterPath IS NOT A VALID Isilon Master"
                 break
                 }
-
-            # $sourcemaster = (Split-Path -Leaf $MasterPath) -replace "Isimaster",""
-            # Write-Verbose "We found Sourcemaster $sourcemaster"
             }
-    
-If (!$MasterVMX)
-    {
-    Write-Host -Foregroundcolor Magenta "No Valid Isilon Master Found"
-    Write-Host -Foregroundcolor Magenta "we will check for any available Isilon Sourcemaster to create a MasterVMX"
-
-    if (!(Test-Path (Join-Path $Sourcedir $sourcemaster )))
-            { 
-            if (!(Test-Path (Join-path $Sourcedir "EMC*isilon*onefs*.zip")))
-                {
-                Write-Host -Foregroundcolor Magenta "No Sourcemaster or Package Found, we need to download ONEFS Simulator from EMC"
-                $request = invoke-webrequest http://www.emc.com/products-solutions/trial-software-download/isilon.htm?PID=SWD_isilon_trialsoftware
-                $Link = $request.Links | where OuterText -eq Download
-                $DownloadLink = $link.href
-                $Targetfile = (Join-Path $Sourcedir (Split-Path -Leaf $DownloadLink))
-                if (!(Receive-LABBitsFile -DownLoadUrl $DownloadLink -Destination $Targetfile))
-                    {
-                    Write-Warning "Failure downloading file, exit now ... "
-                    break
-                    }
-                }
-            
-            $Targetfile = (Get-ChildItem -Path  (Join-path $Sourcedir "EMC*isilon*onefs*.zip"))[0]
-            Expand-LABZip -zipfilename $Targetfile.FullName -destination $Sourcedir -verbose
-            }
-        $ISISourcepath = Join-Path $Sourcedir $sourcemaster
-        Write-Verbose "Isisourcepath = $ISISourcepath"
-        If (!(Test-Path $ISISourcepath))
-            {
-            Write-Host -Foregroundcolor Magenta "No Valid Sourcemaster found"
-            }
-        $ISISources = Get-Item -Path $ISISourcepath
-        $ISISources = $ISISources | Sort-Object -Descending
-        $ISISource = $ISISources[0]
-        Write-Verbose "Isisource = $ISISource"
-        $Isiver = $ISISource.Name
-        # $Isiverlatest = $Isiver -replace "b.",""
-        $Isiverlatest = $Isiver -replace ".vga",""
-        Write-Verbose "Found OneFS  Sourcemaster Version $Isiverlatest"
-        $Bootdisk= Get-ChildItem -path $ISISource -Filter "boot0.vmdk"
-        Write-Verbose "Found Bootbank $($Bootdisk.fullname)"
-        $ISIJournal = Get-ChildItem -path $ISISource -Filter "isi-journal.vmdk"
-        Write-Verbose "Found Journal $($ISIJournal.fullname)"
-
-        $vmxfile = Get-ChildItem -path $ISISource -Filter "b*.vmx" | where { $_.FullName -NotMatch "vmxf" }
-        Write-Verbose "Found VMXfile $($vmxfile.fullname)"
-
-        $Masterpath = ".\ISIMaster$Isiverlatest"
-        Write-Verbose "Masterpath = $MasterPath"
-        if (!(Test-Path $MasterPath))
-            {
-            New-Item -ItemType Directory -Name $MasterPath  | out-null
-            }
-
-        Copy-Item ($Bootdisk.FullName,$ISIJournal.FullName,$vmxfile.FullName ) -Destination $MasterPath
-        $Mastervmx = get-vmx -path $MasterPath
-        Write-Host -ForegroundColor magenta "Tweaking Master VMX File"
-        $Config = Get-VMXConfig -config $MasterVMX.Config
-        $Config = $Config -notmatch "SCSI0:"
-        $Config = $Config -notmatch "ide0:0.fileName"
-        $Config += 'ide0:0.fileName = "boot0.vmdk"'
-        $Config += 'scsi0:0.redo = ""'
-        $Config += 'scsi0:0.present = "TRUE"'
-        $Config += 'scsi0:0.fileName = "isi-journal.vmdk"'
-        $Config | set-Content -Path $MasterVMX.Config
-        $tweakname = Get-ChildItem $MasterVMX.config
-        $tweakdir = Split-Path -Leaf $tweakname.Directory
-        If ($tweakname.BaseName -notmatch  $tweakdir)
-            {
-            Rename-Item $tweakname -NewName "$tweakdir.vmx"
-            }
-        write-verbose "re-reading Master"
-        $MasterVMX = get-vmx -Path $MasterPath
-}
 If (!$MasterVMX)
     {
     Write-Warning "could not get Mastervmx"
@@ -190,7 +147,7 @@ if (!$Basesnap)
 foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     {
     Write-Host -ForegroundColor Magenta "Checking VM $Nodeprefix$node already Exists"
-    If (!(get-vmx $Nodeprefix$node))
+    If (!(get-vmx $Nodeprefix$node  -WarningAction SilentlyContinue))
     {
     Write-Host -ForegroundColor Magenta " ==>Creating clone $Nodeprefix$node"
     $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$node 
@@ -208,7 +165,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     Set-VMXNetworkAdapter -Adapter 2 -ConnectionType hostonly -AdapterType e1000 -config $NodeClone.Config | out-null
     # Disconnect-VMXNetworkAdapter -Adapter 1 -config $NodeClone.Config
     write-verbose "Setting ext-1"
-    Set-VMXNetworkAdapter -Adapter 1 -ConnectionType custom -AdapterType e1000 -config $NodeClone.Config | out-null
+    Set-VMXNetworkAdapter -Adapter 1 -ConnectionType custom -AdapterType e1000 -config $NodeClone.Config -WarningAction SilentlyContinue | out-null
     Set-VMXVnet -Adapter 1 -vnet $vmnet -config $NodeClone.Config | out-null
     $Scenario = Set-VMXscenario -config $NodeClone.Config -Scenarioname $Nodeprefix -Scenario 6
     $ActivationPrefrence = Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node 
@@ -246,3 +203,5 @@ Assign internal Addresses from .41 to .56 according to your Subnet
         Configure DNS Settings
         DNS Server...............: $DNS1,$Subnet.10
         Search Domain............: $BuildDomain.local"
+}
+}
