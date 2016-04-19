@@ -113,7 +113,8 @@ If (!$MasterVMX)
                 $Link = $request.Links | where OuterText -eq Download
                 $DownloadLink = $link.href
                 $Targetfile = (Join-Path $Sourcedir (Split-Path -Leaf $DownloadLink))
-                if (!(Receive-LABBitsFile -DownLoadUrl $DownloadLink -Destination $Targetfile))
+ #               if (!(Receive-LABBitsFile -DownLoadUrl $DownloadLink -Destination $Targetfile))
+                 if (!( Receive-LABBitsFile -DownLoadUrl $DownloadLink -destination $Targetfile ))
                     {
                     Write-Warning "Failure downloading file, exit now ... "
                     break
