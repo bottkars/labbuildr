@@ -67,7 +67,10 @@ $Sourcedir = 'h:\sources',
 [ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain = "labbuildr",
 [Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = "vmnet2",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
-[switch]$offline
+[switch]$offline,
+[switch]$pausebeforescript
+
+
 
 )
 #requires -version 3.0
@@ -217,7 +220,7 @@ if (!$MasterVMX.Template)
     $machinesBuilt = @()
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         {
-        If (!(get-vmx $Nodeprefix$node))
+        If (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue))
         {
         Write-Host -ForegroundColor Magenta "Creating $Nodeprefix$node"
         $ECSName = "$Nodeprefix$Node".ToLower()
@@ -254,7 +257,7 @@ if (!$MasterVMX.Template)
         if ($vmnet)
             {
             Write-Verbose "Configuring NIC 0 for $vmnet"
-            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config | Out-Null
+            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config -WarningAction SilentlyContinue | Out-Null
             Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config | Out-Null
             }
         $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.CloneName)@$BuildDomain"
@@ -514,29 +517,35 @@ else
         Write-Warning "no docker Image available, exiting now ..."
         exit
         }
-    $Scriptblock = "gunzip -c /mnt/hgfs/Sources/docker/$($Docker_image)_$Docker_imagetag.tgz | docker load"
-    Write-Verbose "Creating docker fs layer from offline Image"
-    Write-Verbose $Scriptblock
-    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+    #$Scriptblock = "gunzip -c /mnt/hgfs/Sources/docker/$($Docker_image)_$Docker_imagetag.tgz"
+    #Write-Verbose "Creating docker fs layer from offline Image"
+    #Write-Verbose $Scriptblock
+    #$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
     [switch]$offline_available = $true
     }
+    Write-Host -ForegroundColor Magenta " ==>Cloning git repo"
     $Scriptblock = "git clone -b $Git_Branch --single-branch https://github.com/EMCECS/ECS-CommunityEdition.git"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
     # docker_image_name = "emccorp/ecs-software"
     Write-Host -ForegroundColor Magenta " ==>Installing ECS Singlenode, this may take a while ..."
-    $Logfile =  "/home/ecsuser/ecsinst_step1.log"
-    Write-Host -ForegroundColor Magenta " ==>offline file available, exluding Docker Pull"
-    $file = "/ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py"
-    $Property = "docker_pull_func(docker_image_name)"
-    $Scriptblock = "sed -i 's\$Property$\#$Property$\' $file"
+    # $Logfile =  "/home/ecsuser/ecsinst_step1.log"
+    # Write-Host -ForegroundColor Magenta " ==>offline file available, exluding Docker Pull"
+    # $file = "/ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py"
+    #$Property = "docker_pull_func(docker_image_name)"
+    #$Scriptblock = "sed -i 's\$Property$\#$Property$\' $file"
     # sed -i 's\docker_pull_func(docker_image_name)$\#docker_pull_func(docker_image_name)\' /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py"
-    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
-
-      #  }
-    if ($Branch -match "2.2.0.1")
+    #$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+    if ($pausebeforescript.ispresent)
         {
-        $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks sdb --ethadapter eno16777984 --hostname $ECSName --imagename $Docker_imagename --imagetag $Docker_imagetag &> /tmp/ecsinst_step1.log"  
+        pause
+        }
+      #  }
+    if ($Branch -ge "2.2.0.1")
+        {
+        Write-Host -ForegroundColor Magenta " ==>install ecs with loading docker image"
+        $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks sdb --ethadapter eno16777984 --hostname $ECSName --imagename $Docker_imagename --imagetag $Docker_imagetag --load-image /mnt/hgfs/Sources/docker/$($Docker_image)_$Docker_imagetag.tgz &> /tmp/ecsinst_step1.log"  
+        #$Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks sdb --ethadapter eno16777984 --hostname $ECSName --load-image /mnt/hgfs/Sources/docker/$($Docker_image)_$Docker_imagetag.tgz &> /tmp/ecsinst_step1.log"  
         }
     else
         {
@@ -547,14 +556,15 @@ else
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
 
-
+<#
     Write-Host -ForegroundColor Magenta " ==>Setting automatic startup of docker and ecs container"
-
+    
     $Scriptlets = ("echo '/dev/sdb1 /ecs/uuid-1 xfs defaults 0 0' `>> /etc/fstab",
     "systemctl enable docker.service",
     "echo 'docker start ecsstandalone' `>>/etc/rc.local",
     'chmod +x /etc/rc.d/rc.local')
 
+    #>
     foreach ($Scriptblock in $Scriptlets)
         {
         Write-Verbose $Scriptblock
