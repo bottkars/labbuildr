@@ -133,7 +133,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCVMM", Mandatory = $false)]
-    [ValidateSet('SC2012_R2','SCTP3','SCTP4')]$SC_Version = "SC2012_R2",
+    [ValidateSet('SC2012_R2','SCTP3','SCTP4','SCTP5')]$SC_Version = "SC2012_R2",
 
     <#
     Selects the Blank Nodes Scenario
@@ -302,7 +302,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
-    [ValidateSet('2016TP4','2016TP3','2012R2FallUpdate','2012R2UEFIMASTER')]$Master,
+    [ValidateSet('2016TP5','2016TP4','2016TP3','2012R2FallUpdate','2012R2UEFIMASTER')]$Master,
     <#do we want a special path to the Masters ? #>
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
