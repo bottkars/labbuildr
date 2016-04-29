@@ -3154,12 +3154,12 @@ switch ($PsCmdlet.ParameterSetName)
             if ($singlemdm.IsPresent)
                     {
                     Write-Host -ForegroundColor Gray " ==> Configuring Single MDM"
-                    get-vmx $FirstVMX | invoke-vmxpowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script configure-mdm.ps1 -Parameter "-subnet $IPv4Subnet -singlemdm -CSVnum 3 -ScaleIO_Major $ScaleIO_Major"-interactive 
+                    get-vmx $FirstVMX | invoke-vmxpowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script configure-mdm.ps1 -Parameter "-IPv4Subne $IPv4Subnet -singlemdm -CSVnum 3 -ScaleIO_Major $ScaleIO_Major"-interactive 
                     }
             else
                     {
                     Write-Host -ForegroundColor Gray " ==> Configuring Clustered MDM"
-                    get-vmx $FirstVMX | invoke-vmxpowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script configure-mdm.ps1 -Parameter "-subnet $IPv4Subnet -CSVnum 3 -ScaleIO_Major $ScaleIO_Major" -interactive 
+                    get-vmx $FirstVMX | invoke-vmxpowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script configure-mdm.ps1 -Parameter "-IPv4Subnet $IPv4Subnet -CSVnum 3 -ScaleIO_Major $ScaleIO_Major" -interactive 
                     }
             }
 		if ($SCVMM.IsPresent)
