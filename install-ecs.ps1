@@ -178,7 +178,7 @@ if (!($MasterVMX = get-vmx $Required_Master))
             $Docker_image = "ecs-software-2.2.1"
             $Docker_imagename = "emccorp/ecs-software-2.2.1"
             $Docker_imagetag = "latest"
-            $Git_Branch = "master"
+            $Git_Branch = "develop"
             }
         default
             {
