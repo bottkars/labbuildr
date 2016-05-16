@@ -226,6 +226,7 @@ if (!$MasterVMX.Template)
 ################
 
 ####Build Machines#
+    $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
     $machinesBuilt = @()
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         {
@@ -259,7 +260,7 @@ if (!$MasterVMX.Template)
             $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
             Write-Host -ForegroundColor Magenta " --->Building new Disk $Diskname"
             Write-Host -ForegroundColor Magenta " --->Device: /dev/sd$([convert]::ToChar(96+$LUN))"
-            $Devices += "/dev/sd$([convert]::ToChar(96+$LUN))"
+            $Devices += "sd$([convert]::ToChar(96+$LUN))"
             $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
             Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
             $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
@@ -652,5 +653,8 @@ $Scriptblock = "/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/st
 Write-verbose $Scriptblock
 $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/$Method.log"  
 }
+$StopWatch.Stop()
+Write-host -ForegroundColor White "ECS Deployment took $($StopWatch.Elapsed.ToString())"
+
 Write-Host -ForegroundColor White "Success !? Browse to http://$($IP):443"
 
