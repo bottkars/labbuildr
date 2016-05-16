@@ -253,10 +253,13 @@ if (!$MasterVMX.Template)
         $Config = Get-VMXConfig -config $NodeClone.config
         Write-Verbose "Tweaking Config"
         Write-Verbose "Creating Disks"
+        $devices = @()
         foreach ($LUN in (1..$Disks))
             {
             $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-            Write-Verbose "Building new Disk $Diskname"
+            Write-Host -ForegroundColor Magenta "---> Building new Disk $Diskname"
+            Write-Host Magenta "---> Devicename :  /dev/sd$([convert]::ToChar(96+$LUN))"
+            $Devices += "/dev/sd$([convert]::ToChar(96+$LUN))"
             $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
             Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
             $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
@@ -557,16 +560,17 @@ else
     if ($Branch -ge "2.2.0.1")
         {
         Write-Host -ForegroundColor Magenta " ==>install ecs with loading docker image"
-        $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks sdb --ethadapter eno16777984 --hostname $ECSName --imagename $Docker_imagename --imagetag $Docker_imagetag --load-image /mnt/hgfs/Sources/docker/$($Docker_image)_$Docker_imagetag.tgz &> /tmp/ecsinst_step1.log"  
+        $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks $($devices -join ",") --ethadapter eno16777984 --hostname $ECSName --imagename $Docker_imagename --imagetag $Docker_imagetag --load-image /mnt/hgfs/Sources/docker/$($Docker_image)_$Docker_imagetag.tgz &> /tmp/ecsinst_step1.log"  
         #$Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks sdb --ethadapter eno16777984 --hostname $ECSName --load-image /mnt/hgfs/Sources/docker/$($Docker_image)_$Docker_imagetag.tgz &> /tmp/ecsinst_step1.log"  
         }
     else
         {
-        $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks sdb --ethadapter eno16777984 --hostname $ECSName &> /tmp/ecsinst_step1.log"  
+        $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks $($devices -join ",") --ethadapter eno16777984 --hostname $ECSName &> /tmp/ecsinst_step1.log"  
         }
    # $Expect = "/usr/bin/expect -c 'spawn /usr/bin/sudo -s $Scriptblock;expect `"*password*:`" { send `"Password123!\r`" }' &> /tmp/ecsinst.log"
 
-    Write-Verbose $Scriptblock
+    Write-Host -ForegroundColor Magenta "==>Calling step 1 with 
+    $Scriptblock"
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
 
 <#
@@ -598,7 +602,7 @@ else
 Write-Host -ForegroundColor White "Starting ECS Install Step 2 for creation of Datacenters and Containers.
 This might take up to 45 Minutes
 Approx. 2000 Objects are to be created
-you may chek the opject count with your bowser at http://$($IP):9101/stats/dt/DTInitStat"
+you may chek the opject count with your bowser at http://$($IP):9101"
 # $Logfile =  "/tmp/ecsinst_Step2.log"
 #$Scriptblock = "/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$($BuildDomain)ns1 --ObjectVArray=$($BuildDomain)OVA1 --ObjectVPool=$($BuildDomain)OVP1 --UserName=$Guestuser --DataStoreName=$($BuildDomain)ds1 --VDCName=vdc1 --MethodName= &> /tmp/ecsinst_step2.log" 
 # curl --insecure https://192.168.2.211:443
@@ -648,5 +652,5 @@ $Scriptblock = "/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/st
 Write-verbose $Scriptblock
 $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/$Method.log"  
 }
-Write-Warning "Success !?"
+Write-Host -ForegroundColor White "Success !? Browse to http://$($IP):443"
 
