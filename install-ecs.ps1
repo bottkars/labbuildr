@@ -259,8 +259,8 @@ if (!$MasterVMX.Template)
             {
             $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
             Write-Host -ForegroundColor Magenta " --->Building new Disk $Diskname"
-            Write-Host -ForegroundColor Magenta " --->Device: /dev/sd$([convert]::ToChar(96+$LUN))"
-            $Devices += "sd$([convert]::ToChar(96+$LUN))"
+            Write-Host -ForegroundColor Magenta " --->Device: /dev/sd$([convert]::ToChar(97+$LUN))"
+            $Devices += "sd$([convert]::ToChar(97+$LUN))"
             $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
             Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
             $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
