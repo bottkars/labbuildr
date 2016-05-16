@@ -148,6 +148,7 @@ if (!($MasterVMX = get-vmx $Required_Master))
     ------------------------------------------------"
     exit
     }
+    $repo  = "https://github.com/EMCECS/ECS-CommunityEdition.git"
     switch ($Branch)
         {
             "release-2.1"
@@ -179,6 +180,7 @@ if (!($MasterVMX = get-vmx $Required_Master))
             $Docker_imagename = "emccorp/ecs-software-2.2.1"
             $Docker_imagetag = "latest"
             $Git_Branch = "develop"
+            $repo = "https://github.com/bottkars/ECS-CommunityEdition.git"
             }
         default
             {
@@ -530,8 +532,8 @@ else
     #$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
     [switch]$offline_available = $true
     }
-    Write-Host -ForegroundColor Magenta " ==>Cloning git repo"
-    $Scriptblock = "git clone -b $Git_Branch --single-branch https://github.com/EMCECS/ECS-CommunityEdition.git"
+    Write-Host -ForegroundColor Magenta " ==>Cloning git repo $repo"
+    $Scriptblock = "git clone -b $Git_Branch --single-branch $repo"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
     # docker_image_name = "emccorp/ecs-software"
