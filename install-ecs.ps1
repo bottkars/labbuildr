@@ -375,7 +375,7 @@ foreach ($Node in $machinesBuilt)
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  
 
     write-verbose "Setting Hostname"
-    $Scriptblock = "hostnamectl set-hostname $($NodeClone.vmxname)"
+    $Scriptblock = "hostnamectl set-hostname $($Nodeprefix.ToLower())$Node"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  
 
