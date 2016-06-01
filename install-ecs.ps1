@@ -50,7 +50,7 @@ $Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$uiconfig,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateSet(150GB,500GB,520GB)][uint64]$Disksize = 520GB,
+[ValidateSet(150GB,500GB,520GB)][uint64]$Disksize = 150GB,
 # [Parameter(ParameterSetName = "install",Mandatory=$false)]
 # [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 # [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath = '.\CentOS7 Master',
@@ -58,7 +58,7 @@ $Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [int32]$Nodes=1,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateRange(1,3)][int32]$Disks = 1,[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateRange(1,3)][int32]$Disks = 3,[Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateRange(1,5)]
 [int32]$Startnode = 1,
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
@@ -161,15 +161,15 @@ if (!($MasterVMX = get-vmx $Required_Master))
             }
         "master"
             {
-            $Docker_image = "ecs-software-2.2"
-            $Docker_imagename = "emccorp/ecs-software-2.2"
+            $Docker_image = "ecs-software-2.2.1"
+            $Docker_imagename = "emccorp/ecs-software-2.2.1"
             $Docker_imagetag = "latest"
             $Git_Branch = $Branch
             }
          "develop"
             {
-            $Docker_image = "ecs-software-2.2"
-            $Docker_imagename = "emccorp/ecs-software-2.2"
+            $Docker_image = "ecs-software-2.2.1"
+            $Docker_imagename = "emccorp/ecs-software-2.2.1"
             $Docker_imagetag = "latest"
             $Git_Branch = $Branch
             }
@@ -179,23 +179,23 @@ if (!($MasterVMX = get-vmx $Required_Master))
             $Docker_image = "ecs-software-2.2.1"
             $Docker_imagename = "emccorp/ecs-software-2.2.1"
             $Docker_imagetag = $Branch
-            $Git_Branch = "develop"
-            $repo = "https://github.com/bottkars/ECS-CommunityEdition.git"
+            $Git_Branch = "master"
+            #$repo = "https://github.com/bottkars/ECS-CommunityEdition.git"
             }
         "2.2.1.0-a"
             {
             $Docker_image = "ecs-software-2.2.1"
             $Docker_imagename = "emccorp/ecs-software-2.2.1"
             $Docker_imagetag = $Branch
-            $Git_Branch = "develop"
-            $repo = "https://github.com/bottkars/ECS-CommunityEdition.git"
+            $Git_Branch = "master"
+            #$repo = "https://github.com/bottkars/ECS-CommunityEdition.git"
             }
 
         default
             {
-            $Docker_image = "ecs-software-2.2"
-            $Docker_imagename = "emccorp/ecs-software-2.2"
-            $Docker_imagetag = $Branch
+            $Docker_image = "ecs-software-2.2.1"
+            $Docker_imagename = "emccorp/ecs-software-2.2.1"
+            $Docker_imagetag = "latest"
             $Git_Branch = "master"
             }
         }
