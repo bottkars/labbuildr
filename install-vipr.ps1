@@ -28,7 +28,7 @@
 Param(
 
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$Defaults = $true,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateSet('vipr-2.3.0.0.828','vipr-2.2.1.0.1106','vipr-2.4.0.0.519','vipr-2.4.1.0.220')]$viprmaster = "vipr-2.4.1.0.220",
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateSet('vipr-2.3.0.0.828','vipr-2.2.1.0.1106','vipr-2.4.0.0.519','vipr-2.4.1.0.220','vipr-3.0.0.0.814')]$viprmaster = "vipr-3.0.0.0.814",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
 
 )
@@ -269,7 +269,7 @@ $config = $vmx | get-vmxconfig
 $Config | set-Content -Path $vmx.config
 $Annotation = $VMX | Set-VMXAnnotation -Line1 "https://$subnet.9" -Line2 "user:root" -Line3 "password:ChangeMe" -Line4 "add license from $masterpath" -Line5 "labbuildr by @hyperv_guy" -builddate
 $vmx | Start-VMX
-Write-Host -ForegroundColor Yellow "
+Write-Host -ForegroundColor Magenta "
 Successfully Deployed $viprmaster
 wait a view minutes for storageos to be up and running
 point your browser to https://$subnet.9 
