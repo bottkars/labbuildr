@@ -79,7 +79,7 @@ Write-verbose "Checking Snapshot"
     $Snapshot = $Master | New-VMXSnapshot -SnapshotName "Base"
     }
 
-if (get-vmx $Nodename)
+if (get-vmx $Nodename -WarningAction SilentlyContinue)
 {
 Write-Warning "$Nodename already exists"
 return $false
@@ -222,19 +222,19 @@ if ($bridge.IsPresent)
     {
     write-verbose "configuring network for bridge"
     Set-VMXNetworkAdapter -config $Clone.config -Adapter 1 -ConnectionType bridged -AdapterType vmxnet3
-    Set-VMXNetworkAdapter -config $Clone.config -Adapter 0 -ConnectionType custom -AdapterType vmxnet3
+    Set-VMXNetworkAdapter -config $Clone.config -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -WarningAction SilentlyContinue
     Set-VMXVnet -config $Clone.config -Adapter 0 -vnet $vmnet
     }
 elseif($NW -and $gateway.IsPresent) 
     {
     write-verbose "configuring network for gateway"
     Set-VMXNetworkAdapter -config $Clone.config -Adapter 1 -ConnectionType nat -AdapterType vmxnet3
-    Set-VMXNetworkAdapter -config $Clone.config -Adapter 0 -ConnectionType custom -AdapterType vmxnet3
+    Set-VMXNetworkAdapter -config $Clone.config -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -WarningAction SilentlyContinue
     Set-VMXVnet -config $Clone.config -Adapter 0 -vnet $vmnet
     }
 elseif(!$Isilon.IsPresent)
         {
-        Set-VMXNetworkAdapter -config $Clone.config -Adapter 0 -ConnectionType custom -AdapterType vmxnet3
+        Set-VMXNetworkAdapter -config $Clone.config -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -WarningAction SilentlyContinue
         Set-VMXVnet -config $Clone.config -Adapter 0 -vnet $vmnet
         }
 

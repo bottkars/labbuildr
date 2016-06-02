@@ -430,7 +430,7 @@ Version Of Networker Modules
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
 	#[ValidateSet('nmm8221','nmm822','nmm8211','nmm8212','nmm8214','nmm8216','nmm8217','nmm8218','nmm822','nmm821','nmm300', 'nmm301', 'nmm2012', 'nmm3013', 'nmm82','nmm85','nmm85.BR1','nmm85.BR2','nmm85.BR3','nmm85.BR4','nmm90.DA','nmm9001','nmm9002')]
-    [ValidateSet('nmm90.DA','nmm9001','nmm9002','nmm9003','nmm9004','nmm9005',
+    [ValidateSet('nmm90.DA','nmm9001','nmm9002','nmm9003','nmm9004','nmm9005','nmm9006',
     'nmm8221','nmm8222','nmm8223','nmm8224','nmm8225',
     'nmm8218','nmm8217','nmm8216','nmm8214','nmm8212','nmm821')]
     $nmm_ver,
@@ -468,7 +468,7 @@ mus be extracted to [sourcesdir]\[nw_ver], ex. c:\sources\nw82
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
-    [ValidateSet('nw90.DA','nw9001','nw9002','nw9003','nw9004','nw9005',
+    [ValidateSet('nw90.DA','nw9001','nw9002','nw9003','nw9004','nw9005','nw9006',
     'nw8223','nw8222','nw8221','nw822',
     'nw8218','nw8217','nw8216','nw8215','nw8214','nw8213','nw8212','nw8211','nw821',
     'nw8206','nw8205','nw8204','nw8203','nw8202','nw82',
@@ -1013,7 +1013,7 @@ function test-dcrunning
 	$Origin = $MyInvocation.MyCommand
     
     if (!$NoDomainCheck.IsPresent){
-	if (Test-Path "$Builddir\$DCNODE\$DCNODE.vmx")
+	if (Test-Path "$Builddir\$DCNODE\$DCNODE.vmx" -WarningAction SilentlyContinue)
 	{
 		if ((get-vmx $DCNODE).state -ne "running")
 		    {
@@ -1063,7 +1063,7 @@ function test-domainsetup
 	Write-Host -ForegroundColor White  $DomainGateway
 
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing VMnet .........: "
-    $MyVMnet = (get-vmx .\DCNODE | Get-VMXNetwork).network
+    $MyVMnet = (get-vmx .\DCNODE | Get-VMXNetwork -WarningAction SilentlyContinue).network
 	# $Line = Select-String -Pattern "ethernet0.vnet" -Path "$Builddir\$DCNODE\$DCNODE.vmx"
 	# $myline = $Line.line.Trim('ethernet0.vnet = ')
 	# $MyVMnet = $myline.Replace('"', '')
@@ -2391,7 +2391,7 @@ if (!$NoDomainCheck.IsPresent){
 # DC Validation
 $Nodename = $DCNODE
 $CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
-if (test-vmx $DCNODE)
+if (test-vmx $DCNODE -WarningAction SilentlyContinue)
 {
 	Write-Host -ForegroundColor White  "Domaincontroller already deployed, Comparing Workorder Parameters with Running Environment"
 	test-dcrunning
