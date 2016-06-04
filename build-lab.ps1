@@ -1755,7 +1755,7 @@ if (!$Master)
     } # end Master
 Try
     {
-    $MyMaster = get-vmx -path "$Masterpath\$Master"
+    $MyMaster = get-vmx -path "$Masterpath\$Master" -WarningAction SilentlyContinue
     }
     catch [Exception] 
     {
@@ -1770,10 +1770,10 @@ Try
     }
 if (!$MyMaster)
     {
-    Write-Warning "Could not find $Masterpath\$Master"
+    Write-Host -ForegroundColor Yellow " ==> Could not find $Masterpath\$Master"
     Write-Host -ForegroundColor Gray " ==> Trying to load $Master from labbuildr Master Repo"
     Receive-LABMaster -Master $Master -Destination $Masterpath -unzip
-    $MyMaster = get-vmx -path "$Masterpath\$Master"
+    $MyMaster = get-vmx -path "$Masterpath\$Master" -WarningAction SilentlyContinue
     $MasterVMX = $mymaster.config		
     }
 else
