@@ -1771,16 +1771,16 @@ Try
 if (!$MyMaster)
     {
     Write-Warning "Could not find $Masterpath\$Master"
-    Write-Host -ForegroundColor Gray " ==> Please download a Master from https://github.com/bottkars/labbuildr/wiki/Master"
-    Write-Host -ForegroundColor Gray " ==> And extract to $Masterpath"
-    # write-verbose $_.Exception
-    break
+    Write-Host -ForegroundColor Gray " ==> Trying to load $Master from labbuildr Master Repo"
+    Receive-LABMaster -Master $Master -Destination $Masterpath -unzip
+    $MyMaster = get-vmx -path "$Masterpath\$Master"
+    $MasterVMX = $mymaster.config		
     }
 else
     {
-   $MasterVMX = $mymaster.config		
-   Write-Verbose "We got master $MasterVMX"
-   }
+    $MasterVMX = $mymaster.config		
+    Write-Verbose "We got master $MasterVMX"
+    }
 write-verbose "After Masterconfig !!!! "
 ########
 ########
