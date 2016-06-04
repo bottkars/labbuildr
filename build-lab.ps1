@@ -431,6 +431,7 @@ Version Of Networker Modules
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
 	#[ValidateSet('nmm8221','nmm822','nmm8211','nmm8212','nmm8214','nmm8216','nmm8217','nmm8218','nmm822','nmm821','nmm300', 'nmm301', 'nmm2012', 'nmm3013', 'nmm82','nmm85','nmm85.BR1','nmm85.BR2','nmm85.BR3','nmm85.BR4','nmm90.DA','nmm9001','nmm9002')]
     [ValidateSet('nmm90.DA','nmm9001','nmm9002','nmm9003','nmm9004','nmm9005','nmm9006',
+    'nmm8231','nmm8232',  
     'nmm8221','nmm8222','nmm8223','nmm8224','nmm8225',
     'nmm8218','nmm8217','nmm8216','nmm8214','nmm8212','nmm821')]
     $nmm_ver,
@@ -469,6 +470,7 @@ mus be extracted to [sourcesdir]\[nw_ver], ex. c:\sources\nw82
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [ValidateSet('nw90.DA','nw9001','nw9002','nw9003','nw9004','nw9005','nw9006',
+    'nw8231','nw8232',
     'nw8223','nw8222','nw8221','nw822',
     'nw8218','nw8217','nw8216','nw8215','nw8214','nw8213','nw8212','nw8211','nw821',
     'nw8206','nw8205','nw8204','nw8203','nw8202','nw82',
