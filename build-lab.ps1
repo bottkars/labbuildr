@@ -1753,15 +1753,16 @@ if (!$Master)
     Write-Host -ForegroundColor Gray " ==> Load masters from $UpdateUri"
     break
     } # end Master
-    Try
+Try
     {
     $MyMaster = get-vmx -path "$Masterpath\$Master"
     }
     catch [Exception] 
     {
     Write-Warning "Could not find $Masterpath\$Master"
-    Write-Host -ForegroundColor Gray " ==> Please download a Master from https://github.com/bottkars/labbuildr/wiki/Master"
-    Write-Host -ForegroundColor Gray " ==> And extract to $Masterpath"
+    Write-Host -ForegroundColor Gray " ==> Trying to load $Master from labbuildr Master Repo"
+    Receive-LABMaster -Master $Master -Destination $Masterpath -unzip
+    # Write-Host -ForegroundColor Gray " ==> And extract to $Masterpath"
     # write-verbose $_.Exception
     break
     }
