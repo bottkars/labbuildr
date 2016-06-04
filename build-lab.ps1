@@ -472,7 +472,8 @@ Version Of Networker Server / Client to be installed
     'nw8016','nw8015','nw81014','nw8013','nw8012',
     'nw8007','nw8006','nw8005','nw81004','nw8003','nw8002','nw80',
     'nwunknown'
-    must be extracted to [sourcesdir]\[nw_ver], ex. c:\sources\nw82 if not downloaded vi labbuildr
+    will be downloaded by labbuildr / labtools
+    otherwise must be extracted to [sourcesdir]\networker\[nw_ver], ex. c:\sources\networker\nw82
 #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
