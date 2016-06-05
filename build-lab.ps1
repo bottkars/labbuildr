@@ -2370,14 +2370,13 @@ if ($Java7_required)
     Write-Verbose "Checking for Java 7"
     if (!($Java7 = Get-ChildItem -Path $Sourcedir -Filter 'jre-7*x64*'))
 	    {
-		Write-Warning "Java7 not found, please download from www.java.com"
-	    break
+		Write-Host -ForegroundColor Yellow "Java7 not found, downloading from labbuildr repo"
+        $JavaUrl = "https://labbuildrmaster.blob.core.windows.net/master/Java/jre-7u75-windows-x64.exe"
+        Receive-LABBitsFile -DownLoadUrl $JavaUrl -destination $Sourcedir
+        $Java7 = Get-ChildItem -Path $Sourcedir -Filter 'jre-7*x64*'	    
         }
-    else
-        {
-	    $Java7 = $Java7 | Sort-Object -Property Name -Descending
-	    $LatestJava = $Java7[0].Name
-        }
+    $Java7 = $Java7 | Sort-Object -Property Name -Descending
+    $LatestJava = $Java7[0].Name
     }
 If ($Java8_required)
     {
