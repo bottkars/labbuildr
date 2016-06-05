@@ -645,6 +645,11 @@ $IPv4PrefixLength = '24'
 $myself = $Myself.TrimEnd(".ps1")
 $Starttime = Get-Date
 $Builddir = $PSScriptRoot
+If ($ConfirmPreference -match "none")
+    {$Confirm = $false}
+else
+    {$Confirm = $true}
+
 try
     {
     $Current_labbuildr_branch = Get-Content  ($Builddir + "\labbuildr.branch") -ErrorAction Stop
@@ -1762,12 +1767,16 @@ Try
     {
     Write-Warning "Could not find $Masterpath\$Master"
     Write-Host -ForegroundColor Gray " ==> Trying to load $Master from labbuildr Master Repo"
-    Receive-LABMaster -Master $Master -Destination $Masterpath -unzip
-    $MyMaster = get-vmx -path "$Masterpath\$Master"
+    if (Receive-LABMaster -Master $Master -Destination $Masterpath -unzip -Confirm:$Confirm)
+        {
+        $MyMaster = get-vmx -path "$Masterpath\$Master"
+        }
+    else
+        {
+        Write-Warning "No valid master found /downloaded"
+        break
+        }
 
-    # Write-Host -ForegroundColor Gray " ==> And extract to $Masterpath"
-    # write-verbose $_.Exception
-    #break
     }
 if (!$MyMaster)
     {
