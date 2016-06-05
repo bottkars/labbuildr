@@ -786,6 +786,7 @@ $IN_Guest_UNC_Scriptroot = "\\vmware-host\Shared Folders\$Scripts"
 $IN_Guest_UNC_Sourcepath = "\\vmware-host\Shared Folders\Sources"
 $IN_Guest_UNC_NodeScriptDir = "$IN_Guest_UNC_Scriptroot\Node"
 $IN_Guest_LogDir = "C:\Scripts"
+$Java7Url = "https://labbuildrmaster.blob.core.windows.net/master/Java/jre-7u75-windows-x64.exe"
 #$IN_Guest_UNC_NodeScriptDir = "$IN_Guest_UNC_Scriptroot\Node"
 ##################
 ### VMrun Error Condition help to tune the Bug wher the VMRUN Command can not communicate with the Host !
@@ -2371,8 +2372,7 @@ if ($Java7_required)
     if (!($Java7 = Get-ChildItem -Path $Sourcedir -Filter 'jre-7*x64*'))
 	    {
 		Write-Host -ForegroundColor Yellow "Java7 not found, downloading from labbuildr repo"
-        $JavaUrl = "https://labbuildrmaster.blob.core.windows.net/master/Java/jre-7u75-windows-x64.exe"
-        Receive-LABBitsFile -DownLoadUrl $JavaUrl -destination $Sourcedir
+        Receive-LABBitsFile -DownLoadUrl $Java7Url -destination $Sourcedir
         $Java7 = Get-ChildItem -Path $Sourcedir -Filter 'jre-7*x64*'	    
         }
     $Java7 = $Java7 | Sort-Object -Property Name -Descending
