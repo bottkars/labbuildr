@@ -2372,7 +2372,9 @@ if ($Java7_required)
     if (!($Java7 = Get-ChildItem -Path $Sourcedir -Filter 'jre-7*x64*'))
 	    {
 		Write-Host -ForegroundColor Yellow "Java7 not found, downloading from labbuildr repo"
-        Receive-LABBitsFile -DownLoadUrl $Java7Url -destination $Sourcedir
+        $FileName = Split-Path -Leaf $Java7Url
+        $Destination = Join-Path $Sourcedir $FileName
+        Receive-LABBitsFile -DownLoadUrl $Java7Url -destination $Destination
         $Java7 = Get-ChildItem -Path $Sourcedir -Filter 'jre-7*x64*'	    
         }
     $Java7 = $Java7 | Sort-Object -Property Name -Descending
