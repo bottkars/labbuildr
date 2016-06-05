@@ -1759,9 +1759,10 @@ if (!$Master)
     Write-Host -ForegroundColor Gray " ==> Load masters from $UpdateUri"
     break
     } # end Master
+$MyMaster = get-vmx -path "$Masterpath\$Master" -WarningAction SilentlyContinue
+<#
 Try
     {
-    $MyMaster = get-vmx -path "$Masterpath\$Master" -WarningAction SilentlyContinue
     }
     catch [Exception] 
     {
@@ -1778,6 +1779,7 @@ Try
         }
 
     }
+#>
 if (!$MyMaster)
     {
     Write-Host -ForegroundColor Yellow " ==> Could not find $Masterpath\$Master"
