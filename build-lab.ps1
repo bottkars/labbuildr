@@ -1767,7 +1767,7 @@ Try
     {
     Write-Warning "Could not find $Masterpath\$Master"
     Write-Host -ForegroundColor Gray " ==> Trying to load $Master from labbuildr Master Repo"
-    if (Receive-LABMaster -Master $Master -Destination $Masterpath -unzip -Confirm:$Confirm)
+    if ((Receive-LABMaster -Master $Master -Destination $Masterpath -unzip -Confirm:$Confirm) -eq $true)
         {
         $MyMaster = get-vmx -path "$Masterpath\$Master"
         }
