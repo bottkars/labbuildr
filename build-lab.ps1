@@ -1782,7 +1782,15 @@ if (!$MyMaster)
     {
     Write-Host -ForegroundColor Yellow " ==> Could not find $Masterpath\$Master"
     Write-Host -ForegroundColor Gray " ==> Trying to load $Master from labbuildr Master Repo"
-    Receive-LABMaster -Master $Master -Destination $Masterpath -unzip
+    if (Receive-LABMaster -Master $Master -Destination $Masterpath -unzip -Confirm:$Confirm)
+        {
+        $MyMaster = get-vmx -path "$Masterpath\$Master" -ErrorAction SilentlyContinue
+        }
+    else
+        {
+        Write-Warning "No valid master found /downloaded"
+        break
+        }
     $MyMaster = get-vmx -path "$Masterpath\$Master" -WarningAction SilentlyContinue
     $MasterVMX = $mymaster.config		
     }
