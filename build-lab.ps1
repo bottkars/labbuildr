@@ -234,7 +234,9 @@ Specify if Networker Scenario sould be installed
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
 	[Parameter(ParameterSetName = "SCVMM", Mandatory = $false)]
-	[ValidateSet('SQL2014SP1slip','SQL2012','SQL2012SP1','SQL2012SP2','SQL2012SP1SLIP','SQL2014')]$SQLVER,
+	[ValidateSet(
+    'SQL2014SP1slip','SQL2012','SQL2012SP1','SQL2012SP2','SQL2012SP1SLIP','SQL2014','SQL2016'
+    )]$SQLVER,
     
     ######################### common Parameters start here in Order
     <# reads the Default Config from defaults.xml
@@ -762,7 +764,7 @@ $latest_nmm = 'nmm9006'
 $latest_nw = 'nw9006'
 $latest_e16_cu = 'cu1'
 $latest_e15_cu = 'cu12'
-$latest_sqlver  = 'SQL2014SP1slip'
+$latest_sqlver  = 'SQL2016'
 $latest_master = '2012R2FallUpdate'
 $latest_sql_2012 = 'SQL2012SP2'
 $SIOToolKit_Branch = "master"
