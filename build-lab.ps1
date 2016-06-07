@@ -679,7 +679,7 @@ if ([String]::IsNullOrEmpty($PSCmdlet.MyInvocation.BoundParameters['branch']))
     }
 Write-Verbose "Branch = $branch"
 Write-Verbose "Current Branch = $Current_labbuildr_branch"
-
+<#
 try
     {
     $verlabbuildr = New-Object System.Version (Get-Content  ($Builddir + "\labbuildr4.version") -ErrorAction Stop).Replace("-",".")
@@ -696,6 +696,7 @@ catch
     {
     $vervmxtoolkit = "00.0000"
     }
+#>
 try
     {
     [datetime]$Latest_labbuildr_git = Get-Content  ($Builddir + "\labbuildr-$branch.gitver") -ErrorAction Stop
@@ -746,7 +747,7 @@ $WAIKVER = "WAIK"
 $domainsuffix = ".local"
 $AAGDB = "AWORKS"
 $major = "2016"
-$Edition = "EMCWorld"
+$Edition = "EarlySummer"
 $Default_attachement = "https://www.emc.com/collateral/solution-overview/h12476-so-hybrid-cloud.pdf"
 $Default_vmnet = "vmnet2"
 $Default_BuildDomain = "labbuildr"
@@ -754,11 +755,11 @@ $Default_Subnet = "192.168.2.0"
 $Default_IPv6Prefix = "FD00::"
 $Default_IPv6PrefixLength = '8'
 $Default_AddressFamily = "IPv4"
-$latest_ScaleIOVer = '2.0-5014.0'
+$latest_ScaleIOVer = '2.0-6035.0'
 $ScaleIO_OS = "Windows"
 $ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
-$latest_nmm = 'nmm9005'
-$latest_nw = 'nw9005'
+$latest_nmm = 'nmm9006'
+$latest_nw = 'nw9006'
 $latest_e16_cu = 'cu1'
 $latest_e15_cu = 'cu12'
 $latest_sqlver  = 'SQL2014SP1slip'
