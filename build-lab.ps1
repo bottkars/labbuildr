@@ -767,7 +767,6 @@ $latest_master = '2012R2FallUpdate'
 $latest_sql_2012 = 'SQL2012SP2'
 $SIOToolKit_Branch = "master"
 $NW85_requiredJava = "jre-7u61-windows-x64"
-$latest_java8uri = "http://javadl.sun.com/webapps/download/AutoDL?BundleId=107944"
 $Adminuser = "Administrator"
 $Adminpassword = "Password123!"
 $Dots = [char]58
@@ -781,7 +780,6 @@ $Sleep = 10
 [string]$Sources = "Sources"
 $Sourcedirdefault = "c:\$Sources"
 $Scripts = "Scripts"
-$Sourceslink = "https://my.syncplicity.com/share/wmju8cvjzfcg04i/sources"
 $Buildname = Split-Path -Leaf $Builddir
 $Scenarioname = "default"
 $Scenario = 1
