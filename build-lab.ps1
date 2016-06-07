@@ -3208,7 +3208,7 @@ switch ($PsCmdlet.ParameterSetName)
             }
 		if ($SCVMM.IsPresent)
 		    {
-			#write-verbose "Building SCVMM Setup Configruration"
+			#write-verbose "Building SCVMM Setup Configuration"
 			#invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest -Script set-vmmconfig.ps1 -interactive
 			Write-Host -ForegroundColor Gray " ==> Installing SQL Binaries"
 			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $In_Guest_UNC_SQLScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -DefaultDBpath $CommonParameter" -interactive
@@ -3551,6 +3551,7 @@ switch ($PsCmdlet.ParameterSetName)
 		###################################################
 		# Setup of a Blank Node
 		# Init
+        $size = 'XL'
 		$Nodeip = "$IPv4Subnet.13$Node"
 		$Nodename = "SQLNODE$Node"
 		$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
