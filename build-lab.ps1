@@ -1974,7 +1974,8 @@ Write-Host -ForegroundColor Magenta "==> Entering Download Section"
 
 ##### exchange downloads section
 if ($Exchange2013.IsPresent)
-{
+    {
+    Write-Host  -ForegroundColor White "Preparing Exchange 2014 $e15_cu"
     if (!$e15_cu)
         {
         $e15_cu = $Latest_e15_cu
