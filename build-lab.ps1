@@ -2187,6 +2187,10 @@ if ($SCOM.IsPresent)
 #################
 if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
     {
+    If ($SQLVER -eq 'SQL2016')
+        {
+        $Java8_required = $true
+        }
     $AAGURL = "https://community.emc.com/servlet/JiveServlet/download/38-111250/AWORKS.zip"
     $URL = $AAGURL
     $FileName = Split-Path -Leaf -Path $Url
