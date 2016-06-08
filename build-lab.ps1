@@ -159,7 +159,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "E15", Mandatory = $false)][ValidateRange(1, 10)][int][alias('exn')]$EXNodes,
     <# Specify the Starting exchange Node#>
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
-	[Parameter(ParameterSetName = "E15", Mandatory = $false)][ValidateRange(1, 9)][int][alias('exs')]$EXStartNode = "1",
+	[Parameter(ParameterSetName = "E15", Mandatory = $false)][ValidateRange(1, 9)][int][alias('exs')]$EXStartNode = 1,
     <#
     Determines Exchange CU Version to be Installed
     Valid Versions are:
@@ -1921,6 +1921,8 @@ If ($DAG.IsPresent)
         Write-Host -ForegroundColor Gray " ==> No -EXnodes specified, defaulting to $EXNodes Nodes for DAG Deployment"
         }
     }
+if (!$EXnodes)
+    {$EXNodes = 1}
 if ($Blanknode.IsPresent)
 {
 	workorder "We are going to Install $BlankNodes Blank Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
