@@ -80,16 +80,17 @@ $Start = "1"
 $IPOffset = 5
 $Szenarioname = "ECS"
 $Nodeprefix = "$($Szenarioname)Node"
-
+$Builddir = $PSScriptRoot
+$Masterpath = $Builddir
 $scsi = 0
 If ($Defaults.IsPresent)
     {
-     $labdefaults = Get-labDefaults
-     $vmnet = $labdefaults.vmnet
-     $subnet = $labdefaults.MySubnet
-     $BuildDomain = $labdefaults.BuildDomain
-     $Sourcedir = $labdefaults.Sourcedir
-     try
+    $labdefaults = Get-labDefaults
+    $vmnet = $labdefaults.vmnet
+    $subnet = $labdefaults.MySubnet
+    $BuildDomain = $labdefaults.BuildDomain
+    $Sourcedir = $labdefaults.Sourcedir
+    try
         {
         test-path -Path $Sourcedir | out-null
         }
@@ -104,13 +105,20 @@ If ($Defaults.IsPresent)
         write-warning "no sources directory found at $Sourcedir"
         exit
         }
-
+    try
+        {
+        $Masterpath = $LabDefaults.Masterpath
+        }
+    catch
+        {
+        # Write-Host -ForegroundColor Gray " ==> No Masterpath specified, trying default"
+        $Masterpath = $Builddir
+        }
      $Hostkey = $labdefaults.HostKey
      $Gateway = $labdefaults.Gateway
      $DefaultGateway = $labdefaults.Defaultgateway
      $DNS1 = $labdefaults.DNS1
      $DNS2 = $labdefaults.DNS2
-
      }
 If (!$DNS1 -and !$DNS2)
     {
@@ -126,28 +134,49 @@ If (!$DNS1 -and $DNS2)
     }
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
-
-
 $DefaultTimezone = "Europe/Berlin"
 $Guestpassword = "Password123!"
 $Rootuser = "root"
 $Rootpassword  = "Password123!"
-
 $Guestuser = "$($Szenarioname.ToLower())user"
 $Guestpassword  = "Password123!"
-$Required_Master = "CentOS7 Master"
-$OS = ($Required_Master.Split(" "))[0]
+$Master = "CentOS7 Master"
+$OS = ($Master.Split(" "))[0]
 ###### checking master Present
-if (!($MasterVMX = get-vmx $Required_Master))
+$MasterVMX = get-vmx -path "$Masterpath\$Master\" -WarningAction SilentlyContinue
+if (!$Mastervmx)
     {
-    Write-Warning "Required Master $Required_Master not found
+    Write-Host -ForegroundColor Yellow " ==> Could not find $Masterpath\$Master"
+    Write-Host -ForegroundColor Gray " ==> Trying to load $Master from labbuildr Master Repo"
+    if (Receive-LABMaster -Master $OS -Destination $Masterpath -unzip -Confirm:$Confirm)
+        {
+        $MasterVMX = get-vmx -path "$Masterpath\$Master\" -ErrorAction SilentlyContinue
+        }
+    else
+        {
+        Write-Warning "No valid master found /downloaded"
+        break
+        }
+    $MasterVMX = get-vmx -path "$Masterpath\$Master" -WarningAction SilentlyContinue
+    }
+else
+    {
+    #$MasterVMX = $mymaster.config		
+    Write-Verbose "We got master $($MasterVMX.config)"
+    }
+
+<###
+if (!($MasterVMX = get-vmx -Path "$Masterpath\$Required_Master"))
+    {
+    Write-Host -ForegroundColor Yellow "==>Required Master $Required_Master not found, trying download from labbuildr repo"
+    <#
     please download and extraxt $Required_Master to .\$Required_Master
     see: 
     ------------------------------------------------
     get-help $($MyInvocation.MyCommand.Name) -online
     ------------------------------------------------"
     exit
-    }
+    }#>
     $repo  = "https://github.com/EMCECS/ECS-CommunityEdition.git"
     switch ($Branch)
         {
@@ -246,11 +275,11 @@ if (!$MasterVMX.Template)
         If ($FullClone.IsPresent)
             {
             Write-Host -ForegroundColor Magenta " ==>Creating full Clone of $($MasterVMX.vmxname), doing full sync now"
-            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$Node
+            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$Node -Clonepath $Builddir
             }
         else
             { 
-            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node
+            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node -Clonepath $Builddir
             } 
         If ($Node -eq $Start)
             {$Primary = $NodeClone
