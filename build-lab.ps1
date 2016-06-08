@@ -2735,7 +2735,7 @@ switch ($PsCmdlet.ParameterSetName)
 			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchangeprereqs.ps1 -interactive
 			Write-Host -ForegroundColor Magenta " ==> Setting Power Scheme"
 			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script powerconf.ps1 -interactive
-			Write-Host -ForegroundColor Magenta " ==> Installing E15, this may take up to 60 Minutes ...."
+			Write-Host -ForegroundColor Magenta " ==> Installing E15 $E15_CU, this may take up to 60 Minutes ...."
 			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchange.ps1 -interactive -nowait -Parameter "$CommonParameter -ex_cu $e15_cu"
             }
             }
