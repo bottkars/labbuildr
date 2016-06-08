@@ -180,6 +180,9 @@ Specify if Networker Scenario sould be installed
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
     [ValidateSet('cu1', 'cu2', 'cu3', 'sp1','cu5','cu6','cu7','cu8','cu9','cu10','CU11','cu12')]
     [alias('ex_cu')]$e15_cu,
+    [Parameter(ParameterSetName = "E15", Mandatory = $false)]
+    [ValidateSet('de-DE','en-US')]
+    [alias('ex15_lang')]$e15_language = 'de-DE',
     <# schould we prestage users ? #>	
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
     [Parameter(ParameterSetName = "E15", Mandatory = $false)][switch]$nouser,
@@ -304,7 +307,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
-    [ValidateSet('2016TP5','2016TP4','2016TP3','2012R2FallUpdate','2012R2UEFIMASTER')]$Master,
+    [ValidateSet('2016TP5','2016TP4','2016TP3','2012R2FallUpdate','2012R2UEFIMASTER','2012R2Fall_Ger')]$Master,
     <#do we want a special path to the Masters ? #>
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
