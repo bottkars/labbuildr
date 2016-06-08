@@ -2718,7 +2718,7 @@ switch ($PsCmdlet.ParameterSetName)
                 }
 		    test-dcrunning
 		    Write-Host -ForegroundColor White  $Commentline
-		    workorder "Creating E15 Host $Nodename with IP $Nodeip in Domain $BuildDomain"
+		    workorder "Creating E15 $e15_cu $Nodename with IP $Nodeip in Domain $BuildDomain"
 		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -AddDisks -Disks 3 -Disksize 500GB -Size $Exchangesize -Sourcedir $Sourcedir "
 
 		    ###################################################
