@@ -648,7 +648,6 @@ Sources should be populated from a bases sources.zip
 #$AddressFamily = 'IPv4'
 $IPv4PrefixLength = '24'
 $myself = $Myself.TrimEnd(".ps1")
-$Starttime = Get-Date
 $Builddir = $PSScriptRoot
 If ($ConfirmPreference -match "none")
     {$Confirm = $false}
@@ -2455,7 +2454,7 @@ if (test-vmx $DCNODE -WarningAction SilentlyContinue)
 	    $BuildDomain, $RunningIP, $VMnet, $MyGateway = test-domainsetup
 	    $IPv4Subnet = convert-iptosubnet $RunningIP
 	    workorder "We will Use Domain $BuildDomain and Subnet $IPv4Subnet.0 for on $VMnet the Running Workorder"
-	    
+	    $Starttime = Get-Date
         If ($MyGateway) 
             {
             workorder "We will configure Default Gateway at $MyGateway"
@@ -2465,11 +2464,14 @@ if (test-vmx $DCNODE -WarningAction SilentlyContinue)
     else
         {
         write-verbose " no domain check on IPv6only"
+        $Starttime = Get-Date
         }
     }
+
 }#end test-domain
 else
 {
+    $Starttime = Get-Date
 	###################################################
 	# Part 1, Definition of Domain Controller
 	###################################################
