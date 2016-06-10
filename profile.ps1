@@ -34,11 +34,11 @@ if (!(Test-Connection community.emc.com -Quiet -Count 2 -ErrorAction SilentlyCon
     {
     Write-Warning "no Internet Connection detected or on EMC Net, Download of Sources may not work"
     }
-else
+<#else
     {
     Write-host "latest updates on vmxtoolkit and labbuildr"
     $Url = "https://community.emc.com/blogs/bottk/feeds/posts"
     $blog = [xml](new-object System.Net.WebClient).DownloadString($Url)
     $blog.rss.channel.item |  where {$_.title -match "vmxtoolkit" -or $_.title -Match "labbuildr"} |select Link | ft
-    }
+    }#>
 $Defaults
