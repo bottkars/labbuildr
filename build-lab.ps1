@@ -208,9 +208,9 @@ Specify if Networker Scenario sould be installed
     <# Configure VMM ?#>
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$ConfigureVMM,
     <# Starting Node for Blank Nodes#>
-    [Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)][ValidateRange(1, 9)][alias('bs')]$Blankstart = "1",
+    [Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)][ValidateRange(1, 9)][alias('bs')][int]$Blankstart = "1",
     <# How many Blank Nodes#>
-	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)][ValidateRange(1, 10)][alias('bns')]$BlankNodes = "1",
+	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)][ValidateRange(1, 10)][alias('bns')][int]$BlankNodes = "1",
     <# Wich Number of isilon Nodes #>
     [Parameter(ParameterSetName = "Isilon")]
 	[ValidateRange(2, 16)][alias('isn')]$isi_nodes = 2,
@@ -3425,7 +3425,7 @@ switch ($PsCmdlet.ParameterSetName)
         if ($Cluster.IsPresent) {$AddonFeatures = "$AddonFeatures, Failover-Clustering, RSAT-Clustering, RSAT-Clustering-AutomationServer, RSAT-Clustering-CmdInterface, WVR"}
         if ($BlankHV.IsPresent) {$AddonFeatures = "$AddonFeatures, Hyper-V, RSAT-Hyper-V-Tools, Multipath-IO"}
         $Blank_End = (($Blankstart+$BlankNodes)-1)
-
+		test-dcrunning
 		foreach ($Node in ($Blankstart..$Blank_End))
         
 		{
@@ -3441,7 +3441,6 @@ switch ($PsCmdlet.ParameterSetName)
 			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
             $ClusterIP = "$IPv4Subnet.180"
 			###################################################
-			# we need a DC, so check it is running
 		    Write-Verbose $IPv4Subnet
             write-verbose $Nodename
             write-verbose $Nodeip
@@ -3456,7 +3455,6 @@ switch ($PsCmdlet.ParameterSetName)
                 pause
                 }
 
-			test-dcrunning
 			
 			
 			# Clone Base Machine
