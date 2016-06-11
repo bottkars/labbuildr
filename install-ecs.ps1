@@ -143,91 +143,57 @@ $Guestpassword  = "Password123!"
 $Master = "CentOS7 Master"
 $OS = ($Master.Split(" "))[0]
 ###### checking master Present
-$MasterVMX = get-vmx -path "$Masterpath\$Master\" -WarningAction SilentlyContinue
-if (!$Mastervmx)
+$mastervmx = test-labmaster -Master $Master -MasterPath $MasterPath
+$Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
+$repo  = "https://github.com/EMCECS/ECS-CommunityEdition.git"
+switch ($Branch)
     {
-    Write-Host -ForegroundColor Yellow " ==> Could not find $Masterpath\$Master"
-    Write-Host -ForegroundColor Gray " ==> Trying to load $Master from labbuildr Master Repo"
-    if (Receive-LABMaster -Master $OS -Destination $Masterpath -unzip -Confirm:$Confirm)
+    "release-2.1"
         {
-        $MasterVMX = get-vmx -path "$Masterpath\$Master\" -ErrorAction SilentlyContinue
+        $Docker_imagename = "emccorp/ecs-software-2.1"
+        $Docker_image = "ecs-software-2.1"
+        $Docker_imagetag = "latest"
+        $Git_Branch = $Branch
         }
-    else
+    "master"
         {
-        Write-Warning "No valid master found /downloaded"
-        break
+        $Docker_image = "ecs-software-2.2.1"
+        $Docker_imagename = "emccorp/ecs-software-2.2.1"
+        $Docker_imagetag = "latest"
+        $Git_Branch = $Branch
         }
-    $MasterVMX = get-vmx -path "$Masterpath\$Master" -WarningAction SilentlyContinue
-    }
-else
-    {
-    #$MasterVMX = $mymaster.config		
-    Write-Verbose "We got master $($MasterVMX.config)"
-    }
-
-<###
-if (!($MasterVMX = get-vmx -Path "$Masterpath\$Required_Master"))
-    {
-    Write-Host -ForegroundColor Yellow "==>Required Master $Required_Master not found, trying download from labbuildr repo"
-    <#
-    please download and extraxt $Required_Master to .\$Required_Master
-    see: 
-    ------------------------------------------------
-    get-help $($MyInvocation.MyCommand.Name) -online
-    ------------------------------------------------"
-    exit
-    }#>
-    $repo  = "https://github.com/EMCECS/ECS-CommunityEdition.git"
-    switch ($Branch)
+    "develop"
         {
-            "release-2.1"
-            {
-            $Docker_imagename = "emccorp/ecs-software-2.1"
-            $Docker_image = "ecs-software-2.1"
-            $Docker_imagetag = "latest"
-            $Git_Branch = $Branch
+        $Docker_image = "ecs-software-2.2.1"
+        $Docker_imagename = "emccorp/ecs-software-2.2.1"
+        $Docker_imagetag = "latest"
+        $Git_Branch = $Branch
+        }
 
-            }
-        "master"
-            {
-            $Docker_image = "ecs-software-2.2.1"
-            $Docker_imagename = "emccorp/ecs-software-2.2.1"
-            $Docker_imagetag = "latest"
-            $Git_Branch = $Branch
-            }
-         "develop"
-            {
-            $Docker_image = "ecs-software-2.2.1"
-            $Docker_imagename = "emccorp/ecs-software-2.2.1"
-            $Docker_imagetag = "latest"
-            $Git_Branch = $Branch
-            }
-
-        "2.2.1.0"
-            {
-            $Docker_image = "ecs-software-2.2.1"
-            $Docker_imagename = "emccorp/ecs-software-2.2.1"
-            $Docker_imagetag = $Branch
-            $Git_Branch = "master"
+    "2.2.1.0"
+        {
+        $Docker_image = "ecs-software-2.2.1"
+        $Docker_imagename = "emccorp/ecs-software-2.2.1"
+        $Docker_imagetag = $Branch
+        $Git_Branch = "master"
             #$repo = "https://github.com/bottkars/ECS-CommunityEdition.git"
-            }
-        "2.2.1.0-a"
-            {
-            $Docker_image = "ecs-software-2.2.1"
-            $Docker_imagename = "emccorp/ecs-software-2.2.1"
-            $Docker_imagetag = $Branch
-            $Git_Branch = "master"
-            #$repo = "https://github.com/bottkars/ECS-CommunityEdition.git"
-            }
-
-        default
-            {
-            $Docker_image = "ecs-software-2.2.1"
-            $Docker_imagename = "emccorp/ecs-software-2.2.1"
-            $Docker_imagetag = "latest"
-            $Git_Branch = "master"
-            }
         }
+    "2.2.1.0-a"
+        {
+        $Docker_image = "ecs-software-2.2.1"
+        $Docker_imagename = "emccorp/ecs-software-2.2.1"
+        $Docker_imagetag = $Branch
+        $Git_Branch = "master"
+        }
+
+    default
+        {
+        $Docker_image = "ecs-software-2.2.1"
+        $Docker_imagename = "emccorp/ecs-software-2.2.1"
+        $Docker_imagetag = "latest"
+        $Git_Branch = "master"
+        }
+    }
 
 
 if ($offline.IsPresent)
@@ -249,18 +215,6 @@ catch [System.Management.Automation.DriveNotFoundException]
     break
     }
 
-
-if (!$MasterVMX.Template) 
-            {
-            write-verbose "Templating Master VMX"
-            $template = $MasterVMX | Set-VMXTemplate
-            }
-        $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
-        if (!$Basesnap) 
-        {
-         Write-verbose "Base snap does not exist, creating now"
-        $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
-        }
 ################
 
 ####Build Machines#
