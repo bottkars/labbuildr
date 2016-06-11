@@ -1848,11 +1848,11 @@ Switch ($Totalmemory)
 }
 If ($NumLogCPU -le 4 -and $Computersize -le 2)
 {
-	debug "Bad, Running $mySelf on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logicalk CPUs and $Totalmemory GB Memory "
+	Write-Host -ForegroundColor White "==>Running $mySelf on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logicalk CPUs and $Totalmemory GB Memory "
 }
 If ($NumLogCPU -gt 4 -and $Computersize -le 2)
 {
-	write-verbose "Good, Running $mySelf on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logical CPU and $Totalmemory GB Memory"
+	Write-Host -ForegroundColor White "==>Running $mySelf on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logical CPU and $Totalmemory GB Memory"
 	Write-Host "Consider Adding Memory "
 }
 If ($NumLogCPU -gt 4 -and $Computersize -gt 2)
