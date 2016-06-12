@@ -92,7 +92,7 @@ If ($Defaults.IsPresent)
     $Sourcedir = $labdefaults.Sourcedir
     try
         {
-        test-path -Path $Sourcedir | out-null
+        Get-Item -Path $Sourcedir -ErrorAction Stop | Out-Null 
         }
     catch
         [System.Management.Automation.DriveNotFoundException] 
@@ -103,7 +103,7 @@ If ($Defaults.IsPresent)
         catch [System.Management.Automation.ItemNotFoundException]
         {
         write-warning "no sources directory found at $Sourcedir"
-        exit
+        return
         }
     try
         {
@@ -120,6 +120,7 @@ If ($Defaults.IsPresent)
      $DNS1 = $labdefaults.DNS1
      $DNS2 = $labdefaults.DNS2
      }
+
 if (!$Masterpath) {$Masterpath = $Builddir}
 If (!$DNS1 -and !$DNS2)
     {
