@@ -326,6 +326,12 @@ foreach ($Node in $machinesBuilt)
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword    #-logfile $Logfile
 
     ##### Prepare
+    Write-Host -ForegroundColor Magenta " ==>Testing default Route, make sure that Gateway is reachable ( install OpenWRT )"
+    $Scriptblock = "DEFAULT_ROUTE=`$(ip route show default | awk '/default/ {print `$3}');ping -c 1 `$DEFAULT_ROUTE"
+    Write-Verbose $Scriptblock
+    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  
+
+
     Write-Host -ForegroundColor Magenta " ==>Configuring GuestOS"
 
     Write-Host -ForegroundColor Magenta " ==>ssh into $ip with root:Password123! and Monitor $Logfile"
