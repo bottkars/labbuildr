@@ -143,6 +143,7 @@ $Guestpassword  = "Password123!"
 $Master = "CentOS7 Master"
 $OS = ($Master.Split(" "))[0]
 ###### checking master Present
+Write-Verbose  $Masterpath
 $mastervmx = test-labmaster -Master $Master -MasterPath $MasterPath
 $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
 $repo  = "https://github.com/EMCECS/ECS-CommunityEdition.git"
