@@ -120,6 +120,7 @@ If ($Defaults.IsPresent)
      $DNS1 = $labdefaults.DNS1
      $DNS2 = $labdefaults.DNS2
      }
+if (!$Masterpath) {$Masterpath = $Builddir}
 If (!$DNS1 -and !$DNS2)
     {
     Write-Warning "DNS Server not Set, exiting now"
