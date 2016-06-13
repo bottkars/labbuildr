@@ -2881,20 +2881,9 @@ switch ($PsCmdlet.ParameterSetName)
 			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script powerconf.ps1 -interactive
 Write-Host -ForegroundColor Yellow "not yet implemented"
 return
-			    Switch ($e16_cu)
-                        {
-                        "final"
-                            {
-                            $install_from = "exe"
-                            }
-                        default
-                            {
-                            $install_from = "iso"
-                            }
-                        }
 
-                Write-Host -ForegroundColor Magenta " ==> Installing e16 $e16_cu fro $install_from, this may take up to 60 Minutes ...."
-			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchange.ps1 -interactive -nowait -Parameter "$CommonParameter -ex_cu $e16_cu -install_from $install_from"
+                Write-Host -ForegroundColor Magenta " ==> Installing e14 $e14_sp, this may take up to 60 Minutes ...."
+			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchange.ps1 -interactive -nowait -Parameter "$CommonParameter -e14_sp $e14_sp -ex_lang $e14_lang"
                 }
             }
         if ($EXnew)
