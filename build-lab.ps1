@@ -2879,9 +2879,6 @@ switch ($PsCmdlet.ParameterSetName)
                 checkpoint-progress -step exprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
 			    Write-Host -ForegroundColor Magenta " ==> Setting Power Scheme"
 			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script powerconf.ps1 -interactive
-Write-Host -ForegroundColor Yellow "not yet implemented"
-return
-
                 Write-Host -ForegroundColor Magenta " ==> Installing e14 $e14_sp, this may take up to 60 Minutes ...."
 			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchange.ps1 -interactive -nowait -Parameter "$CommonParameter -e14_sp $e14_sp -ex_lang $e14_lang"
                 }
