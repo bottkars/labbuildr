@@ -2804,9 +2804,7 @@ switch ($PsCmdlet.ParameterSetName)
 {	
 "E14"{
         Write-Host -ForegroundColor Magenta " ==> Starting $EX_Version $e14_sp Setup"
-        Write-Host -ForegroundColor Yellow "not yet implemented"
-        return
-        $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\E2016"
+        $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$EX_Version"
 
         # we need ipv4
         if ($AddressFamily -notmatch 'ipv4')
@@ -2819,7 +2817,7 @@ switch ($PsCmdlet.ParameterSetName)
         }
         if ($DAG.IsPresent)
             {
-            Write-Host -ForegroundColor Gray " ==> Running e16 Avalanche Install"
+            Write-Host -ForegroundColor Gray " ==> Running $E Avalanche Install"
 
             if ($DAGNOIP.IsPresent)
 			    {
@@ -2833,16 +2831,17 @@ switch ($PsCmdlet.ParameterSetName)
 		foreach ($EXNODE in ($EXStartNode..($EXNodes+$EXStartNode-1)))
             {
 			###################################################
-			# Setup e16 Node
+			# Setup e14 Node
 			# Init
 			$Nodeip = "$IPv4Subnet.12$EXNODE"
 			$Nodename = "$EX_Version"+"N"+"$EXNODE"
 			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
 			$EXLIST += $CloneVMX
 		    # $Exprereqdir = "$Sourcedir\EXPREREQ\"
-            $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features"
+            $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS"
             # $AddonFeatures = "$AddonFeatures, RSAT-DNS-SERVER, Desktop-Experience, RPC-over-HTTP-proxy, RSAT-Clustering, RSAT-Clustering-CmdInterface, Web-Mgmt-Console, WAS-Process-Model, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI, Windows-Identity-Foundation" 
-            $AddonFeatures = "$AddonFeatures, RSAT-DNS-Server, AS-HTTP-Activation, Desktop-Experience, NET-Framework-45-Features, RPC-over-HTTP-proxy, RSAT-Clustering, RSAT-Clustering-CmdInterface, RSAT-Clustering-Mgmt, RSAT-Clustering-PowerShell, Web-Mgmt-Console, WAS-Process-Model, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI, Windows-Identity-Foundation"
+            $AddonFeatures = "$AddonFeatures, Add-WindowsFeature NET-Framework-Features,NET-HTTP-Activation,RPC-over-HTTP-proxy,RSAT-Clustering,Web-Mgmt-Console,WAS-Process-Model,Web-Asp-Net,Web-Basic-Auth,Web-Client-Auth,Web-Digest-Auth,Web-Dir-Browsing,Web-Dyn-Compression,Web-Http-Errors,Web-Http-Logging,Web-Http-Redirect,Web-Http-Tracing,Web-ISAPI-Ext,Web-ISAPI-Filter,Web-Lgcy-Mgmt-Console,Web-Metabase,Web-Net-Ext,Web-Request-Monitor,Web-Server,Web-Static-Content,Web-Windows-Auth,Web-WMI"
+
 
 
 			###################################################
@@ -2875,7 +2874,9 @@ switch ($PsCmdlet.ParameterSetName)
 			    domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $EXAddressFamiliy -AddOnfeatures $AddonFeatures
 			    Write-Host -ForegroundColor Magenta " ==> Setup Database Drives"
 			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script prepare-disks.ps1
-			    Write-Host -ForegroundColor Magenta " ==> Setup e16 Prereqs"
+			    Write-Host -ForegroundColor Yellow "not yet implemented"
+return
+                Write-Host -ForegroundColor Magenta " ==> Setup $EX_Version Prereqs"
 			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchangeprereqs.ps1 -interactive
                 checkpoint-progress -step exprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
 			    Write-Host -ForegroundColor Magenta " ==> Setting Power Scheme"
