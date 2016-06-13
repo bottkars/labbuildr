@@ -2874,13 +2874,13 @@ switch ($PsCmdlet.ParameterSetName)
 			    domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $EXAddressFamiliy -AddOnfeatures $AddonFeatures
 			    Write-Host -ForegroundColor Magenta " ==> Setup Database Drives"
 			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script prepare-disks.ps1
-			    Write-Host -ForegroundColor Yellow "not yet implemented"
-return
                 Write-Host -ForegroundColor Magenta " ==> Setup $EX_Version Prereqs"
 			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchangeprereqs.ps1 -interactive
                 checkpoint-progress -step exprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
 			    Write-Host -ForegroundColor Magenta " ==> Setting Power Scheme"
 			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script powerconf.ps1 -interactive
+Write-Host -ForegroundColor Yellow "not yet implemented"
+return
 			    Switch ($e16_cu)
                         {
                         "final"
