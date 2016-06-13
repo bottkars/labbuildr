@@ -102,7 +102,7 @@ If ($Defaults.IsPresent)
         }
         catch [System.Management.Automation.ItemNotFoundException]
         {
-        write-warning "no sources directory found at $Sourcedir"
+        write-warning "no sources directory found at $Sourcedir, please create or select different Directory"
         return
         }
     try
