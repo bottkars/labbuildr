@@ -2904,8 +2904,8 @@ switch ($PsCmdlet.ParameterSetName)
                          Write-Verbose $ToolState.State
                         }
                     until ($ToolState.state -match "running")
-            Write-Host -ForegroundColor Magenta " ==> Performing e16 Post Install Tasks:"
-    		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script configure-exchange.ps1 -interactive
+            Write-Host -ForegroundColor Magenta " ==> Performing $EX_Version Post Install Tasks:"
+#    		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script configure-exchange.ps1 -interactive
      
     
     #  -nowait
