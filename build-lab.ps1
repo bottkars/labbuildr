@@ -73,6 +73,11 @@ param (
     #>
 	[Parameter(ParameterSetName = "Hyperv")][switch][alias('hv')]$HyperV,
     <# 
+    E14 Scenario: Installs a Standalone or DAG Exchange 2010 Installation.
+    IP-Addresses: .110 - .119
+    #>
+	[Parameter(ParameterSetName = "E14",Mandatory = $true)][switch][alias('ex14')]$Exchange2010,
+    <# 
     E15 Scenario: Installs a Standalone or DAG Exchange 2013 Installation.
     IP-Addresses: .110 - .119
     #>
@@ -152,12 +157,15 @@ Specify if Networker Scenario sould be installed
     <#
     Determines if Exchange should be installed in a DAG
     #>
+    [Parameter(ParameterSetName = "E14", Mandatory = $false)]
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)][switch]$DAG,
     <# Specify the Number of Exchange Nodes#>
+    [Parameter(ParameterSetName = "E14", Mandatory = $false)]
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
     [Parameter(ParameterSetName = "E15", Mandatory = $false)][ValidateRange(1, 10)][int][alias('exn')]$EXNodes,
     <# Specify the Starting exchange Node#>
+    [Parameter(ParameterSetName = "E14", Mandatory = $false)]
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)][ValidateRange(1, 9)][int][alias('exs')]$EXStartNode = 1,
     <#
@@ -180,10 +188,36 @@ Specify if Networker Scenario sould be installed
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
     [ValidateSet('cu1', 'cu2', 'cu3', 'sp1','cu5','cu6','cu7','cu8','cu9','cu10','CU11','cu12')]
     [alias('ex_cu')]$e15_cu,
-    [Parameter(ParameterSetName = "E15", Mandatory = $false)]
-    [ValidateSet('de-DE','en-US')]
-    [alias('ex15_lang')]$e15_language = 'de-DE',
+
+<#
+    Determines Exchange UR Version to be Installed
+    Valid Versions are:
+    'ur13'
+    Default is latest
+    CU Location is [Driveletter]:\sources\e2013[cuver], e.g. c:\sources\e2013cu7
+    #>
+	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
+    [ValidateSet('ur13')]
+    [alias('e2010_ur')]$e14_ur,
+<#
+    Determines Exchange CU Version to be Installed
+    Valid Versions are:
+    'sp3'
+    Default is latest
+    CU Location is [Driveletter]:\sources\e2013[cuver], e.g. c:\sources\e2013cu7
+    #>
+	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
+    [ValidateSet('sp3')]
+    [alias('e2010_sp')]$e14_sp,
+
+
+
+
+	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
+    [ValidateSet('de_DE','en_US')]
+    [alias('e2010_lang')]$e14_lang = 'de_DE',
     <# schould we prestage users ? #>	
+	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
     [Parameter(ParameterSetName = "E15", Mandatory = $false)][switch]$nouser,
     <# Install a DAG without Management IP Address ? #>
@@ -260,6 +294,7 @@ Specify if Networker Scenario sould be installed
 #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
@@ -278,6 +313,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
@@ -297,6 +333,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
@@ -312,6 +349,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
@@ -336,6 +374,7 @@ Specify if Networker Scenario sould be installed
 <# select vmnet, number from 1 to 19#>                                        	
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
@@ -353,6 +392,7 @@ Specify if Networker Scenario sould be installed
 <# This stores the defaul config in defaults.xml#>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
@@ -395,6 +435,7 @@ Machine Sizes
 <# Specify your own Domain name#>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
@@ -416,6 +457,7 @@ Machine Sizes
     <# install Networker Modules for Microsoft #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
@@ -432,6 +474,7 @@ Version Of Networker Modules
 #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
@@ -447,6 +490,7 @@ Version Of Networker Modules
 <# Indicates to install Networker Server with Scenario #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
@@ -481,6 +525,7 @@ Version Of Networker Server / Client to be installed
 #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
@@ -516,6 +561,7 @@ This should be used in Distributed scenario´s
  #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
@@ -531,6 +577,7 @@ This should be used in Distributed scenario´s
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "DConly", Mandatory = $false)]
@@ -548,6 +595,7 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
 #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
@@ -564,6 +612,7 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
 <# Specify your IPv6 ULA Prefix, consider https://www.sixxs.net/tools/grh/ula/  #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
@@ -580,6 +629,7 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
 <# Specify your IPv6 ULA Prefix Length, #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
@@ -601,6 +651,7 @@ Sources should be populated from a bases sources.zip
 	#[Parameter(ParameterSetName = "default", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
@@ -625,6 +676,7 @@ Sources should be populated from a bases sources.zip
     <# Turn on Logging to Console#>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
@@ -766,6 +818,8 @@ $latest_nmm = 'nmm9006'
 $latest_nw = 'nw9006'
 $latest_e16_cu = 'cu1'
 $latest_e15_cu = 'cu12'
+$latest_e14_sp = 'sp3'
+$latest_e14_ur = 'ur13'
 $latest_sqlver  = 'SQL2016'
 $latest_master = '2012R2FallUpdate'
 $latest_sql_2012 = 'SQL2012SP2'
@@ -1499,6 +1553,31 @@ if ($defaults.IsPresent)
                 $sqlver = $latest_sqlver
                 }
             }
+        if (!$e14_sp) 
+            {
+            try
+                {
+                $e14_sp = $LabDefaults.e14_cu
+                }
+            catch 
+                {
+                Write-Host -ForegroundColor Gray " ==> No Exchange 2010 SP Specified, setting $latest_e14_sp"
+                $e14_sp = $latest_e14_sp
+                }
+            }
+        if (!$e14_ur) 
+            {
+            try
+                {
+                $e14_ur = $LabDefaults.e14_ur
+                }
+            catch 
+                {
+                Write-Host -ForegroundColor Gray " ==> No Exchange 2010 Update Rollup Specified, setting $latest_e14_ur"
+                $e14_ur = $latest_e14_ur
+                }
+            }
+
         if (!$e15_cu) 
             {
             try
@@ -1650,6 +1729,8 @@ $IPv4Subnet = convert-iptosubnet $MySubnet
 if (!$BuildDomain) { $BuildDomain = $Default_BuildDomain }
 if (!$ScaleIOVer) {$ScaleIOVer = $latest_ScaleIOVer}
 if (!$SQLVER) {$SQLVER = $latest_sqlver}
+if (!$e14_ur) {$e14_ur = $latest_e14_ur}
+if (!$e14_sp) {$e14_sp = $latest_e14_sp}
 if (!$e15_cu) {$e15_cu = $latest_e15_cu}
 if (!$e16_cu) {$e16_cu = $latest_e16_cu}
 if (!$Master) {$Master = $latest_master}
@@ -1703,6 +1784,8 @@ $config += ("<nmm_ver>$nmm_ver</nmm_ver>")
 $config += ("<nw_ver>$nw_ver</nw_ver>")
 $config += ("<master>$Master</master>")
 $config += ("<sqlver>$SQLVER</sqlver>")
+$config += ("<e14_ur>$e14_ur</e14_ur>")
+$config += ("<e14_sp>$e14_sp</e14_sp>")
 $config += ("<e15_cu>$e15_cu</e15_cu>")
 $config += ("<e16_cu>$e16_cu</e16_cu>")
 $config += ("<vmnet>$VMnet</vmnet>")
@@ -1762,48 +1845,7 @@ if (!$Master)
     Write-Host -ForegroundColor Gray " ==> Load masters from $UpdateUri"
     break
     } # end Master
-$MyMaster = get-vmx -path "$Masterpath\$Master" -WarningAction SilentlyContinue
-<#
-Try
-    {
-    }
-    catch [Exception] 
-    {
-    Write-Warning "Could not find $Masterpath\$Master"
-    Write-Host -ForegroundColor Gray " ==> Trying to load $Master from labbuildr Master Repo"
-    if (Receive-LABMaster -Master $Master -Destination $Masterpath -unzip -Confirm:$Confirm)
-        {
-        $MyMaster = get-vmx -path "$Masterpath\$Master" -ErrorAction SilentlyContinue
-        }
-    else
-        {
-        Write-Warning "No valid master found /downloaded"
-        break
-        }
 
-    }
-#>
-if (!$MyMaster)
-    {
-    Write-Host -ForegroundColor Yellow " ==> Could not find $Masterpath\$Master"
-    Write-Host -ForegroundColor Gray " ==> Trying to load $Master from labbuildr Master Repo"
-    if (Receive-LABMaster -Master $Master -Destination $Masterpath -unzip -Confirm:$Confirm)
-        {
-        $MyMaster = get-vmx -path "$Masterpath\$Master" -ErrorAction SilentlyContinue
-        }
-    else
-        {
-        Write-Warning "No valid master found /downloaded"
-        break
-        }
-    $MyMaster = get-vmx -path "$Masterpath\$Master" -WarningAction SilentlyContinue
-    $MasterVMX = $mymaster.config		
-    }
-else
-    {
-    $MasterVMX = $mymaster.config		
-    Write-Verbose "We got master $MasterVMX"
-    }
 write-verbose "After Masterconfig !!!! "
 ########
 ########
@@ -1866,6 +1908,13 @@ $Sourcever = @()
 # $Sourcever = @("$nw_ver","$nmm_ver","E2013$e15_cu","$WAIKVER","$SQL2012R2")
 if (!($DConly.IsPresent))
 {
+	if ($Exchange2010.IsPresent) 
+        {
+        $EX_Version = "E2010"
+        $Scenarioname = "Exchange"
+        $Scenario = 1
+        }
+
 	if ($Exchange2013.IsPresent) 
         {
         $EX_Version = "E2013"
@@ -1973,9 +2022,66 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
 Write-Host -ForegroundColor Magenta "==> Entering Download Section"
 
 ##### exchange downloads section
+if ($Exchange2010.IsPresent)
+    {
+    Write-Host  -ForegroundColor White "Preparing Exchange 2010 $e14_sp $e14_ur"
+    if (!$e14_sp)
+        {
+        $e14_sp = $Latest_e14_sp
+        }
+    if (!$e14_ur)
+        {
+        $e14_ur = $Latest_e14_ur
+        }
+
+    If ($Master -notin ('2012_Ger','2012'))
+        {
+        Write-Warning "You selected $Master as master, but only master up to 2012 are supported in this scenario"
+        return
+        }
+    If (!(Receive-LABExchange -Exchange2010 -e14_sp $e14_sp -e14_ur $e14_ur  -e14_lang $e14_lang -Destination $Sourcedir -unzip))
+        {
+        Write-Host -ForegroundColor Gray " ==> We could not receive Exchange 2010 $e14_sp"
+        return
+        }
+
+    $EX_Version = "E2010"
+    $Scenarioname = "Exchange"
+    $Prereqdir = "Attachments"
+    $attachments = (
+    "http://www.cisco.com/c/dam/en/us/solutions/collateral/data-center-virtualization/unified-computing/fle_vmware.pdf"
+    )
+    $Destination = Join-Path $Sourcedir $Prereqdir
+    if (!(Test-Path $Destination)){New-Item -ItemType Directory -Path $Destination | Out-Null }
+     foreach ($URL in $attachments)
+        {
+        $FileName = Split-Path -Leaf -Path $Url
+        if (!(test-path  "$Destination\$FileName"))
+            {
+            Write-Verbose "$FileName not found, trying Download"
+            if (!(Receive-LABBitsFile -DownLoadUrl $URL -destination $Sourcedir\$Prereqdir\$FileName))
+                { Write-Host -ForegroundColor Gray " ==> Error Downloading file $Url, Please check connectivity"
+                  Write-Host -ForegroundColor Gray " ==> Creating Dummy File"
+                  New-Item -ItemType file -Path "$Sourcedir\$Prereqdir\$FileName" | out-null
+                }
+            }
+
+        
+        }
+    
+	    if ($DAG.IsPresent)
+	        {
+		    Write-Host -ForegroundColor Yellow "We will form a $EX_Version $EXNodes-Node DAG"
+	        }
+
+}
+#########
+
+
+##### exchange downloads section
 if ($Exchange2013.IsPresent)
     {
-    Write-Host  -ForegroundColor White "Preparing Exchange 2014 $e15_cu"
+    Write-Host  -ForegroundColor White "Preparing Exchange 2013 $e15_cu"
     if (!$e15_cu)
         {
         $e15_cu = $Latest_e15_cu
@@ -2430,6 +2536,36 @@ If ($Java8_required)
         }
     }
 ##end Autodownloaders
+##### Master Downloader
+
+$MyMaster = get-vmx -path "$Masterpath\$Master" -WarningAction SilentlyContinue
+if (!$MyMaster)
+    {
+    Write-Host -ForegroundColor Yellow " ==> Could not find $Masterpath\$Master"
+    Write-Host -ForegroundColor Gray " ==> Trying to load $Master from labbuildr Master Repo"
+    if (Receive-LABMaster -Master $Master -Destination $Masterpath -unzip -Confirm:$Confirm)
+        {
+        $MyMaster = get-vmx -path "$Masterpath\$Master" -ErrorAction SilentlyContinue
+        }
+    else
+        {
+        Write-Warning "No valid master found /downloaded"
+        break
+        }
+    $MyMaster = get-vmx -path "$Masterpath\$Master" -WarningAction SilentlyContinue
+    $MasterVMX = $mymaster.config		
+    }
+else
+    {
+    $MasterVMX = $mymaster.config		
+    Write-Verbose "We got master $MasterVMX"
+    }
+
+##### end Master Downloader
+
+
+
+
 ##########################################
 Write-Host -ForegroundColor Magenta "==> end download section"
 if (!($SourceOK = test-source -SourceVer $Sourcever -SourceDir $Sourcedir))
@@ -2665,7 +2801,171 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 		}# end cloneok
 	} # End Switchblock AAG
 switch ($PsCmdlet.ParameterSetName)
-{
+{	
+"E14"{
+        Write-Host -ForegroundColor Magenta " ==> Starting $EX_Version $e14_sp Setup"
+        Write-Host -ForegroundColor Yellow "not yet implemented"
+        return
+        $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\E2016"
+
+        # we need ipv4
+        if ($AddressFamily -notmatch 'ipv4')
+            { 
+            $EXAddressFamiliy = 'IPv4IPv6'
+            }
+        else
+        {
+        $EXAddressFamiliy = $AddressFamily
+        }
+        if ($DAG.IsPresent)
+            {
+            Write-Host -ForegroundColor Gray " ==> Running e16 Avalanche Install"
+
+            if ($DAGNOIP.IsPresent)
+			    {
+				$DAGIP = ([System.Net.IPAddress])::None
+			    }
+			else
+                {
+                $DAGIP = "$IPv4subnet.110"
+                }
+        }
+		foreach ($EXNODE in ($EXStartNode..($EXNodes+$EXStartNode-1)))
+            {
+			###################################################
+			# Setup e16 Node
+			# Init
+			$Nodeip = "$IPv4Subnet.12$EXNODE"
+			$Nodename = "$EX_Version"+"N"+"$EXNODE"
+			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+			$EXLIST += $CloneVMX
+		    # $Exprereqdir = "$Sourcedir\EXPREREQ\"
+            $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features"
+            # $AddonFeatures = "$AddonFeatures, RSAT-DNS-SERVER, Desktop-Experience, RPC-over-HTTP-proxy, RSAT-Clustering, RSAT-Clustering-CmdInterface, Web-Mgmt-Console, WAS-Process-Model, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI, Windows-Identity-Foundation" 
+            $AddonFeatures = "$AddonFeatures, RSAT-DNS-Server, AS-HTTP-Activation, Desktop-Experience, NET-Framework-45-Features, RPC-over-HTTP-proxy, RSAT-Clustering, RSAT-Clustering-CmdInterface, RSAT-Clustering-Mgmt, RSAT-Clustering-PowerShell, Web-Mgmt-Console, WAS-Process-Model, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI, Windows-Identity-Foundation"
+
+
+			###################################################
+	    	
+            Write-Verbose $IPv4Subnet
+            Write-Verbose "IPv4PrefixLength = $IPv4PrefixLength"
+            write-verbose $Nodename
+            write-verbose $Nodeip
+            Write-Verbose "IPv6Prefix = $IPV6Prefix"
+            Write-Verbose "IPv6PrefixLength = $IPv6PrefixLength"
+            Write-Verbose "Addressfamily = $AddressFamily"
+            Write-Verbose "EXAddressFamiliy = $EXAddressFamiliy"
+            if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+                { 
+                Write-verbose "Now Pausing"
+                pause
+                }
+            $Exchangesize = "XXL"
+		    test-dcrunning
+		    Write-Host -ForegroundColor White  $Commentline
+		    workorder "Creating $EX_Version Host $Nodename with IP $Nodeip in Domain $BuildDomain"
+		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -AddDisks -Disks 3 -Disksize 500GB -Size $Exchangesize -Sourcedir $Sourcedir "
+		    ###################################################
+		    If ($CloneOK)
+                {
+                $EXnew = $True
+			    Write-Host -ForegroundColor Gray " ==> Waiting for firstboot finished"
+			    test-user -whois Administrator
+			    Write-Host -ForegroundColor Magenta " ==> Starting Customization"
+			    domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $EXAddressFamiliy -AddOnfeatures $AddonFeatures
+			    Write-Host -ForegroundColor Magenta " ==> Setup Database Drives"
+			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script prepare-disks.ps1
+			    Write-Host -ForegroundColor Magenta " ==> Setup e16 Prereqs"
+			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchangeprereqs.ps1 -interactive
+                checkpoint-progress -step exprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
+			    Write-Host -ForegroundColor Magenta " ==> Setting Power Scheme"
+			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script powerconf.ps1 -interactive
+			    Switch ($e16_cu)
+                        {
+                        "final"
+                            {
+                            $install_from = "exe"
+                            }
+                        default
+                            {
+                            $install_from = "iso"
+                            }
+                        }
+
+                Write-Host -ForegroundColor Magenta " ==> Installing e16 $e16_cu fro $install_from, this may take up to 60 Minutes ...."
+			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchange.ps1 -interactive -nowait -Parameter "$CommonParameter -ex_cu $e16_cu -install_from $install_from"
+                }
+            }
+        if ($EXnew)
+        {
+        foreach ($EXNODE in ($EXStartNode..($EXNodes+$EXStartNode-1)))
+            {
+            $Nodename = "$EX_Version"+"N"+"$EXNODE"
+            $CloneVMX = (get-vmx $Nodename).config
+            # 
+			test-user -whois Administrator
+            Write-Host -ForegroundColor White  "Waiting for Pass 4 (e16 Installed) for $Nodename"
+            #$EXSetupStart = Get-Date
+			    While ($FileOK = (&$vmrun -gu $BuildDomain\Administrator -gp Password123! fileExistsInGuest $CloneVMX "$IN_Guest_LogDir\exchange.pass") -ne "The file exists.")
+			    {
+				    sleep $Sleep
+				    #runtime $EXSetupStart "Exchange"
+			    } #end while
+			    Write-Host
+                    do {
+                        $ToolState = Get-VMXToolsState -config $CloneVMX
+                         Write-Verbose $ToolState.State
+                        }
+                    until ($ToolState.state -match "running")
+            Write-Host -ForegroundColor Magenta " ==> Performing e16 Post Install Tasks:"
+    		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script configure-exchange.ps1 -interactive
+     
+    
+    #  -nowait
+            if ($EXNode -eq ($EXNodes+$EXStartNode-1)) #are we last sever in Setup ?!
+                {
+                if ($DAG.IsPresent) 
+                    {
+				    Write-Host -ForegroundColor Magenta " ==> Creating DAG"
+				    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -activeWindow -interactive -Script create-dag.ps1 -Parameter "-DAGIP $DAGIP -AddressFamily $EXAddressFamiliy -EX_Version $EX_Version $CommonParameter"
+				    } # end if $DAG
+                if (!($nouser.ispresent))
+                    {
+                    Write-Host -ForegroundColor Magenta " ==> Creating Accounts and Mailboxes:"
+	                do
+				        {
+						 #invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "'C:\Program Files\Microsoft\Exchange Server\V15\bin\'" -script "RemoteExchange.ps1;Connect-ExchangeServer -auto; . '$IN_Guest_UNC_ScenarioScriptDir\User.ps1' -subnet $IPv4Subnet -AddressFamily $AddressFamily -IPV6Prefix $IPV6Prefix $CommonParameter"
+				    
+                        ($cmdresult = &$vmrun -gu "$BuildDomain\Administrator" -gp Password123! runPrograminGuest  $CloneVMX -activeWindow -interactive c:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe ". 'C:\Program Files\Microsoft\Exchange Server\V15\bin\RemoteExchange.ps1'; Connect-ExchangeServer -auto; . '$IN_Guest_UNC_ScenarioScriptDir\User.ps1' -subnet $IPv4Subnet -AddressFamily $AddressFamily -IPV6Prefix $IPV6Prefix $CommonParameter") 
+					    if ($BugTest) { debug $Cmdresult }
+				        }
+				    until ($VMrunErrorCondition -notcontains $cmdresult)
+                    } #end creatuser
+            }# end if last server
+       }      
+		
+        foreach ($EXNODE in ($EXStartNode..($EXNodes+$EXStartNode-1)))
+            {
+            $Nodename = "$EX_Version"+"N"+"$EXNODE"
+            $CloneVMX = (get-vmx $Nodename).config				
+			Write-Host -ForegroundColor Magenta " ==> Setting Local Security Policies"
+			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script create-security.ps1 -interactive
+			########### Entering networker Section ##############
+			if ($NMM.IsPresent)
+			{
+				Write-Host -ForegroundColor Magenta " ==> Install NWClient"
+				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+				Write-Host -ForegroundColor Magenta " ==> Install NMM"
+				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-nmm.ps1 -interactive -Parameter "-nmm_ver $nmm_ver"
+			    Write-Host -ForegroundColor Magenta " ==> Performin NMM Post Install Tasks"
+			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script finish-nmm.ps1 -interactive
+            }# end nmm
+			########### leaving NMM Section ###################
+		    invoke-postsection
+    }#end foreach exnode
+        }
+} #End Switchblock Exchange
+
 	"E15"{
         $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\E2013"
         # we need ipv4
@@ -2969,6 +3269,7 @@ switch ($PsCmdlet.ParameterSetName)
     }#end foreach exnode
         }
 } #End Switchblock Exchange
+
 
 
 ##### Hyper-V Block #####	
