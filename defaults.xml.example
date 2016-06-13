@@ -4,6 +4,8 @@
 <nw_ver>nw9006</nw_ver>
 <master>2012R2FallUpdate</master>
 <sqlver>SQL2014</sqlver>
+<e14_ur>ur13</e14_ur>
+<e14_sp>sp3</e14_sp>
 <e15_cu>cu12</e15_cu>
 <e16_cu>cu1</e16_cu>
 <vmnet>vmnet2</vmnet>
