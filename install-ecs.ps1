@@ -326,15 +326,12 @@ foreach ($Node in $machinesBuilt)
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword    #-logfile $Logfile
     Write-Host -ForegroundColor Magenta " ==>you can now use ssh into $ip with root:Password123! and Monitor $Logfile"
     ##### Prepare
-    Write-Host -ForegroundColor Cyan " ==>Testing default Route, make sure that Gateway is reachable ( install and start OpenWRT )"
+    Write-Host -ForegroundColor Cyan " ==>Testing default Route, make sure that Gateway is reachable ( install and start OpenWRT )
+    if failures occur, open a 2nd labbuildr windows and run start-vmx OpenWRT "
+   
     $Scriptblock = "DEFAULT_ROUTE=`$(ip route show default | awk '/default/ {print `$3}');ping -c 1 `$DEFAULT_ROUTE"
     Write-Verbose $Scriptblock
-    While (!($Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile))
-        {
-        Write-Host -ForegroundColor Magenta -NoNewline "*****$DefaultGateway not reachable form $($NodeClone.clonename)
-Is OpenWRT up and Running ? We need Inet Acces for ECS Installation"
-}
-    
+    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile     
     
       
     Write-Host -ForegroundColor Magenta " ==>Configuring GuestOS"
