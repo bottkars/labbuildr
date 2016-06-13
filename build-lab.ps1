@@ -2891,7 +2891,7 @@ switch ($PsCmdlet.ParameterSetName)
             $CloneVMX = (get-vmx $Nodename).config
             # 
 			test-user -whois Administrator
-            Write-Host -ForegroundColor White  "Waiting for Pass 4 (e16 Installed) for $Nodename"
+            Write-Host -ForegroundColor White  "Waiting for Pass 4 ($EX_Version Installed) for $Nodename"
             #$EXSetupStart = Get-Date
 			    While ($FileOK = (&$vmrun -gu $BuildDomain\Administrator -gp Password123! fileExistsInGuest $CloneVMX "$IN_Guest_LogDir\exchange.pass") -ne "The file exists.")
 			    {
@@ -2916,6 +2916,9 @@ switch ($PsCmdlet.ParameterSetName)
 				    Write-Host -ForegroundColor Magenta " ==> Creating DAG"
 				    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -activeWindow -interactive -Script create-dag.ps1 -Parameter "-DAGIP $DAGIP -AddressFamily $EXAddressFamiliy -EX_Version $EX_Version $CommonParameter"
 				    } # end if $DAG
+Write-Host -ForegroundColor Yellow "not yet implemented"
+return
+
                 if (!($nouser.ispresent))
                     {
                     Write-Host -ForegroundColor Magenta " ==> Creating Accounts and Mailboxes:"
