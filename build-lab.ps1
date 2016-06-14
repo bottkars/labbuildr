@@ -197,7 +197,7 @@ Specify if Networker Scenario sould be installed
     CU Location is [Driveletter]:\sources\e2013[cuver], e.g. c:\sources\e2013cu7
     #>
 	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
-    [ValidateSet('ur13')]
+    [ValidateSet('ur1','ur2','ur3','ur4','ur5','ur6','ur7','ur8v2','ur9','ur10','ur11','ur12','ur13')]
     [alias('e2010_ur')]$e14_ur,
 <#
     Determines Exchange CU Version to be Installed
