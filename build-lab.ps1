@@ -2799,7 +2799,8 @@ switch ($PsCmdlet.ParameterSetName)
 "E14"{
         Write-Host -ForegroundColor Magenta " ==> Starting $EX_Version $e14_sp Setup"
         $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$EX_Version"
-
+        $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, Server-Media-Foundation, "
+        $AddonFeatures = "$AddonFeatures, NET-Framework-Features,NET-HTTP-Activation,RPC-over-HTTP-proxy,RSAT-Clustering,Web-Mgmt-Console,WAS-Process-Model,Web-Asp-Net,Web-Basic-Auth,Web-Client-Auth,Web-Digest-Auth,Web-Dir-Browsing,Web-Dyn-Compression,Web-Http-Errors,Web-Http-Logging,Web-Http-Redirect,Web-Http-Tracing,Web-ISAPI-Ext,Web-ISAPI-Filter,Web-Lgcy-Mgmt-Console,Web-Metabase,Web-Net-Ext,Web-Request-Monitor,Web-Server,Web-Static-Content,Web-Windows-Auth,Web-WMI"
         # we need ipv4
         if ($AddressFamily -notmatch 'ipv4')
             { 
@@ -2812,7 +2813,7 @@ switch ($PsCmdlet.ParameterSetName)
         if ($DAG.IsPresent)
             {
             Write-Host -ForegroundColor Gray " ==> Running $E Avalanche Install"
-
+            $AddonFeatures = "$AddonFeatures, Failover-Clustering, RSAT-Clustering"            
             if ($DAGNOIP.IsPresent)
 			    {
 				$DAGIP = ([System.Net.IPAddress])::None
@@ -2831,13 +2832,6 @@ switch ($PsCmdlet.ParameterSetName)
 			$Nodename = "$EX_Version"+"N"+"$EXNODE"
 			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
 			$EXLIST += $CloneVMX
-		    # $Exprereqdir = "$Sourcedir\EXPREREQ\"
-            $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, Server-Media-Foundation"
-            # $AddonFeatures = "$AddonFeatures, RSAT-DNS-SERVER, Desktop-Experience, RPC-over-HTTP-proxy, RSAT-Clustering, RSAT-Clustering-CmdInterface, Web-Mgmt-Console, WAS-Process-Model, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI, Windows-Identity-Foundation" 
-            $AddonFeatures = "$AddonFeatures, NET-Framework-Features,NET-HTTP-Activation,RPC-over-HTTP-proxy,RSAT-Clustering,Web-Mgmt-Console,WAS-Process-Model,Web-Asp-Net,Web-Basic-Auth,Web-Client-Auth,Web-Digest-Auth,Web-Dir-Browsing,Web-Dyn-Compression,Web-Http-Errors,Web-Http-Logging,Web-Http-Redirect,Web-Http-Tracing,Web-ISAPI-Ext,Web-ISAPI-Filter,Web-Lgcy-Mgmt-Console,Web-Metabase,Web-Net-Ext,Web-Request-Monitor,Web-Server,Web-Static-Content,Web-Windows-Auth,Web-WMI"
-
-
-
 			###################################################
 	    	
             Write-Verbose $IPv4Subnet
