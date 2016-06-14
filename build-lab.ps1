@@ -2799,7 +2799,7 @@ switch ($PsCmdlet.ParameterSetName)
 "E14"{
         Write-Host -ForegroundColor Magenta " ==> Starting $EX_Version $e14_sp Setup"
         $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$EX_Version"
-        $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, Server-Media-Foundation, "
+        $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, Server-Media-Foundation"
         $AddonFeatures = "$AddonFeatures, NET-Framework-Features,NET-HTTP-Activation,RPC-over-HTTP-proxy,RSAT-Clustering,Web-Mgmt-Console,WAS-Process-Model,Web-Asp-Net,Web-Basic-Auth,Web-Client-Auth,Web-Digest-Auth,Web-Dir-Browsing,Web-Dyn-Compression,Web-Http-Errors,Web-Http-Logging,Web-Http-Redirect,Web-Http-Tracing,Web-ISAPI-Ext,Web-ISAPI-Filter,Web-Lgcy-Mgmt-Console,Web-Metabase,Web-Net-Ext,Web-Request-Monitor,Web-Server,Web-Static-Content,Web-Windows-Auth,Web-WMI"
         # we need ipv4
         if ($AddressFamily -notmatch 'ipv4')
