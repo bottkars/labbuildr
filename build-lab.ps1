@@ -209,11 +209,7 @@ Specify if Networker Scenario sould be installed
 	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
     [ValidateSet('sp3')]
     [alias('e2010_sp')]$e14_sp,
-
-
-
-
-	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
+    [Parameter(ParameterSetName = "E14", Mandatory = $false)]
     [ValidateSet('de_DE','en_US')]
     [alias('e2010_lang')]$e14_lang = 'de_DE',
     <# schould we prestage users ? #>	
