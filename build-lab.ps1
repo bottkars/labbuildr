@@ -2907,6 +2907,8 @@ switch ($PsCmdlet.ParameterSetName)
                 if ($DAG.IsPresent) 
                     {
 				    Write-Host -ForegroundColor Magenta " ==> Creating DAG"
+                    Write-Host "Pausing now for run create-dag manually"
+                    pause
 				    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -activeWindow -interactive -Script create-dag.ps1 -Parameter "-DAGIP $DAGIP -AddressFamily $EXAddressFamiliy -EX_Version $EX_Version $CommonParameter"
 				    } # end if $DAG
 #Write-Host -ForegroundColor Yellow "not yet implemented"
