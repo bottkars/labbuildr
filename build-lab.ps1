@@ -824,7 +824,6 @@ $NW85_requiredJava = "jre-7u61-windows-x64"
 $Adminuser = "Administrator"
 $Adminpassword = "Password123!"
 $Dots = [char]58
-[string]$Commentline = "#######################################################################################################################"
 $WAIKVER = "WAIK"
 $DCNODE = "DCNODE"
 $NWNODE = "NWSERVER"
@@ -2735,7 +2734,6 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
             pause
             }
 			# Clone Base Machine
-			Write-Host -ForegroundColor White  $Commentline
 			Write-Host -ForegroundColor White  "Creating $Nodename with IP $Nodeip for Always On Availability Group"
 			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $AAGNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -sql"
 			###################################################
@@ -2857,7 +2855,6 @@ switch ($PsCmdlet.ParameterSetName)
                 }
             $Exchangesize = "XXL"
 		    test-dcrunning
-		    Write-Host -ForegroundColor White  $Commentline
 		    workorder "Creating $EX_Version Host $Nodename with IP $Nodeip in Domain $BuildDomain"
 		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -AddDisks -Disks 3 -Disksize 500GB -Size $Exchangesize -Sourcedir $Sourcedir "
 		    ###################################################
@@ -3004,7 +3001,6 @@ switch ($PsCmdlet.ParameterSetName)
                 pause
                 }
 		    test-dcrunning
-		    Write-Host -ForegroundColor White  $Commentline
 		    workorder "Creating E15 $e15_cu $Nodename with IP $Nodeip in Domain $BuildDomain"
 		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -AddDisks -Disks 3 -Disksize 500GB -Size $Exchangesize -Sourcedir $Sourcedir "
 
@@ -3152,7 +3148,6 @@ switch ($PsCmdlet.ParameterSetName)
                 }
             $Exchangesize = "XXL"
 		    test-dcrunning
-		    Write-Host -ForegroundColor White  $Commentline
 		    workorder "Creating $EX_Version Host $Nodename with IP $Nodeip in Domain $BuildDomain"
 		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -AddDisks -Disks 3 -Disksize 500GB -Size $Exchangesize -Sourcedir $Sourcedir "
 		    ###################################################
@@ -3333,7 +3328,6 @@ switch ($PsCmdlet.ParameterSetName)
                 }
 			###################################################
 			# Clone BAse Machine
-			Write-Host -ForegroundColor White  $Commentline
 			Write-Host -ForegroundColor White  "Creating Hyper-V Node  $Nodename"
 			# Write-Host -ForegroundColor White  "Hyper-V Development is still not finished and untested, be careful"
 			test-dcrunning
@@ -3569,7 +3563,6 @@ switch ($PsCmdlet.ParameterSetName)
 			
 			
 			# Clone Base Machine
-			Write-Host -ForegroundColor White  $Commentline
 			Write-Host -ForegroundColor White  "Creating SOFS Node Host $Nodename with IP $Nodeip"
 			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir "
 			
@@ -3641,7 +3634,6 @@ switch ($PsCmdlet.ParameterSetName)
 
 			test-dcrunning
 			# Clone Base Machine
-			Write-Host -ForegroundColor White  $Commentline
 			Write-Host -ForegroundColor White  "Creating Host $Nodename with IP $Nodeip"
 		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $SPSize -Sourcedir $Sourcedir $cloneparm"
 			###################################################
@@ -3745,7 +3737,6 @@ switch ($PsCmdlet.ParameterSetName)
 			
 			
 			# Clone Base Machine
-			Write-Host -ForegroundColor White  $Commentline
 			Write-Host -ForegroundColor White  "Creating Blank Node Host $Nodename with IP $Nodeip"
 			if ($VTbit)
 			{
@@ -3817,7 +3808,6 @@ switch ($PsCmdlet.ParameterSetName)
 
 			test-dcrunning
 			if ($SpaceNodes -gt 1) {$AddonFeatures = "Failover-Clustering, RSAT-Clustering"}
-			Write-Host -ForegroundColor White  $Commentline
 			Write-Host -ForegroundColor White  "Creating Storage Spaces Node Host $Nodename with IP $Nodeip"
 			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -AddOnfeatures $AddonFeature"
 			###################################################
@@ -3866,7 +3856,6 @@ switch ($PsCmdlet.ParameterSetName)
              }
         if ($Cluster.IsPresent) {$AddonFeatures = ("$AddonFeatures", "Failover-Clustering")}
 		test-dcrunning
-		Write-Host -ForegroundColor White  $Commentline
 		Write-Host -ForegroundColor White  "Creating $SQLVER Node $Nodename with IP $Nodeip"
 		$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -sql"
 		###################################################
@@ -3922,7 +3911,6 @@ switch ($PsCmdlet.ParameterSetName)
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NodePrefix"
     [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features,Web-Mgmt-Console, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI" 
 	###################################################
-	Write-Host -ForegroundColor White  $Commentline
 	Write-Host -ForegroundColor White  "Creating Panorama Server $Nodename"
   	Write-Verbose $IPv4Subnet
     write-verbose $Nodename
@@ -3961,7 +3949,6 @@ switch ($PsCmdlet.ParameterSetName)
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NodePrefix"
     [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS" 
 	###################################################
-	Write-Host -ForegroundColor White  $Commentline
 	Write-Host -ForegroundColor White  "Creating SRM Server $Nodename"
   	Write-Verbose $IPv4Subnet
     write-verbose $Nodename
@@ -4008,7 +3995,6 @@ switch ($PsCmdlet.ParameterSetName)
     $In_Guest_UNC_SQLScriptDir = "$IN_Guest_UNC_Scriptroot\sql\"
 
 	###################################################
-	Write-Host -ForegroundColor White  $Commentline
 	Write-Host -ForegroundColor White  "Creating $SC_Version Server $Nodename"
   	Write-Verbose $IPv4Subnet
     write-verbose $Nodename
@@ -4065,7 +4051,6 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
     [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features"
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NWNODE" 
 	###################################################
-	Write-Host -ForegroundColor White  $Commentline
 	Write-Host -ForegroundColor White  "Creating Networker Server $Nodename"
   	Write-Verbose $IPv4Subnet
     write-verbose $Nodename
