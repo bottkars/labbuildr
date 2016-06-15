@@ -4040,6 +4040,8 @@ switch ($PsCmdlet.ParameterSetName)
 }
 if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
 {
+    if ($Master -notmatch '_Ger')
+    {
 	###################################################
 	# Networker Setup
 	###################################################
@@ -4107,6 +4109,11 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
 		progress "Please finish NMC Setup by Double-Clicking Networker Management Console from Desktop on $NWNODE.$builddomain.local"
 	    
 	}
+    }#end ger
+else
+    {
+    Write-Host -ForegroundColor Yellow "!!! Only non-localized Masters are supported with networker"
+    }#end else ger
 } #Networker End
 $endtime = Get-Date
 $Runtime = ($endtime - $Starttime).TotalMinutes
