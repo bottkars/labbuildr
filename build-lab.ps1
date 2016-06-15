@@ -340,7 +340,12 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
-    [ValidateSet('2016TP5','2016TP4','2016TP3','2012R2FallUpdate','2012R2UEFIMASTER','2012R2Fall_Ger','2012_Ger')]$Master,
+    [ValidateSet(
+    '2016TP5','2016TP5_GER',
+    '2012R2_Ger','2012_R2',
+    '2012R2FallUpdate','2012R2Fall_Ger',
+    '2012_Ger','2012'
+    )]$Master,
     <#do we want a special path to the Masters ? #>
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
@@ -462,7 +467,7 @@ Machine Sizes
 	[switch]$NMM,
     <#
 Version Of Networker Modules
-    'nmm90.DA','nmm9001','nmm9002','nmm9003','nmm9004','nmm9005','nmm9006',
+    'nmm90.DA','nmm9001','nmm9002','nmm9003','nmm9004','nmm9005','nmm9006','nmm9007',
     'nmm8231','nmm8232',  
     'nmm8221','nmm8222','nmm8223','nmm8224','nmm8225',
     'nmm8218','nmm8217','nmm8216','nmm8214','nmm8212','nmm821'
@@ -477,10 +482,12 @@ Version Of Networker Modules
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
-    [ValidateSet('nmm90.DA','nmm9001','nmm9002','nmm9003','nmm9004','nmm9005','nmm9006',
+    [ValidateSet(
+    'nmm90.DA','nmm9001','nmm9002','nmm9003','nmm9004','nmm9005','nmm9006','nmm9007',
     'nmm8231','nmm8232',  
     'nmm8221','nmm8222','nmm8223','nmm8224','nmm8225',
-    'nmm8218','nmm8217','nmm8216','nmm8214','nmm8212','nmm821')]
+    'nmm8218','nmm8217','nmm8216','nmm8214','nmm8212','nmm821'
+    )]
     $nmm_ver,
 	
 <# Indicates to install Networker Server with Scenario #>
@@ -501,7 +508,7 @@ Version Of Networker Modules
 	[switch]$NW,
     <#
 Version Of Networker Server / Client to be installed
-    'nw90.DA','nw9001','nw9002','nw9003','nw9004','nw9005','nw9006',
+    'nw90.DA','nw9001','nw9002','nw9003','nw9004','nw9005','nw9006','nw9007',
     'nw8231','nw8232',
     'nw8223','nw8222','nw8221','nw822',
     'nw8218','nw8217','nw8216','nw8215','nw8214','nw8213','nw8212','nw8211','nw821',
@@ -515,8 +522,7 @@ Version Of Networker Server / Client to be installed
     'nw8026','nw8025','nw81024','nw8023','nw8022','nw8021',
     'nw8016','nw8015','nw81014','nw8013','nw8012',
     'nw8007','nw8006','nw8005','nw81004','nw8003','nw8002','nw80',
-    'nwunknown'
-    will be downloaded by labbuildr / labtools
+    'nwunknown'    will be downloaded by labbuildr / labtools
     otherwise must be extracted to [sourcesdir]\networker\[nw_ver], ex. c:\sources\networker\nw82
 #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
@@ -533,7 +539,8 @@ Version Of Networker Server / Client to be installed
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
-    [ValidateSet('nw90.DA','nw9001','nw9002','nw9003','nw9004','nw9005','nw9006',
+    [ValidateSet(
+    'nw90.DA','nw9001','nw9002','nw9003','nw9004','nw9005','nw9006','nw9007',
     'nw8231','nw8232',
     'nw8223','nw8222','nw8221','nw822',
     'nw8218','nw8217','nw8216','nw8215','nw8214','nw8213','nw8212','nw8211','nw821',
@@ -547,7 +554,8 @@ Version Of Networker Server / Client to be installed
     'nw8026','nw8025','nw81024','nw8023','nw8022','nw8021',
     'nw8016','nw8015','nw81014','nw8013','nw8012',
     'nw8007','nw8006','nw8005','nw81004','nw8003','nw8002','nw80',
-    'nwunknown')]
+    'nwunknown'
+    )]
     $nw_ver,
 
 ### network Parameters ######
@@ -2909,9 +2917,7 @@ switch ($PsCmdlet.ParameterSetName)
                     Write-Host -ForegroundColor Magenta " ==> Creating Accounts and Mailboxes:"
 	                do
 				        {
-						 invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "'C:\Program Files\Microsoft\Exchange Server\V14\bin\'" -script "RemoteExchange.ps1;Connect-ExchangeServer -auto; . '$IN_Guest_UNC_ScenarioScriptDir\User.ps1' -subnet $IPv4Subnet -AddressFamily $AddressFamily -IPV6Prefix $IPV6Prefix $CommonParameter"
-				    
-                        ($cmdresult = &$vmrun -gu "$BuildDomain\Administrator" -gp Password123! runPrograminGuest  $CloneVMX -activeWindow -interactive c:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe ". 'C:\Program Files\Microsoft\Exchange Server\V15\bin\RemoteExchange.ps1'; Connect-ExchangeServer -auto; . '$IN_Guest_UNC_ScenarioScriptDir\User.ps1' -subnet $IPv4Subnet -AddressFamily $AddressFamily -IPV6Prefix $IPV6Prefix $CommonParameter") 
+                        ($cmdresult = &$vmrun -gu "$BuildDomain\Administrator" -gp Password123! runPrograminGuest  $CloneVMX -activeWindow -interactive c:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe ". 'C:\Program Files\Microsoft\Exchange Server\V14\bin\RemoteExchange.ps1'; Connect-ExchangeServer -auto; . '$IN_Guest_UNC_ScenarioScriptDir\User.ps1' -subnet $IPv4Subnet -AddressFamily $AddressFamily -IPV6Prefix $IPV6Prefix $CommonParameter") 
 					    if ($BugTest) { debug $Cmdresult }
 				        }
 				    until ($VMrunErrorCondition -notcontains $cmdresult)
