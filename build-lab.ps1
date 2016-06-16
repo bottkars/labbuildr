@@ -4039,9 +4039,33 @@ switch ($PsCmdlet.ParameterSetName)
         } # end isilon
 }
 if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
-{
-    if ($Master -notmatch '_Ger')
     {
+    if ($Master -match '_Ger')
+        {
+        Write-Host -ForegroundColor Magenta " ==> Networker does not Support German, checking for en-Us Master"
+        Switch ($Master)
+            {
+            "2012_Ger"
+                {
+                $Master = "2012"
+                }
+            default
+                {
+                $Master = "2012R2FallUpdate"
+                }
+            }
+        if (Receive-LABMaster -Master $Master -Destination $Masterpath -unzip -Confirm:$Confirm)
+            {
+            $MyMaster = get-vmx -path "$Masterpath\$Master" -ErrorAction SilentlyContinue
+            $MasterVMX = $mymaster.config		
+            }
+        else
+            {
+            Write-Warning "No valid master found /downloaded"
+            break
+            }
+        }
+
 	###################################################
 	# Networker Setup
 	###################################################
@@ -4109,11 +4133,6 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
 		progress "Please finish NMC Setup by Double-Clicking Networker Management Console from Desktop on $NWNODE.$builddomain.local"
 	    
 	}
-    }#end ger
-else
-    {
-    Write-Host -ForegroundColor Yellow "!!! Only non-localized Masters are supported with networker"
-    }#end else ger
 } #Networker End
 $endtime = Get-Date
 $Runtime = ($endtime - $Starttime).TotalMinutes
