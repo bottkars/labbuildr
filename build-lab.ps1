@@ -4054,10 +4054,12 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
                 $Master = "2012R2FallUpdate"
                 }
             }
+    $NWMaster = get-vmx -path "$Masterpath\$Master" -WarningAction SilentlyContinue
+    if (!$NWMaster)
+        {
         if (Receive-LABMaster -Master $Master -Destination $Masterpath -unzip -Confirm:$Confirm)
             {
-            $MyMaster = get-vmx -path "$Masterpath\$Master" -ErrorAction SilentlyContinue
-            $MasterVMX = $mymaster.config		
+            $NWMaster = get-vmx -path "$Masterpath\$Master" -ErrorAction SilentlyContinue
             }
         else
             {
@@ -4065,7 +4067,7 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
             break
             }
         }
-
+    $MasterVMX = $nwmaster.config		
 	###################################################
 	# Networker Setup
 	###################################################
