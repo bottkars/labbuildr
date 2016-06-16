@@ -4054,20 +4054,22 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
                 $Master = "2012R2FallUpdate"
                 }
             }
-    $NWMaster = get-vmx -path "$Masterpath\$Master" -WarningAction SilentlyContinue
-    if (!$NWMaster)
-        {
-        if (Receive-LABMaster -Master $Master -Destination $Masterpath -unzip -Confirm:$Confirm)
+        $NWMaster = get-vmx -path "$Masterpath\$Master" -WarningAction SilentlyContinue
+
+        if (!$NWMaster)
             {
-            $NWMaster = get-vmx -path "$Masterpath\$Master" -ErrorAction SilentlyContinue
+            if (Receive-LABMaster -Master $Master -Destination $Masterpath -unzip -Confirm:$Confirm)
+                {
+                $NWMaster = get-vmx -path "$Masterpath\$Master" -ErrorAction SilentlyContinue
+                }
+            else
+                {
+                Write-Warning "No valid master found /downloaded"
+                break
+                }
             }
-        else
-            {
-            Write-Warning "No valid master found /downloaded"
-            break
-            }
-        }
-    $MasterVMX = $nwmaster.config		
+        $MasterVMX = $nwmaster.config
+        }		
 	###################################################
 	# Networker Setup
 	###################################################
