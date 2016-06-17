@@ -448,7 +448,7 @@ Machine Sizes
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
-	[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain,
+	[ValidateLength(1,63)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,63}[a-zA-Z0-9]+$")][string]$BuildDomain,
 	
 <# Turn this one on if you would like to install a Hypervisor inside a VM #>
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
