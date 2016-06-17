@@ -57,6 +57,11 @@ Param(
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
+If ($ConfirmPreference -match "none")
+    {$Confirm = $false}
+else
+    {$Confirm = $true}
+
 If ($Defaults.IsPresent)
     {
     $labdefaults = Get-labDefaults
@@ -106,7 +111,7 @@ $Node_requires = "numactl libaio"
 $MDM_Requires = "mutt bash-completion python"
 $Gateway_Requires = "jre"
 $Required_Master = "CentOS7 Master"
-$mastervmx = test-labmaster -Master $Required_Master -MasterPath $MasterPath
+$mastervmx = test-labmaster -Master $Required_Master -MasterPath $MasterPath -Confirm:$Confirm
 
 ###### checking master Present
 if (!($MasterVMX = test-labmaster -Masterpath $MasterPath -Master $Required_Master))
