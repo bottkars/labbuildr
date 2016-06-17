@@ -75,11 +75,22 @@ If ($Defaults.IsPresent)
         Write-Warning "No valid Sourcedir Found from Defaults, USB stick connected ?"
         Break
         }
-    $DefaultGateway = $labdefaults.DefaultGateway
-    $DNS1 = $labdefaults.DNS1
-    $Hostkey = $labdefaults.HostKey
+    try
+        {
+        $Masterpath = $LabDefaults.Masterpath
+        }
+    catch
+        {
+        # Write-Host -ForegroundColor Gray " ==> No Masterpath specified, trying default"
+        $Masterpath = $Builddir
+        }
+     $Hostkey = $labdefaults.HostKey
+     $Gateway = $labdefaults.Gateway
+     $DefaultGateway = $labdefaults.Defaultgateway
+     $DNS1 = $labdefaults.DNS1
+     $DNS2 = $labdefaults.DNS2
     }
-
+if (!$Masterpath) {$Masterpath = $Builddir}
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 $rootuser = "root"
@@ -93,9 +104,10 @@ $Node_requires = "numactl libaio"
 $MDM_Requires = "mutt bash-completion python"
 $Gateway_Requires = "jre"
 $Required_Master = "CentOS7 Master"
+$mastervmx = test-labmaster -Master $Required_Master -MasterPath $MasterPath
 
 ###### checking master Present
-if (!($MasterVMX = get-vmx $Required_Master))
+if (!($MasterVMX = test-labmaster -Masterpath $MasterPath -Master $Required_Master))
     {
     Write-Warning "Required Master $Required_Master not found
     please download and extraxt $Required_Master to .\$Required_Master
@@ -130,26 +142,14 @@ if ($SIOGateway.IsPresent)
         manual action required: expand ScaleIO Gateway ZipFile"
         break
         }
+    $Sourcedir_replace = $Sourcedir.Replace("\","\\")
+    $SIOGatewayrpm = $SIOGatewayrpm -replace  $Sourcedir_replace,"/mnt/hgfs/Sources"
+    $SIOGatewayrpm = $SIOGatewayrpm.Replace("\","/")
+    Write-Verbose $SIOGatewayrpm
     }
 $Sourcedir_replace = $Sourcedir.Replace("\","\\")
 Write-Verbose $SIOGatewayrpm
 Write-Verbose $Sourcedir_replace
-
-$SIOGatewayrpm = $SIOGatewayrpm -replace  $Sourcedir_replace,"/mnt/hgfs/Sources"
-$SIOGatewayrpm = $SIOGatewayrpm.Replace("\","/")
-Write-Verbose $SIOGatewayrpm
-
-if (!$MasterVMX.Template) 
-            {
-            Write-Host -ForegroundColor Magenta " ==> Templating Master VMX"
-            $template = $MasterVMX | Set-VMXTemplate
-            }
-        $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
-        if (!$Basesnap) 
-        {
-         Write-Host -ForegroundColor Magenta " ==> Base snap does not exist, creating now"
-        $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
-        }
 ####Build Machines#
   $machinesBuilt = @()
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
