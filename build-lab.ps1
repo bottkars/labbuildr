@@ -448,7 +448,7 @@ Machine Sizes
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
-	[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain,
+	[ValidateLength(1,63)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,63}[a-zA-Z0-9]+$")][string]$BuildDomain,
 	
 <# Turn this one on if you would like to install a Hypervisor inside a VM #>
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
@@ -4054,20 +4054,22 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
                 $Master = "2012R2FallUpdate"
                 }
             }
-    $NWMaster = get-vmx -path "$Masterpath\$Master" -WarningAction SilentlyContinue
-    if (!$NWMaster)
-        {
-        if (Receive-LABMaster -Master $Master -Destination $Masterpath -unzip -Confirm:$Confirm)
+        $NWMaster = get-vmx -path "$Masterpath\$Master" -WarningAction SilentlyContinue
+
+        if (!$NWMaster)
             {
-            $NWMaster = get-vmx -path "$Masterpath\$Master" -ErrorAction SilentlyContinue
+            if (Receive-LABMaster -Master $Master -Destination $Masterpath -unzip -Confirm:$Confirm)
+                {
+                $NWMaster = get-vmx -path "$Masterpath\$Master" -ErrorAction SilentlyContinue
+                }
+            else
+                {
+                Write-Warning "No valid master found /downloaded"
+                break
+                }
             }
-        else
-            {
-            Write-Warning "No valid master found /downloaded"
-            break
-            }
-        }
-    $MasterVMX = $nwmaster.config		
+        $MasterVMX = $nwmaster.config
+        }		
 	###################################################
 	# Networker Setup
 	###################################################
