@@ -24,7 +24,9 @@
 This will install 3 Centos Nodes CentOSNode1 -CentOSNode3 from the Default CentOS7 Master , in the Default 192.168.2.0 network, IP .221 - .223
 
 #>
-[CmdletBinding(DefaultParametersetName = "defaults")]
+[CmdletBinding(DefaultParametersetName = "defaults",
+    SupportsShouldProcess=$true,
+    ConfirmImpact="Medium")]
 Param(
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
