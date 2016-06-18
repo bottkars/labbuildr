@@ -147,7 +147,7 @@ if ($SIOGateway.IsPresent)
         Write-Warning "ScaleIO Gateway RPM not found in $Sourcedir\ScaleIO\
         if using 2.x, the Zip files are Packed recursively
         manual action required: expand ScaleIO Gateway ZipFile"
-        break
+        return
         }
     $Sourcedir_replace = $Sourcedir.Replace("\","\\")
     $SIOGatewayrpm = $SIOGatewayrpm -replace  $Sourcedir_replace,"/mnt/hgfs/Sources"
