@@ -270,8 +270,15 @@ Write-Verbose $Sourcedir_replace
             }
         $Scriptblock = "rm /etc/resolv.conf;systemctl restart network"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword # -Confirm:$false -SleepSec 5 -logfile /tmp/yum-requires.log | Out-Null
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
 
+        Write-Host -ForegroundColor Cyan " ==>Testing default Route, make sure that Gateway is reachable ( install and start OpenWRT )
+        if failures occur, open a 2nd labbuildr windows and run start-vmx OpenWRT "
+   
+        $Scriptblock = "DEFAULT_ROUTE=`$(ip route show default | awk '/default/ {print `$3}');ping -c 1 `$DEFAULT_ROUTE"
+        Write-Verbose $Scriptblock
+        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile     
+        
         Write-Host -ForegroundColor Magenta " ==> Installing Required RPM´s on $Nodeprefix$Node_num"
         Switch ($Node_num)
             {
