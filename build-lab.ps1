@@ -2460,7 +2460,8 @@ if ($NW.IsPresent -or $NWServer.IsPresent)
         $Scenarioname = "nwserver"
         $Scenario = 8
         }
-	if (!($Acroread = Get-ChildItem -Path $Sourcedir -Filter 'a*rdr*.exe'))
+	Receive-LABAcrobat -Destination $Sourcedir
+    <#if (!($Acroread = Get-ChildItem -Path $Sourcedir -Filter 'a*rdr*.exe'))
 	    {
 		Write-Host -ForegroundColor White  "Adobe reader not found ...."
 	    }
@@ -2469,7 +2470,7 @@ if ($NW.IsPresent -or $NWServer.IsPresent)
 		$Acroread = $Acroread | Sort-Object -Property Name -Descending
 		$Latest_Acroread = $Acroread[0].Name
 		write-verbose "Found Adobe $Latest_Acroread"
-	    }
+	    }#
     try
         {
         $Acroread_Patch = Get-ChildItem -Path $Sourcedir -Filter 'a*rdr*.msp'
@@ -2485,7 +2486,7 @@ if ($NW.IsPresent -or $NWServer.IsPresent)
 		    write-verbose "Found Adobe $Latest_Acroread"
             }
 
-	##### 
+	#####> 
     $Java7_required = $True
     #####
 If ($nw_ver -gt "nw85.BR1")
@@ -4108,11 +4109,14 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
 		Write-Host -ForegroundColor Gray " ==> Building Networker Server"
 		Write-Host -ForegroundColor Gray " ==> installing JAVA"
 		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-program.ps1 -Parameter "-Program $LatestJava -ArgumentList '/s' $CommonParameter"-interactive
-		if ($Latest_Acroread)
+		<#if ($Latest_Acroread)
             {
             Write-Host -ForegroundColor Gray " ==> installing Acrobat Reader"
 		    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-program.ps1 -Parameter "-Program $Latest_Acroread -ArgumentList '/sPB /rs' $CommonParameter"-interactive
-            }
+            }#>
+        Write-Host -ForegroundColor Gray " ==> installing Acrobat Reader"
+		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-acrobat.ps1 -Parameter "$CommonParameter"-interactive
+
 		Write-Host -ForegroundColor Gray " ==> installing Networker Server"
 		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-nwserver.ps1 -Parameter "-nw_ver $nw_ver $CommonParameter"-interactive
 		if (!$Gateway.IsPresent)
