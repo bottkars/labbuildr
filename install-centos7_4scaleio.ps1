@@ -264,6 +264,10 @@ Write-Verbose $Sourcedir_replace
             {
             $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $ip -device eno16777984 -Peerdns -DNS1 $DNS1 -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $rootuser -rootpassword $Guestpassword | Out-Null
             }
+        $Scriptblock = "rm /etc/resolv.conf;systemctl restart network"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword # -Confirm:$false -SleepSec 5 -logfile /tmp/yum-requires.log | Out-Null
+
         Write-Host -ForegroundColor Magenta " ==> Installing Required RPM´s on $Nodeprefix$Node_num"
         Switch ($Node_num)
             {
