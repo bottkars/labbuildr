@@ -62,6 +62,7 @@ If ($ConfirmPreference -match "none")
 else
     {$Confirm = $true}
 $Builddir = $PSScriptRoot
+$Scriptdir = Join-Path $Builddir "Scripts"
 If ($Defaults.IsPresent)
     {
     $labdefaults = Get-labDefaults
@@ -230,6 +231,8 @@ Write-Verbose $Sourcedir_replace
         $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | Out-Null
         Write-Host -ForegroundColor Magenta " ==> Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
+        $NodeClone | Set-VMXSharedFolder -add -Sharename Scripts -Folder $Scriptdir  | Out-Null
+
         $Scriptblock = "systemctl disable iptables.service"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
