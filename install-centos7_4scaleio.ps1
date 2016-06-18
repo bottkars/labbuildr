@@ -61,7 +61,7 @@ If ($ConfirmPreference -match "none")
     {$Confirm = $false}
 else
     {$Confirm = $true}
-
+$Builddir = $PSScriptRoot
 If ($Defaults.IsPresent)
     {
     $labdefaults = Get-labDefaults
@@ -155,7 +155,6 @@ if ($SIOGateway.IsPresent)
     Write-Verbose $SIOGatewayrpm
     }
 $Sourcedir_replace = $Sourcedir.Replace("\","\\")
-Write-Verbose $SIOGatewayrpm
 Write-Verbose $Sourcedir_replace
 ####Build Machines#
   $machinesBuilt = @()
@@ -165,7 +164,15 @@ Write-Verbose $Sourcedir_replace
         If (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue))
         {
         Write-Host -ForegroundColor Magenta "==>Creating $Nodeprefix$node"
-        $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node 
+        try
+            {
+            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node # -clonepath $Builddir
+            }
+        catch
+            {
+            Write-Warning "Error creating VM"
+            return
+            }
         If ($Node -eq 1){$Primary = $NodeClone}
         $Config = Get-VMXConfig -config $NodeClone.config
         Write-Host -ForegroundColor Magenta " ==> Tweaking Config"
