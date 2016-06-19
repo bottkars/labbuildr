@@ -60,21 +60,16 @@ Param(
 [Parameter(ParameterSetName = "install",Mandatory=$true)]$MasterPath,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$Defaults = $true,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)][int32]$Nodes=1,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)][int32]$Startnode = 1,
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
 [Parameter(ParameterSetName = "install",Mandatory=$False)]
-[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain = "labbuildr",
+[ValidateLength(1,63)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,63}[a-zA-Z0-9]+$")][string]$BuildDomain = "labbuildr",
 [Parameter(ParameterSetName = "install", Mandatory = $true)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = "vmnet2"
 
 
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
-[int]$NodeOffset = 3
 
 switch ($PsCmdlet.ParameterSetName)
 {
@@ -120,11 +115,13 @@ switch ($PsCmdlet.ParameterSetName)
 
         $memsize = 4096
         $Numcpu = 2
+        $Startnode = 1
+        $Nodes = 1
         [System.Version]$subnet = $Subnet.ToString()
         $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 
         $Builddir = $PSScriptRoot
-        $Nodeprefix = "ddmcNode"
+        $Nodeprefix = "DDMCNode"
         if (!$MasterVMX)
             {
             $MasterVMX = get-vmx ddmc-1.4*
@@ -185,9 +182,6 @@ switch ($PsCmdlet.ParameterSetName)
                 }
 
             }
-
-            
-            
         Write-Host -ForegroundColor Magenta " ==>Checking Base VM Snapshot"
         if (!$MasterVMX.Template) 
             {
@@ -218,7 +212,7 @@ switch ($PsCmdlet.ParameterSetName)
             $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName Base
             }
             # $Basesnap
-            foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
+        foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
             {
             Write-Host -ForegroundColor Magenta " ==>Checking VM $Nodeprefix$node already Exists"
             If (!(get-vmx -path $Nodeprefix$node -WarningAction SilentlyContinue))
@@ -253,7 +247,6 @@ switch ($PsCmdlet.ParameterSetName)
             }
 
         }
-    $Nodeaddress = $Node+$NodeOffset
     Write-host
     Write-host -ForegroundColor Blue "****** To Configure  ddmc 1.4 ******
 Go to VMware Console an wait for system to boot"
@@ -272,7 +265,7 @@ Ethernet Port ethV0
     Enter yes for Enable Ethernet ethV0
     Enter NO for DHCP
     Enter IP Address for ethV0:
-    $subnet.2$Nodeaddress as IP Address
+    $subnet.20 as IP Address
     enter the netmask for ethV0:
     255.255.255.0
 Ethernet Port eth0
