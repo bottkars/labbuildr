@@ -186,13 +186,15 @@ switch ($PsCmdlet.ParameterSetName)
 
             }
 
-
+            
+            
+        Write-Host -ForegroundColor Magenta " ==>Checkin Base VM Snapshot"
         if (!$MasterVMX.Template) 
             {
             Write-Host -ForegroundColor Magenta " ==>Templating Master VMX"
             $template = $MasterVMX | Set-VMXTemplate
             }
-        $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
+        $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" -WarningAction SilentlyContinue
 
         if (!$Basesnap) 
             {
