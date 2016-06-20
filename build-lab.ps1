@@ -1047,16 +1047,7 @@ function domainjoin
     Write-Host -ForegroundColor Gray " ==>Done"
     invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script create-labshortcut.ps1 -interactive # -Parameter $CommonParameter
 }
-function status
-{
-	param ([string]$message)
-	write-host -ForegroundColor Yellow $message
-}
-function progress
-{
-	param ([string]$message)
-	write-host -ForegroundColor Gray $message
-}
+
 function debug
 {
 	param ([string]$message)
@@ -4133,7 +4124,7 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
         }
         invoke-postsection -wait
         invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script configure-nmc.ps1 -interactive
-		progress "Please finish NMC Setup by Double-Clicking Networker Management Console from Desktop on $NWNODE.$builddomain.local"
+		Write-Host -ForegroundColor Gray " ==>Please finish NMC Setup by Double-Clicking Networker Management Console from Desktop on $NWNODE.$builddomain.local"
 	    
 	}
 } #Networker End
