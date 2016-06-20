@@ -49,7 +49,7 @@ Param(
 #requires -version 3.0
 #requires -module vmxtoolkit 
 $Product = "ISILON"
-$Product_tag = "EMC_Isilon_OneFS_*_Simulator"
+$Product_tag = "8.*.vga"
 
 switch ($PsCmdlet.ParameterSetName)
 {
