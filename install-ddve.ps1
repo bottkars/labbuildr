@@ -106,7 +106,7 @@ switch ($PsCmdlet.ParameterSetName)
             $mastername = $OVFfile.BaseName
             }
         & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $ovf $PSScriptRoot #
-        Write-Host -ForegroundColor Magenta  "Use install-ddve.ps1 -Masterpath .\$Mastername -Defaults"
+        Write-Host -ForegroundColor Magenta  "Use .\install-ddve.ps1 -Masterpath .\$Mastername -Defaults"
         }
 
      default
@@ -125,7 +125,7 @@ switch ($PsCmdlet.ParameterSetName)
                 Write-Warning "no  defaults or example defaults found, exiting now"
                 exit
                     }
-            Write-Host -ForegroundColor Magenta "Using generic defaults from labbuildr"
+            Write-Host -ForegroundColor Magenta " ==>Using generic defaults from labbuildr"
             }
             $vmnet = $labdefaults.vmnet
             $subnet = $labdefaults.MySubnet
@@ -134,6 +134,7 @@ switch ($PsCmdlet.ParameterSetName)
             $Gateway = $labdefaults.Gateway
             $DefaultGateway = $labdefaults.Defaultgateway
             $DNS1 = $labdefaults.DNS1
+            $DNS1 = $labdefaults.DNS2
             $configure = $true
             }
 
@@ -145,7 +146,7 @@ switch ($PsCmdlet.ParameterSetName)
         $Nodeprefix = "DDvENode"
         if (!$MasterVMX)
             {
-            $MasterVMX = get-vmx Ddve-5.7*
+            $MasterVMX = get-vmx Ddve-5.7* -WarningAction SilentlyContinue
             iF ($MasterVMX)
                 {
                 $MasterVMX = $MasterVMX | Sort-Object -Descending
@@ -156,7 +157,7 @@ switch ($PsCmdlet.ParameterSetName)
             {
             if ($MasterPath)        
                 {
-                $MasterVMX = get-vmx -path $MasterPath
+                $MasterVMX = get-vmx -path $MasterPath -WarningAction SilentlyContinue
                 }
             }
 
@@ -193,7 +194,7 @@ switch ($PsCmdlet.ParameterSetName)
                             Write-Warning "Error Extraxting OVF"
                             exit
                             }
-                        $MasterVMX = get-vmx $mastername
+                        $MasterVMX = get-vmx $mastername -WarningAction SilentlyContinue
                         }
                 }
             else
@@ -210,11 +211,11 @@ switch ($PsCmdlet.ParameterSetName)
             write-verbose "Templating Master VMX"
             $template = $MasterVMX | Set-VMXTemplate
             }
-        $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
+        $Basesnap = $MasterVMX | Get-VMXSnapshot -WarningAction SilentlyContinue| where Snapshot -Match "Base"
 
         if (!$Basesnap) 
             {
-            Write-Host -ForegroundColor Magenta "Tweaking Base VMX"
+            Write-Host -ForegroundColor Magenta " ==>Tweaking Base VMX"
             $config = Get-VMXConfig -config $MasterVMX.config
             $config = $config -notmatch "virtualhw.version"
             $config += 'virtualhw.version = "9"'
@@ -224,6 +225,7 @@ switch ($PsCmdlet.ParameterSetName)
             $config += 'scsi0:1.mode = "persistent"'
             foreach ($scsi in 0..3)
                 {
+                Write-Host -ForegroundColor Magenta " ==>Adding Adapter SCSI$scsi"
                 $config = $config -notmatch "scsi$scsi.virtualDev"
                 $config += 'scsi'+$scsi+'.virtualDev = "pvscsi"'
                 $config = $config -notmatch "scsi$scsi.present"
@@ -237,7 +239,7 @@ switch ($PsCmdlet.ParameterSetName)
             foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
             {
             Write-Verbose "Checking VM $Nodeprefix$node already Exists"
-            If (!(get-vmx -path $Nodeprefix$node))
+            If (!(get-vmx -path $Nodeprefix$node -WarningAction SilentlyContinue))
                 {
                 write-Host -ForegroundColor Magenta "Creating clone $Nodeprefix$node"
                 $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXlinkedClone -CloneName $Nodeprefix$node -Clonepath "$Builddir" 
@@ -286,9 +288,9 @@ switch ($PsCmdlet.ParameterSetName)
             foreach ($LUN in (2..($NumDisks+1)))
                     {
                     $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-                    Write-Verbose "Building new Disk $Diskname"
+                    Write-Host -ForegroundColor Magenta " ==>Building new Disk $Diskname"
                     $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-                    Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
+                    Write-Host -ForegroundColor Magenta " ==>Adding Disk $Diskname to $($NodeClone.VMXname)"
                     $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
                     }
 
@@ -299,17 +301,17 @@ switch ($PsCmdlet.ParameterSetName)
                     foreach ($LUN in (0..($NumDisks-1)))
                         {
                         $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-                        Write-Verbose "Building new Disk $Diskname"
+                        Write-Host -ForegroundColor Magenta " ==>Building new Disk $Diskname"
                         $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-                        Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
+                        Write-Host -ForegroundColor Magenta " ==>Adding Disk $Diskname to $($NodeClone.VMXname)"
                         $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
                         }
                     }
                 }
         
-            Write-Verbose "Configuring NIC0"
+            Write-Host -ForegroundColor Magenta " ==>Configuring NIC0"
             $Netadater0 = $NodeClone | Set-VMXVnet -Adapter 0 -vnet $VMnet
-            Write-Verbose "Configuring NIC1"
+            Write-Host -ForegroundColor Magenta " ==>Configuring NIC1"
             # $Netadater1 = $NodeClone | Set-VMXVnet -Adapter 1 -vnet vmnet8
             $Netadater1 = $NodeClone | Set-VMXNetworkAdapter -Adapter 1 -ConnectionType nat -AdapterType vmxnet3
             # $Netadater1connected = $NodeClone | Connect-VMXNetworkAdapter -Adapter 1
@@ -317,11 +319,11 @@ switch ($PsCmdlet.ParameterSetName)
             
             $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
             $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
-            Write-Verbose "Configuring Memory to $memsize"
+            Write-Host -ForegroundColor Magenta " ==>Configuring Memory to $memsize"
             $Memory = $NodeClone | Set-VMXmemory -MemoryMB $memsize
-            Write-Verbose "Configuring $Numcpu CPUs"
+            Write-Host -ForegroundColor Magenta " ==>Configuring $Numcpu CPUs"
             $Processor = $nodeclone | Set-VMXprocessor -Processorcount $Numcpu
-            Write-Verbose "Starting VM $($NodeClone.Clonename)"
+            Write-Host -ForegroundColor Magenta " ==>Starting VM $($NodeClone.Clonename)"
             $NodeClone | start-vmx | Out-Null
             if ($configure.IsPresent)
                 {
@@ -335,9 +337,9 @@ switch ($PsCmdlet.ParameterSetName)
 
         }
     Write-host
-    Write-host -ForegroundColor Magenta "****** To Configure  DDVE 5.7 ******
+    Write-host -ForegroundColor Blue "****** To Configure  DDVE 5.7 ******
 Go to VMware Console an wait for system to boot"
-    Write-host -ForegroundColor Magenta "
+    Write-host -ForegroundColor Blue "
     Please login with 
     localhost login : sysadmin 
     Password: changeme
@@ -356,30 +358,16 @@ Ethernet Port ethV1
     Enter IP Address for ethV0:
     $subnet.2$Node as IP Address
     enter the netmask for ethV0:
-    255.255.25.0
+    255.255.255.0
 Default Gateway    
     Enter $DefaultGateway for Gateway IP Address
     Leave IPv6 Gateway Blank
 DNS Server
-    Enter $subnet.10 as DNS Server
+    Enter $DNS1,$DNS2 as DNS Server
     Enter Save to Save
 
 Open Your webbrowser to Configure Licences and Features !!!
 "
-<#
-Write-Host -ForegroundColor DarkYellow "NOTE !!!!!!
-    +++++++++++++DDVE 5.5.1.4 and 5.6 ( feedbackcentral ) do not have WEB UI enabled by default ! +++++++++++++
-    special Instructions for DDVE 5.5.1 to 5.6
-    When the Wizard starts, press Ctrl-C
-
-    enter 'storage add dev3'
-    enter 'filesys create'
-    enter 'filesys enable'
-    enter 'adminaccess enable http' ( for DDVE 5.5.1 and above )    
-    enter 'config setup'
-    +++++++++++++make sure you did 'adminaccess enable http' from above !!!!                      +++++++++++++
-    "
-#>
     }# end default
 }
 
