@@ -49,7 +49,7 @@ Param(
 #requires -version 3.0
 #requires -module vmxtoolkit 
 $Product = "ISILON"
-$Product_tag = "8.*.vga"
+$Product_tag = "8.*"
 
 switch ($PsCmdlet.ParameterSetName)
 {
