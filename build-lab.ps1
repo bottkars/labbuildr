@@ -707,8 +707,8 @@ $myself = $Myself.TrimEnd(".ps1")
 $Builddir = $PSScriptRoot
 If ($ConfirmPreference -match "none")
     {$Confirm = $false}
-else
-    {$Confirm = $true}
+<#else
+    {$Confirm = $true}#>
 
 try
     {
@@ -2541,7 +2541,8 @@ If ($Java8_required)
     }
 ##end Autodownloaders
 ##### Master Downloader
-
+$MyMaster = test-labmaster -Masterpath "$Masterpath\$Master" -Master $Master -Confirm:$Confirm
+<#
 $MyMaster = get-vmx -path "$Masterpath\$Master" -WarningAction SilentlyContinue
 if (!$MyMaster)
     {
@@ -2564,8 +2565,10 @@ else
     $MasterVMX = $mymaster.config		
     Write-Verbose "We got master $MasterVMX"
     }
-
+#>
 ##### end Master Downloader
+    $MasterVMX = $mymaster.config		
+    Write-Verbose "We got master $MasterVMX"
 
 
 
@@ -4055,6 +4058,8 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
                 $Master = "2012R2FallUpdate"
                 }
             }
+        $NWMaster = test-labmaster -Masterpath "$Masterpath\$Master" -Master $Master -Confirm:$Confirm
+        <#
         $NWMaster = get-vmx -path "$Masterpath\$Master" -WarningAction SilentlyContinue
 
         if (!$NWMaster)
@@ -4069,6 +4074,7 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
                 break
                 }
             }
+        #>
         $MasterVMX = $nwmaster.config
         }		
 	###################################################
