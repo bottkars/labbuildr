@@ -2542,7 +2542,7 @@ If ($Java8_required)
     }
 ##end Autodownloaders
 ##### Master Downloader
-$MyMaster = test-labmaster -Masterpath "$Masterpath\$Master" -Master $Master -Confirm:$Confirm
+$MyMaster = test-labmaster -Masterpath "$Masterpath" -Master $Master -Confirm:$Confirm
 <#
 $MyMaster = get-vmx -path "$Masterpath\$Master" -WarningAction SilentlyContinue
 if (!$MyMaster)
@@ -4059,7 +4059,7 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
                 $Master = "2012R2FallUpdate"
                 }
             }
-        $NWMaster = test-labmaster -Masterpath "$Masterpath\$Master" -Master $Master -Confirm:$Confirm
+        $NWMaster = test-labmaster -Masterpath "$Masterpath" -Master $Master -Confirm:$Confirm
         <#
         $NWMaster = get-vmx -path "$Masterpath\$Master" -WarningAction SilentlyContinue
 
