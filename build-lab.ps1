@@ -2023,7 +2023,7 @@ Write-Host -ForegroundColor Magenta "==> Entering Download Section"
 ##### exchange downloads section
 if ($Exchange2010.IsPresent)
     {
-    Write-Host  -ForegroundColor White "Preparing Exchange 2010 $e14_sp $e14_ur"
+    Write-Host  -ForegroundColor White " ==>Preparing Exchange 2010 $e14_sp $e14_ur"
     if (!$e14_sp)
         {
         $e14_sp = $Latest_e14_sp
@@ -2080,7 +2080,7 @@ if ($Exchange2010.IsPresent)
 ##### exchange downloads section
 if ($Exchange2013.IsPresent)
     {
-    Write-Host  -ForegroundColor White "Preparing Exchange 2013 $e15_cu"
+    Write-Host  -ForegroundColor White " ==>Preparing Exchange 2013 $e15_cu"
     if (!$e15_cu)
         {
         $e15_cu = $Latest_e15_cu
@@ -2131,7 +2131,9 @@ if ($Exchange2013.IsPresent)
 
 ##### exchange 2016 downloads section
 if ($Exchange2016.IsPresent)
-{
+    {
+    Write-Host  -ForegroundColor White " ==>Preparing Exchange $EX_Version $e16_cu"
+
     if (!$e16_cu)
         {
         $e16_cu = $Latest_e16_cu
@@ -2373,7 +2375,7 @@ if ($NMM.IsPresent)
 
     if ((Test-Path "$NW_Sourcedir/$nmm_ver/win_x64/networkr/NetWorker Module for Microsoft.msi") -or (Test-Path "$NW_Sourcedir/$nmm_ver/win_x64/networkr/NWVSS.exe"))
         {
-        Write-Verbose "Networker NMM $nmm_ver found"
+        Write-Host -ForegroundColor Gray  " ==>Networker NMM $nmm_ver found"
         }
     else
         {
@@ -2662,7 +2664,7 @@ else
         Write-Host -ForegroundColor Gray " ==> Building DC for Domain $BuildDomain, this may take a while"
         invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script new-dc.ps1 -Parameter "-dcname $DCName -Domain $BuildDomain -IPv4subnet $IPv4subnet -IPv4Prefixlength $IPv4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -IPv6Prefix $IPv6Prefix  -AddressFamily $AddressFamily $AddGateway $CommonParameter" -interactive -nowait
    
-        Write-Host -ForegroundColor White  "Preparing Domain"
+        Write-Host -ForegroundColor White  " ==>Preparing Domain"
         if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
             {
             write-verbose "verbose enabled, Please press any key within VM $Dcname"
@@ -2682,10 +2684,10 @@ else
             }
 
 		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script finish-domain.ps1 -Parameter "-domain $BuildDomain -domainsuffix $domainsuffix $CommonParameter" -interactive -nowait
-		Write-Host -ForegroundColor White  "Creating Domain $BuildDomain"
+		Write-Host -ForegroundColor White  " ==>Creating Domain $BuildDomain"
 		While ($FileOK = (&$vmrun -gu Administrator -gp Password123! fileExistsInGuest $CloneVMX $IN_Guest_LogDir\3.pass) -ne "The file exists.") { Write-Host -NoNewline "."; sleep $Sleep }
 		write-host
-		Write-Host -ForegroundColor White   "Domain Setup Finished"
+		Write-Host -ForegroundColor White " ==>Domain Setup Finished"
 		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script dns.ps1 -Parameter "-IPv4subnet $IPv4Subnet -IPv4Prefixlength $IPV4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily  -IPV6Prefix $IPV6Prefix $AddGateway $CommonParameter"  -interactive
 		invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script add-serviceuser.ps1 -interactive
 	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script create-labshortcut.ps1 -interactive # -Parameter $CommonParameter
