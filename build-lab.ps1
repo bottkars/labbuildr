@@ -1044,7 +1044,7 @@ function domainjoin
     $Folderstate = Set-VMXSharedFolderState -VMXName $nodename -config $CloneVMX -enabled
     Write-Verbose "Please Check inside VM for Network Warnings"
 	While ($FileOK = (&$vmrun -gu Administrator -gp Password123! fileExistsInGuest $CloneVMX $IN_Guest_LogDir\3.pass) -ne "The file exists.") { Write-Host -NoNewline "."; sleep $Sleep }
-    Write-Host "Done"
+    Write-Host -ForegroundColor Gray " ==>Done"
     invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script create-labshortcut.ps1 -interactive # -Parameter $CommonParameter
 }
 function status
@@ -1276,9 +1276,9 @@ function invoke-postsection
     {
     param (
     [switch]$wait)
-    write-verbose "Setting Power Scheme"
+    Write-Host -ForegroundColor Gray " ==>Setting Power Scheme"
 	invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$IN_Guest_UNC_NodeScriptDir" -Script powerconf.ps1 -interactive # $CommonParameter
-	write-verbose "Configuring UAC"
+	Write-Host -ForegroundColor Gray " ==>Configuring UAC"
     invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$IN_Guest_UNC_NodeScriptDir" -Script set-uac.ps1 -interactive # $CommonParameter
     if ($LabDefaults.Puppet)
         {
@@ -1305,17 +1305,6 @@ if ($PSCmdlet.MyInvocation.BoundParameters["debug"].IsPresent)
     $CommonParameter = ' -debug'
     }
 ####################################################
-<#
-###################################################
-foreach ($Module in $RequiredModules){
-# if(-not(Get-Module -name $Module))
-#{
-Write-Verbose "Loading $Module Modules"
-Import-Module "$Builddir\$Module" -Force
-#}
-}
-#>
-###################################################
 switch ($PsCmdlet.ParameterSetName)
 {
     "update" 
@@ -1334,14 +1323,14 @@ switch ($PsCmdlet.ParameterSetName)
 				if (Get-Item $Builddir\$deletefile -ErrorAction SilentlyContinue)
 				    {
 					Remove-Item -Path $Builddir\$deletefile -Recurse -ErrorAction SilentlyContinue
-					Write-Host -ForegroundColor White  "deleted $deletefile"
+					Write-Host -ForegroundColor White  " ==>deleted $deletefile"
 					write-log "deleted $deletefile"
 					}
 			    }
             }
         else 
             {
-            Write-Host "No Deletions required"
+            Write-Host -ForegroundColor Gray " ==>No Deletions required"
             }
 
 
@@ -1381,8 +1370,8 @@ switch ($PsCmdlet.ParameterSetName)
         if ($ReloadProfile)
             {
             Remove-Item .\Update -Recurse -Confirm:$false
-			Write-Host -ForegroundColor White  "Update Done"
-            Write-Host -ForegroundColor White  "press any key for reloading Modules"
+			Write-Host -ForegroundColor White  " ==>Update Done"
+            Write-Host -ForegroundColor White  " ==>press any key for reloading Modules"
             pause
             ./profile.ps1
             }
