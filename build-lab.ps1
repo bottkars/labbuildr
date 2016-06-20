@@ -2075,7 +2075,7 @@ if ($Exchange2010.IsPresent)
     
 	    if ($DAG.IsPresent)
 	        {
-		    Write-Host -ForegroundColor Yellow "We will form a $EX_Version $EXNodes-Node DAG"
+		    Write-Host -ForegroundColor Magenta " ==>We will form a $EX_Version $EXNodes-Node DAG"
 	        }
 
 }
@@ -2128,7 +2128,7 @@ if ($Exchange2013.IsPresent)
     
 	    if ($DAG.IsPresent)
 	        {
-		    Write-Host -ForegroundColor Yellow "We will form a $EX_Version $EXNodes-Node DAG"
+		    Write-Host -ForegroundColor Magenta " ==>We will form a $EX_Version $EXNodes-Node DAG"
 	        }
 
 }
@@ -2177,13 +2177,15 @@ if ($Exchange2016.IsPresent)
     
 	    if ($DAG.IsPresent)
 	        {
-		    Write-Host -ForegroundColor Yellow "We will form a $EXNodes-Node DAG"
+		    Write-Host -ForegroundColor Magenta " ==>We will form a $EXNodes-Node DAG"
 	        }
 
 }
 #########
 
-if ($NMM.IsPresent) { debug "Networker Modules $nmm_ver will be intalled by User selection" }
+if ($NMM.IsPresent) 
+    {
+    Write-Host -ForegroundColor Magenta " ==>Networker Modules $nmm_ver will be intalled by User selection" }
 if ($Sharepoint.IsPresent)
     {
     $Prereqdir = "$spver"+"prereq"
@@ -2600,11 +2602,11 @@ if (test-vmx $DCNODE -WarningAction SilentlyContinue)
 	    $Checkdom = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$IN_Guest_UNC_Scriptroot\$DCNODE" -Script checkdom.ps1 # $CommonParameter
 	    $BuildDomain, $RunningIP, $VMnet, $MyGateway = test-domainsetup
 	    $IPv4Subnet = convert-iptosubnet $RunningIP
-	    workorder "We will Use Domain $BuildDomain and Subnet $IPv4Subnet.0 for on $VMnet the Running Workorder"
+	    Write-Host -ForegroundColor Magenta " ==> will Use Domain $BuildDomain and Subnet $IPv4Subnet.0 for on $VMnet the Running Workorder"
 	    $Starttime = Get-Date
         If ($MyGateway) 
             {
-            workorder "We will configure Default Gateway at $MyGateway"
+            Write-Host -ForegroundColor Magenta " ==>We will configure Default Gateway at $MyGateway"
             $AddGateway  = "-DefaultGateway $MyGateway"
             Write-Verbose -Message "we will add a Gateway with $AddGateway"
             }
@@ -2641,15 +2643,15 @@ else
         {
         Write-Verbose "Gateway : $DefaultGateway"
         }
-	workorder "We will Build Domain $BuildDomain and Subnet $IPv4subnet.0  on $VMnet for the Running Workorder"
-    if ($DefaultGateway){ workorder "The Gateway will be $DefaultGateway"}
+	Write-Host -ForegroundColor Magenta " ==>We will Build Domain $BuildDomain and Subnet $IPv4subnet.0  on $VMnet for the Running Workorder"
+    if ($DefaultGateway){ Write-Host -ForegroundColor Magenta " ==>The Gateway will be $DefaultGateway"}
 	if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
         {
         Write-Verbose "Press any key to Continue Cloning"
         Pause
         }
     Set-LABDNS1 -DNS1 "$IPv4Subnet.10"
-	$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 0 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Size 'L' -Sourcedir $Sourcedir"
+	$CloneOK = Invoke-Expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 0 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Size 'L' -Sourcedir $Sourcedir"
 	
 	###################################################
 	#
@@ -2862,7 +2864,7 @@ switch ($PsCmdlet.ParameterSetName)
                 }
             $Exchangesize = "XXL"
 		    test-dcrunning
-		    workorder "Creating $EX_Version Host $Nodename with IP $Nodeip in Domain $BuildDomain"
+		    Write-Host -ForegroundColor Magenta " ==>Creating $EX_Version Host $Nodename with IP $Nodeip in Domain $BuildDomain"
 		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -AddDisks -Disks 3 -Disksize 500GB -Size $Exchangesize -Sourcedir $Sourcedir "
 		    ###################################################
 		    If ($CloneOK)
@@ -3004,7 +3006,7 @@ switch ($PsCmdlet.ParameterSetName)
                 pause
                 }
 		    test-dcrunning
-		    workorder "Creating E15 $e15_cu $Nodename with IP $Nodeip in Domain $BuildDomain"
+		    Write-Host -ForegroundColor Magenta " ==>Creating E15 $e15_cu $Nodename with IP $Nodeip in Domain $BuildDomain"
 		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -AddDisks -Disks 3 -Disksize 500GB -Size $Exchangesize -Sourcedir $Sourcedir "
 
 		    ###################################################
@@ -3151,7 +3153,7 @@ switch ($PsCmdlet.ParameterSetName)
                 }
             $Exchangesize = "XXL"
 		    test-dcrunning
-		    workorder "Creating $EX_Version Host $Nodename with IP $Nodeip in Domain $BuildDomain"
+		    Write-Host -ForegroundColor Magenta " ==>Creating $EX_Version Host $Nodename with IP $Nodeip in Domain $BuildDomain"
 		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -AddDisks -Disks 3 -Disksize 500GB -Size $Exchangesize -Sourcedir $Sourcedir "
 		    ###################################################
 		    If ($CloneOK)
@@ -3481,7 +3483,7 @@ switch ($PsCmdlet.ParameterSetName)
 		########### leaving NMM Section ###################
     If ($newdeploy)
         {
-        Write-Host -ForegroundColor Green "Trying New Cluster Deployment !! "
+        Write-Host -ForegroundColor Magenta " ==>Trying New Cluster Deployment !! "
         if ($Cluster.IsPresent)
 		{
 			write-host
