@@ -1025,7 +1025,7 @@ function domainjoin
         Write-Host -ForegroundColor Gray " ==> Preparing VMware Tools Upgrade by injecting tools CD ( update will start before next reboot of VM )"
         Start-Process 'C:\Program Files (x86)\VMware\VMware Workstation\vmrun.exe' -ArgumentList  "installTools $CloneVMX" -NoNewWindow
         }
-    Write-Host -ForegroundColor Magenta "Configuring Node and Features and Joining Domain $BuildDomain"
+    Write-Host -ForegroundColor Magenta " ==>Configuring Node and Features and Joining Domain $BuildDomain"
 	do
         {
         Write-Verbose "Joining Domain $BuildDomain"
@@ -1034,7 +1034,7 @@ function domainjoin
         }
     until ($domainadd -match "success")
 
-    Write-Host -ForegroundColor Gray "Waiting for Phase Domain Joined"
+    Write-Host -ForegroundColor Gray " ==>Waiting for Phase Domain Joined"
     do {
         $ToolState = Get-VMXToolsState -config $CloneVMX
         Write-Verbose $ToolState.State
