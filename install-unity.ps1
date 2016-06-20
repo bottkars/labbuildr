@@ -78,7 +78,7 @@ switch ($PsCmdlet.ParameterSetName)
 {
 
     "import"
-        {
+    {
         if (!$Masterpath)
             {
             try
@@ -102,66 +102,65 @@ switch ($PsCmdlet.ParameterSetName)
         .\install-Unity.ps1 -Defaults to try defaults"
         }
 
-     default
+    default
+    {
+    If ($Defaults.IsPresent)
         {
-        If ($Defaults.IsPresent)
+        $labdefaults = Get-labDefaults
+        if (!($labdefaults))
             {
-            $labdefaults = Get-labDefaults
-            if (!($labdefaults))
+            try
                 {
-                try
-                    {
-                    $labdefaults = Get-labDefaults -Defaultsfile ".\defaults.xml.example"
-                    }
-                catch
-                    {
+                $labdefaults = Get-labDefaults -Defaultsfile ".\defaults.xml.example"
+                }
+            catch
+                {
                 Write-Warning "no  defaults or example defaults found, exiting now"
                 exit
-                    }
+                }
             Write-Host -ForegroundColor Magenta "Using generic defaults from labbuildr"
             }
-            $vmnet = $labdefaults.vmnet
-            $subnet = $labdefaults.MySubnet
-            $BuildDomain = $labdefaults.BuildDomain
-            $Sourcedir = $labdefaults.Sourcedir
-            $Gateway = $labdefaults.Gateway
-            $DefaultGateway = $labdefaults.Defaultgateway
-            $DNS1 = $labdefaults.DNS1
-            $DNS2 = $labdefaults.DNS2
-            $configure = $true
-            $masterpath = $labdefaults.Masterpath
-            }
+        $vmnet = $labdefaults.vmnet
+        $subnet = $labdefaults.MySubnet
+        $BuildDomain = $labdefaults.BuildDomain
+        $Sourcedir = $labdefaults.Sourcedir
+        $Gateway = $labdefaults.Gateway
+        $DefaultGateway = $labdefaults.Defaultgateway
+        $DNS1 = $labdefaults.DNS1
+        $DNS2 = $labdefaults.DNS2
+        $configure = $true
+        $masterpath = $labdefaults.Masterpath
+    }
 
-        $Startnode = 1
-        $Nodes = 1
-        $ipoffset = 84+$Node
+    $Startnode = 1
+    $Nodes = 1
 
-        [System.Version]$subnet = $Subnet.ToString()
-        $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
+    [System.Version]$subnet = $Subnet.ToString()
+    $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 
-        $Builddir = $PSScriptRoot
-        $Nodeprefix = "UnityNode"
-        if (!$MasterVMX)
+    $Builddir = $PSScriptRoot
+    $Nodeprefix = "UnityNode"
+    if (!$MasterVMX)
+        {
+        $MasterVMX = get-vmx -path $Masterpath -VMXName UnityVSA-4*
+        iF ($MasterVMX)
             {
-            $MasterVMX = get-vmx -path $Masterpath -VMXName UnityVSA-4*
-            iF ($MasterVMX)
-                {
-                $MasterVMX = $MasterVMX | Sort-Object -Descending
-                $MasterVMX = $MasterVMX[-1]
-                }
+            $MasterVMX = $MasterVMX | Sort-Object -Descending
+            $MasterVMX = $MasterVMX[-1]
             }
-        else
+        }
+    else
+        {
+        if ($MasterPath)        
             {
-            if ($MasterPath)        
-                {
-                $MasterVMX = get-vmx -path $MasterPath -VMXName $MasterVMX
-                }
+            $MasterVMX = get-vmx -path $MasterPath -VMXName $MasterVMX
             }
+        }
 
-        if (!$MasterVMX)
-            {
-            write-Host -ForegroundColor Magenta "Could not find existing UnityMaster"
-            <#
+    if (!$MasterVMX)
+        {
+        write-Host -ForegroundColor Magenta "Could not find existing UnityMaster"
+        <#
             if ($Defaults.IsPresent)
                 {
                 Write-Host -ForegroundColor Magenta "Trying Latest OVF fom $Sourcedir"
@@ -201,73 +200,73 @@ switch ($PsCmdlet.ParameterSetName)
                 exit
                 }
             #>
-            return
-            }
-        Write-Host -ForegroundColor Magenta " ==>Checking Base VM Snapshot"
-        if (!$MasterVMX.Template) 
-            {
-            Write-Host -ForegroundColor Magenta " ==>Templating Master VMX"
-            $template = $MasterVMX | Set-VMXTemplate
-            }
-        $Basesnap = $MasterVMX | Get-VMXSnapshot -WarningAction SilentlyContinue| where Snapshot -Match "Base" 
+        return
+        }
+    Write-Host -ForegroundColor Magenta " ==>Checking Base VM Snapshot"
+    if (!$MasterVMX.Template) 
+        {
+        Write-Host -ForegroundColor Magenta " ==>Templating Master VMX"
+        $template = $MasterVMX | Set-VMXTemplate
+        }
+    $Basesnap = $MasterVMX | Get-VMXSnapshot -WarningAction SilentlyContinue| where Snapshot -Match "Base" 
 
-        if (!$Basesnap) 
+    if (!$Basesnap) 
+        {
+        Write-Host -ForegroundColor Magenta "Tweaking Base VMX"
+        $config = Get-VMXConfig -config $MasterVMX.config
+        foreach ($scsi in 0..3)
             {
-            Write-Host -ForegroundColor Magenta "Tweaking Base VMX"
-            $config = Get-VMXConfig -config $MasterVMX.config
-            foreach ($scsi in 0..3)
-                {
-                $config = $config -notmatch "scsi$scsi.virtualDev"
-                $config += 'scsi'+$scsi+'.virtualDev = "pvscsi"'
-                $config = $config -notmatch "scsi$scsi.present"
-                $config += 'scsi'+$scsi+'.present = "true"'
-                }
-            Set-Content -Path $MasterVMX.config -Value $config
-            Write-Host -ForegroundColor Magenta " ==>Base snap does not exist, creating now"
-            $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName Base
+            $config = $config -notmatch "scsi$scsi.virtualDev"
+            $config += 'scsi'+$scsi+'.virtualDev = "pvscsi"'
+            $config = $config -notmatch "scsi$scsi.present"
+            $config += 'scsi'+$scsi+'.present = "true"'
             }
+        Set-Content -Path $MasterVMX.config -Value $config
+        Write-Host -ForegroundColor Magenta " ==>Base snap does not exist, creating now"
+        $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName Base
+        }
             # $Basesnap
-        foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
+    foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
+        {
+        $ipoffset = 84+$Node
+        Write-Host -ForegroundColor Magenta " ==>Checking VM $Nodeprefix$node already Exists"
+        If (!(get-vmx -path $Nodeprefix$node -WarningAction SilentlyContinue))
             {
-            Write-Host -ForegroundColor Magenta " ==>Checking VM $Nodeprefix$node already Exists"
-            If (!(get-vmx -path $Nodeprefix$node -WarningAction SilentlyContinue))
+            write-Host -ForegroundColor Magenta " ==>Creating clone $Nodeprefix$node"
+            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXlinkedClone -CloneName $Nodeprefix$node -Clonepath "$Builddir" 
+            Write-Host -ForegroundColor Magenta " ==>Configuring NICs"
+            foreach ($nic in 0..5)
                 {
-                write-Host -ForegroundColor Magenta " ==>Creating clone $Nodeprefix$node"
-                $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXlinkedClone -CloneName $Nodeprefix$node -Clonepath "$Builddir" 
-        Write-Host -ForegroundColor Magenta " ==>Configuring NICs"
-        foreach ($nic in 0..5)
-            {
-            Write-Host -ForegroundColor Gray "  ==>Configuring NIC$nic"
-            $Netadater0 = $NodeClone | Set-VMXVnet -Adapter $nic -vnet $VMnet -WarningAction SilentlyContinue
-            }
-        Write-Host -ForegroundColor Magenta " ==>Creating Disks"
-        $SCSI = 1
-        [uint64]$Disksize = 100GB
-        if ($Disks -ne 0)
-            {
-            foreach ($LUN in (3..($Disks+2)))
-                {
-                $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-                Write-Host -ForegroundColor Gray "  ==>Building new Disk $Diskname"
-                $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-                Write-Host -ForegroundColor Gray "  ==>Adding Disk $Diskname to $($NodeClone.VMXname)"
-                $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
+                Write-Host -ForegroundColor Gray "  ==>Configuring NIC$nic"
+                $Netadater0 = $NodeClone | Set-VMXVnet -Adapter $nic -vnet $VMnet -WarningAction SilentlyContinue
                 }
-        }
-        $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
-        $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
-        Write-Host -ForegroundColor Magenta " ==>Starting VM $($NodeClone.Clonename)"
-        $NodeClone | start-vmx | Out-Null
-        [string]$ip="$($subnet.ToString()).$($ipoffset.ToString())"
-        }
+            Write-Host -ForegroundColor Magenta " ==>Creating Disks"
+            $SCSI = 1
+            [uint64]$Disksize = 100GB
+            if ($Disks -ne 0)
+                {
+                foreach ($LUN in (3..($Disks+2)))
+                    {
+                    $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
+                    Write-Host -ForegroundColor Gray "  ==>Building new Disk $Diskname"
+                    $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
+                    Write-Host -ForegroundColor Gray "  ==>Adding Disk $Diskname to $($NodeClone.VMXname)"
+                    $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
+                    }
+                }
+            $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
+            $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
+            Write-Host -ForegroundColor Magenta " ==>Starting VM $($NodeClone.Clonename)"
+            $NodeClone | start-vmx | Out-Null
+            [string]$ip="$($subnet.ToString()).$($ipoffset.ToString())"
+            }
         else
             {
             Write-Warning "Node $Nodeprefix$node already exists"
             }
-
-        }
-    Write-host
-    Write-host -ForegroundColor Blue "****** To Configure  Unity 4 ******
+    }
+Write-host
+Write-host -ForegroundColor Blue "****** To Configure  Unity 4 ******
         Go to VMware Console an wait for system to boot
         It might take up to 15 Minutes on First boot
         Login with  
