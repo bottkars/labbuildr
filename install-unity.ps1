@@ -127,13 +127,15 @@ switch ($PsCmdlet.ParameterSetName)
             $Gateway = $labdefaults.Gateway
             $DefaultGateway = $labdefaults.Defaultgateway
             $DNS1 = $labdefaults.DNS1
-            $DNS2 = $labdefaults.DNS1
+            $DNS2 = $labdefaults.DNS2
             $configure = $true
             $masterpath = $labdefaults.Masterpath
             }
 
         $Startnode = 1
         $Nodes = 1
+        $ipoffset = 84+$Node
+
         [System.Version]$subnet = $Subnet.ToString()
         $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 
@@ -227,7 +229,6 @@ switch ($PsCmdlet.ParameterSetName)
             # $Basesnap
         foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
             {
-            $ipoffset = 4+$Node
             Write-Host -ForegroundColor Magenta " ==>Checking VM $Nodeprefix$node already Exists"
             If (!(get-vmx -path $Nodeprefix$node -WarningAction SilentlyContinue))
                 {
@@ -257,10 +258,7 @@ switch ($PsCmdlet.ParameterSetName)
         $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
         Write-Host -ForegroundColor Magenta " ==>Starting VM $($NodeClone.Clonename)"
         $NodeClone | start-vmx | Out-Null
-        if ($configure.IsPresent)
-            {
-            $ip="$($subnet).$($ipoffset)"
-            }
+        [string]$ip="$($subnet.ToString()).$($ipoffset.ToString())"
         }
         else
             {
