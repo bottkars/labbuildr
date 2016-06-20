@@ -2330,7 +2330,7 @@ if ($Panorama.IsPresent)
     $Targetir = "$Sourcedir/panorama"
     if (Test-Path "$Sourcedir/panorama/Syncplicity Panorama.msi")
         {
-        Write-Verbose "Syncplicity found"
+        Write-Host -ForegroundColor Gray " ==>Syncplicity found"
         }
     else
         {
@@ -2350,11 +2350,11 @@ if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
     {
     if ((Test-Path "$NW_Sourcedir/$nw_ver/win_x64/networkr/networker.msi") -or (Test-Path "$NW_Sourcedir/$nw_ver/win_x64/networkr/lgtoclnt-*.exe"))
         {
-        Write-Host "Networker $nw_ver found"
+        Write-Host -ForegroundColor Gray " ==>Networker $nw_ver found"
         }
     else #if ($nw_ver -lt "nw84")
         {
-        Write-Host -ForegroundColor Gray " ==> We need to get $NW_ver, trying Automated Download"
+        Write-Host -ForegroundColor Gray " ==>We need to get $NW_ver, trying Automated Download"
         $NW_download_ok  =  receive-LABNetworker -nw_ver $nw_ver -arch win_x64 -Destination $NW_Sourcedir -unzip # $CommonParameter
         if ($NW_download_ok)
             {
