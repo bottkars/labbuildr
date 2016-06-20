@@ -1052,11 +1052,6 @@ function status
 	param ([string]$message)
 	write-host -ForegroundColor Yellow $message
 }
-function workorder
-{
-	param ([string]$message)
-	write-host -ForegroundColor Magenta $message
-}
 function progress
 {
 	param ([string]$message)
@@ -1965,7 +1960,7 @@ Write-Host -ForegroundColor White  "Version $($major).$Edition"
 #Write-Host -ForegroundColor White  "# running Labuildr Build $verlabbuildr"
 # Write-Host -ForegroundColor White  "# and vmxtoolkit   Build $vervmxtoolkit"
 
-workorder "Building Proposed Workorder"
+Write-Host -ForegroundColor Magenta " ==>Building Proposed Workorder"
 If ($DAG.IsPresent)
     {
     if (!$EXNodes)
@@ -1978,16 +1973,16 @@ if (!$EXnodes)
     {$EXNodes = 1}
 if ($Blanknode.IsPresent)
 {
-	workorder "We are going to Install $BlankNodes Blank Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
+	Write-Host -ForegroundColor Magenta " ==>We are going to Install $BlankNodes Blank Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
 
-    workorder "The Gateway will be $DefaultGateway"
+    Write-Host -ForegroundColor Magenta " ==>The Gateway will be $DefaultGateway"
 	if ($VTbit) { write-verbose "Virtualization will be enabled in the Nodes" }
 	if ($Cluster.IsPresent) { write-verbose "The Nodes will be Clustered" }
 }
 if ($SOFS.IsPresent)
 {
-	workorder "We are going to Install $SOFSNODES SOFS Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
-    if ($DefaultGateway.IsPresent){ workorder "The Gateway will be $DefaultGateway"}
+	Write-Host -ForegroundColor Magenta " ==>We are going to Install $SOFSNODES SOFS Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
+    if ($DefaultGateway.IsPresent){ Write-Host -ForegroundColor Magenta " ==>The Gateway will be $DefaultGateway"}
 	if ($Cluster.IsPresent) { write-verbose "The Nodes will be Clustered ( Single Node Clusters )" }
 }
 if ($HyperV.IsPresent)
@@ -2002,13 +1997,13 @@ if ($ScaleIO.IsPresent)
                 Write-Host -ForegroundColor Gray " ==> Need 3 nodes for ScaleIO, incrementing to 3"
                 $HyperVNodes = 3
                 }	
-workorder "We are going to Install ScaleIO on $HyperVNodes Hyper-V  Nodes"
-    if ($DefaultGateway.IsPresent){ workorder "The Gateway will be $DefaultGateway"}
+Write-Host -ForegroundColor Magenta " ==>We are going to Install ScaleIO on $HyperVNodes Hyper-V  Nodes"
+    if ($DefaultGateway.IsPresent){ Write-Host -ForegroundColor Magenta " ==>The Gateway will be $DefaultGateway"}
 	# if ($Cluster.IsPresent) { write-verbose "The Nodes will be Clustered ( Single Node Clusters )" }
 }
 if ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG" -or $SPdbtype -eq "AlwaysOn")
 {
-	workorder "We are going to Install an SQL Always On Cluster with $AAGNodes Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet"
+	Write-Host -ForegroundColor Magenta " ==>We are going to Install an SQL Always On Cluster with $AAGNodes Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet"
 	$AlwaysOn = $true
     # if ($NoNMM -eq $false) {Write-Host -ForegroundColor White  "Networker Modules will be installed on each Node"}
 }
@@ -2252,7 +2247,7 @@ if ($Sharepoint.IsPresent)
             Write-Verbose "Extracting $FileName"
             Start-Process -FilePath "$Sourcedir\$FileName" -ArgumentList "/extract:$Sourcedir\$SPver /quiet /passive" -Wait
             }
-    workorder "We are going to Install Sharepoint 2013 in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet and SQL"
+    Write-Host -ForegroundColor Magenta " ==>We are going to Install Sharepoint 2013 in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet and SQL"
     }# end SPPREREQ
 if ($ConfigureVMM.IsPresent)
     {
@@ -2454,7 +2449,7 @@ else
 Write-Verbose "Pupppetmaster will be $Puppetmaster"
 }
 
-if ($nw.IsPresent -and !$NoDomainCheck.IsPresent) { workorder "Networker $nw_ver Node will be installed" }
+if ($nw.IsPresent -and !$NoDomainCheck.IsPresent) { Write-Host -ForegroundColor Magenta " ==>Networker $nw_ver Node will be installed" }
 write-verbose "Checking Environment"
 if ($NW.IsPresent -or $NWServer.IsPresent)
 {
@@ -2791,9 +2786,9 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
             {
                 if ($NMM.IsPresent)
                     {
-				    Write-Host -ForegroundColor White  "Installing Networker $nmm_ver an NMM $nmm_ver on all Nodes"
+				    Write-Host -ForegroundColor White  " ==>Installing Networker $nmm_ver an NMM $nmm_ver on all Nodes"
 					Write-Host -ForegroundColor White  $CloneVMX
-					Write-Host -ForegroundColor Magenta " ==> Install NWClient"
+					Write-Host -ForegroundColor Magenta " ==>Install NWClient"
 					invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
                     Write-Host -ForegroundColor Magenta " ==> Install NMM"
 					invoke-vmxpowershell -config $CloneVMX -ScriptPath "$IN_Guest_UNC_Scriptroot\SQL" -Script install-nmm.ps1 -interactive -Parameter "-nmm_ver $nmm_ver" -Guestuser $Adminuser -Guestpassword $Adminpassword
