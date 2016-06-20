@@ -256,6 +256,7 @@ switch ($PsCmdlet.ParameterSetName)
                 }
             $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
             $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
+            $Annotation = $Nodeclone | Set-VMXAnnotation -Line1 "System User" -Line2 "sysadmin:sysadmin" -Line3 "Unity User" -Line4 "admin:Password123#"
             Write-Host -ForegroundColor Magenta " ==>Starting VM $($NodeClone.Clonename)"
             $NodeClone | start-vmx | Out-Null
             [string]$ip="$($subnet.ToString()).$($ipoffset.ToString())"
