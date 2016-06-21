@@ -159,7 +159,8 @@ If (!$MasterPath)
             }
 If (!$MasterVMX)
     {
-    Write-Warning "could not get $Product Master. use .\install-isiova -import fo import / download $Product Master"
+    Write-Warning "could not get $Product Master
+    Please Run .\$($MyInvocation.MyCommand) -import to download and Ipmort $Product Master"
     return
     }
 $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
