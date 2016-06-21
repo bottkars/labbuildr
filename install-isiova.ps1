@@ -114,7 +114,7 @@ switch ($PsCmdlet.ParameterSetName)
             write-verbose "Templating Master VMX"
             $MasterVMX | Set-VMXTemplate
             }
-        Write-Host -ForegroundColor White "Please run $($MyInvocation.MyCommand) -MasterPath .\$($ovaPath.Basename) -Defaults"
+        Write-Host -ForegroundColor White "Please run .\$($MyInvocation.MyCommand) -MasterPath .\$($ovaPath.Basename) -Defaults"
         }
     default
 {
@@ -153,14 +153,14 @@ If (!$MasterPath)
             {
             If (!($MasterVMX = get-vmx -path $MasterPath))
                 {
-                Write-Verbose "$MasterPath IS NOT A VALID Isilon Master"
-                break
+                Write-Verbose "$MasterPath IS NOT A VALID $Product Master"
+                return
                 }
             }
 If (!$MasterVMX)
     {
-    Write-Warning "could not get Mastervmx"
-    break
+    Write-Warning "could not get $Product Master. use .\install-isiova -import fo import / download $Product Master"
+    return
     }
 $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
 if (!$Basesnap) 
