@@ -39,7 +39,9 @@ Param(
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install", Mandatory=$false)]$MasterPath,
 [Parameter(ParameterSetName = "install", Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
-[Parameter(ParameterSetName = "install", Mandatory=$false)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir
+[Parameter(ParameterSetName = "install", Mandatory=$false)]
+#[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]
+$Sourcedir
 )
 #requires -version 3.0
 #requires -module vmxtoolkit 
@@ -59,14 +61,25 @@ If ($Defaults.IsPresent)
 
 try
     {
-    Test-Path $Sourcedir
+    Get-Item -Path $Sourcedir -ErrorAction Stop | Out-Null 
     }
-catch [Exception] 
+catch
+    [System.Management.Automation.DriveNotFoundException] 
     {
-    Write-Output "we need a Sourcedir to Continue
-    Consider using -Defaults"
-    break
+    Write-Warning "Drive not found, make sure to have your Source Stick connected"
+    return        
     }
+catch [System.Management.Automation.ItemNotFoundException]
+    {
+    Write-Warning "no sources directory found named $Sourcedir"
+    return
+    }
+catch
+    {
+    Write-Warning "no sources directory found named $Sourcedir"
+    return
+    }
+
                 
 If (!$MasterPath)
     {
@@ -104,12 +117,16 @@ If (!$MasterVMX)
             { 
             if (!(Test-Path (Join-path $Sourcedir "EMC*isilon*onefs*.zip")))
                 {
-                write-warning "No Sourcemaster or Package Found, we need to download ONEFS Simulator from EMC"
+                write-warning "No Sourcemaster or Package Found, Please Reach out t support.emc.co  to obtain Isilon7 Simulator
+                or use Isilon8 with ./install-isiova.ps1"
+                <#
                 $request = invoke-webrequest http://www.emc.com/getisilon
                 $Link = $request.Links | where OuterText -eq Download
                 $DownloadLink = $link.href
                 $Targetfile = (Join-Path $Sourcedir (Split-Path -Leaf $DownloadLink))
                 Get-LABFTPFile -Source $DownloadLink -TarGet $Targetfile -Defaultcredentials
+                return
+                #>
                 }
             $Targetfile = Get-ChildItem -Path  (Join-path $Sourcedir "EMC*isilon*onefs*.zip")
             Expand-LABZip -zipfilename $Targetfile.FullName -destination $Sourcedir
