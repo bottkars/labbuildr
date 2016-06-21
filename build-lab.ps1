@@ -1808,16 +1808,16 @@ else
         {
         Get-Item -Path $Sourcedir -ErrorAction Stop | Out-Null 
         }
-        catch
+    catch
         [System.Management.Automation.DriveNotFoundException] 
         {
         Write-Warning "Drive not found, make sure to have your Source Stick connected"
-        exit
+        return        
         }
-        catch [System.Management.Automation.ItemNotFoundException]
+    catch [System.Management.Automation.ItemNotFoundException]
         {
         Write-Warning "no sources directory found named $Sourcedir"
-        exit
+        return
         }
 
 

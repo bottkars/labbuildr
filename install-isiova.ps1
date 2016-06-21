@@ -55,6 +55,26 @@ switch ($PsCmdlet.ParameterSetName)
 {
     "import"
         {
+        if (!($Sourcedir ))
+            {
+            $Sourcedir= (Get-labDefaults).Sourcedir
+            }
+        try
+            {
+            Get-Item -Path $Sourcedir -ErrorAction Stop | Out-Null 
+            }
+        catch
+            [System.Management.Automation.DriveNotFoundException] 
+            {
+            Write-Warning "Drive not found, make sure to have your Source Stick connected"
+            return        
+            }
+        catch [System.Management.Automation.ItemNotFoundException]
+            {
+            Write-Warning "no sources directory found named $Sourcedir"
+            return
+            }
+<#
         Try 
             {
             test-Path $Sourcedir
@@ -68,6 +88,7 @@ switch ($PsCmdlet.ParameterSetName)
                 exit
                 }
             }
+        #>
         if (!($OVAPath = Get-ChildItem -Path "$Sourcedir\$Product" -recurse -Include "$Product_tag.ova" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
             {
                     write-warning "No $Product OVA found, Checking for Downloaded Package"
