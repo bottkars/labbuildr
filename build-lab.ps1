@@ -3273,9 +3273,10 @@ switch ($PsCmdlet.ParameterSetName)
             
             }
         if ($Cluster.IsPresent) {$AddonFeatures = "$AddonFeatures, Failover-Clustering, RSAT-Clustering, WVR"}
-        If (!(get-vmx HVNODE))
+        If (!(get-vmx HVNODE* -WarningAction SilentlyContinue))
             {
             $newdeploy = $true
+            Write-Host -ForegroundColor Magenta " ==>This is a Hyper-v Newdepoly"
             }
         else
             {
