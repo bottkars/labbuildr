@@ -86,7 +86,7 @@ switch ($PsCmdlet.ParameterSetName)
             write-verbose "Templating Master VMX"
             $MasterVMX | Set-VMXTemplate
             }
-        Write-Host -ForegroundColor White "Please run $($MyInvocation.MyCommand) -MasterPath .\EMC_Isilon_OneFS_8.0.0.0_Simulator\ -Defaults"
+        Write-Host -ForegroundColor White "Please run $($MyInvocation.MyCommand) -MasterPath .\$($ovaPath.Basename) -Defaults"
         }
     default
 {
