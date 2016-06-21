@@ -26,7 +26,8 @@
 Param(
 [Parameter(ParameterSetName = "install", Mandatory=$false)]
 [Parameter(ParameterSetName = "import",Mandatory=$false)][String]
-[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir,
+#[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]
+$Sourcedir,
 [Parameter(ParameterSetName = "import",Mandatory=$false)][switch]$forcedownload,
 [Parameter(ParameterSetName = "import",Mandatory=$false)][switch]$noextract,
 [Parameter(ParameterSetName = "import",Mandatory=$true)][switch]$import,
@@ -74,6 +75,12 @@ switch ($PsCmdlet.ParameterSetName)
             Write-Warning "no sources directory found named $Sourcedir"
             return
             }
+        catch
+            {
+            Write-Warning "no sources directory found named $Sourcedir"
+            return
+            }
+
 <#
         Try 
             {
