@@ -2250,7 +2250,7 @@ if ($SCVMM.IsPresent)
         {
         $SQLVER = "SQL2012SP2"
         }
-    If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCVMM -Destination $Sourcedir -unzip))
+    If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCVMM -Destination $Sourcedir -unzip -WarningAction SilentlyContinue))
         {
         Write-Warning "We could not receive scvmm"
         return
@@ -2270,7 +2270,7 @@ if ($SCOM.IsPresent)
         $SQLVER = "SQL2012SP2"
         }
 
-    If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCOM -Destination $Sourcedir -unzip))
+    If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCOM -Destination $Sourcedir -unzip -WarningAction SilentlyContinue))
         {
         Write-Warning "We could not receive scom"
         return
@@ -2305,7 +2305,7 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
         Extract-Zip -zipfilename $Sourcedir\$FileName -destination $Sourcedir
         }
 
-    if (!($SQL_OK = receive-labsql -SQLVER $SQLVER -Destination $Sourcedir -Product_Dir "SQL" -extract))
+    if (!($SQL_OK = receive-labsql -SQLVER $SQLVER -Destination $Sourcedir -Product_Dir "SQL" -extract -WarningAction SilentlyContinue))
         {
         break
         }
