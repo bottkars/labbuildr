@@ -137,7 +137,7 @@ $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 If (!$MasterPath)
     {
     Write-Host -Foregroundcolor Magenta "No master Specified, rule is Pic Any available Isilon Master now"
-    $MasterVMXs = get-vmx -vmxname "ISIMaster*"
+    $MasterVMXs = get-vmx -vmxname "$Product_tag"
     if ($Mastervmxs)
             {
             $Mastervmxs = $MasterVMXs | Sort-Object -Descending
