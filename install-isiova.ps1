@@ -143,7 +143,7 @@ $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 If (!$MasterPath)
     {
     Write-Host -Foregroundcolor Magenta "No master Specified, rule is Pic Any available Isilon Master now"
-    $MasterVMXs = get-vmx -vmxname "$Product_tag"
+    $MasterVMXs = get-vmx -vmxname "$Product_tag" -WarningAction SilentlyContinue
     if ($Mastervmxs)
             {
             $Mastervmxs = $MasterVMXs | Sort-Object -Descending
@@ -152,7 +152,9 @@ If (!$MasterPath)
             }
      else
             {
-            $sourcemaster = Get-ChildItem $Sourcedir  "*8.*" -Exclude "*.ova"
+            Write-Warning "Could not find a Master VMX with Tag $Product_tag
+Please check if a master was imported with $($MyInvocation.InvocationName) -import"
+            return
             }
     }
     else
@@ -186,6 +188,12 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     {
     Write-Host -ForegroundColor Magenta " ==>Creating clone $Nodeprefix$node"
     $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$node 
+    If (!(get-vmx $Nodeprefix$node  -WarningAction SilentlyContinue))
+        {
+        Write-Warning "node $Nodeprefix$node could not be created. please reach out to @sddc_guy"
+        return
+        }
+        
     Write-Host -ForegroundColor Magenta " ==>Creating Disks"
     $SCSI = 0
     foreach ($LUN in (1..$Disks))
