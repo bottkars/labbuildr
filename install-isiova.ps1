@@ -109,6 +109,12 @@ switch ($PsCmdlet.ParameterSetName)
         
         & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --name=$($ovaPath.Basename) $ovaPath.FullName $PSScriptRoot  #
         $MasterVMX = get-vmx -path ".\$($ovaPath.Basename)"
+        Write-Host -ForegroundColor Magenta " ==>Customizing Master VM"
+        foreach ($lun in 2..6)
+            {
+            Write-Host -ForegroundColor Gray " ==> removing disk SCSI2"
+            $MasterVMX | Remove-VMXScsiDisk -LUN $lun -Controller 0 | Out-Null
+            }
         if (!$MasterVMX.Template) 
             {
             write-verbose "Templating Master VMX"
@@ -185,9 +191,18 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     foreach ($LUN in (1..$Disks))
             {
             $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-            Write-Verbose "Building new Disk $Diskname"
-            $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-            Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
+            Write-Host -ForegroundColor Gray " ==> Building Disk $Diskname"
+            try
+                {
+                $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path -ErrorAction Stop
+                }
+            catch
+                {
+                Write-Warning "Error Creating new disk, maybe orpahn node or disk files with name $Diskname exists ?
+try to delete $Nodeprefix$Node Directory and try again"
+                exit
+                }
+            Write-Host -ForegroundColor Gray " ==> Adding Disk $Diskname to $($NodeClone.VMXname)"
             $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
             }
     write-verbose "Setting int-b"
