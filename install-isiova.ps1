@@ -44,8 +44,9 @@ $Sourcedir,
 [Parameter(ParameterSetName = "install", Mandatory=$False)][ValidateLength(3,10)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install", Mandatory=$false)]$MasterPath,
-[Parameter(ParameterSetName = "install", Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2"
+[Parameter(ParameterSetName = "install", Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
 #[Parameter(ParameterSetName = "install", Mandatory=$false)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir
+[switch]$Use_default_disks
 )
 #requires -version 3.0
 #requires -module vmxtoolkit 
@@ -80,7 +81,11 @@ switch ($PsCmdlet.ParameterSetName)
             Write-Warning "no sources directory found named $Sourcedir"
             return
             }
-
+if ($Use_default_disks.IsPresent)
+    {
+    Write-Warning "use_defazlt_diskparameter is experimental, and thus it has to be used for IMPORT and CREATION"
+    pause
+    }
 <#
         Try 
             {
@@ -110,11 +115,14 @@ switch ($PsCmdlet.ParameterSetName)
         & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --name=$($ovaPath.Basename) $ovaPath.FullName $PSScriptRoot  #
         $MasterVMX = get-vmx -path ".\$($ovaPath.Basename)"
         Write-Host -ForegroundColor Magenta " ==>Customizing Master VM"
+    if (!$Use_default_disks.IsPresent)
+        {
         foreach ($lun in 2..6)
             {
-            Write-Host -ForegroundColor Gray " ==> removing disk SCSI2"
+            Write-Host -ForegroundColor Gray " ==> removing disk SCSI4"
             $MasterVMX | Remove-VMXScsiDisk -LUN $lun -Controller 0 | Out-Null
             }
+        }
         if (!$MasterVMX.Template) 
             {
             write-verbose "Templating Master VMX"
@@ -195,24 +203,31 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         }
         
     Write-Host -ForegroundColor Magenta " ==>Creating Disks"
-    $SCSI = 0
-    foreach ($LUN in (1..$Disks))
-            {
-            $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-            Write-Host -ForegroundColor Gray " ==> Building Disk $Diskname"
-            try
+    if (!$Use_default_disks.IsPresent)
+        {
+        $SCSI = 0
+        foreach ($LUN in (1..$Disks))
                 {
-                $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path -ErrorAction Stop
-                }
-            catch
-                {
-                Write-Warning "Error Creating new disk, maybe orpahn node or disk files with name $Diskname exists ?
+                $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
+                Write-Host -ForegroundColor Gray " ==> Building Disk $Diskname"
+                try
+                    {
+                    $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path -ErrorAction Stop
+                    }
+                catch
+                    {
+                    Write-Warning "Error Creating new disk, maybe orpahn node or disk files with name $Diskname exists ?
 try to delete $Nodeprefix$Node Directory and try again"
-                exit
+                    exit
+                    }
+                Write-Host -ForegroundColor Gray " ==> Adding Disk $Diskname to $($NodeClone.VMXname)"
+                $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
                 }
-            Write-Host -ForegroundColor Gray " ==> Adding Disk $Diskname to $($NodeClone.VMXname)"
-            $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
             }
+    else
+        {
+        Write-Warning "Using Default Disks on request"
+        }
     write-verbose "Setting int-b"
     Set-VMXNetworkAdapter -Adapter 2 -ConnectionType hostonly -AdapterType e1000 -config $NodeClone.Config | out-null
     # Disconnect-VMXNetworkAdapter -Adapter 1 -config $NodeClone.Config
