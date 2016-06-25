@@ -84,11 +84,11 @@ switch ($PsCmdlet.ParameterSetName)
         Write-Verbose "Masterpath : $masterpath" 
         if (!($Importfile = Get-ChildItem -Path $nve_dir -Filter "$Product_tag.ovf" -ErrorAction SilentlyContinue))
             {
-            Write-Verbose "OVF does not exist, we need to extract from OVA" 
+            Write-host -ForegroundColor Gray " ==> OVF does not exist, we need to extract from OVA" 
 
             if (!([array]$OVAPath = Get-ChildItem -Path "$Sourcedir\$Product" -Include "$Product_tag.ova" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
                 {
-                write-warning "No $Product OVA found, Checking for Downloaded Package"
+                Write-Host -ForegroundColor Gray " ==> no $Product OVA found, checking for download package"
                 Receive-LABNetworker -nve -nve_ver $nve_ver -Destination "$Sourcedir\$Product" -Confirm:$false
                 }
             [array]$OVAPath = Get-ChildItem -Path "$Sourcedir\$Product" -Recurse -include "$Product_tag.ova"  -Exclude ".*" | Sort-Object -Descending
