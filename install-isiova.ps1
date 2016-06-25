@@ -212,7 +212,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
                 Write-Host -ForegroundColor Gray " ==> Building Disk $Diskname"
                 try
                     {
-                    $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path -ErrorAction Stop
+                    $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path -ErrorAction Stop -Debug
                     }
                 catch
                     {
