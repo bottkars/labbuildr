@@ -220,7 +220,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
 try to delete $Nodeprefix$Node Directory and try again"
                     exit
                     }
-                Write-Host -ForegroundColor Gray " ==> Adding Disk $Diskname to $($NodeClone.VMXname)"
+                Write-Host -ForegroundColor Gray " ==> Adding Disk $Diskname to $($NodeClone.Clonename)"
                 $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
                 }
             }
