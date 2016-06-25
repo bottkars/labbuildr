@@ -89,7 +89,7 @@ switch ($PsCmdlet.ParameterSetName)
             if (!([array]$OVAPath = Get-ChildItem -Path "$Sourcedir\$Product" -Include "$Product_tag.ova" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
                 {
                 write-warning "No $Product OVA found, Checking for Downloaded Package"
-                Receive-LABNetworker -nve -nve_ver $nve_ver -Destination "$Sourcedir\$Product" -verbose
+                Receive-LABNetworker -nve -nve_ver $nve_ver -Destination "$Sourcedir\$Product" -Confirm:$false
                 }
             [array]$OVAPath = Get-ChildItem -Path "$Sourcedir\$Product" -Recurse -include "$Product_tag.ova"  -Exclude ".*" | Sort-Object -Descending
             $Importfile = $OVApath[0]
