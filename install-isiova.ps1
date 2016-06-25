@@ -215,7 +215,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
                 Write-Host $NodeClone
                 try
                     {
-                    $Newdisk = $NodeClone | New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -ErrorAction Stop -Debug
+                    $Newdisk = $NodeClone | New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -ErrorAction Stop #-Debug
                     }
                 catch
                     {
