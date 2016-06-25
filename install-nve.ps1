@@ -82,7 +82,7 @@ switch ($PsCmdlet.ParameterSetName)
         $nve_dir = Join-Path $Networker_dir $Product_tag
         Write-Verbose "NVE Dir : $nve_dir"
         Write-Verbose "Masterpath : $masterpath" 
-        if (!($Importfile = Get-ChildItem -Path $nve_dir -Filter "$Product_tag.ovf"))
+        if (!($Importfile = Get-ChildItem -Path $nve_dir -Filter "$Product_tag.ovf" -ErrorAction SilentlyContinue))
             {
             Write-Verbose "OVF does not exist, we need to extract from OVA" 
 
