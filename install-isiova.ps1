@@ -212,6 +212,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
 
                 $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
                 Write-Host -ForegroundColor Gray " ==> Building Disk $Diskname"
+                Write-Host $NodeClone
                 try
                     {
                     $Newdisk = $NodeClone | New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -ErrorAction Stop -Debug
