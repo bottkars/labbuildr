@@ -208,8 +208,6 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         $SCSI = 0
         foreach ($LUN in (1..$Disks))
                 {
-                Get-ChildItem -Path $NodeClone.path
-
                 $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
                 Write-Host -ForegroundColor Gray " ==> Building Disk $Diskname"
                 Write-Host $NodeClone
