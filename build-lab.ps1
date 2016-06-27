@@ -272,7 +272,7 @@ Specify if Networker Scenario sould be installed
 	[Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
 	[Parameter(ParameterSetName = "SCVMM", Mandatory = $false)]
 	[ValidateSet(
-    'SQL2014SP1slip','SQL2012','SQL2012SP1','SQL2012SP2','SQL2012SP1SLIP','SQL2014','SQL2016'
+    'SQL2014SP1slip','SQL2012','SQL2012SP1','SQL2012SP2','SQL2012SP1SLIP','SQL2014','SQL2016','SQL2016_ISO'
     )]$SQLVER,
     
     ######################### common Parameters start here in Order
@@ -1855,23 +1855,27 @@ Switch ($Totalmemory)
 	{ $_ -gt 0 -and $_ -le 8 }
 	{
 		$Computersize = 1
+        $SQLSize = "L"
 		$Exchangesize = "XL"
 	}
 	{ $_ -gt 8 -and $_ -le 16 }
 	{
 		$Computersize = 2
 		$Exchangesize = "XL"
+        $SQLSize = "XL"
 	}
 	{ $_ -gt 16 -and $_ -le 32 }
 	{
 		$Computersize = 3
 		$Exchangesize = "TXL"
+        $SQLSize = "TXL"
 	}
 	
 	else
 	{
 		$Computersize = 3
 		$Exchangesize = "XXL"
+        $SQLSize = "TXL"
 	}
 	
 }
@@ -2289,7 +2293,7 @@ if ($SCOM.IsPresent)
 #################
 if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
     {
-    If ($SQLVER -eq 'SQL2016')
+    If ($SQLVER -match 'SQL2016')
         {
         $Java8_required = $true
         }
@@ -2723,7 +2727,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 			$AAGLIST += $CloneVMX
             #$In_Guest_UNC_SQLScriptDir = "$Builddir\$Scripts\sql\"
             $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features, Failover-Clustering, RSAT-Clustering, WVR"
-			###################################################
+            ###################################################
 			Write-Verbose $IPv4Subnet
             write-verbose $Nodeip
             Write-Verbose $Nodename
@@ -2735,7 +2739,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
             }
 			# Clone Base Machine
 			Write-Host -ForegroundColor White  "Creating $Nodename with IP $Nodeip for Always On Availability Group"
-			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $AAGNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -sql"
+			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $AAGNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $SQLSize -Sourcedir $Sourcedir -sql"
 			###################################################
 			If ($CloneOK)
 			{
@@ -2745,7 +2749,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 			    domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
                 invoke-postsection -wait
                 Write-Host -ForegroundColor Magenta " ==> Setup Database Drives"
-			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script prepare-disks.ps1
+			    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script prepare-disks.ps1 -interactive
 				Write-Host -ForegroundColor Magenta " ==> Starting $SQLVER Setup on $Nodename"
 				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $In_Guest_UNC_SQLScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -reboot" -interactive -nowait
                 $SQLSetupStart = Get-Date
@@ -2757,22 +2761,22 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 			####### Check for all SQl Setups Done .. ####
 			Write-Host -ForegroundColor Magenta " ==> Checking SQL INSTALLED and Rebooted on All Machines"
 			foreach ($AAGNode in $AAGLIST)
-			{
+			    {
 				While ($FileOK = (&$vmrun -gu $builddomain\Administrator -gp Password123! fileExistsInGuest $AAGNode $IN_Guest_LogDir\sql.pass) -ne "The file exists.")
-				{
-				runtime $SQLSetupStart "$SQLVER $Nodename"
-				}
-            Write-Host -ForegroundColor Magenta " ==> Setting SQL Server Roles on $AAGNode"
-            invoke-vmxpowershell -config $AAGNode -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$IN_Guest_UNC_Scriptroot\SQL" -Script set-sqlroles.ps1 -interactive
-			} # end aaglist
+				    {
+				    runtime $SQLSetupStart "$SQLVER $Nodename"
+				    }
+                Write-Host -ForegroundColor Magenta " ==> Setting SQL Server Roles on $AAGNode"
+                invoke-vmxpowershell -config $AAGNode -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$IN_Guest_UNC_Scriptroot\SQL" -Script set-sqlroles.ps1 -interactive
+			    } # end aaglist
 			write-host
 			Write-Host -ForegroundColor Magenta " ==> Forming AlwaysOn WFC Cluster"
 	        invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix 'AAGNODE' -IPAddress '$IPv4Subnet.160' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
-			Write-Host -ForegroundColor Magenta " ==> Enabling AAG"
+            Write-Host -ForegroundColor Magenta " ==> Enabling AAG"
 			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script enable-aag.ps1 -interactive
 			Write-Host -ForegroundColor Magenta " ==> Creating AAG"
 			invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script create-aag.ps1 -interactive -Parameter "-Nodeprefix 'AAGNODE' -AgName '$AAGName' -DatabaseList 'AdventureWorks2012' -BackupShare '\\vmware-host\Shared Folders\Sources\AWORKS' -IPv4Subnet $IPv4Subnet -IPV6Prefix $IPV6Prefix -AddressFamily $AddressFamily $CommonParameter"
-			foreach ($CloneVMX in $AAGLIST)
+            foreach ($CloneVMX in $AAGLIST)
             {
                 if ($NMM.IsPresent)
                     {
@@ -2812,7 +2816,7 @@ switch ($PsCmdlet.ParameterSetName)
         }
         if ($DAG.IsPresent)
             {
-            Write-Host -ForegroundColor Gray " ==> Running $E Avalanche Install"
+            Write-Host -ForegroundColor Gray " ==> Running $EX_Version Avalanche Install"
             $AddonFeatures = "$AddonFeatures, Failover-Clustering, RSAT-Clustering"            
             if ($DAGNOIP.IsPresent)
 			    {
@@ -2940,6 +2944,9 @@ switch ($PsCmdlet.ParameterSetName)
 } #End Switchblock Exchange
 
 	"E15"{
+        $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features"
+        $AddonFeatures = "$AddonFeatures, RSAT-DNS-SERVER, Desktop-Experience, RPC-over-HTTP-proxy, RSAT-Clustering, RSAT-Clustering-CmdInterface, Web-Mgmt-Console, WAS-Process-Model, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI, Windows-Identity-Foundation" 
+
         $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\E2013"
         # we need ipv4
         if ($AddressFamily -notmatch 'ipv4')
@@ -2952,6 +2959,7 @@ switch ($PsCmdlet.ParameterSetName)
         }
         if ($DAG.IsPresent)
             {
+            $AddonFeatures = "$AddonFeatures, Failover-Clustering"
             Write-Host -ForegroundColor Gray " ==> Running E15 Avalanche Install"
 
             if ($DAGNOIP.IsPresent)
@@ -2973,8 +2981,6 @@ switch ($PsCmdlet.ParameterSetName)
 			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
 			$EXLIST += $CloneVMX
 		    # $Exprereqdir = "$Sourcedir\EXPREREQ\"
-            $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features"
-            $AddonFeatures = "$AddonFeatures, RSAT-DNS-SERVER, Desktop-Experience, RPC-over-HTTP-proxy, RSAT-Clustering, RSAT-Clustering-CmdInterface, Web-Mgmt-Console, WAS-Process-Model, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI, Windows-Identity-Foundation" 
 			###################################################
 	    	
             Write-Verbose $IPv4Subnet
@@ -3083,6 +3089,9 @@ switch ($PsCmdlet.ParameterSetName)
 	"E16"{
         Write-Host -ForegroundColor Magenta " ==> Starting $EX_Version $e16_cu Setup"
         $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\E2016"
+            $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features"
+            # $AddonFeatures = "$AddonFeatures, RSAT-DNS-SERVER, Desktop-Experience, RPC-over-HTTP-proxy, RSAT-Clustering, RSAT-Clustering-CmdInterface, Web-Mgmt-Console, WAS-Process-Model, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI, Windows-Identity-Foundation" 
+            $AddonFeatures = "$AddonFeatures, RSAT-DNS-Server, AS-HTTP-Activation, Desktop-Experience, NET-Framework-45-Features, RPC-over-HTTP-proxy, RSAT-Clustering, RSAT-Clustering-CmdInterface, RSAT-Clustering-Mgmt, RSAT-Clustering-PowerShell, Web-Mgmt-Console, WAS-Process-Model, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI, Windows-Identity-Foundation"
 
         # we need ipv4
         if ($AddressFamily -notmatch 'ipv4')
@@ -3095,6 +3104,7 @@ switch ($PsCmdlet.ParameterSetName)
         }
         if ($DAG.IsPresent)
             {
+            $AddonFeatures = "$AddonFeatures, Failover-Clustering"
             Write-Host -ForegroundColor Gray " ==> Running e16 Avalanche Install"
 
             if ($DAGNOIP.IsPresent)
@@ -3116,9 +3126,6 @@ switch ($PsCmdlet.ParameterSetName)
 			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
 			$EXLIST += $CloneVMX
 		    # $Exprereqdir = "$Sourcedir\EXPREREQ\"
-            $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features"
-            # $AddonFeatures = "$AddonFeatures, RSAT-DNS-SERVER, Desktop-Experience, RPC-over-HTTP-proxy, RSAT-Clustering, RSAT-Clustering-CmdInterface, Web-Mgmt-Console, WAS-Process-Model, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI, Windows-Identity-Foundation" 
-            $AddonFeatures = "$AddonFeatures, RSAT-DNS-Server, AS-HTTP-Activation, Desktop-Experience, NET-Framework-45-Features, RPC-over-HTTP-proxy, RSAT-Clustering, RSAT-Clustering-CmdInterface, RSAT-Clustering-Mgmt, RSAT-Clustering-PowerShell, Web-Mgmt-Console, WAS-Process-Model, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI, Windows-Identity-Foundation"
 
 
 			###################################################

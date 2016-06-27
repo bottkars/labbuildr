@@ -85,25 +85,21 @@ switch ($PsCmdlet.ParameterSetName)
         if (!($Importfile = Get-ChildItem -Path $nve_dir -Filter "$Product_tag.ovf" -ErrorAction SilentlyContinue))
             {
             Write-host -ForegroundColor Gray " ==> OVF does not exist, we need to extract from OVA" 
-
-            if (!([array]$OVAPath = Get-ChildItem -Path "$Sourcedir\$Product" -Include "$Product_tag.ova" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
-                {
-                Write-Host -ForegroundColor Gray " ==> no $Product OVA found, checking for download package"
-                Receive-LABNetworker -nve -nve_ver $nve_ver -Destination "$Sourcedir\$Product" -Confirm:$false
-                }
-            [array]$OVAPath = Get-ChildItem -Path "$Sourcedir\$Product" -Recurse -include "$Product_tag.ova"  -Exclude ".*" | Sort-Object -Descending
-            $Importfile = $OVApath[0]
-            $OVA_Destination = join-path $Importfile.DirectoryName $Importfile.BaseName
-            Write-Host -ForegroundColor Magenta " ==>Extraxting from OVA Package $Importfile"
-            $Expand = Expand-LAB7Zip -Archive $Importfile.FullName -destination $OVA_Destination
+            Write-Host -ForegroundColor Gray " ==> Checking for $Product OVA package"
+            Receive-LABNetworker -nve -nve_ver $nve_ver -Destination "$Sourcedir\$Product" -Confirm:$false
+            $OVA_File = Get-ChildItem -Path "$Sourcedir\$Product" -Recurse -include "$Product_tag.ova"  -Exclude ".*" | Sort-Object -Descending | Select-Object -First 1
+            #$OVA_File = $OVApath[0]
+            #$OVA_Destination = join-path $Importfile.DirectoryName $Importfile.BaseName
+            Write-Host -ForegroundColor Magenta " ==>Extraxting from OVA Package $OVA_File"
+            $Expand = Expand-LAB7Zip -Archive $OVA_file.FullName -destination $nve_dir
             try
                 {
                 Write-Host -ForegroundColor Magenta " ==>Validating OVF from OVA Package"
-                $Importfile = Get-ChildItem -Filter "*.ovf" -Path $Importfile.DirectoryName -ErrorAction SilentlyContinue
+                $Importfile = Get-ChildItem -Filter "*.ovf" -Path $nve_dir -ErrorAction stop
                 }
             catch
                 {
-                Write-Warning "we could not find a ovf file at $($Importfile.Directoryname)"
+                Write-Warning "we could not find a ovf file at $($OVA_Destination)"
                 return
                 }
             ## tweak ovf
@@ -139,17 +135,17 @@ switch ($PsCmdlet.ParameterSetName)
 
         Write-Host -ForegroundColor Magenta " ==>Checkin for VM $mastername"
 
-        if (Get-VMX -Path $masterpath\$mastername)
+        if (Get-VMX -Path $masterpath\$mastername -WarningAction SilentlyContinue)
             {
-            Write-Warning "Base VM $mastername already exists, please delete first"
+            Write-Warning "Base VM $masterpath\$mastername already exists, please delete first"
             exit
             }
         else
             {
-            Write-Host -ForegroundColor Magenta " ==>Importing Base VM"
+            Write-Host -ForegroundColor Magenta " ==>Importing Base VM, this may take a while"
             if ((import-VMXOVATemplate -OVA $Importfile.FullName -Name $mastername -destination $masterpath  -acceptAllEulas).success -eq $true)
                 {
-                Write-Host -ForegroundColor Gray "[Preparation of Template done, please run $($MyInvocation.MyCommand) -MasterPath $mastername]"
+                Write-Host -ForegroundColor Gray " ==> Preparation of Template done, please run $($MyInvocation.MyCommand) -Defaults -nve_ver $nve_ver"
                 }
             else
                 {
