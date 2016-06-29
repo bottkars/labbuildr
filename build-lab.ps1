@@ -142,7 +142,10 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCVMM", Mandatory = $false)]
-    [ValidateSet('SC2012_R2','SCTP3','SCTP4','SCTP5')]$SC_Version = "SC2012_R2",
+    [ValidateSet(
+    'SC2012_R2',
+    'SCTP3','SCTP4','SCTP5')]
+    $SC_Version = "SC2012_R2",
 
     <#
     Selects the Blank Nodes Scenario
@@ -709,10 +712,10 @@ Sources should be populated from a bases sources.zip
 ###################################################
 ### VMware Master Script
 ###################################################
-[string]$Myself = $MyInvocation.MyCommand
+[string]$Myself_ps1 = $MyInvocation.MyCommand
+$myself = $Myself_ps1.TrimEnd(".ps1")
 #$AddressFamily = 'IPv4'
 $IPv4PrefixLength = '24'
-$myself = $Myself.TrimEnd(".ps1")
 $Builddir = $PSScriptRoot
 If ($ConfirmPreference -match "none")
     {$Confirm = $false}
@@ -861,6 +864,11 @@ $IN_Guest_UNC_Sourcepath = "\\vmware-host\Shared Folders\Sources"
 $IN_Guest_UNC_NodeScriptDir = "$IN_Guest_UNC_Scriptroot\Node"
 $IN_Guest_LogDir = "C:\Scripts"
 $Java7_Url = "https://labbuildrmaster.blob.core.windows.net/master/Java/jre-7u80-windows-x64.exe"
+################
+# labbuildr special statics
+$my_repo = "labbuildr"
+$labbuildr_modules_required = ('labtools','vmxtoolkit')
+
 #$IN_Guest_UNC_NodeScriptDir = "$IN_Guest_UNC_Scriptroot\Node"
 ##################
 ### VMrun Error Condition help to tune the Bug wher the VMRUN Command can not communicate with the Host !
@@ -1309,7 +1317,7 @@ switch ($PsCmdlet.ParameterSetName)
     "update" 
         {
         $ReloadProfile = $False
-        $Repo = "labbuildr"
+        $Repo = $my_repo
         $RepoLocation = "bottkars"
         $Latest_local_git = $Latest_labbuildr_git
         $Destination = "$Builddir"
@@ -1332,7 +1340,7 @@ switch ($PsCmdlet.ParameterSetName)
             Write-Host -ForegroundColor Gray " ==>No Deletions required"
             }
 
-
+        
 
         ####
         $Repo = "labbuildr-scripts"
@@ -1340,8 +1348,9 @@ switch ($PsCmdlet.ParameterSetName)
         $Latest_local_git = $Latest_labbuildr_scripts_git
         $Destination = "$Builddir\$Scripts"
         $Has_update = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -delete
-        ####
-        $Repo = "labtools"
+        
+        foreach ($Repo in $labbuildr_modules_required)
+            {
         $RepoLocation = "bottkars"
         $Latest_local_git = $Latest_labtools_git
         $Destination = "$Builddir\$Repo"
@@ -1349,15 +1358,7 @@ switch ($PsCmdlet.ParameterSetName)
             {
             $ReloadProfile = $True
             }
-        ####
-        $Repo = "VMXToolKit"
-        $RepoLocation = "bottkars"
-        $Latest_local_git = $Latest_vmxtoolkit_git
-        $Destination = "$Builddir\VMXToolKit"
-        if ($Hasupdate = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -delete)
-            {
-            $ReloadProfile = $True
-            }
+        }
         ####
         $Repo = "SIOToolKit"
         $RepoLocation = "emccode"
@@ -1376,7 +1377,7 @@ switch ($PsCmdlet.ParameterSetName)
             }
         else
             {
-            ./build-lab.ps1
+            ."./$Myself_ps1"
             }
 
     return 
@@ -1391,7 +1392,7 @@ switch ($PsCmdlet.ParameterSetName)
     }# end shortcut
     "Version"
         {
-				Write-Host -ForegroundColor Magenta -NoNewline "labbuildr version $major-$Edition on branch : " 
+				Write-Host -ForegroundColor Magenta -NoNewline "$my_repo version $major-$Edition on branch : " 
                 Write-Host -ForegroundColor Cyan "$Current_labbuildr_branch"
                 If ($branch -ne "master")
                     {
@@ -1401,7 +1402,7 @@ Write-Host
                     }
                 if ($Latest_labbuildr_git)
                     {
-                    Write-Host -ForegroundColor White "labbuildr Git Release $Latest_labbuildr_git"
+                    Write-Host -ForegroundColor White "$my_repo Git Release $Latest_labbuildr_git"
                     }
                 if ($Latest_vmxtoolkit_git)
                     {
@@ -1460,7 +1461,7 @@ if ($defaults.IsPresent)
                 Write-Warning "no  defaults or example defaults found, exiting now"
                 exit
                     }
-        Write-Host -ForegroundColor Magenta "Using generic defaults from labbuildr"
+        Write-Host -ForegroundColor Magenta "Using generic defaults from $my_repo"
         }
         $DefaultGateway = $LabDefaults.DefaultGateway
         if (!$nmm_ver)
@@ -1881,16 +1882,16 @@ Switch ($Totalmemory)
 }
 If ($NumLogCPU -le 4 -and $Computersize -le 2)
 {
-	Write-Host -ForegroundColor White "==>Running $mySelf on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logicalk CPUs and $Totalmemory GB Memory "
+	Write-Host -ForegroundColor White "==>Running $my_repo on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logicalk CPUs and $Totalmemory GB Memory "
 }
 If ($NumLogCPU -gt 4 -and $Computersize -le 2)
 {
-	Write-Host -ForegroundColor White "==>Running $mySelf on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logical CPU and $Totalmemory GB Memory"
+	Write-Host -ForegroundColor White "==>Running $my_repo on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logical CPU and $Totalmemory GB Memory"
 	Write-Host "Consider Adding Memory "
 }
 If ($NumLogCPU -gt 4 -and $Computersize -gt 2)
 {
-	Write-Host -ForegroundColor White  "Excellent, Running $mySelf on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logical CPU and $Totalmemory GB Memory"
+	Write-Host -ForegroundColor White  "Excellent, Running $my_repo on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logical CPU and $Totalmemory GB Memory"
 }
 # get-vmwareversion
 ####### Building required Software Versions Tabs
@@ -2502,7 +2503,7 @@ if ($Java7_required)
     Write-Verbose "Checking for Java 7"
     if (!($Java7 = Get-ChildItem -Path $Sourcedir -Filter 'jre-7*x64*'))
 	    {
-		Write-Host -ForegroundColor Yellow "Java7 not found, downloading from labbuildr repo"
+		Write-Host -ForegroundColor Yellow "Java7 not found, downloading from $my_repo repo"
         $FileName = Split-Path -Leaf $Java7_Url
         $Destination = Join-Path $Sourcedir $FileName
         Receive-LABBitsFile -DownLoadUrl $Java7_Url -destination $Destination
@@ -4146,7 +4147,7 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
 } #Networker End
 $endtime = Get-Date
 $Runtime = ($endtime - $Starttime).TotalMinutes
-Write-Host -ForegroundColor White  "Finished Creation of $mySelf in $Runtime Minutes "
+Write-Host -ForegroundColor White  "Finished Creation of $my_repo in $Runtime Minutes "
 Write-Host -ForegroundColor White  "Deployed VM´s in Scenario $Scenarioname"
 get-vmx | where scenario -match $Scenarioname | ft vmxname,state,activationpreference
 return
