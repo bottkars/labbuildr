@@ -2534,7 +2534,7 @@ If ($Java8_required)
     }
 ##end Autodownloaders
 ##### Master Downloader
-$MyMaster = test-labmaster -Masterpath "$Masterpath" -Master $Master -Confirm:$Confirm
+$MyMaster = test-labmaster -Masterpath "$Masterpath" -Master $Master -mastertype vmware -Confirm:$Confirm 
 <#
 $MyMaster = get-vmx -path "$Masterpath\$Master" -WarningAction SilentlyContinue
 if (!$MyMaster)
