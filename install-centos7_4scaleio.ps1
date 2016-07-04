@@ -162,9 +162,9 @@ if ($SIOGateway.IsPresent)
 $Sourcedir_replace = $Sourcedir.Replace("\","\\")
 Write-Verbose $Sourcedir_replace
 ####Build Machines#
-  $machinesBuilt = @()
-    foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
-        {
+$machinesBuilt = @()
+foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
+    {
         Write-Host -ForegroundColor White "Checking for $Nodeprefix$node"
         If (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue))
         {
@@ -217,9 +217,9 @@ Write-Verbose $Sourcedir_replace
         write-Warning "Machine $Nodeprefix$node already Exists"
         }
     }
-    Write-Host -ForegroundColor White "Starting Node Configuration"
-    foreach ($Node in $machinesBuilt)
-        {
+Write-Host -ForegroundColor White "Starting Node Configuration"
+foreach ($Node in $machinesBuilt)
+    {
         $Node_num = $node -replace $Nodeprefix
         $ip="$subnet.22$($Node[-1])"
         $NodeClone = get-vmx $Node
@@ -309,7 +309,7 @@ Write-Verbose $Sourcedir_replace
     
     
     }
-    $StopWatch.Stop()
+$StopWatch.Stop()
 Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
 write-Host -ForegroundColor White "Login to the VM´s with root/Password123!"
     
