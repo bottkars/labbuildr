@@ -140,68 +140,6 @@ if (!($MasterVMX = test-labmaster -Masterpath $MasterPath -Master $Required_Mast
     exit
     }
 ####
-<#
-##### cecking for linux binaries
-$url = "ftp://ftp.emc.com/Downloads/ScaleIO/ScaleIO_RHEL6_Download.zip"
-write-warning "Checking for Downloaded RPM Packages"
-if (!($rpmpath  = Get-ChildItem -Path "$Sourcedir\ScaleIO\" -Recurse -Filter "*.el7.x86_64.rpm" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
-    {
-    write-warning "Checking for Downloaded Package"
-    $Uri = "http://www.emc.com/products-solutions/trial-software-download/scaleio.htm"
-    $request = Invoke-WebRequest -Uri $Uri -UseBasicParsing
-    $DownloadLinks = $request.Links | where href -match "linux"
-    foreach ($Link in $DownloadLinks)
-        {
-        $Url = $link.href
-        $FileName = Split-Path -Leaf -Path $Url
-        if (!(test-path  $Sourcedir\$FileName) -or $forcedownload.IsPresent)
-            {
-                        $ok = Get-labyesnoabort -title "Could not find $Filename, we need to dowload from www.emc.com" -message "Should we Download $FileName from ww.emc.com ?" 
-                        switch ($ok)
-                            {
-
-                            "0"
-                                {
-                                Write-Verbose "$FileName not found, trying Download"
-                                if (!( Get-LABFTPFile -Source $URL -Target $Sourcedir\$FileName -verbose -Defaultcredentials))
-                                    { 
-                                    write-warning "Error Downloading file $Url, Please check connectivity"
-                                    Remove-Item -Path $Sourcedir\$FileName -Verbose
-                                    }
-                                }
-                             "1"
-                                {
-                             break
-                                }   
-                             "2"
-                                {
-                                Write-Verbose "User requested Abort"
-                                exit
-                                }
-                            }
-                        
-                        }
-        Else
-            {
-            Write-Warning "Found $Sourcedir\$FileName, using this one unless -forcedownload is specified ! "
-            }
-        }
-    if (Test-Path "$Sourcedir\$FileName")
-        {
-            Expand-LABZip -zipfilename "$Sourcedir\$FileName" -destination "$Sourcedir\ScaleIO\"
-        }
-}
-$SIOGatewayrpm = Get-ChildItem -Path "$Sourcedir\ScaleIO\" -Recurse -Filter "EMC-ScaleIO-gateway-*noarch.rpm" -ErrorAction SilentlyContinue
-$SIOGatewayrpm = $SIOGatewayrpm[-1].FullName
-$SIOGatewayrpm = $SIOGatewayrpm.Replace($Sourcedir,"/mnt/hgfs/Sources")
-$SIOGatewayrpm = $SIOGatewayrpm.Replace("\","/")
-#>
-if (!($MasterVMX = get-vmx -path $MasterPath))
-    {
-    Write-Warning "no Ubuntu Master found
-    please download Ubuntu Master to $Sourcedir\Ubuntu15_Master"
-    exit
-    }
 if (!$MasterVMX.Template) 
             {
             write-verbose "Templating Master VMX"
@@ -214,49 +152,66 @@ if (!$MasterVMX.Template)
         $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
         }
 ####Build Machines#
-    $machinesBuilt = @()
-    foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
+$machinesBuilt = @()
+foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
+    {
+        Write-Host -ForegroundColor White "Checking for $Nodeprefix$node"
+        If (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue))
         {
-        If (!(get-vmx $Nodeprefix$node))
-        {
-        write-verbose " Creating $Nodeprefix$node"
-        $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node 
+        Write-Host -ForegroundColor Magenta "==>Creating $Nodeprefix$node"
+        try
+            {
+            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node # -clonepath $Builddir
+            }
+        catch
+            {
+            Write-Warning "Error creating VM"
+            return
+            }
         If ($Node -eq 1){$Primary = $NodeClone}
         $Config = Get-VMXConfig -config $NodeClone.config
-        Write-Verbose "Tweaking Config"
-        Write-Verbose "Creating Disks"
+        Write-Host -ForegroundColor Magenta " ==> Tweaking Config"
+        Write-Host -ForegroundColor Magenta " ==> Creating Disks"
         foreach ($LUN in (1..$Disks))
             {
             $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-            Write-Verbose "Building new Disk $Diskname"
+            Write-Host -ForegroundColor Magenta " ==> Building new Disk $Diskname"
             $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-            Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
+            Write-Host -ForegroundColor Magenta " ==> Adding Disk $Diskname to $($NodeClone.VMXname)"
             $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
             }
-        write-verbose "Setting NIC0 to HostOnly"
+        Write-Host -ForegroundColor Magenta " ==> Setting NIC0 to HostOnly"
         $Netadapter = Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config
         if ($vmnet)
             {
-            Write-Verbose "Configuring NIC 0 for $vmnet"
-            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config  | Out-Null
-            Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config   | Out-Null
+            Write-Host -ForegroundColor Magenta " ==> Configuring NIC 0 for $vmnet"
+            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config -WarningAction SilentlyContinue | Out-Null
+            Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config | Out-Null
             }
+
         $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.CloneName)@$BuildDomain"
         $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
+       <# if ($node -eq 3)
+            {
+            Write-Host -ForegroundColor Magenta " ==> Setting Gateway Memory to 3 GB"
+            $NodeClone | Set-VMXmemory -MemoryMB 3072 | Out-Null
+            }#>
         $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname Ubuntu -Scenario 7
         $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
-        $CDDisconnect = $NodeClone | Connect-VMXcdromImage -Contoller SATA -connect:$False
-        Write-Verbose "Starting UbuntuNode$Node"
+        Write-Host -ForegroundColor Magenta " ==> Starting $Nodeprefix$Node"
         start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
         $machinesBuilt += $($NodeClone.cloneName)
-    }
+        }
     else
         {
         write-Warning "Machine $Nodeprefix$node already Exists"
         }
     }
-    foreach ($Node in $machinesBuilt)
-        {
+Write-Host -ForegroundColor White "Starting Node Configuration"
+
+    
+foreach ($Node in $machinesBuilt)
+    {
         $ip="$subnet.22$($Node[-1])"
         $NodeClone = get-vmx $Node
         do {
@@ -335,7 +290,8 @@ if (!$MasterVMX.Template)
     
     
     }
-    write-Warning "Login to the VM´s with root/Password123!"
+$StopWatch.Stop()
+write-Warning "Login to the VM´s with root/Password123!"
     
 
 
