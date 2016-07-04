@@ -24,35 +24,33 @@
 This will install 3 Ubuntu Nodes UbuntuNode1 -UbuntuNode3 from the Default Ubuntu Master , in the Default 192.168.2.0 network, IP .221 - .223
 
 #>
-[CmdletBinding(DefaultParametersetName = "defaults")]
+[CmdletBinding(DefaultParametersetName = "defaults",
+    SupportsShouldProcess=$true,
+    ConfirmImpact="Medium")]
 Param(
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$Defaults,
+[Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateRange(1,3)][int32]$Disks = 1,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir = 'h:\sources',
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath = '.\Ubuntu15_Master',
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[int32]$Nodes=3,
+[ValidateRange(1,9)][int32]$Nodes=1,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [int32]$Startnode = 1,
-
-<# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
-
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
 [Parameter(ParameterSetName = "install",Mandatory=$False)]
-[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain,
+[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain = "labbuildr",
 [Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$forcedownload,
-[Parameter(ParameterSetName = "install",Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$SIOGateway
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$forcedownload
+#[Parameter(ParameterSetName = "install",Mandatory = $false)]
+#[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$SIOGateway
 )
+#requires -version 3.0
+#requires -module vmxtoolkit
 #requires -version 3.0
 #requires -module vmxtoolkit
 If ($Defaults.IsPresent)
@@ -64,7 +62,59 @@ If ($Defaults.IsPresent)
      $Sourcedir = $labdefaults.Sourcedir
      $DefaultGateway = $labdefaults.DefaultGateway
      $DNS1 = $labdefaults.DNS1
+     $DNS2 = $labdefaults.DNS2
+
      }
+If ($ConfirmPreference -match "none")
+    {$Confirm = $false}
+else
+    {$Confirm = $true}
+$Builddir = $PSScriptRoot
+$Scriptdir = Join-Path $Builddir "Scripts"
+If ($Defaults.IsPresent)
+    {
+    $labdefaults = Get-labDefaults
+    $vmnet = $labdefaults.vmnet
+    $subnet = $labdefaults.MySubnet
+    $BuildDomain = $labdefaults.BuildDomain
+    try
+        {
+        $Sourcedir = $labdefaults.Sourcedir
+        }
+    catch [System.Management.Automation.ValidationMetadataException]
+        {
+        Write-Warning "Could not test Sourcedir Found from Defaults, USB stick connected ?"
+        Break
+        }
+    catch [System.Management.Automation.ParameterBindingException]
+        {
+        Write-Warning "No valid Sourcedir Found from Defaults, USB stick connected ?"
+        Break
+        }
+    try
+        {
+        $Masterpath = $LabDefaults.Masterpath
+        }
+    catch
+        {
+        # Write-Host -ForegroundColor Gray " ==> No Masterpath specified, trying default"
+        $Masterpath = $Builddir
+        }
+     $Hostkey = $labdefaults.HostKey
+     $Gateway = $labdefaults.Gateway
+     $DefaultGateway = $labdefaults.Defaultgateway
+     $DNS1 = $labdefaults.DNS1
+     $DNS2 = $labdefaults.DNS2
+    }
+if (!$DNS2)
+    {
+    $DNS2 = $DNS1
+    }
+if (!$Masterpath) {$Masterpath = $Builddir}
+
+
+
+
 
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
@@ -73,6 +123,23 @@ $Guestpassword = "Password123!"
 [uint]$Disksize = 100GB
 $scsi = 0
 $Nodeprefix = "Ubuntu15Node"
+
+$Required_Master = "Ubuntu15_4"
+
+$mastervmx = test-labmaster -Master $Required_Master -MasterPath $MasterPath -Confirm:$Confirm
+
+###### checking master Present
+if (!($MasterVMX = test-labmaster -Masterpath $MasterPath -Master $Required_Master))
+    {
+    Write-Warning "Required Master $Required_Master not found
+    please download and extraxt $Required_Master to .\$Required_Master
+    see: 
+    ------------------------------------------------
+    get-help $($MyInvocation.MyCommand.Name) -online
+    ------------------------------------------------"
+    exit
+    }
+####
 <#
 ##### cecking for linux binaries
 $url = "ftp://ftp.emc.com/Downloads/ScaleIO/ScaleIO_RHEL6_Download.zip"
@@ -256,20 +323,14 @@ if (!$MasterVMX.Template)
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
 
-        $Scriptblock = "/etc/init.d/networking restart"
+        $Scriptblock = "echo 'dns-nameservers $DNS1' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
 
-        if ($node[-1] -eq "3" -and $SIOGateway.ispresent)
-            {
-            $Scriptblock = "yum install jre -y"
-            Write-Verbose $Scriptblock
-            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/yum-jre.log
-            
-            $Scriptblock = "export GATEWAY_ADMIN_PASSWORD='Password123!';rpm -Uhv --nodeps $SIOGatewayrpm"
-            Write-Verbose $Scriptblock
-            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile /tmp/SIOGateway.log
-            } 
+
+        $Scriptblock = "/etc/init.d/networking restart"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
 
     
     
