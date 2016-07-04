@@ -151,6 +151,7 @@ if (!$MasterVMX.Template)
          Write-verbose "Base snap does not exist, creating now"
         $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
         }
+$StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
 ####Build Machines#
 $machinesBuilt = @()
 foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
@@ -214,16 +215,18 @@ foreach ($Node in $machinesBuilt)
     {
         $ip="$subnet.22$($Node[-1])"
         $NodeClone = get-vmx $Node
+        Write-Host -ForegroundColor Magenta " ==> Waiting for $node to boot"
+
         do {
             $ToolState = Get-VMXToolsState -config $NodeClone.config
             Write-Verbose "VMware tools are in $($ToolState.State) state"
             sleep 5
             }
         until ($ToolState.state -match "running")
-        Write-Verbose "Setting Shared Folders"
-        $NodeClone | Set-VMXSharedFolderState -enabled # | Out-Null
+        Write-Host -ForegroundColor Magenta " ==>Setting Shared Folders"
+        $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
         # $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources # | Out-Null
-        Write-Verbose "Adding Shared Folders"        
+        Write-Host -ForegroundColor Magenta " ==>Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
         $Scriptblock = "systemctl disable iptables.service"
         Write-Verbose $Scriptblock
@@ -238,54 +241,54 @@ foreach ($Node in $machinesBuilt)
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
 
         #>
-
+        Write-Host -ForegroundColor Magenta "==> Configuring Guest network"
 
         $Scriptblock = "echo 'auto lo' > /etc/network/interfaces"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
 
         $Scriptblock = "echo 'iface lo inet loopback' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
 
         $Scriptblock = "echo 'auto eth0' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
         $Scriptblock = "echo 'iface eth0 inet static' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
         $Scriptblock = "echo 'address $ip' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
         $Scriptblock = "echo 'gateway $DefaultGateway' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
         $Scriptblock = "echo 'netmask 255.255.255.0' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
         $Scriptblock = "echo 'network $subnet.0' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
         $Scriptblock = "echo 'broadcast $subnet.255' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
         $Scriptblock = "echo 'dns-nameservers $DNS1' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
 
         $Scriptblock = "/etc/init.d/networking restart"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
     
     
