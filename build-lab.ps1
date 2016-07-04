@@ -1451,17 +1451,17 @@ if ($defaults.IsPresent)
         $LabDefaults = Get-LABDefaults
         }
        if (!($LabDefaults))
+            {
+            try
                 {
-                try
-                    {
-                    $LabDefaults = Get-labDefaults -Defaultsfile ".\defaults.xml.example"
-                    }
-                catch
-                    {
-                Write-Warning "no  defaults or example defaults found, exiting now"
-                exit
-                    }
-        Write-Host -ForegroundColor Magenta "Using generic defaults from $my_repo"
+                $LabDefaults = Get-labDefaults -Defaultsfile ".\defaults.xml.example"
+                }
+            catch
+                {
+            Write-Warning "no  defaults or example defaults found, exiting now"
+            exit
+                }
+            Write-Host -ForegroundColor Magenta "Using generic defaults from $my_repo"
         }
         $DefaultGateway = $LabDefaults.DefaultGateway
         if (!$nmm_ver)
