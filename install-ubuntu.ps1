@@ -239,8 +239,33 @@ foreach ($Node in $machinesBuilt)
         $Scriptblock = "systemctl stop iptables.service"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
-
+        ssh-keygen -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa
+        ssh-keygen -f /etc/ssh/ssh_host_dsa_key -N '' -t dsa
         #>
+        Write-Host -ForegroundColor Gray " ==> Configuring SSH Keys"
+        $Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
+    
+        $Scriptblock = "ssh-keygen -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
+
+        $Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
+
+        if ($Hostkey)
+            {
+            $Scriptblock = "echo '$Hostkey' >> /root/.ssh/authorized_keys"
+            Write-Verbose $Scriptblock
+            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+            }
+
+        $Scriptblock = "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys;chmod 0600 /root/.ssh/authorized_keys"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+
         Write-Host -ForegroundColor Magenta "==> Configuring Guest network"
 
         $Scriptblock = "echo 'auto lo' > /etc/network/interfaces"
