@@ -21,7 +21,7 @@
    https://community.emc.com/blogs/bottk/
 .EXAMPLE
 .\install-Ubuntu.ps1
-This will install 3 Ubuntu Nodes UbuntuNode1 -UbuntuNode3 from the Default Ubuntu Master , in the Default 192.168.2.0 network, IP .221 - .223
+This will install 3 Ubuntu Nodes Ubuntu1 -Ubuntu3 from the Default Ubuntu Master , in the Default 192.168.2.0 network, IP .221 - .223
 
 #>
 [CmdletBinding(DefaultParametersetName = "defaults",
@@ -33,6 +33,14 @@ Param(
 [Parameter(ParameterSetName = "install",Mandatory=$False)]
 [ValidateRange(1,3)]
 [int32]$Disks = 1,
+[Parameter(ParameterSetName = "install",Mandatory = $false)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[ValidateSet('16_4','15_4')]
+[string]$ubuntu_ver = "16_4",
+[Parameter(ParameterSetName = "install",Mandatory = $false)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[ValidateSet('cinnamon','none')]
+[string]$Desktop = "none",
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]
 $Sourcedir = 'h:\sources',
@@ -55,10 +63,6 @@ $vmnet = "vmnet2",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [ValidateScript({ Test-Path -Path $_ })]
 $Defaultsfile=".\defaults.xml",
-[Parameter(ParameterSetName = "install",Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateSet('cinnamon','none')]
-[string]$Desktop = "none",
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$forcedownload,
 [int]$ip_startrange = 200
@@ -118,21 +122,34 @@ if (!$Masterpath) {$Masterpath = $Builddir}
 
 $ip_startrange = $ip_startrange+$Startnode
 
-
-
+switch ($ubuntu_ver)
+    {
+    "16_4"
+        {
+        $netdev = "ens160"
+        }
+    default
+        {
+        $netdev= "eth0"
+        }
+    }
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 $rootuser = "root"
 $Guestpassword = "Password123!"
 [uint]$Disksize = 100GB
 $scsi = 0
-$Nodeprefix = "Ubuntu15Node"
-$Required_Master = "Ubuntu15_4"
+$Nodeprefix = "Ubuntu"
+$Required_Master = "Ubuntu$ubuntu_ver"
 
 #$mastervmx = test-labmaster -Master $Required_Master -MasterPath $MasterPath -Confirm:$Confirm
 
 ###### checking master Present
-if (!($MasterVMX = test-labmaster -Masterpath $MasterPath -Master $Required_Master -Confirm:$Confirm))
+try
+    {
+    $MasterVMX = test-labmaster -Masterpath $MasterPath -Master $Required_Master -Confirm:$Confirm -erroraction stop
+    }
+catch
     {
     Write-Warning "Required Master $Required_Master not found
     please download and extraxt $Required_Master to .\$Required_Master
@@ -204,7 +221,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
         Write-Host -ForegroundColor Magenta " ==> Starting $Nodeprefix$Node"
         start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
-        $machinesBuilt += $($NodeClone.cloneName)
+        $machinesBuilt += $($NodeClone.cloneName).tolower()
         }
     else
         {
@@ -231,26 +248,31 @@ foreach ($Node in $machinesBuilt)
         # $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources # | Out-Null
         Write-Host -ForegroundColor Gray " ==> Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
-        $Scriptblock = "systemctl disable iptables.service"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-    
-        ##### selectiung fastest apt mirror
-        ## sudo netselect -v -s10 -t20 `wget -q -O- https://launchpad.net/ubuntu/+archivemirrors | grep 
         
-        <#
-        $Scriptblock = "systemctl stop iptables.service"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
-        ssh-keygen -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa
-        ssh-keygen -f /etc/ssh/ssh_host_dsa_key -N '' -t dsa
-        #>
-        Write-Host -ForegroundColor Gray " ==> Configuring SSH"
+        If ($ubuntu_ver -lt "16")
+            {
+            $Scriptblock = "systemctl disable iptables.service"
+            Write-Verbose $Scriptblock
+            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+    
+            ##### selectiung fastest apt mirror
+            ## sudo netselect -v -s10 -t20 `wget -q -O- https://launchpad.net/ubuntu/+archivemirrors | grep 
+        
+            <#
+            $Scriptblock = "systemctl stop iptables.service"
+            Write-Verbose $Scriptblock
+            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+            ssh-keygen -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa
+            ssh-keygen -f /etc/ssh/ssh_host_dsa_key -N '' -t dsa
+            #>
 
+            }
+
+        Write-Host -ForegroundColor Gray " ==> Configuring SSH"
         $Scriptblock = "sed -i '/PermitRootLogin without-password/ c\PermitRootLogin yes' /etc/ssh/sshd_config"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
-
+        
         $Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa -force"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
@@ -274,7 +296,7 @@ foreach ($Node in $machinesBuilt)
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-        Write-Host -ForegroundColor Magenta "==> Configuring Guest network"
+        Write-Host -ForegroundColor Magenta "==> Configuring Guest network for $netdev"
 
         $Scriptblock = "echo 'auto lo' > /etc/network/interfaces"
         Write-Verbose $Scriptblock
@@ -286,15 +308,15 @@ foreach ($Node in $machinesBuilt)
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
 
-        $Scriptblock = "echo 'auto eth0' >> /etc/network/interfaces"
+        $Scriptblock = "echo 'auto $netdev' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-        $Scriptblock = "echo 'iface eth0 inet static' >> /etc/network/interfaces"
+        $Scriptblock = "echo 'iface $netdev inet static' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-        Write-Host -ForegroundColor Gray " ==> Setting IP $ip for eth0"
+        Write-Host -ForegroundColor Gray " ==> Setting IP $ip for $netdev"
         $Scriptblock = "echo 'address $ip' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
@@ -321,6 +343,14 @@ foreach ($Node in $machinesBuilt)
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
+        $Scriptblock = "echo 'dns-search $BuildDomain.local' >> /etc/network/interfaces"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+        
+        Write-Host -ForegroundColor Gray " ==> setting hostname $Node"
+        $Scriptblock = "echo '127.0.0.1       localhost' > /etc/hosts; echo '$ip $Node $Node.$BuildDomain.local' >> /etc/hosts; hostname $Node"
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+
         Write-Host -ForegroundColor Magenta "==> Restarting Guest Network"
         $Scriptblock = "/etc/init.d/networking restart"
         Write-Verbose $Scriptblock
@@ -332,7 +362,7 @@ foreach ($Node in $machinesBuilt)
             {
                 'cinnamon'
                 {
-                Write-Host -ForegroundColor Magenta " ==> downloaing and configuring $Desktop as Desktop, this may take a while
+                Write-Host -ForegroundColor Magenta " ==> downloading and configuring $Desktop as Desktop, this may take a while
     login manager will start after installation finished"
                 $Scriptblock = "apt-get update;apt-get install -y cinnamon-desktop-environment xinit;systemctl start lightdm"
                 Write-Verbose $Scriptblock
