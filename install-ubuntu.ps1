@@ -69,18 +69,6 @@ $Defaultsfile=".\defaults.xml",
 #requires -module vmxtoolkit
 #requires -version 3.0
 #requires -module vmxtoolkit
-If ($Defaults.IsPresent)
-    {
-     $labdefaults = Get-labDefaults
-     $vmnet = $labdefaults.vmnet
-     $subnet = $labdefaults.MySubnet
-     $BuildDomain = $labdefaults.BuildDomain
-     $Sourcedir = $labdefaults.Sourcedir
-     $DefaultGateway = $labdefaults.DefaultGateway
-     $DNS1 = $labdefaults.DNS1
-     $DNS2 = $labdefaults.DNS2
-
-     }
 If ($ConfirmPreference -match "none")
     {$Confirm = $false}
 else
