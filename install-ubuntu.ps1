@@ -329,7 +329,7 @@ foreach ($Node in $machinesBuilt)
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         
         Write-Host -ForegroundColor Gray " ==> Setting DNS $DNS1 $DNS2"
-        $Scriptblock = "echo 'dns-nameservers $DNS1,$DNS2' >> /etc/network/interfaces"
+        $Scriptblock = "echo 'dns-nameservers $DNS1 $DNS2' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
@@ -344,7 +344,7 @@ foreach ($Node in $machinesBuilt)
             {
                 'cinnamon'
                 {
-                Write-Host -ForegroundColor Magenta " ==> Configuring $Desktop as Desktop"
+                Write-Host -ForegroundColor Magenta " ==> Configuring $Desktop as Desktop, this may take a while"
                 $Scriptblock = "apt-get update;apt-get install -y cinnamon-desktop-environment xinit;systemctl start lightdm"
                 Write-Verbose $Scriptblock
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
