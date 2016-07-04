@@ -230,7 +230,7 @@ foreach ($Node in $machinesBuilt)
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
         $Scriptblock = "systemctl disable iptables.service"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
     
         ##### selectiung fastest apt mirror
         ## sudo netselect -v -s10 -t20 `wget -q -O- https://launchpad.net/ubuntu/+archivemirrors | grep 
@@ -281,10 +281,11 @@ foreach ($Node in $machinesBuilt)
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-        $Scriptblock = "echo 'dns-nameservers $DNS1' >> /etc/network/interfaces"
+        $Scriptblock = "echo 'dns-nameservers $DNS1,$DNS2' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
+        Write-Host -ForegroundColor Magenta "==> Restarting Guest Network"
 
         $Scriptblock = "/etc/init.d/networking restart"
         Write-Verbose $Scriptblock
@@ -294,7 +295,9 @@ foreach ($Node in $machinesBuilt)
     
     }
 $StopWatch.Stop()
-write-Warning "Login to the VM´s with root/Password123!"
+Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
+
+Write-Host -ForegroundColor Yellow "Login to the VM´s with root/Password123!"
     
 
 
