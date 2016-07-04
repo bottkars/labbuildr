@@ -260,7 +260,7 @@ foreach ($Node in $machinesBuilt)
         Write-Host -ForegroundColor Gray " ==> Configuring SSH"
 
         $Scriptblock = "sed -i '/PermitRootLogin without-password/ c\PermitRootLogin yes' /etc/ssh/sshd_config"
-        Write-Host $Scriptblock
+        Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
 
         $Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa -force"
