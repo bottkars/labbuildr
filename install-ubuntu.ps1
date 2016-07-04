@@ -45,7 +45,8 @@ Param(
 [Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$forcedownload
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$forcedownload,
+[int]$ip_startrange = 201
 #[Parameter(ParameterSetName = "install",Mandatory = $false)]
 #[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$SIOGateway
 )
@@ -123,7 +124,6 @@ $Guestpassword = "Password123!"
 [uint]$Disksize = 100GB
 $scsi = 0
 $Nodeprefix = "Ubuntu15Node"
-
 $Required_Master = "Ubuntu15_4"
 
 #$mastervmx = test-labmaster -Master $Required_Master -MasterPath $MasterPath -Confirm:$Confirm
@@ -213,7 +213,7 @@ Write-Host -ForegroundColor White "Starting Node Configuration"
     
 foreach ($Node in $machinesBuilt)
     {
-        $ip="$subnet.22$($Node[-1])"
+        $ip="$subnet.$ip_startrange"
         $NodeClone = get-vmx $Node
         Write-Host -ForegroundColor Magenta " ==> Waiting for $node to boot"
 
@@ -223,10 +223,10 @@ foreach ($Node in $machinesBuilt)
             sleep 5
             }
         until ($ToolState.state -match "running")
-        Write-Host -ForegroundColor Magenta " ==>Setting Shared Folders"
+        Write-Host -ForegroundColor Gray " ==> Setting Shared Folders"
         $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
         # $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources # | Out-Null
-        Write-Host -ForegroundColor Magenta " ==>Adding Shared Folders"        
+        Write-Host -ForegroundColor Gray " ==> Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
         $Scriptblock = "systemctl disable iptables.service"
         Write-Verbose $Scriptblock
@@ -261,10 +261,12 @@ foreach ($Node in $machinesBuilt)
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
+        Write-Host -ForegroundColor Gray " ==> Setting IP $ip for eth0"
         $Scriptblock = "echo 'address $ip' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
+        Write-Host -ForegroundColor Gray " ==> Setting Gateway $DefaultGateway"
         $Scriptblock = "echo 'gateway $DefaultGateway' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
@@ -280,17 +282,18 @@ foreach ($Node in $machinesBuilt)
         $Scriptblock = "echo 'broadcast $subnet.255' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-
+        
+        Write-Host -ForegroundColor Gray " ==> Setting DNS $DNS1,$DNS2"
         $Scriptblock = "echo 'dns-nameservers $DNS1,$DNS2' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
         Write-Host -ForegroundColor Magenta "==> Restarting Guest Network"
-
         $Scriptblock = "/etc/init.d/networking restart"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
+        $ip_startrange++
     
     
     }
