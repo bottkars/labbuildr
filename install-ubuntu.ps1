@@ -126,10 +126,10 @@ $Nodeprefix = "Ubuntu15Node"
 
 $Required_Master = "Ubuntu15_4"
 
-$mastervmx = test-labmaster -Master $Required_Master -MasterPath $MasterPath -Confirm:$Confirm
+#$mastervmx = test-labmaster -Master $Required_Master -MasterPath $MasterPath -Confirm:$Confirm
 
 ###### checking master Present
-if (!($MasterVMX = test-labmaster -Masterpath $MasterPath -Master $Required_Master))
+if (!($MasterVMX = test-labmaster -Masterpath $MasterPath -Master $Required_Master -Confirm:$Confirm))
     {
     Write-Warning "Required Master $Required_Master not found
     please download and extraxt $Required_Master to .\$Required_Master
