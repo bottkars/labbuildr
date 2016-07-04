@@ -332,7 +332,8 @@ foreach ($Node in $machinesBuilt)
             {
                 'cinnamon'
                 {
-                Write-Host -ForegroundColor Magenta " ==> Configuring $Desktop as Desktop, this may take a while"
+                Write-Host -ForegroundColor Magenta " ==> downloaing and configuring $Desktop as Desktop, this may take a while
+    login manager will start after installation finished"
                 $Scriptblock = "apt-get update;apt-get install -y cinnamon-desktop-environment xinit;systemctl start lightdm"
                 Write-Verbose $Scriptblock
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
