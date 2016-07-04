@@ -30,23 +30,38 @@ This will install 3 Ubuntu Nodes UbuntuNode1 -UbuntuNode3 from the Default Ubunt
 Param(
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateRange(1,3)][int32]$Disks = 1,
+[Parameter(ParameterSetName = "install",Mandatory=$False)]
+[ValidateRange(1,3)]
+[int32]$Disks = 1,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir = 'h:\sources',
+[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]
+$Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateRange(1,9)][int32]$Nodes=1,
+[ValidateRange(1,9)]
+[int32]$Nodes=1,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [int32]$Startnode = 1,
-[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
+[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[ValidateScript({$_ -match [IPAddress]$_ })]
+[ipaddress]$subnet = "192.168.2.0",
 [Parameter(ParameterSetName = "install",Mandatory=$False)]
-[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain = "labbuildr",
-[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")]
+[string]$BuildDomain = "labbuildr",
+[Parameter(ParameterSetName = "install",Mandatory = $false)]
+[ValidateSet('vmnet1', 'vmnet2','vmnet3')]
+$vmnet = "vmnet2",
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[ValidateScript({ Test-Path -Path $_ })]
+$Defaultsfile=".\defaults.xml",
+[Parameter(ParameterSetName = "install",Mandatory = $false)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[ValidateSet('cinnamon','none')]
+[string]$Desktop = "none",
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$forcedownload,
-[int]$ip_startrange = 201
+[int]$ip_startrange = 200
 #[Parameter(ParameterSetName = "install",Mandatory = $false)]
 #[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$SIOGateway
 )
@@ -113,7 +128,7 @@ if (!$DNS2)
     }
 if (!$Masterpath) {$Masterpath = $Builddir}
 
-
+$ip_startrange = $ip_startrange+$Startnode
 
 
 
@@ -242,12 +257,17 @@ foreach ($Node in $machinesBuilt)
         ssh-keygen -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa
         ssh-keygen -f /etc/ssh/ssh_host_dsa_key -N '' -t dsa
         #>
-        Write-Host -ForegroundColor Gray " ==> Configuring SSH Keys"
-        $Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa"
+        Write-Host -ForegroundColor Gray " ==> Configuring SSH"
+
+        $Scriptblock = "sed -i '/PermitRootLogin without-password/ c\PermitRootLogin yes' /etc/ssh/sshd_config"
+        Write-Host $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
+
+        $Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa -force"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
     
-        $Scriptblock = "ssh-keygen -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa"
+        $Scriptblock = "/usr/bin/ssh-keygen -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
 
@@ -308,7 +328,7 @@ foreach ($Node in $machinesBuilt)
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         
-        Write-Host -ForegroundColor Gray " ==> Setting DNS $DNS1,$DNS2"
+        Write-Host -ForegroundColor Gray " ==> Setting DNS $DNS1 $DNS2"
         $Scriptblock = "echo 'dns-nameservers $DNS1,$DNS2' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
@@ -317,6 +337,24 @@ foreach ($Node in $machinesBuilt)
         $Scriptblock = "/etc/init.d/networking restart"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+
+
+        ###
+        switch ($Desktop)
+            {
+                'cinnamon'
+                {
+                Write-Host -ForegroundColor Magenta " ==> Configuring $Desktop as Desktop"
+                $Scriptblock = "apt-get update;apt-get install -y cinnamon-desktop-environment xinit;systemctl start lightdm"
+                Write-Verbose $Scriptblock
+                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+                }
+            default
+                {
+                }
+            }
+
+        ####
 
         $ip_startrange++
     
