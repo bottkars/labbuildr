@@ -364,7 +364,7 @@ foreach ($Node in $machinesBuilt)
                 {
                 Write-Host -ForegroundColor Magenta " ==> downloading and configuring $Desktop as Desktop, this may take a while
     login manager will start after installation finished"
-                $Scriptblock = "apt-get update;apt-get install -y cinnamon-desktop-environment xinit;systemctl start lightdm"
+                $Scriptblock = "apt-get update >> /tmp/cinamon.log;apt-get install -y cinnamon-desktop-environment xinit >> /tmp/cinamon.log;systemctl start lightdm >> /tmp/cinamon.log"
                 Write-Verbose $Scriptblock
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
                 }
@@ -381,7 +381,6 @@ foreach ($Node in $machinesBuilt)
     }
 $StopWatch.Stop()
 Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
-
 Write-Host -ForegroundColor Yellow "Login to the VM´s with root/Password123!"
     
 

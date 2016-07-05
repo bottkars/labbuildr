@@ -80,14 +80,10 @@ switch ($PsCmdlet.ParameterSetName)
         $Content | Set-Content $PSScriptRoot\$mastername\$mastername.vmx
         $Mastervmx = get-vmx -path $PSScriptRoot\$mastername\$mastername.vmx
         $Mastervmx | Set-VMXHWversion -HWversion 7
-        write-Warning "Now run .\install-cloudboost.ps1 -Master .\$mastername -Defaults " 
+        Write-Host -ForegroundColor Yellow " ==>Now run .\install-cloudboost.ps1 -Master .\$mastername -Defaults " 
         }
 default
     {
-
-
-            
-            
     If ($Defaults.IsPresent)
             {
             $labdefaults = Get-labDefaults
@@ -100,30 +96,29 @@ default
             $DNS1 = $labdefaults.DNS1
             $configure = $true
             }
-
-
-
+        [System.Version]$subnet = $Subnet.ToString()
+    $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
+        
     $Nodeprefix = "cloudboost"
+
     If (!($MasterVMX = get-vmx -path $Master))
       {
-       Write-Error "No Valid Master Found"
+       Write-Warning "No Valid Master Found, please import Cloudboost OVA template first with .\install-cloudboost.ps1 -ovf [path to ova template]"
       break
      }
-    
-
-    $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
+    Write-Host -ForegroundColor Magenta " ==>Checking for Basesnap"    
+    $Basesnap = $MasterVMX | Get-VMXSnapshot -WarningAction SilentlyContinue| where Snapshot -Match "Base"
     if (!$Basesnap) 
         {
-
-        Write-Verbose "Tweaking VMX File"
+        Write-Host -ForegroundColor Gray " ==> Tweaking Base VMX File"
         $Config = Get-VMXConfig -config $MasterVMX.Config
         $Config = $Config -notmatch 'snapshot.maxSnapshots'
         $Config | set-Content -Path $MasterVMX.Config
-        Write-verbose "Base snap does not exist, creating now"
+        Write-Host -ForegroundColor Magenta " ==>Base snap does not exist, creating now"
         $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
         if (!$MasterVMX.Template) 
             {
-            write-verbose "Templating Master VMX"
+            Write-Host -ForegroundColor Gray " ==> Templating Master VMX"
             $template = $MasterVMX | Set-VMXTemplate
             }
 
@@ -132,30 +127,38 @@ default
 
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         {
-        Write-Verbose "Checking VM $Nodeprefix$node already Exists"
-        If (!(get-vmx $Nodeprefix$node))
+        Write-Host -ForegroundColor Magenta " ==>Checking VM $Nodeprefix$node already Exists"
+        If (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue))
             {
-            write-verbose "Creating clone $Nodeprefix$node"
+            Write-Host -ForegroundColor Magenta " ==>Creating clone $Nodeprefix$node"
             $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$node 
-            Write-Verbose "tweaking $Nodeprefix to run on Workstation"
-            $NodeClone | Set-VMXmemory -MemoryMB 8192
-            Write-Verbose "Setting ext-0"
-            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType e1000 -PCISlot 32 -config $NodeClone.Config
-            Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config
+            Write-Host -ForegroundColor Gray " ==> tweaking $Nodeprefix to run on Workstation"
+            $NodeClone | Set-VMXmemory -MemoryMB 8192 | Out-Null
+            Write-Host -ForegroundColor Gray " ==> Setting eth0 to e1000/slot32"
+            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType e1000 -PCISlot 32 -config $NodeClone.Config -WarningAction SilentlyContinue | Out-Null
+            Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config -WarningAction SilentlyContinue | Out-Null
             $Scenario = Set-VMXscenario -config $NodeClone.Config -Scenarioname $Nodeprefix -Scenario 6
             $ActivationPrefrence = Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node 
             # Set-VMXVnet -Adapter 0 -vnet vmnet2
-            write-verbose "Setting Display Name $($NodeClone.CloneName)@$Builddomain"
-            Set-VMXDisplayName -config $NodeClone.Config -Displayname "$($NodeClone.CloneName)@$Builddomain" 
-            Write-Verbose "Starting $Nodeprefix$node"
+            Write-Host -ForegroundColor Gray " ==> Setting Display Name $($NodeClone.CloneName)@$Builddomain"
+            Set-VMXDisplayName -config $NodeClone.Config -Displayname "$($NodeClone.CloneName)@$Builddomain" | Out-Null
+            Write-Host -ForegroundColor Magenta " ==>Starting $Nodeprefix$node"
             start-vmx -Path $NodeClone.config -VMXName $NodeClone.CloneName
             } # end check vm
         else
             {
-            Write-Verbose "VM $Nodeprefix$node already exists"
+            Write-Host -ForegroundColor Yellow " ==>VM $Nodeprefix$node already exists"
             }
         }#end foreach
-    write-Warning "Login to cloudboost with admin / password"
+    Write-Host -ForegroundColor White "change the default password on admin console
+    for CloudBoost 2.1 run 
+    
+net config eth0 $subnet.7$Node netmask 255.255.255.0 
+route add 0.0.0.0 netmask 0.0.0.0 gw $DefaultGateway
+dns set primary $DNS1
+fqdn $Nodeprefix$Node.$BuildDomain.local
+"
+
     } # end default
 
 
