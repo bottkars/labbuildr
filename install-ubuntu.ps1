@@ -137,7 +137,7 @@ switch ($ubuntu_ver)
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 $rootuser = "root"
 $Guestpassword = "Password123!"
-[uint]$Disksize = 100GB
+[uint64]$Disksize = 100GB
 $scsi = 0
 $Nodeprefix = "Ubuntu"
 $Required_Master = "Ubuntu$ubuntu_ver"
