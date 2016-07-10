@@ -2691,7 +2691,7 @@ else
         if ($NW.IsPresent)
             {
             Write-Host -ForegroundColor Magenta " ==> Install NWClient"
-		    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+		    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter "-nw_ver $nw_ver"
             }
         invoke-postsection 
 		# run-vmpowershell -Script gpo.ps1 -interactive
@@ -2785,7 +2785,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 				    Write-Host -ForegroundColor White  " ==>Installing Networker $nmm_ver an NMM $nmm_ver on all Nodes"
 					Write-Host -ForegroundColor White  $CloneVMX
 					Write-Host -ForegroundColor Magenta " ==>Install NWClient"
-					invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+					invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter "-nw_ver $nw_ver"
                     Write-Host -ForegroundColor Magenta " ==> Install NMM"
 					invoke-vmxpowershell -config $CloneVMX -ScriptPath "$IN_Guest_UNC_Scriptroot\SQL" -Script install-nmm.ps1 -interactive -Parameter "-nmm_ver $nmm_ver" -Guestuser $Adminuser -Guestpassword $Adminpassword
                     Write-Host -ForegroundColor Magenta " ==> Finishing Always On"
@@ -2933,7 +2933,7 @@ switch ($PsCmdlet.ParameterSetName)
 			if ($NMM.IsPresent)
 			{
 				Write-Host -ForegroundColor Magenta " ==> Install NWClient"
-				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter "-nw_ver $nw_ver"
 				Write-Host -ForegroundColor Magenta " ==> Install NMM"
 				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-nmm.ps1 -interactive -Parameter "-nmm_ver $nmm_ver"
 			    Write-Host -ForegroundColor Magenta " ==> Performin NMM Post Install Tasks"
@@ -3076,7 +3076,7 @@ switch ($PsCmdlet.ParameterSetName)
 			if ($NMM.IsPresent)
 			{
 				Write-Host -ForegroundColor Magenta " ==> Install NWClient"
-				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter "-nw_ver $nw_ver"
 				Write-Host -ForegroundColor Magenta " ==> Install NMM"
 				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-nmm.ps1 -interactive -Parameter "-nmm_ver $nmm_ver"
 			    Write-Host -ForegroundColor Magenta " ==> Performin NMM Post Install Tasks"
@@ -3238,7 +3238,7 @@ switch ($PsCmdlet.ParameterSetName)
 			if ($NMM.IsPresent)
 			{
 				Write-Host -ForegroundColor Magenta " ==> Install NWClient"
-				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter "-nw_ver $nw_ver"
 				Write-Host -ForegroundColor Magenta " ==> Install NMM"
 				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-nmm.ps1 -interactive -Parameter "-nmm_ver $nmm_ver"
 			    Write-Host -ForegroundColor Magenta " ==> Performin NMM Post Install Tasks"
@@ -3461,7 +3461,7 @@ switch ($PsCmdlet.ParameterSetName)
 	            if ($NMM.IsPresent)
 		            {
 			        Write-Host -ForegroundColor Gray " ==> Install NWClient"
-			        invoke-vmxpowershell -config $CloneVMX -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver -Guestuser $Adminuser -Guestpassword $Adminpassword
+			        invoke-vmxpowershell -config $CloneVMX -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive _parameter "-nw_ver $nw_ver" -Guestuser $Adminuser -Guestpassword $Adminpassword
 			        
                     Write-Host -ForegroundColor Gray " ==> Install NMM"
                     $NMM_Parameter = "-nmm_ver $nmm_ver"
@@ -3662,7 +3662,7 @@ switch ($PsCmdlet.ParameterSetName)
 				    Write-Host -ForegroundColor White  "Installing Networker $nmm_ver an NMM $nmm_ver on all Nodes"
 					Write-Host -ForegroundColor White  $CloneVMX
 					Write-Host -ForegroundColor Gray " ==> Install NWClient"
-					invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_Scriptroot -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+					invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_Scriptroot -Script install-nwclient.ps1 -interactive -Parameter "-nw_ver $nw_ver" 
                     Write-Host -ForegroundColor Gray " ==> Install NMM"
 					invoke-vmxpowershell -config $CloneVMX -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-nmm.ps1 -interactive -Parameter "-nmm_ver $nmm_ver" -Guestuser $Adminuser -Guestpassword $Adminpassword
 					}
@@ -3756,7 +3756,7 @@ switch ($PsCmdlet.ParameterSetName)
                 if ($NW.IsPresent)
                     {
                     Write-Host -ForegroundColor Gray " ==> Install NWClient"
-		            invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+		            invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter "-nw_ver $nw_ver"
                     }
 				invoke-postsection
 			}# end Cloneok
@@ -3885,7 +3885,7 @@ switch ($PsCmdlet.ParameterSetName)
 			if ($NMM.IsPresent)
 			{
 				Write-Host -ForegroundColor Gray " ==> Install NWClient"
-				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter "-nw_ver $nw_ver"
 				Write-Host -ForegroundColor Gray " ==> Install NMM"
 				invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-nmm.ps1 -interactive -Parameter "-nmm_ver $nmm_ver"
 			}# End NoNmm
@@ -3972,7 +3972,7 @@ switch ($PsCmdlet.ParameterSetName)
         if ($NW.IsPresent)
             {
             Write-Host -ForegroundColor Gray " ==> Install NWClient"
-		    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+		    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter "-nw_ver $nw_ver"
             }
         invoke-postsection -wait
         Write-Host -ForegroundColor Gray " ==> Building SRM Server"
@@ -4018,7 +4018,7 @@ switch ($PsCmdlet.ParameterSetName)
         if ($NW.IsPresent)
             {
             Write-Host -ForegroundColor Gray " ==> Install NWClient"
-		    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter $nw_ver
+		    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter "-nw_ver $nw_ver"
             }
         invoke-postsection -wait
         Write-Host -ForegroundColor Gray " ==> Installing SQL Binaries"
