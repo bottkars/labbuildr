@@ -3461,7 +3461,7 @@ switch ($PsCmdlet.ParameterSetName)
 	            if ($NMM.IsPresent)
 		            {
 			        Write-Host -ForegroundColor Gray " ==> Install NWClient"
-			        invoke-vmxpowershell -config $CloneVMX -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive _parameter "-nw_ver $nw_ver" -Guestuser $Adminuser -Guestpassword $Adminpassword
+			        invoke-vmxpowershell -config $CloneVMX -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter "-nw_ver $nw_ver" -Guestuser $Adminuser -Guestpassword $Adminpassword
 			        
                     Write-Host -ForegroundColor Gray " ==> Install NMM"
                     $NMM_Parameter = "-nmm_ver $nmm_ver"
