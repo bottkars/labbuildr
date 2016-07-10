@@ -183,7 +183,7 @@ Specify if Networker Scenario sould be installed
     CU Location is [Driveletter]:\sources\e2016[cuver], e.g. c:\sources\e2016Preview1
     #>
 	[Parameter(ParameterSetName = "E16", Mandatory = $false)]
-    [ValidateSet('cu1','final')]
+    [ValidateSet('cu2','cu1','final')]
     $e16_cu,
 <#
     Determines Exchange CU Version to be Installed
@@ -193,7 +193,7 @@ Specify if Networker Scenario sould be installed
     CU Location is [Driveletter]:\sources\e2013[cuver], e.g. c:\sources\e2013cu7
     #>
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
-    [ValidateSet('cu1', 'cu2', 'cu3', 'sp1','cu5','cu6','cu7','cu8','cu9','cu10','CU11','cu12','cu13')]
+    [ValidateSet('cu1','cu2','cu3','sp1','cu5','cu6','cu7','cu8','cu9','cu10','cu11','cu12','cu13')]
     [alias('ex_cu')]$e15_cu,
 
 <#
