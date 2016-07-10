@@ -425,7 +425,7 @@ Machine Sizes
 'L'   = 2vCPU, 2048MB
 'XL'  = 2vCPU, 4096MB 
 'TXL' = 2vCPU, 6144MB
-'XXL' = 4vCPU, 6144MB
+'XXL' = 4vCPU, 8192MB
 'XXXL' = 4vCPU, 8192MB
 #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
@@ -1863,7 +1863,7 @@ Switch ($Totalmemory)
 	{ $_ -gt 8 -and $_ -le 16 }
 	{
 		$Computersize = 2
-		$Exchangesize = "XL"
+		$Exchangesize = "TXL"
         $SQLSize = "XL"
 	}
 	{ $_ -gt 16 -and $_ -le 32 }

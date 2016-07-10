@@ -134,7 +134,7 @@ $content += 'memsize = "4096"'
 $Content += 'numvcpus = "2"'
 }
 "TXL"{
-$content += 'memsize = "6144"'
+$content += 'memsize = "8192"'
 $Content += 'numvcpus = "2"'
 }
 "XXL"{
