@@ -4010,7 +4010,7 @@ switch ($PsCmdlet.ParameterSetName)
 	###################################################
 	# APPSYNC Setup
 	###################################################
-	$Nodeip = "$IPv4Subnet.17"
+	$Nodeip = "$IPv4Subnet.14"
 	$NodePrefix = "APPSYNC"
     $Nodename = $NodePrefix
 	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
