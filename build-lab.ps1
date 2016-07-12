@@ -137,7 +137,7 @@ Specify if Networker Scenario sould be installed
     [ValidateSet(
     '3.0.0'
     )]
-    $AP_VER='3.0.0',
+    $APPSYNC_VER='3.0.0',
 
     <#
     Selects the Microsoft System Center Binary Install
@@ -4017,7 +4017,7 @@ switch ($PsCmdlet.ParameterSetName)
     $Nodename = $NodePrefix
 	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NodePrefix"
-    [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS" 
+    [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, Desktop-Experience" 
 	###################################################
 	Write-Host -ForegroundColor White  "Creating APPSYNC Server $Nodename"
   	Write-Verbose $IPv4Subnet
@@ -4046,7 +4046,7 @@ switch ($PsCmdlet.ParameterSetName)
             }
         invoke-postsection -wait
         Write-Host -ForegroundColor Gray " ==> Building APPSYNC Server"
-	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script INSTALL-APPSYNC.ps1 -interactive -parameter "-APPSYNC_VER $APPSYNC_VER $CommonParameter"
+	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script INSTALL-APPSYNC.ps1 -interactive -parameter "-APPSYNC_VER $AppSync_ver $CommonParameter"
         Write-Host -ForegroundColor White "You can now Connect to http://$($Nodeip):58080/APG/ with admin/changeme"
 	
 }
