@@ -465,8 +465,6 @@ Machine Sizes
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
-    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
-    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
