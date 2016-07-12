@@ -132,6 +132,13 @@ Specify if Networker Scenario sould be installed
     '3.6.0.3'
     )]
     $SRM_VER='4.0.0.0',
+    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $true)][switch][alias('asc')]$AppSync,
+    [Parameter(ParameterSetName = "APPSYNC")]
+    [ValidateSet(
+    '3.0.0'
+    )]
+    $AP_VER='4.0.0.0',
+
     <#
     Selects the Microsoft System Center Binary Install
     IP-Addresses: .18
@@ -347,6 +354,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [ValidateSet(
     '2016TP5','2016TP5_GER',
     '2012R2_Ger','2012_R2',
@@ -368,6 +376,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [ValidateScript({ Test-Path -Path $_ })]$Masterpath,
     <# Do we want Additional Disks / of additional 100GB Disks for ScaleIO. The disk will be made ready for ScaleIO usage in Guest OS#>	
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
@@ -394,6 +403,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet,
 
  #   [Parameter(Mandatory = $false, HelpMessage = "Enter a valid VMware network Number vmnet between 1 and 19 ")]
@@ -409,6 +419,7 @@ Specify if Networker Scenario sould be installed
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
 	[switch]$savedefaults,
@@ -438,6 +449,7 @@ Machine Sizes
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
 	[ValidateSet('XS', 'S', 'M', 'L', 'XL', 'TXL', 'XXL', 'XXXL')]$Size = "M",
 	
 <# Specify your own Domain name#>
@@ -452,6 +464,9 @@ Machine Sizes
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
+    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
+    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
@@ -512,6 +527,7 @@ Version Of Networker Modules
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
 	[switch]$NW,
     <#
@@ -548,6 +564,7 @@ Version Of Networker Server / Client to be installed
     [Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [ValidateSet(
@@ -587,6 +604,7 @@ This should be used in Distributed scenario´s
 	[Parameter(ParameterSetName = "Isilon", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
     [switch]$NoDomainCheck,
@@ -602,6 +620,7 @@ This should be used in Distributed scenario´s
     [Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[Validatepattern(‘(?<Address>((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))’)]$MySubnet,
@@ -623,7 +642,8 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
-    [Validateset('IPv4','IPv6','IPv4IPv6')]$AddressFamily, 
+     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
+   [Validateset('IPv4','IPv6','IPv4IPv6')]$AddressFamily, 
 
 <# Specify your IPv6 ULA Prefix, consider https://www.sixxs.net/tools/grh/ula/  #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
@@ -640,6 +660,7 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [ValidateScript({$_ -match [IPAddress]$_ })]$IPV6Prefix,
 
 <# Specify your IPv6 ULA Prefix Length, #>
@@ -657,6 +678,7 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
     $IPv6PrefixLength,
 <# 
@@ -677,6 +699,7 @@ Sources should be populated from a bases sources.zip
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
     [String]$Sourcedir,
@@ -701,6 +724,7 @@ Sources should be populated from a bases sources.zip
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[switch]$ConsoleLog
@@ -3983,6 +4007,53 @@ switch ($PsCmdlet.ParameterSetName)
 	
 }
 } #SRM End
+"APPSYNC"
+{
+	###################################################
+	# APPSYNC Setup
+	###################################################
+	$Nodeip = "$IPv4Subnet.17"
+	$NodePrefix = "APPSYNC"
+    $Nodename = $NodePrefix
+	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+    $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NodePrefix"
+    [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS" 
+	###################################################
+	Write-Host -ForegroundColor White  "Creating APPSYNC Server $Nodename"
+  	Write-Verbose $IPv4Subnet
+    write-verbose $Nodename
+    write-verbose $Nodeip
+    if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+        { 
+        Write-verbose "Now Pausing, Clone Process will start after keypress"
+        pause
+        }
+
+	test-dcrunning
+	$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Gateway -size XXL -Sourcedir $Sourcedir $CommonParameter"
+	###################################################
+	If ($CloneOK)
+	{
+		Write-Host -ForegroundColor Gray " ==> Waiting for firstboot finished"
+		test-user -whois Administrator
+		Write-Host -ForegroundColor Gray " ==> Starting Customization"
+		domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddonFeatures $AddonFeatures
+		While (([string]$UserLoggedOn = (&$vmrun -gu Administrator -gp Password123! listProcessesInGuest $CloneVMX)) -notmatch "owner=$BuildDomain\\Administrator") { write-host -NoNewline "." }
+        if ($NW.IsPresent)
+            {
+            Write-Host -ForegroundColor Gray " ==> Install NWClient"
+		    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter "-nw_ver $nw_ver"
+            }
+        invoke-postsection -wait
+        Write-Host -ForegroundColor Gray " ==> Building APPSYNC Server"
+	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script INSTALL-APPSYNC.ps1 -interactive -parameter "-APPSYNC_VER $APPSYNC_VER $CommonParameter"
+        Write-Host -ForegroundColor White "You can now Connect to http://$($Nodeip):58080/APG/ with admin/changeme"
+	
+}
+} #APPSYNC End
+
+
+
 
 "SCOM"
 {
@@ -4031,7 +4102,7 @@ switch ($PsCmdlet.ParameterSetName)
 #        Write-Host -ForegroundColor White "You cn now Connect to http://$($Nodeip):58080/APG/ with admin/changeme"
 	
 }
-} #SRM End
+} #APPSYNC End
 
 
 
