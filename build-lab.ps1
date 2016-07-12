@@ -137,7 +137,7 @@ Specify if Networker Scenario sould be installed
     [ValidateSet(
     '3.0.0'
     )]
-    $AP_VER='4.0.0.0',
+    $AP_VER='3.0.0',
 
     <#
     Selects the Microsoft System Center Binary Install
@@ -315,6 +315,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
 	[switch]$defaults,
@@ -334,6 +335,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Switch]$Toolsupdate,
 
     
