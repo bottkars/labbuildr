@@ -1376,7 +1376,16 @@ switch ($PsCmdlet.ParameterSetName)
         foreach ($Repo in $labbuildr_modules_required)
             {
         $RepoLocation = "bottkars"
-        [datetime]$Latest_local_git = Get-Content  ($Builddir + "\$($Repo)-$branch.gitver") -ErrorAction SilentlyContinue
+        try 
+            {
+            [datetime]$Latest_local_git = Get-Content  ($Builddir + "\$($Repo)-$branch.gitver") -ErrorAction Stop
+            }
+        catch 
+            {
+            [datetime]$Latest_labbuildr_git = "07/11/2015"
+            }
+
+            
         #$Latest_local_git = $Latest_$($repo)_git
         $Destination = "$Builddir\$Repo"
         if ($Has_update = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -delete)
