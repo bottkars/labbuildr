@@ -137,7 +137,7 @@ Specify if Networker Scenario sould be installed
     [ValidateSet(
     '3.0.0'
     )]
-    $APPSYNC_VER='3.0.0',
+    $AP_VER='3.0.0',
 
     <#
     Selects the Microsoft System Center Binary Install
@@ -1376,16 +1376,7 @@ switch ($PsCmdlet.ParameterSetName)
         foreach ($Repo in $labbuildr_modules_required)
             {
         $RepoLocation = "bottkars"
-        try 
-            {
-            [datetime]$Latest_local_git = Get-Content  ($Builddir + "\$($Repo)-$branch.gitver") -ErrorAction Stop
-            }
-        catch 
-            {
-            [datetime]$Latest_labbuildr_git = "07/11/2015"
-            }
-
-            
+        [datetime]$Latest_local_git = Get-Content  ($Builddir + "\$($Repo)-$branch.gitver") 
         #$Latest_local_git = $Latest_$($repo)_git
         $Destination = "$Builddir\$Repo"
         if ($Has_update = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -delete)
@@ -2037,7 +2028,7 @@ if ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG" -or $SPdbtyp
 #if ($NWServer.IsPresent -or $NW.IsPresent)
 
 #################################################
-## Download Section       ######################
+## Download Sewction       ######################
 #################################################
 Write-Verbose "Entering Download Section"
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
@@ -2045,7 +2036,7 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     write-host "Press enter to Continue to Automatic Downloads or ctrl-c to exit"
     Pause
     }
-Write-Host -ForegroundColor Magenta " ==>Entering Download Section"
+Write-Host -ForegroundColor Magenta "==> Entering Download Section"
 
 ##### exchange downloads section
 if ($Exchange2010.IsPresent)
@@ -4026,7 +4017,7 @@ switch ($PsCmdlet.ParameterSetName)
     $Nodename = $NodePrefix
 	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NodePrefix"
-    [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, Desktop-Experience" 
+    [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS" 
 	###################################################
 	Write-Host -ForegroundColor White  "Creating APPSYNC Server $Nodename"
   	Write-Verbose $IPv4Subnet
@@ -4055,7 +4046,7 @@ switch ($PsCmdlet.ParameterSetName)
             }
         invoke-postsection -wait
         Write-Host -ForegroundColor Gray " ==> Building APPSYNC Server"
-	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script INSTALL-APPSYNC.ps1 -interactive -parameter "-APPSYNC_VER $AppSync_ver $CommonParameter"
+	    invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script INSTALL-APPSYNC.ps1 -interactive -parameter "-APPSYNC_VER $APPSYNC_VER $CommonParameter"
         Write-Host -ForegroundColor White "You can now Connect to http://$($Nodeip):58080/APG/ with admin/changeme"
 	
 }
