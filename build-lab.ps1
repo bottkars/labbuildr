@@ -4017,7 +4017,7 @@ switch ($PsCmdlet.ParameterSetName)
     $Nodename = $NodePrefix
 	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NodePrefix"
-    [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS Desktop-Experience" 
+    [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, Desktop-Experience" 
 	###################################################
 	Write-Host -ForegroundColor White  "Creating APPSYNC Server $Nodename"
   	Write-Verbose $IPv4Subnet
