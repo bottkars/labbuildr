@@ -371,10 +371,7 @@ foreach ($Node in $machinesBuilt)
                 Write-Verbose $Scriptblock
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-                Write-Host -ForegroundColor Magenta " ==> reconfiguring vmware tools for xdm"
-                $Scriptblock = "/usr/bin/perl /usr/bin/vmware-config-tools.pl -d >> /tmp/toolsconfig.log"
-                Write-Verbose $Scriptblock
-                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+                Write-Host -ForegroundColor Blue " for full screen resolution, run /usr/bin/vmware-config-tools.pl -d"
 
                 Write-Host -ForegroundColor Magenta " ==> starting login manager"
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
