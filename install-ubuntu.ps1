@@ -367,12 +367,12 @@ foreach ($Node in $machinesBuilt)
                 'cinnamon'
                 {
                 Write-Host -ForegroundColor Magenta " ==> downloading and configuring $Desktop as Desktop, this may take a while"
-                $Scriptblock = "apt-get update >> /tmp/cinamon.log;apt-get install -y cinnamon-desktop-environment xinit >> /tmp/cinamon.log;systemctl start lightdm >> /tmp/cinamon.log"
+                $Scriptblock = "apt-get update >> /tmp/cinamon.log;apt-get install -y cinnamon-desktop-environment xinit >> /tmp/cinamon.log"
                 Write-Verbose $Scriptblock
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
                 Write-Host -ForegroundColor Magenta " ==> reconfiguring vmware tools for xdm"
-                $Scriptblock = "/usr/bin/vmware-config-tools.pl -d >> /tmp/toolsconfig.log"
+                $Scriptblock = "/usr/bin/perl /usr/bin/vmware-config-tools.pl -d >> /tmp/toolsconfig.log"
                 Write-Verbose $Scriptblock
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
