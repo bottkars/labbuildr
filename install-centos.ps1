@@ -333,7 +333,7 @@ foreach ($Node in $machinesBuilt)
     if ($Desktop -ne "none")
         {
         Write-Host -ForegroundColor Magenta " ==> Installing X-Windows environment"
-        $Scriptblock = 'yum groupinstall -y "X Window system'
+        $Scriptblock = "yum groupinstall -y `'X Window system'"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         }
