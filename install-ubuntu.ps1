@@ -362,9 +362,18 @@ foreach ($Node in $machinesBuilt)
             {
                 'cinnamon'
                 {
-                Write-Host -ForegroundColor Magenta " ==> downloading and configuring $Desktop as Desktop, this may take a while
-    login manager will start after installation finished"
+                Write-Host -ForegroundColor Magenta " ==> downloading and configuring $Desktop as Desktop, this may take a while"
                 $Scriptblock = "apt-get update >> /tmp/cinamon.log;apt-get install -y cinnamon-desktop-environment xinit >> /tmp/cinamon.log;systemctl start lightdm >> /tmp/cinamon.log"
+                Write-Verbose $Scriptblock
+                
+                Write-Host -ForegroundColor Magenta " ==> reconfiguring vmware tools"
+                $Scriptblock = "/usr/bin/vmware-config-tools.pl >> /tmp/toolsconfig.log"
+                Write-Verbose $Scriptblock
+                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+
+                Write-Host -ForegroundColor Magenta " ==> starting login manager"
+                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+                $Scriptblock = "systemctl enable lightdm >> /tmp/lightdm.log;systemctl start lightdm >> /tmp/lightdm.log"
                 Write-Verbose $Scriptblock
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
                 }
