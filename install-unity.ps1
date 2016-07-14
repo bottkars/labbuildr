@@ -96,7 +96,7 @@ switch ($PsCmdlet.ParameterSetName)
             $OVFfile = Get-Item $ovf
             $mastername = $OVFfile.BaseName
             }
-        Import-VMXOVATemplate -OVA E:\EMC_VAs\UnityVSA-4.0.0.7329527.ova -acceptAllEulas -AllowExtraConfig -destination $MasterPath
+        Import-VMXOVATemplate -OVA $ovf -acceptAllEulas -AllowExtraConfig -destination $MasterPath
         #   & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $ovf $PSScriptRoot #
         Write-Host -ForegroundColor Magenta  "Use .\install-Unity.ps1 -Masterpath $Masterpath -Mastername $Mastername 
         .\install-Unity.ps1 -Defaults to try defaults"

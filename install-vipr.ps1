@@ -114,31 +114,6 @@ foreach ($Disk in $Disks)
                     Write-Warning $_.Exception
                     exit
                     }
-                <#
-                $Length = $request.Headers.'content-length'
-                # Start-BitsTransfer -Source $ViprURL -Destination "$Sourcedir\$viprmaster.zip" -Verbose
-                try
-                    {
-                    $Size = "{0:N2}" -f ($Length/1GB)
-                    Write-Warning "
-                    Trying to download $ViprURL 
-                    The File size is $($size)GB, this might take a while....
-                    Please do not interrupt the download"
-                    Invoke-WebRequest $ViprURL -OutFile "$Sourcedir\$viprmaster.zip" -Verbose
-                    }
-                catch [Exception] 
-                    {
-                    Write-Warning "Could not downlod $ViprURL. please download manually"
-                    Write-Warning $_.Exception
-                    exit
-                    }
-                   
-                if ( (Get-ChildItem  "$Sourcedir\$viprmaster.zip").length -ne $Length)
-                    {
-                    Write-Warning "File size does not match"
-                    Remove-Item "$Sourcedir\$viprmaster.zip" -Force
-                    exit
-                    }  #>                      
                 }
             }
 
