@@ -328,6 +328,34 @@ foreach ($Node in $machinesBuilt)
         # $Scriptblock = "yum install $requires -y"
         #Write-Verbose $Scriptblock
         #$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/yum-requires.log | Out-Null
+    
+    #yum groupinstall "X Window system"
+    if ($Desktop -ne "none")
+        {
+        Write-Host -ForegroundColor Magenta " ==> Installing X-Windows environment"
+        $Scriptblock = 'yum groupinstall -y "X Window system'
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+        }
+        switch ($Desktop)
+            {
+                'cinnamon'
+                {
+                Write-Host -ForegroundColor Magenta " ==> adding EPEL Repo"
+                $Scriptblock = 'wget http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-6.noarch.rpm; rpm -ivh epel-release-7-6.noarch.rpm'
+                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+                
+                
+                Scriptblock = "yum install -y lightdm cinnamon"
+                Write-Verbose $Scriptblock
+                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+
+                 #Scriptblock = "systemctl enable lightdm >> /tmp/lightdm.log;systemctl start lightdm >> /tmp/lightdm.log"
+
+                }
+            default
+                {
+                }
     }
 $StopWatch.Stop()
 Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
