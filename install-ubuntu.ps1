@@ -28,7 +28,8 @@ This will install 3 Ubuntu Nodes Ubuntu1 -Ubuntu3 from the Default Ubuntu Master
     SupportsShouldProcess=$true,
     ConfirmImpact="Medium")]
 Param(
-[Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
+[Parameter(ParameterSetName = "defaults", Mandatory = $true)]
+[switch]$Defaults,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$False)]
 [ValidateRange(1,3)]
@@ -69,8 +70,6 @@ $Defaultsfile=".\defaults.xml",
 #[Parameter(ParameterSetName = "install",Mandatory = $false)]
 #[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$SIOGateway
 )
-#requires -version 3.0
-#requires -module vmxtoolkit
 #requires -version 3.0
 #requires -module vmxtoolkit
 If ($ConfirmPreference -match "none")

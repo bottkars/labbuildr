@@ -118,16 +118,18 @@ if (!$DNS2)
 if (!$Masterpath) {$Masterpath = $Builddir}
 
 $ip_startrange = $ip_startrange+$Startnode
-
+$OS = "Centos$centos_ver"
 switch ($centos_ver)
     {
     "7"
         {
         $netdev = "eno16777984"
+        $Required_Master = "$OS Master"
         }
     default
         {
         $netdev= "eno16777984"
+        $Required_Master = $OS
         }
     }
 [System.Version]$subnet = $Subnet.ToString()
@@ -137,7 +139,6 @@ $Guestpassword = "Password123!"
 [uint64]$Disksize = 100GB
 $scsi = 0
 $Nodeprefix = "Centos"
-$Required_Master = "Centos$centos_ver Master"
 try
     {
     $yumcachedir = join-path -Path $Sourcedir "$OS\cache\yum" -ErrorAction stop
