@@ -332,7 +332,7 @@ foreach ($Node in $machinesBuilt)
     #yum groupinstall "X Window system"
     if ($Desktop -ne "none")
         {
-        Write-Host -ForegroundColor Magenta " ==> Installing X-Windows environment"
+        Write-Host -ForegroundColor Gray " ==> Installing X-Windows environment"
         $Scriptblock = "yum groupinstall -y `'X Window system'"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
@@ -341,11 +341,11 @@ foreach ($Node in $machinesBuilt)
             {
                 'cinnamon'
                 {
-                Write-Host -ForegroundColor Magenta " ==> adding EPEL Repo"
-                $Scriptblock = 'wget http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-7.noarch.rpm; rpm -ivh epel-release-7-7.noarch.rpm'
+                Write-Host -ForegroundColor Gray " ==> adding EPEL Repo"
+                $Scriptblock = 'rpm -i http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-7.noarch.rpm'
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
                 
-                
+                Write-Host -ForegroundColor Gray " ==> Installing Display Manager"
                 $Scriptblock = "yum install -y lightdm cinnamon"
                 Write-Verbose $Scriptblock
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
