@@ -342,11 +342,11 @@ foreach ($Node in $machinesBuilt)
                 'cinnamon'
                 {
                 Write-Host -ForegroundColor Magenta " ==> adding EPEL Repo"
-                $Scriptblock = 'wget http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-6.noarch.rpm; rpm -ivh epel-release-7-6.noarch.rpm'
+                $Scriptblock = 'wget http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-7.noarch.rpm; rpm -ivh epel-release-7-7.noarch.rpm'
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
                 
                 
-                Scriptblock = "yum install -y lightdm cinnamon"
+                $Scriptblock = "yum install -y lightdm cinnamon"
                 Write-Verbose $Scriptblock
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
