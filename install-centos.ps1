@@ -357,6 +357,7 @@ foreach ($Node in $machinesBuilt)
                 {
                 }
     }
+}
 $StopWatch.Stop()
 Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
 write-Host -ForegroundColor White "Login to the VM´s with root/Password123!"
