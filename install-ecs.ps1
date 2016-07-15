@@ -248,13 +248,13 @@ catch [System.Management.Automation.DriveNotFoundException]
         Write-Host -ForegroundColor Magenta " ==>Customizing VM"
         $Config = Get-VMXConfig -config $NodeClone.config
         Write-Verbose "Tweaking Config"
-        Write-Host -ForegroundColor Magenta " ==>Creating Disks"
+        Write-Host -ForegroundColor Gray " ==>Creating Disks"
         $devices = @()
         foreach ($LUN in (1..$Disks))
             {
             $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-            Write-Host -ForegroundColor Magenta " --->Building new Disk $Diskname"
-            Write-Host -ForegroundColor Magenta " --->Device: /dev/sd$([convert]::ToChar(97+$LUN))"
+            Write-Host -ForegroundColor Gray " ==>Building new Disk $Diskname"
+            Write-Host -ForegroundColor Gray " ==>Device: /dev/sd$([convert]::ToChar(97+$LUN))"
             $Devices += "sd$([convert]::ToChar(97+$LUN))"
             $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
             Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
@@ -289,7 +289,7 @@ catch [System.Management.Automation.DriveNotFoundException]
     }
 foreach ($Node in $machinesBuilt)
         {
-        Write-Host -ForegroundColor Magenta " ==>Configuring GuestOS Network"
+        Write-Host -ForegroundColor Gray " ==>Configuring GuestOS Network"
         [int]$NodeNum = $Node -replace "$Nodeprefix"
         $ClassC = $NodeNum+$IPOffset
         $ip="$subnet.$Range$ClassC"
@@ -324,7 +324,7 @@ foreach ($Node in $machinesBuilt)
     $Scriptblock =  "systemctl stop NetworkManager"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword    #-logfile $Logfile
-    Write-Host -ForegroundColor Magenta " ==>you can now use ssh into $ip with root:Password123! and Monitor $Logfile"
+    Write-Host -ForegroundColor Gray " ==>you can now use ssh into $ip with root:Password123! and Monitor $Logfile"
     ##### Prepare
     Write-Host -ForegroundColor Cyan " ==>Testing default Route, make sure that Gateway is reachable ( install and start OpenWRT )
     if failures occur, open a 2nd labbuildr window and run start-vmx OpenWRT "
@@ -344,14 +344,14 @@ foreach ($Node in $machinesBuilt)
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword    #-logfile $Logfile  
 
-    Write-Host -ForegroundColor Magenta " ==>Setting Kernel Parameters"
+    Write-Host -ForegroundColor Gray " ==>Setting Kernel Parameters"
     $Scriptblock = "echo 'kernel.pid_max=655360' >> /etc/sysctl.conf;sysctl -w kernel.pid_max=655360"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  
 
     if ($EMC_ca.IsPresent)
         {
-        Write-Host -ForegroundColor Magenta " ==>Copying EMC CA Certs"
+        Write-Host -ForegroundColor Gray " ==>Copying EMC CA Certs"
         $files = Get-ChildItem -Path "$Sourcedir\EMC_ca"
         foreach ($File in $files)
             {
@@ -455,17 +455,17 @@ foreach ($Node in $machinesBuilt)
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
-    Write-Host -ForegroundColor Magenta " ==>Generating Yum Cache on $Sourcedir"
+    Write-Host -ForegroundColor Gray " ==>Generating Yum Cache on $Sourcedir"
     $Scriptblock="yum makecache"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
-    Write-Host -ForegroundColor Magenta " ==>INSTALLING VERSIONLOCK"
+    Write-Host -ForegroundColor Gray " ==>INSTALLING VERSIONLOCK"
     $Scriptblock="yum install yum-plugin-versionlock -y"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
     
-    Write-Host -ForegroundColor Magenta " ==>locking vmware tools"
+    Write-Host -ForegroundColor Gray " ==>locking vmware tools"
     $Scriptblock="yum versionlock open-vm-tools"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
@@ -486,7 +486,7 @@ foreach ($Node in $machinesBuilt)
 
     foreach ($remotehost in ('emccodevmstore001.blob.core.windows.net','registry-1.docker.io','index.docker.io'))
         {
-        Write-Host -ForegroundColor Magenta " ==>resolving $remotehost" 
+        Write-Host -ForegroundColor Gray " ==>resolving $remotehost" 
         $Scriptblock = "nslookup $remotehost"
         Write-Verbose $Scriptblock
         $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
@@ -519,7 +519,7 @@ if (!(Test-Path "$Sourcedir\docker\$($Docker_image)_$Docker_imagetag.tgz") -and 
     $Scriptblock = "docker pull $($Docker_imagename):$Docker_imagetag"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
-    Write-Host -ForegroundColor Magenta " ==>Creating Offline Image for ECS $Docker_imagename"
+    Write-Host -ForegroundColor Gray " ==>Creating Offline Image for ECS $Docker_imagename"
     $Scriptblock = "docker save $($Docker_imagename):$Docker_imagetag | gzip -c >  /mnt/hgfs/Sources/docker/$($Docker_image)_$Docker_imagetag.tgz"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword # -logfile $Logfile
@@ -537,7 +537,7 @@ else
     #$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
     [switch]$offline_available = $true
     }
-    Write-Host -ForegroundColor Magenta " ==>Cloning git repo $repo"
+    Write-Host -ForegroundColor Gray " ==>Cloning git repo $repo"
     $Scriptblock = "git clone -b $Git_Branch --single-branch $repo"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
@@ -615,7 +615,7 @@ Write-verbose $Scriptblock
 $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/curl.log" -Confirm:$false -SleepSec 60
 if ($AdjustTimeouts.isPresent)
     {
-    Write-Host -ForegroundColor Magenta " ==>Adjusting Timeouts"
+    Write-Host -ForegroundColor Gray " ==>Adjusting Timeouts"
     $Scriptblock = "/usr/bin/sudo -s sed -i -e 's\30, 60, InsertVDC\300, 300, InsertVDC\g' /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py"
     Write-verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/SED.log"   # -Confirm:$false -SleepSec 60
@@ -637,19 +637,19 @@ $VDC_NAME = "VDC_$Node"
 
 foreach ( $Method in $Methods )
     {
-    Write-Host -ForegroundColor Magenta " ==>running Method $Method, monitor tail -f /var/log/vipr/emcvipr-object/ssm.log"
+    Write-Host -ForegroundColor Gray " ==>running Method $Method, monitor tail -f /var/log/vipr/emcvipr-object/ssm.log"
     $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$Namespace_Name --ObjectVArray=$Pool_Name --ObjectVPool=$Replicaton_Group_Name --UserName=$Guestuser --DataStoreName=$Datastore_Name --VDCName=$VDC_NAME --MethodName=$Method" 
     Write-verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/$Method.log"  
     }
 $Method = 'CreateUser'
-Write-Host -ForegroundColor Magenta " ==>running Method $Method"
+Write-Host -ForegroundColor Gray " ==>running Method $Method"
 $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$Namespace_Name --ObjectVArray=$Pool_Name --ObjectVPool=$Replicaton_Group_Name --UserName=$Guestuser --DataStoreName=$Datastore_Name --VDCName=$VDC_NAME --MethodName=$Method;exit 0" 
 Write-verbose $Scriptblock
 $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/$Method.log"  
 
 $Method = 'CreateSecretKey'
-Write-Host -ForegroundColor Magenta " ==>running Method $Method"
+Write-Host -ForegroundColor Gray " ==>running Method $Method"
 $Scriptblock = "/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$Namespace_Name --ObjectVArray=$Pool_Name --ObjectVPool=$Replicaton_Group_Name --UserName=$Guestuser --DataStoreName=$Datastore_Name --VDCName=$VDC_NAME --MethodName=$Method" 
 Write-verbose $Scriptblock
 $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/$Method.log"  
