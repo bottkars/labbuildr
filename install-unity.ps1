@@ -160,46 +160,6 @@ switch ($PsCmdlet.ParameterSetName)
     if (!$MasterVMX)
         {
         write-Host -ForegroundColor Magenta "Could not find existing UnityMaster"
-        <#
-            if ($Defaults.IsPresent)
-                {
-                Write-Host -ForegroundColor Magenta "Trying Latest OVF fom $Sourcedir"
-                try
-                    {
-                    $OVFpath =Join-Path $Sourcedir "Unity-*.ov*" -ErrorAction Stop
-                    }
-                catch [System.Management.Automation.DriveNotFoundException] 
-                    {
-                    Write-Warning "Drive not found, make sure to have your Source Stick connected"
-                    exit
-                    }
-                
-                    $OVFfile = get-item -Path $OVFpath | Sort-Object -Descending -Property Name
-                    If (!$OVFfile)
-                        {
-                        Write-Warning "No OVF for Unity found, please conntact feedbackcentral"
-                        exit
-                        }
-                    else 
-                        {
-                        Write-Host -ForegroundColor Magenta "testing OVA File"
-                        $OVFfile = $OVFfile[0]
-                        $mastername = $OVFfile.BaseName
-                        & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $OVFfile.FullName $PSScriptRoot #
-                        if ($LASTEXITCODE -ne 0)
-                            {
-                            Write-Warning "Error Extraxting OVF"
-                            exit
-                            }
-                        $MasterVMX = get-vmx $mastername
-                        }
-                }
-            else
-                {
-                Write-Warning "Please import with -ovf or use -Defaults"
-                exit
-                }
-            #>
         return
         }
     Write-Host -ForegroundColor Magenta " ==>Checking Base VM Snapshot"
@@ -278,6 +238,7 @@ svc_initial_config -4 `"$ip 255.255.255.0 $DefaultGateway`"
 https://$ip and login with admin / Password123#
     activate your license at
  https://www.emc.com/auth/elmeval.htm
+ Please keep your license in a save location as it might me re-used when re-deploying $Nodeprefix$Node
 "
 
     }# end default
