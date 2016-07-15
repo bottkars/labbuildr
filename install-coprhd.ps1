@@ -50,53 +50,58 @@ $Node = 1
 #requires -module vmxtoolkit
 $Range = "24"
 $Builddir = $PSScriptRoot
-
+If ($ConfirmPreference -match "none")
+    {$Confirm = $false}
+else
+    {$Confirm = $true}
+$Builddir = $PSScriptRoot
+$Scriptdir = Join-Path $Builddir "Scripts"
 If ($Defaults.IsPresent)
     {
-     $labdefaults = Get-labDefaults
-     if (!($labdefaults))
+    $labdefaults = Get-labDefaults
+    $vmnet = $labdefaults.vmnet
+    $subnet = $labdefaults.MySubnet
+    $BuildDomain = $labdefaults.BuildDomain
+    try
         {
-        try
-            {
-            $labdefaults = Get-labDefaults -Defaultsfile ".\defaults.xml.example"
-            }
-        catch
-            {
-            Write-Warning "no  defaults or example defaults found, exiting now"
-            exit
-            }
-        Write-Host -ForegroundColor Magenta "Using generic defaults from labbuildr"
+        $Sourcedir = $labdefaults.Sourcedir
         }
-     $vmnet = $labdefaults.vmnet
-     $subnet = $labdefaults.MySubnet
-     $BuildDomain = $labdefaults.BuildDomain
-     if (!$Sourcedir)
-            {
-            try
-                {
-                $Sourcedir = $labdefaults.Sourcedir
-                }
-            catch [System.Management.Automation.ParameterBindingException]
-                {
-                Write-Warning "No sources specified, trying default"
-                $Sourcedir = "C:\Sources"
-                }
-            }
-
-     #$Sourcedir = $labdefaults.Sourcedir
+    catch [System.Management.Automation.ValidationMetadataException]
+        {
+        Write-Warning "Could not test Sourcedir Found from Defaults, USB stick connected ?"
+        Break
+        }
+    catch [System.Management.Automation.ParameterBindingException]
+        {
+        Write-Warning "No valid Sourcedir Found from Defaults, USB stick connected ?"
+        Break
+        }
+    try
+        {
+        $Masterpath = $LabDefaults.Masterpath
+        }
+    catch
+        {
+        # Write-Host -ForegroundColor Gray " ==> No Masterpath specified, trying default"
+        $Masterpath = $Builddir
+        }
+     $Hostkey = $labdefaults.HostKey
      $Gateway = $labdefaults.Gateway
      $DefaultGateway = $labdefaults.Defaultgateway
      $DNS1 = $labdefaults.DNS1
-     $MasterPath = $labdefaults.MasterPath
-     If (!$MasterPath)
-        {
-        $MasterPath = $PSScriptRoot
-        }
-     }
+     $DNS2 = $labdefaults.DNS2
+    }
+if (!$DNS2)
+    {
+    $DNS2 = $DNS1
+    }
+if (!$Masterpath) {$Masterpath = $Builddir}
 
+$ip_startrange = $ip_startrange+$Startnode
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
-$OS = "OpenSuse"
+$OS = "OpenSUSE"
+$Required_Master = $OS
 $Scenarioname = "Coprhd"
 try
     {
@@ -122,7 +127,7 @@ if (!$Sourcedir)
     }
 else
     {
-    Write-Host -ForegroundColor Magenta "Checking for $Sourcedir"
+    Write-Host -ForegroundColor Gray " ==>Checking for $Sourcedir"
     try
         {
         Get-Item -Path $Sourcedir -ErrorAction Stop | Out-Null 
@@ -153,49 +158,53 @@ else
 
 [uint64]$Disksize = 100GB
 $scsi = 0
-if (!(Test-Path $MasterPath))
+
+try
     {
-    Write-Warning "no OpenSuse Master found. Please download from
-    https://github.com/bottkars/labbuildr/wiki/Master"
+    $MasterVMX = test-labmaster -Masterpath $MasterPath -Master $Required_Master -Confirm:$Confirm -erroraction stop
+    }
+catch
+    {
+    Write-Warning "Required Master $Required_Master not found
+    please download and extraxt $Required_Master to .\$Required_Master
+    see: 
+    ------------------------------------------------
+    get-help $($MyInvocation.MyCommand.Name) -online
+    ------------------------------------------------"
     exit
     }
-#$Node = "1"
-if (!($MasterVMX = get-vmx -path $MasterPath))
-    {
-    Write-Warning "no OpenSuse Master found. Please download from
-    https://github.com/bottkars/labbuildr/wiki/Master"
-    exit
-    }
+####
 if (!$MasterVMX.Template) 
             {
-            write-host -ForegroundColor Magenta " ==>Templating Master VMX"
+            write-verbose "Templating Master VMX"
             $template = $MasterVMX | Set-VMXTemplate
             }
-$Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
+        $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
         if (!$Basesnap) 
         {
-         write-host -ForegroundColor Magenta " ==>Base snap does not exist, creating now"
+         Write-verbose "Base snap does not exist, creating now"
         $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
         }
+$StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
 if (!(Test-path $Scriptdir ))
     {
     $CoprHD_Dir = New-Item -ItemType Directory $Scriptdir -Force
     }
 
-
-        If (!(get-vmx $Nodename))
+	    Write-Host -ForegroundColor Magenta "Checking for $Nodename"
+        If (!(get-vmx $Nodename -WarningAction SilentlyContinue))
         {
-        write-host -ForegroundColor Magenta " ==>Creating $Nodename"
+        write-host -ForegroundColor White " ==>Creating $Nodename"
         $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodename -clonepath $Builddir
         If ($Node -eq 1){$Primary = $NodeClone}
         $Config = Get-VMXConfig -config $NodeClone.config
-        write-host -ForegroundColor Magenta " ==>Tweaking Config"
-        write-host -ForegroundColor Magenta " ==>Setting NIC0 to HostOnly"
+        Write-Host -ForegroundColor Gray " ==>Tweaking Config"
+        Write-Host -ForegroundColor Gray " ==>Setting NIC0 to HostOnly"
         Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config | Out-Null
         if ($vmnet)
             {
-            write-host -ForegroundColor Magenta " ==>Configuring NIC 0 for $vmnet"
-            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config | Out-Null
+            Write-Host -ForegroundColor Gray " ==>Configuring NIC 0 for $vmnet"
+            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config -WarningAction SilentlyContinue| Out-Null
             Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config | Out-Null
             }
         $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.CloneName)@$BuildDomain"
@@ -203,7 +212,7 @@ if (!(Test-path $Scriptdir ))
         $Annotation = $NodeClone | Set-VMXAnnotation -Line1 "rootuser:$Rootuser" -Line2 "rootpasswd:$Guestpassword" -Line3 "Guestuser:$Guestuser" -Line4 "Guestpassword:$Guestpassword" -Line5 "labbuildr by @hyperv_guy" -builddate
         $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname $Nodeprefix -Scenario 6
         # $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
-        write-host -ForegroundColor Magenta " ==>Setting VM Size"
+        Write-Host -ForegroundColor Gray " ==>Setting VM Size"
         $NodeClone | Set-VMXprocessor -Processorcount 4 | Out-Null
         $NodeClone | Set-VMXmemory -MemoryMB 6144 | Out-Null
         $Config = $Nodeclone | Get-VMXConfig
@@ -220,18 +229,18 @@ if (!(Test-path $Scriptdir ))
             sleep 5
             }
         until ($ToolState.state -match "running")
-        write-host -ForegroundColor Magenta " ==>Setting Shared Folders enabled"
+        Write-Host -ForegroundColor Gray " ==>Setting Shared Folders enabled"
         $NodeClone | Set-VMXSharedFolderState -enabled |Out-Null
-        write-host -ForegroundColor Magenta " ==>Cleaning Shared Folders"
+        Write-Host -ForegroundColor Gray " ==>Cleaning Shared Folders"
         $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | out-null 
-        write-host -ForegroundColor Magenta " ==>Adding $Sourcedir to Shared Folders"        
+        Write-Host -ForegroundColor Gray " ==>Adding $Sourcedir to Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir |Out-Null
-        write-host -ForegroundColor Magenta " ==>Configuring Network with $IP for $Nodename"
+        Write-Host -ForegroundColor Gray " ==>Configuring Network with $IP for $Nodename"
         $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -suse -device eno16777984 -Peerdns -DNS1 "$DNS1" -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodename"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
-        Write-Host -ForegroundColor Magenta " ==>Restarting Network, please be patient"
+        Write-Host -ForegroundColor Gray " ==>Restarting Network, please be patient"
         $NodeClone | Invoke-VMXBash -Scriptblock "/sbin/rcnetwork restart" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         
-        Write-Host -ForegroundColor Magenta " ==>Starting zypper Tasks, this may take a while"
+        Write-Host -ForegroundColor Gray " ==>Starting zypper Tasks, this may take a while"
         $Scriptblock = "sed '\|# cachedir = /var/cache/zypp|icachedir = /mnt/hgfs/Sources/$OS/zypp/\n' /etc/zypp/zypp.conf -i"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
@@ -252,16 +261,16 @@ if (!(Test-path $Scriptdir ))
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile "/tmp/zypper.log" | Out-Null
 
            
-        Write-Host -ForegroundColor Magenta " ==>Cloning into CoprHD"
+        Write-Host -ForegroundColor Gray " ==>Cloning into CoprHD"
         $Scriptblock = "git clone https://review.coprhd.org/scm/ch/coprhd-controller.git"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile "/tmp/git_clone.log" | Out-Null
 
-        Write-Host -ForegroundColor Magenta " ==>Running Installation Tasks"
+        Write-Host -ForegroundColor Gray " ==>Running Installation Tasks"
         $Components = ('installRepositories','installPackages','installNginx','installJava 8','installStorageOS')
         Foreach ($component in $Components)
             {
-            Write-Host -ForegroundColor Magenta " ==> Running Task $component"
+            Write-Host -ForegroundColor Gray " ==> Running Task $component"
             $Scriptblock = "/coprhd-controller/packaging/appliance-images/openSUSE/13.2/CoprHDDevKit/configure.sh $component"
             Write-Verbose $Scriptblock
             $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile "/tmp/$component.log"  | Out-Null       
@@ -299,9 +308,8 @@ node_id=vipr1"
     $Scriptblock = "/bin/rpm -Uhv /coprhd-controller/build/RPMS/x86_64/storageos*.x86_64.rpm" #;/sbin/shutdown -r now"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword   | Out-Null
-
-
-
+	$StopWatch.Stop()
+	Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
     Write-Host -ForegroundColor Blue "Installed CoprHD RPM
     StorageOS may take 5 Minutes to boot
     please Visit https://$ip for Configuration
