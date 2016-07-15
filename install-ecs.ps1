@@ -438,7 +438,7 @@ foreach ($Node in $machinesBuilt)
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword   # -logfile $Logfile
 
-
+	#### end ssh
     
 
 

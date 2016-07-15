@@ -240,7 +240,45 @@ if (!(Test-path $Scriptdir ))
         Write-Host -ForegroundColor Gray " ==>Restarting Network, please be patient"
         $NodeClone | Invoke-VMXBash -Scriptblock "/sbin/rcnetwork restart" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         
-        Write-Host -ForegroundColor Gray " ==>Starting zypper Tasks, this may take a while"
+		###  ssh section
+		Write-Host -ForegroundColor Gray " ==>Configuring SSH Access"
+		### generate user ssh keys ==> need to check latest coprhd user ...
+		#$Scriptblock ="/usr/bin/ssh-keygen -t rsa -N '' -f /home/$Guestuser/.ssh/id_rsa"
+		#Write-Verbose $Scriptblock
+		#$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword  
+
+    	#$Scriptblock = "cat /home/$Guestuser/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys"
+		#Write-Verbose $Scriptblock
+		#$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword   # -logfile $Logfile
+    
+	
+		#### Start ssh for pwless  root local login
+		$Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa"
+		Write-Verbose $Scriptblock
+		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  
+
+		if ($Hostkey)
+				{
+				$Scriptblock = "echo '$Hostkey' >> /root/.ssh/authorized_keys"
+				Write-Verbose $Scriptblock
+				$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+				}
+
+		$Scriptblock = "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys;chmod 0600 /root/.ssh/authorized_keys"
+		Write-Verbose $Scriptblock
+		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword   # -logfile $Logfile
+
+		$Scriptblock = "{ echo -n '$($NodeClone.vmxname) '; cat /etc/ssh/ssh_host_rsa_key.pub; } >> ~/.ssh/known_hosts"
+		Write-Verbose $Scriptblock
+		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword   # -logfile $Logfile
+
+		$Scriptblock = "{ echo -n 'localhost '; cat /etc/ssh/ssh_host_rsa_key.pub; } >> ~/.ssh/known_hosts"
+		Write-Verbose $Scriptblock
+		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword   # -logfile $Logfile
+		Write-Host -ForegroundColor Gray " ==>ssh configuration finished"     
+		#### end ssh  
+	
+		Write-Host -ForegroundColor Gray " ==>Starting zypper Tasks, this may take a while"
         $Scriptblock = "sed '\|# cachedir = /var/cache/zypp|icachedir = /mnt/hgfs/Sources/$OS/zypp/\n' /etc/zypp/zypp.conf -i"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
@@ -249,12 +287,10 @@ if (!(Test-path $Scriptdir ))
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-        
+    
         $Scriptblock = "sudo zypper ref"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-
-
 
         $Scriptblock = "zypper --non-interactive install --no-recommends git make; echo $?"
         Write-Verbose $Scriptblock
@@ -265,6 +301,7 @@ if (!(Test-path $Scriptdir ))
         $Scriptblock = "git clone https://review.coprhd.org/scm/ch/coprhd-controller.git"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile "/tmp/git_clone.log" | Out-Null
+		
 
         Write-Host -ForegroundColor Gray " ==>Running Installation Tasks"
         $Components = ('installRepositories','installPackages','installNginx','installJava 8','installStorageOS')
