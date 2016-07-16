@@ -2426,7 +2426,8 @@ if ($ScaleIO.IsPresent)
         if ($ScaleIO_Major -ge 2)
             {
             Write-Host -ForegroundColor Magenta "Checking for OpenSSL"
-            if (!(test-path "$Sourcedir\Win64OpenSSL_Light-1_0_1s.exe"))
+            $openSSL_File = Split-Path -Leaf $openSSL_URL
+            if (!(test-path "$Sourcedir\$openSSL_File"))
                 {
                 Start-BitsTransfer -Destination $Sourcedir -Source $openSSL_URL -Description "OpenSSL for ScaleIO"
                 }
