@@ -854,8 +854,8 @@ $Default_AddressFamily = "IPv4"
 $latest_ScaleIOVer = '2.0-6035.0'
 $ScaleIO_OS = "Windows"
 $ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
-$latest_nmm = 'nmm9007'
-$latest_nw = 'nw9007'
+$latest_nmm = 'nmm9010'
+$latest_nw = 'nw9010'
 $latest_e16_cu = 'cu2'
 $latest_e15_cu = 'cu13'
 $latest_e14_sp = 'sp3'
@@ -863,6 +863,7 @@ $latest_e14_ur = 'ur13'
 $latest_sqlver  = 'SQL2016'
 $latest_master = '2012R2FallUpdate'
 $latest_sql_2012 = 'SQL2012SP2'
+$openSSL_URL = 'https://slproweb.com/download/Win32OpenSSL_Light-1_0_2h.exe'
 $SIOToolKit_Branch = "master"
 $NW85_requiredJava = "jre-7u61-windows-x64"
 $Adminuser = "Administrator"
@@ -2427,7 +2428,7 @@ if ($ScaleIO.IsPresent)
             Write-Host -ForegroundColor Magenta "Checking for OpenSSL"
             if (!(test-path "$Sourcedir\Win64OpenSSL_Light-1_0_1s.exe"))
                 {
-                Start-BitsTransfer -Destination $Sourcedir -Source https://slproweb.com/download/Win64OpenSSL_Light-1_0_1s.exe -Description "OpenSSL for ScaleIO"
+                Start-BitsTransfer -Destination $Sourcedir -Source $openSSL_URL -Description "OpenSSL for ScaleIO"
                 }
             }
         Write-Verbose "Checking Diskspeed"
