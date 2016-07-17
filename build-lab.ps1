@@ -863,7 +863,6 @@ $latest_e14_ur = 'ur13'
 $latest_sqlver  = 'SQL2016'
 $latest_master = '2012R2FallUpdate'
 $latest_sql_2012 = 'SQL2012SP2'
-$openSSL_URL = 'https://slproweb.com/download/Win64OpenSSL_Light-1_0_2h.exe'
 $SIOToolKit_Branch = "master"
 $NW85_requiredJava = "jre-7u61-windows-x64"
 $Adminuser = "Administrator"
@@ -2426,11 +2425,17 @@ if ($ScaleIO.IsPresent)
         if ($ScaleIO_Major -ge 2)
             {
             Write-Host -ForegroundColor Magenta "Checking for OpenSSL"
-            $openSSL_File = Split-Path -Leaf $openSSL_URL
-            if (!(test-path "$Sourcedir\$openSSL_File"))
-                {
-                Start-BitsTransfer -Destination $Sourcedir -Source $openSSL_URL -Description "OpenSSL for ScaleIO"
-                }
+			try
+				{
+				$OpenSSL = Receive-LABOpenSSL -Destination $Sourcedir -ErrorAction Stop
+				}
+			catch
+				{
+				Write-Warning "could not retrieve OpenSSL"
+				exit
+				}
+			Receive-LABOpenSSL -Destination $Sourcedir
+            # $openSSL_File = Split-Path -Leaf $openSSL_URL
             }
         Write-Verbose "Checking Diskspeed"
         $URL = "https://gallery.technet.microsoft.com/DiskSpd-a-robust-storage-6cd2f223/file/132882/1/Diskspd-v2.0.15.zip"
@@ -3395,7 +3400,7 @@ switch ($PsCmdlet.ParameterSetName)
                             {
                             if ($ScaleIO_Major -ge 2)
                                 {
-                                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-openssl.ps1 -interactive
+                                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-openssl.ps1 -openssl_ver $OpenSSL.Version -interactive
                                 }
                             Write-Host -ForegroundColor Gray " ==> Installing MDM as Manager"
                             invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role MDM -disks $Disks -ScaleIOVer $ScaleIOVer -mdmipa $mdmipa -mdmipb $mdmipb" -interactive

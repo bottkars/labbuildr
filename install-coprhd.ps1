@@ -242,17 +242,6 @@ if (!(Test-path $Scriptdir ))
         
 		###  ssh section
 		Write-Host -ForegroundColor Gray " ==>Configuring SSH Access"
-		### generate user ssh keys ==> need to check latest coprhd user ...
-		#$Scriptblock ="/usr/bin/ssh-keygen -t rsa -N '' -f /home/$Guestuser/.ssh/id_rsa"
-		#Write-Verbose $Scriptblock
-		#$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword  
-
-    	#$Scriptblock = "cat /home/$Guestuser/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys"
-		#Write-Verbose $Scriptblock
-		#$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword   # -logfile $Logfile
-    
-	
-		#### Start ssh for pwless  root local login
 		$Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa"
 		Write-Verbose $Scriptblock
 		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  
