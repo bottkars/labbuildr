@@ -2421,7 +2421,6 @@ if ($ScaleIO.IsPresent)
         Write-Host -ForegroundColor Gray " ==> we did not find ScaleIO $ScaleIOVer, we will check local zip/try to download latest version!"
         Receive-LABScaleIO -Destination $Sourcedir -arch Windows -unzip -Confirm:$false -force
         }
-        #### will be moved to receive-labopenssl
         if ($ScaleIO_Major -ge 2)
             {
             Write-Host -ForegroundColor Magenta "Checking for OpenSSL"
@@ -2434,8 +2433,6 @@ if ($ScaleIO.IsPresent)
 				Write-Warning "could not retrieve OpenSSL"
 				exit
 				}
-			Receive-LABOpenSSL -Destination $Sourcedir
-            # $openSSL_File = Split-Path -Leaf $openSSL_URL
             }
         Write-Verbose "Checking Diskspeed"
         $URL = "https://gallery.technet.microsoft.com/DiskSpd-a-robust-storage-6cd2f223/file/132882/1/Diskspd-v2.0.15.zip"
@@ -3409,7 +3406,7 @@ switch ($PsCmdlet.ParameterSetName)
                             {
                             if ($ScaleIO_Major -ge 2)
                                 {
-                                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-openssl.ps1 -interactive
+                                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-openssl.ps1 -openssl_ver $OpenSSL.Version -interactive
                                 }
 
                             if (!$singlemdm.IsPresent)
@@ -3428,7 +3425,7 @@ switch ($PsCmdlet.ParameterSetName)
                             {
                             if ($ScaleIO_Major -ge 2)
                                 {
-                                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-openssl.ps1 -interactive
+                                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-openssl.ps1 -openssl_ver $OpenSSL.Version -interactive
                                 }
 
 		                        <#do
@@ -3481,7 +3478,7 @@ switch ($PsCmdlet.ParameterSetName)
                             {
                             if ($ScaleIO_Major -ge 2)
                                 {
-                                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-openssl.ps1 -interactive
+                                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-openssl.ps1 -openssl_ver $OpenSSL.Version -interactive
                                 }
                                 invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer -mdmipa $mdmipa -mdmipb $mdmipb" -interactive 
                             }
