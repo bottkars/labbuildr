@@ -3397,7 +3397,7 @@ switch ($PsCmdlet.ParameterSetName)
                             {
                             if ($ScaleIO_Major -ge 2)
                                 {
-                                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-openssl.ps1 -openssl_ver $OpenSSL.Version -interactive
+                                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-openssl.ps1  -Parameter "-openssl_ver $OpenSSL.Version" -interactive
                                 }
                             Write-Host -ForegroundColor Gray " ==> Installing MDM as Manager"
                             invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role MDM -disks $Disks -ScaleIOVer $ScaleIOVer -mdmipa $mdmipa -mdmipb $mdmipb" -interactive
@@ -3406,7 +3406,7 @@ switch ($PsCmdlet.ParameterSetName)
                             {
                             if ($ScaleIO_Major -ge 2)
                                 {
-                                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-openssl.ps1 -openssl_ver $OpenSSL.Version -interactive
+                                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-openssl.ps1  -Parameter "-openssl_ver $OpenSSL.Version" -interactive
                                 }
 
                             if (!$singlemdm.IsPresent)
@@ -3425,7 +3425,7 @@ switch ($PsCmdlet.ParameterSetName)
                             {
                             if ($ScaleIO_Major -ge 2)
                                 {
-                                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-openssl.ps1 -openssl_ver $OpenSSL.Version -interactive
+                                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-openssl.ps1  -Parameter "-openssl_ver $OpenSSL.Version" -interactive
                                 }
 
 		                        <#do
@@ -3478,7 +3478,7 @@ switch ($PsCmdlet.ParameterSetName)
                             {
                             if ($ScaleIO_Major -ge 2)
                                 {
-                                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-openssl.ps1 -openssl_ver $OpenSSL.Version -interactive
+                                invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-openssl.ps1 -Parameter "-openssl_ver $OpenSSL.Version" -interactive
                                 }
                                 invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer -mdmipa $mdmipa -mdmipb $mdmipb" -interactive 
                             }
