@@ -69,8 +69,9 @@ $Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
 [switch]$offline,
 [switch]$pausebeforescript,
-$Domain_Suffix = "local"
-
+$Domain_Suffix = "local",
+$Nodeprefix = "ECSNode",
+$Custom_IP
 
 
 )
@@ -80,7 +81,6 @@ $Range = "24"
 $Start = "1"
 $IPOffset = 5
 $Szenarioname = "ECS"
-$Nodeprefix = "$($Szenarioname)Node"
 $Builddir = $PSScriptRoot
 $Masterpath = $Builddir
 $scsi = 0
@@ -227,9 +227,12 @@ catch [System.Management.Automation.DriveNotFoundException]
     $machinesBuilt = @()
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         {
+
         If (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue))
         {
+
         Write-Host -ForegroundColor Magenta "Creating $Nodeprefix$node"
+
         $ECSName = "$Nodeprefix$Node".ToLower()
         If ($FullClone.IsPresent)
             {
@@ -294,7 +297,14 @@ foreach ($Node in $machinesBuilt)
         Write-Host -ForegroundColor Gray " ==>Configuring GuestOS Network"
         [int]$NodeNum = $Node -replace "$Nodeprefix"
         $ClassC = $NodeNum+$IPOffset
-        $ip="$subnet.$Range$ClassC"
+		if (!$Custom_IP)
+			{
+			 $ip="$subnet.$Range$ClassC"
+			}
+		else
+			{
+			$IP=$Custom_IP
+			}
         $NodeClone = get-vmx $Node
         Write-Host -ForegroundColor Magenta " ==>Waiting for VM to boot GuestOS $OS"
     
