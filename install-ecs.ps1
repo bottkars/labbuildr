@@ -657,5 +657,5 @@ $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $
 $StopWatch.Stop()
 Write-host -ForegroundColor White "ECS Deployment took $($StopWatch.Elapsed.ToString())"
 
-Write-Host -ForegroundColor White "Success !? Browse to http://$($IP):443"
+Write-Host -ForegroundColor White "Success !? Browse to https://$($IP):443 and login with root/ChangeMe"
 
