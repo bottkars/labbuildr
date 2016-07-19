@@ -58,49 +58,81 @@ Param(
 )
 #requires -version 3.0
 #requires -module vmxtoolkit 
+$labdefaults = Get-labDefaults
+$Builddir = $PSScriptRoot
+
 switch ($PsCmdlet.ParameterSetName)
 {
     "import"
         {
+		try
+			{
+			$Masterpath = $LabDefaults.Masterpath
+			}
+		catch
+			{
+			# Write-Host -ForegroundColor Gray " ==> No Masterpath specified, trying default"
+			$Masterpath = $Builddir
+			}
         if (!(($Mymaster = Get-Item $ovf).Extension -match "ovf" -or "ova"))
             {
             write-warning "no OVF Template found"
             exit
             }
-        
+        $masterpath = $labdefaults.MasterPath
         # if (!($mastername)) {$mastername = (Split-Path -Leaf $ovf).Replace(".ovf","")}
         # $Mymaster = Get-Item $ovf
         $Mastername = $Mymaster.Basename
-        import-VMXOVATemplate -OVA $ovf
+        import-VMXOVATemplate -OVA $ovf -destination $masterpath -acceptAllEulas
         # & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck  --name=$mastername $ovf $PSScriptRoot #
-        $Content = Get-Content $PSScriptRoot\$mastername\$mastername.vmx
+        $Content = Get-Content $masterpath\$mastername\$mastername.vmx
         $Content = $Content -notmatch 'snapshot.maxSnapshots'
         $Content = $Content -notmatch 'vmci0.pciSlotNumber'
         $Content += 'vmci0.pciSlotNumber = "33"'
-        $Content | Set-Content $PSScriptRoot\$mastername\$mastername.vmx
-        $Mastervmx = get-vmx -path $PSScriptRoot\$mastername\$mastername.vmx
+        $Content | Set-Content $masterpath\$mastername\$mastername.vmx
+        $Mastervmx = get-vmx -path $masterpath\$mastername\$mastername.vmx
         $Mastervmx | Set-VMXHWversion -HWversion 7
-        Write-Host -ForegroundColor Yellow " ==>Now run .\install-cloudboost.ps1 -Master .\$mastername -Defaults " 
+        Write-Host -ForegroundColor Yellow " ==>Now run .\install-cloudboost.ps1 -Master $masterpath\$mastername -Defaults " 
         }
 default
     {
     If ($Defaults.IsPresent)
-            {
-            $labdefaults = Get-labDefaults
-            $vmnet = $labdefaults.vmnet
-            $subnet = $labdefaults.MySubnet
-            $BuildDomain = $labdefaults.BuildDomain
-            $Sourcedir = $labdefaults.Sourcedir
-            $Gateway = $labdefaults.Gateway
-            $DefaultGateway = $labdefaults.Defaultgateway
-            $DNS1 = $labdefaults.DNS1
-            $configure = $true
-            }
-        [System.Version]$subnet = $Subnet.ToString()
+        {
+		$vmnet = $labdefaults.vmnet
+		$subnet = $labdefaults.MySubnet
+		$BuildDomain = $labdefaults.BuildDomain
+		try
+			{
+			$Sourcedir = $labdefaults.Sourcedir
+			}
+		catch [System.Management.Automation.ValidationMetadataException]
+			{
+			Write-Warning "Could not test Sourcedir Found from Defaults, USB stick connected ?"
+			Break
+			}
+		catch [System.Management.Automation.ParameterBindingException]
+			{
+			Write-Warning "No valid Sourcedir Found from Defaults, USB stick connected ?"
+			Break
+			}
+		try
+			{
+			$Masterpath = $LabDefaults.Masterpath
+			}
+		catch
+			{
+			# Write-Host -ForegroundColor Gray " ==> No Masterpath specified, trying default"
+			$Masterpath = $Builddir
+			}
+		 $Hostkey = $labdefaults.HostKey
+		 $Gateway = $labdefaults.Gateway
+		 $DefaultGateway = $labdefaults.Defaultgateway
+		 $DNS1 = $labdefaults.DNS1
+		 $DNS2 = $labdefaults.DNS2
+		}
+    [System.Version]$subnet = $Subnet.ToString()
     $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
-        
     $Nodeprefix = "cloudboost"
-
     If (!($MasterVMX = get-vmx -path $Master))
       {
        Write-Warning "No Valid Master Found, please import Cloudboost OVA template first with .\install-cloudboost.ps1 -ovf [path to ova template]"
