@@ -79,7 +79,6 @@ switch ($PsCmdlet.ParameterSetName)
             write-warning "no OVF Template found"
             exit
             }
-        $masterpath = $labdefaults.MasterPath
         # if (!($mastername)) {$mastername = (Split-Path -Leaf $ovf).Replace(".ovf","")}
         # $Mymaster = Get-Item $ovf
         $Mastername = $Mymaster.Basename
