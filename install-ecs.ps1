@@ -575,12 +575,13 @@ else
     $Scriptblock"
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword
 
-<#
+
     Write-Host -ForegroundColor Magenta " ==>Setting automatic startup of docker and ecs container"
     
-    $Scriptlets = ("echo '/dev/sdb1 /ecs/uuid-1 xfs defaults 0 0' `>> /etc/fstab",
+    $Scriptlets = (
+	#"echo '/dev/sdb1 /ecs/uuid-1 xfs defaults 0 0' `>> /etc/fstab",
     "systemctl enable docker.service",
-    "echo 'docker start ecsstandalone' `>>/etc/rc.local",
+    #"echo 'docker start ecsstandalone' `>>/etc/rc.local",
     'chmod +x /etc/rc.d/rc.local')
 
     #>
