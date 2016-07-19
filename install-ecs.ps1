@@ -68,7 +68,8 @@ $Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = "vmnet2",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
 [switch]$offline,
-[switch]$pausebeforescript
+[switch]$pausebeforescript,
+$Domain_Suffix = "local"
 
 
 
@@ -83,6 +84,7 @@ $Nodeprefix = "$($Szenarioname)Node"
 $Builddir = $PSScriptRoot
 $Masterpath = $Builddir
 $scsi = 0
+
 If ($Defaults.IsPresent)
     {
     $labdefaults = Get-labDefaults
@@ -308,7 +310,7 @@ foreach ($Node in $machinesBuilt)
         $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | Out-Null
         Write-Verbose "Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
-        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device eno16777984 -Peerdns -DNS1 $DNS1 -DNS2 $DNS2 -DNSDOMAIN "$BuildDomain.local" -Hostname $ECSName  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
+        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device eno16777984 -Peerdns -DNS1 $DNS1 -DNS2 $DNS2 -DNSDOMAIN "$BuildDomain.$($Domain_Suffix)" -Hostname $ECSName  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
     
 
     $Logfile = "/tmp/1_prepare.log"
@@ -340,7 +342,7 @@ foreach ($Node in $machinesBuilt)
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  
 
-    $Scriptblock =  "echo '$ip $($ECSName) $($ECSName).$BuildDomain.local'  >> /etc/hosts"
+    $Scriptblock =  "echo '$ip $($ECSName) $($ECSName).$BuildDomain.$($Domain_Suffix)'  >> /etc/hosts"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword    #-logfile $Logfile  
 
