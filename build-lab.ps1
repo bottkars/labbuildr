@@ -841,7 +841,7 @@ try
 ################## Statics
 $LogFile = "$Builddir\$(Get-Content env:computername).log"
 $WAIKVER = "WAIK"
-$domainsuffix = ".local"
+$custom_domainsuffix = "local"
 $AAGDB = "AWORKS"
 $major = "2016"
 $Edition = "Summer #IAMDELL"
@@ -1070,8 +1070,8 @@ function domainjoin
 	do
         {
         Write-Verbose "Joining Domain $BuildDomain"
-        Write-Verbose "Calling $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script configure-node.ps1 -Parameter -nodeip $Nodeip -nodename $Nodename -Domain $BuildDomain -domainsuffix $domainsuffix -IPv4subnet $IPv4subnet -IPV6Subnet $IPv6Prefix -AddressFamily $AddressFamily -IPv4PrefixLength $IPv4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -IPv6Prefix $IPv6Prefix $AddGateway -AddOnfeatures '$AddonFeatures' $CommonParameter"
-        $domainadd = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script configure-node.ps1 -Parameter "-nodeip $Nodeip -nodename $Nodename -Domain $BuildDomain -domainsuffix $domainsuffix -IPv4subnet $IPv4subnet -IPV6Subnet $IPv6Prefix -AddressFamily $AddressFamily -IPv4PrefixLength $IPv4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -IPv6Prefix $IPv6Prefix $AddGateway -AddOnfeatures '$AddonFeatures' $CommonParameter" -nowait -interactive # $CommonParameter
+        Write-Verbose "Calling $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script configure-node.ps1 -Parameter -nodeip $Nodeip -nodename $Nodename -Domain $BuildDomain -domainsuffix $custom_domainsuffix -IPv4subnet $IPv4subnet -IPV6Subnet $IPv6Prefix -AddressFamily $AddressFamily -IPv4PrefixLength $IPv4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -IPv6Prefix $IPv6Prefix $AddGateway -AddOnfeatures '$AddonFeatures' $CommonParameter"
+        $domainadd = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script configure-node.ps1 -Parameter "-nodeip $Nodeip -nodename $Nodename -Domain $BuildDomain -domainsuffix $custom_domainsuffix -IPv4subnet $IPv4subnet -IPV6Subnet $IPv6Prefix -AddressFamily $AddressFamily -IPv4PrefixLength $IPv4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -IPv6Prefix $IPv6Prefix $AddGateway -AddOnfeatures '$AddonFeatures' $CommonParameter" -nowait -interactive # $CommonParameter
         }
     until ($domainadd -match "success")
 
@@ -1765,6 +1765,14 @@ else
     {
     $DNS1 = $LabDefaults.DNS1
     }
+if ($LabDefaults.custom_domainsuffix)
+	{
+	$custom_domainsuffix = "$LabDefaults.custom_domainsuffix"
+	}
+else
+	{
+	$custom_domainsuffix = "local"
+	}
 write-verbose "After defaults !!!! "
 Write-Verbose "Sourcedir : $Sourcedir"
 Write-Verbose "NWVER : $nw_ver"
@@ -2659,7 +2667,7 @@ else
     Write-Verbose "IPV6Prefix :$IPv6Prefix"
     Write-Verbose "IPv6Prefixlength : $IPv6PrefixLength"
     write-verbose "DCName : $DCName"
-    Write-Verbose "Domainsuffix : $domainsuffix"
+    Write-Verbose "Domainsuffix : $custom_domainsuffix"
     Write-Verbose "Domain : $BuildDomain"
     Write-Verbose "AddressFamily : $AddressFamily"
     Write-Verbose "DefaultGateway : $DefaultGateway"
@@ -2711,7 +2719,7 @@ else
             Start-Process 'C:\Program Files (x86)\VMware\VMware Workstation\vmrun.exe' -ArgumentList  "installTools $CloneVMX" -NoNewWindow
             }
 
-		$script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script finish-domain.ps1 -Parameter "-domain $BuildDomain -domainsuffix $domainsuffix $CommonParameter" -interactive -nowait
+		$script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script finish-domain.ps1 -Parameter "-domain $BuildDomain -domainsuffix $custom_domainsuffix $CommonParameter" -interactive -nowait
 		Write-Host -ForegroundColor White  " ==>Creating Domain $BuildDomain"
 		While ($FileOK = (&$vmrun -gu Administrator -gp Password123! fileExistsInGuest $CloneVMX $IN_Guest_LogDir\3.pass) -ne "The file exists.") { Write-Host -NoNewline "."; sleep $Sleep }
 		write-host
