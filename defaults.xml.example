@@ -10,6 +10,7 @@
 <e16_cu>cu2</e16_cu>
 <vmnet>vmnet2</vmnet>
 <vlanID></vlanID>
+<Custom_DomainSuffix>local</Custom_DomainSuffix>
 <BuildDomain>labbuildr</BuildDomain>
 <MySubnet>192.168.2.0</MySubnet>
 <AddressFamily>IPv4</AddressFamily>
@@ -17,7 +18,7 @@
 <IPv6PrefixLength>8</IPv6PrefixLength>
 <Gateway>False</Gateway>
 <DefaultGateway>192.168.2.4</DefaultGateway>
-<DNS1>192.168.2.4</DNS1>
+<DNS1>192.168.2.10</DNS1>
 <DNS2>192.168.2.10</DNS2>
 <Sourcedir>C:\Sources</Sourcedir>
 <ScaleIOVer>2.0-6035.0</ScaleIOVer>

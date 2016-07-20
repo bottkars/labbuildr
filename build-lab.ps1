@@ -1767,7 +1767,7 @@ else
     }
 if ($LabDefaults.custom_domainsuffix)
 	{
-	$custom_domainsuffix = "$LabDefaults.custom_domainsuffix"
+	$custom_domainsuffix = $LabDefaults.custom_domainsuffix
 	}
 else
 	{
