@@ -85,6 +85,15 @@ If ($Defaults.IsPresent)
         # Write-Host -ForegroundColor Gray " ==> No Masterpath specified, trying default"
         $Masterpath = $Builddir
         }
+	if ($LabDefaults.custom_domainsuffix)
+		{
+		$custom_domainsuffix = $LabDefaults.custom_domainsuffix
+		}
+	else
+		{
+		$custom_domainsuffix = "local"
+		}
+
      $Hostkey = $labdefaults.HostKey
      $Gateway = $labdefaults.Gateway
      $DefaultGateway = $labdefaults.Defaultgateway
@@ -236,7 +245,7 @@ if (!(Test-path $Scriptdir ))
         Write-Host -ForegroundColor Gray " ==>Adding $Sourcedir to Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir |Out-Null
         Write-Host -ForegroundColor Gray " ==>Configuring Network with $IP for $Nodename"
-        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -suse -device eno16777984 -Peerdns -DNS1 "$DNS1" -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodename"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
+        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -suse -device eno16777984 -Peerdns -DNS1 "$DNS1" -DNSDOMAIN "$BuildDomain.$custom_domainsuffix" -Hostname "$Nodename"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
         Write-Host -ForegroundColor Gray " ==>Restarting Network, please be patient"
         $NodeClone | Invoke-VMXBash -Scriptblock "/sbin/rcnetwork restart" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         
