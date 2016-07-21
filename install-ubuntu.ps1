@@ -113,6 +113,15 @@ If ($Defaults.IsPresent)
      $DNS1 = $labdefaults.DNS1
      $DNS2 = $labdefaults.DNS2
     }
+if ($LabDefaults.custom_domainsuffix)
+	{
+	$custom_domainsuffix = $LabDefaults.custom_domainsuffix
+	}
+else
+	{
+	$custom_domainsuffix = "local"
+	}
+
 if (!$DNS2)
     {
     $DNS2 = $DNS1
@@ -342,12 +351,12 @@ foreach ($Node in $machinesBuilt)
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-        $Scriptblock = "echo 'dns-search $BuildDomain.local' >> /etc/network/interfaces"
+        $Scriptblock = "echo 'dns-search $BuildDomain.$Custom_DomainSuffix' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         
         Write-Host -ForegroundColor Gray " ==> setting hostname $Node"
-        $Scriptblock = "echo '127.0.0.1       localhost' > /etc/hosts; echo '$ip $Node $Node.$BuildDomain.local' >> /etc/hosts; hostname $Node"
+        $Scriptblock = "echo '127.0.0.1       localhost' > /etc/hosts; echo '$ip $Node $Node.$BuildDomain.$Custom_DomainSuffix' >> /etc/hosts; hostname $Node"
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
         Write-Host -ForegroundColor Magenta "==> Restarting Guest Network"

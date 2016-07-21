@@ -30,7 +30,7 @@ Param(
 #[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 #[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateRange(1,3)][int32]$Disks = 1,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('1024','2048','3072','4096','8192','12288','16384','20480','30720','51200','65536')]$Memory = "4096",
+[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('1024','2048','3072','4096','8192','12288','16384','20480','30720','51200','65536')]$Memory = "3072",
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
@@ -96,11 +96,28 @@ If ($Defaults.IsPresent)
     $DNS1 = $labdefaults.DNS1
     $Hostkey = $labdefaults.HostKey
     }
+if ($LabDefaults.custom_domainsuffix)
+	{
+	$custom_domainsuffix = $LabDefaults.custom_domainsuffix
+	}
+else
+	{
+	$custom_domainsuffix = "local"
+	}
+
 If (!$DNS1)
     {
     Write-Warning "DNS Server not Set, exiting now"
     }
-
+try
+    {
+    $Masterpath = $LabDefaults.Masterpath
+    }
+catch
+    {
+    # Write-Host -ForegroundColor Gray " ==> No Masterpath specified, trying default"
+    $Masterpath = $Builddir
+    }
 
 
 [System.Version]$subnet = $Subnet.ToString()
@@ -113,10 +130,14 @@ $Rootpassword  = "Password123!"
 
 $Guestuser = "$($Szenarioname.ToLower())user"
 $Guestpassword  = "Password123!"
-$Required_Master = "CentOS7 Master"
+$Required_Master = "Centos7 Master"
 $OS = ($Required_Master.Split(" "))[0]
 ###### checking master Present
-if (!($MasterVMX = get-vmx $Required_Master))
+try
+    {
+    $MasterVMX = test-labmaster -Masterpath $MasterPath -Master $Required_Master -Confirm:$Confirm -erroraction stop
+    }
+catch
     {
     Write-Warning "Required Master $Required_Master not found
     please download and extraxt $Required_Master to .\$Required_Master
@@ -127,6 +148,18 @@ if (!($MasterVMX = get-vmx $Required_Master))
     exit
     }
 ####
+if (!$MasterVMX.Template) 
+            {
+            write-verbose "Templating Master VMX"
+            $template = $MasterVMX | Set-VMXTemplate
+            }
+        $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
+        if (!$Basesnap) 
+        {
+         Write-verbose "Base snap does not exist, creating now"
+        $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
+        }
+##
 
 
 try
@@ -141,7 +174,8 @@ catch [System.Management.Automation.DriveNotFoundException]
 
 
 [uint64]$Disksize = 100GB
-$Node_requires = "git"
+$Node_requires = "git numactl libaio"
+
 if (!$MasterVMX.Template) 
             {
             write-verbose "Templating Master VMX"
@@ -158,8 +192,13 @@ if (!$MasterVMX.Template)
 
 if ($rexray.IsPresent)
     {
-    Write-Warning "Searching for ScaleIO SDC Binaries in $Sourcedir\Scaleio, this may take a while"
-    $sdc_rpm = Get-ChildItem -Path $Sourcedir -Filter "EMC-ScaleIO-sdc-*el7.x86_64.rpm" -Recurse | Sort-Object -Descending
+    Write-Host -ForegroundColor Gray " ==>Searching for ScaleIO SDC Binaries in $Sourcedir\Scaleio, this may take a while"
+    if (!($sdc_rpm = Get-ChildItem -Path $Sourcedir -Filter "EMC-ScaleIO-sdc-*el7.x86_64.rpm" -Recurse | Sort-Object -Descending))
+		{
+		Receive-LABScaleIO -Destination $Sourcedir -arch linux -unzip  | Out-Null
+		$sdc_rpm = Get-ChildItem -Path $Sourcedir -Filter "EMC-ScaleIO-sdc-*el7.x86_64.rpm" -Recurse | Sort-Object -Descending
+		}
+
     If ($sdc_rpm)
         {
         $autoinstall_sdc = $true
@@ -179,32 +218,17 @@ if ($rexray.IsPresent)
     $machinesBuilt = @()
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         {
-        If (!(get-vmx $Nodeprefix$node))
+        If (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue))
         {
-        write-verbose " Creating $Nodeprefix$node"
+        write-Host -ForegroundColor Magenta " ==>Creating $Nodeprefix$node"
         $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node 
         If ($Node -eq 1){$Primary = $NodeClone}
         $Config = Get-VMXConfig -config $NodeClone.config
         Write-Verbose "Tweaking Config"
-        <#
-        Write-Verbose "Creating Disks"
-        foreach ($LUN in (1..$Disks))
-            {
-            $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-            Write-Verbose "Building new Disk $Diskname"
-            $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-            Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
-            $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
-            }
-        #>
         write-verbose "Setting NIC0 to HostOnly"
-        $Netadapter = Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config
-        if ($vmnet)
-            {
-            Write-Verbose "Configuring NIC 0 for $vmnet"
-            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config  | Out-Null
-            Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config   | Out-Null
-            }
+        Write-Verbose "Configuring NIC 0 for $vmnet"
+        Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config -WarningAction SilentlyContinue| Out-Null
+        Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config -WarningAction SilentlyContinue | Out-Null
         $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.CloneName)@$BuildDomain"
         $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
         $NodeClone | Set-VMXprocessor -Processorcount 2 | Out-Null
@@ -226,6 +250,7 @@ if ($rexray.IsPresent)
         $ClassC = $node_num+$IPOffset
         $ip="$subnet.$Range$ClassC"
         $NodeClone = get-vmx $Node
+		Write-Host -ForegroundColor Magenta " ==> Waiting for $Node to become ready"
         do {
             $ToolState = Get-VMXToolsState -config $NodeClone.config
             Write-Verbose "VMware tools are in $($ToolState.State) state"
@@ -240,11 +265,11 @@ if ($rexray.IsPresent)
         
         If ($DefaultGateway)
             {
-            $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device eno16777984 -Peerdns -DNS1 $DNS1 -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $rootuser -rootpassword $Guestpassword | Out-Null
+            $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device eno16777984 -Peerdns -DNS1 $DNS1 -DNSDOMAIN "$BuildDomain.$Custom_DomainSuffix" -Hostname "$Nodeprefix$Node"  -rootuser $rootuser -rootpassword $Guestpassword | Out-Null
             }
         else
             {
-            $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $ip -device eno16777984 -Peerdns -DNS1 $DNS1 -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $rootuser -rootpassword $Guestpassword | Out-Null
+            $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $ip -device eno16777984 -Peerdns -DNS1 $DNS1 -DNSDOMAIN "$BuildDomain.$Custom_DomainSuffix" -Hostname "$Nodeprefix$Node"  -rootuser $rootuser -rootpassword $Guestpassword | Out-Null
             }
     
     
@@ -252,95 +277,95 @@ if ($rexray.IsPresent)
 
     $Scriptblock =  "systemctl start NetworkManager"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword #| ft -AutoSize vmxname,scriptblock #-logfile $Logfile
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
     $Scriptblock =  "/etc/init.d/network restart"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  #-logfile $Logfile
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null 
 
     $Scriptblock =  "systemctl stop NetworkManager"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  #-logfile $Logfile
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null 
 
 
     Write-Host -ForegroundColor Magenta "ssh into $ip with root:Password123! and Monitor $Logfile"
     write-verbose "Disabling IPv&"
     $Scriptblock = "echo 'net.ipv6.conf.all.disable_ipv6 = 1' >> /etc/sysctl.conf;sysctl -p"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile 
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 
-    $Scriptblock =  "echo '$ip $($NodeClone.vmxname) $($NodeClone.vmxname).$BuildDomain.local'  >> /etc/hosts"
+    $Scriptblock =  "echo '$ip $($NodeClone.vmxname) $($NodeClone.vmxname).$BuildDomain.$Custom_DomainSuffix'  >> /etc/hosts"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  #-logfile $Logfile
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null #-logfile $Logfile
 
  
     $Scriptblock = "systemctl disable iptables.service"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
     
     $Scriptblock = "systemctl stop iptables.service"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 
     write-verbose "Setting Timezone"
     $Scriptblock = "timedatectl set-timezone $DefaultTimezone"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 
     write-verbose "Setting Hostname"
     $Scriptblock = "hostnamectl set-hostname $($NodeClone.vmxname)"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  | Out-Null
 
             
         $Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword 
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
     
         if ($Hostkey)
             {
             $Scriptblock = "echo '$Hostkey' >> /root/.ssh/authorized_keys"
             Write-Verbose $Scriptblock
-            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
             }
 
         $Scriptblock = "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys;chmod 0600 /root/.ssh/authorized_keys"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
 
-        Write-Host -ForegroundColor Magenta "Nodenumber : $Node_num"
+        # Write-Host -ForegroundColor Magenta "Nodenumber : $Node_num"
     ### preparing yum
     $file = "/etc/yum.conf"
     $Property = "cachedir"
     $Scriptblock = "grep -q '^$Property' $file && sed -i 's\^$Property=/var*.\$Property=/mnt/hgfs/Sources/$OS/\' $file || echo '$Property=/mnt/hgfs/Sources/$OS/yum/`$basearch/`$releasever/' >> $file"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  | Out-Null
 
     $file = "/etc/yum.conf"
     $Property = "keepcache"
     $Scriptblock = "grep -q '^$Property' $file && sed -i 's\$Property=0\$Property=1\' $file || echo '$Property=1' >> $file"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  | Out-Null
 
     Write-Host -ForegroundColor Magenta "Generating Yum Cache on $Sourcedir"
     $Scriptblock="yum makecache"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 
     Write-Host -ForegroundColor Magenta "INSTALLING VERSIONLOCK"
     $Scriptblock="yum install yum-plugin-versionlock -y"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
     
     Write-Host -ForegroundColor Magenta "locking vmware tools"
     $Scriptblock="yum versionlock open-vm-tools"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 
     $requires = "$Node_requires"
     $Scriptblock = "yum install $requires -y"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/yum-requires.log
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/yum-requires.log  | Out-Null
 
 
 
@@ -350,31 +375,79 @@ if ($rexray.IsPresent)
         Write-Host -ForegroundColor Magenta "Performing yum update, this may take a while"
         $Scriptblock = "yum update -y"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  | Out-Null
         }
     
     $Scriptblock = "curl -sSL https://get.docker.com/ | sh"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/yum-requires.log
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/yum-requires.log  | Out-Null
 
 
     $Scriptblock =  "rpm -Uvh http://repos.mesosphere.com/el/7/noarch/RPMS/mesosphere-el-repo-7-1.noarch.rpm"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/mesos.log
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/mesos.log  | Out-Null
 
     $Scriptblock =  "yum -y install mesos marathon mesosphere-zookeeper"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/mesos.log
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/mesos.log  | Out-Null
 
     $Scriptblock = "yum -y install mesosphere-zookeeper"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/mesos.log
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/mesos.log  | Out-Null
 
     $Scriptblock = "echo '$node_num' > /var/lib/zookeeper/myid"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5
-    if ($rexray.IsPresent)
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5  | Out-Null
+    $ZK = "zk://"
+    foreach ($mesos_Node in $machinesBuilt)
         {
+        [int]$Mesos_Node_num = $mesos_Node -replace "$Nodeprefix"
+        $ClassC = $Mesos_Node_num+$IPOffset
+        $ip="$subnet.$Range$ClassC"
+
+        $Scriptblock = "echo 'server.$Mesos_Node_num=$($IP):2888:3888' >> /etc/zookeeper/conf/zoo.cfg"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5  | Out-Null
+        $zk = "$Zk$($IP):2181,"
+        }
+    $ZK = "$($ZK.Substring(0,$ZK.Length-1))/mesos"
+    $Scriptblock = "systemctl enable docker"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/mesos.log  | Out-Null
+
+    $Scriptblock = "systemctl start docker"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/mesos.log  | Out-Null
+
+    $Scriptblock = "systemctl enable zookeeper"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/mesos.log  | Out-Null
+
+    $Scriptblock = "systemctl start zookeeper"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/mesos.log  | Out-Null
+
+    $Scriptblock = "echo '$ZK' > /etc/mesos/zk"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 | Out-Null
+    ### should be calced soon node/2+1
+    $Scriptblock = "echo 2 > /etc/mesos-master/quorum"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 | Out-Null
+
+	if ($Update.IsPresent)
+		{
+        $Scriptblock = "shutdown -r now"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -nowait | Out-Null
+		}
+    }
+if ($rexray.IsPresent)
+    {
+    foreach ($Node in $machinesBuilt)
+        {
+        $NodeClone = get-vmx $Node
+      
         if ($autoinstall_sdc)
             {
             Write-Verbose "trying rexray and ScaleIO SDC Install"
@@ -396,55 +469,12 @@ if ($rexray.IsPresent)
             {
             Write-Warning "SDC Binaries not found, plese install manually"
             }
-        }
-    $ZK = "zk://"
-    foreach ($mesos_Node in $machinesBuilt)
-        {
-        [int]$Mesos_Node_num = $mesos_Node -replace "$Nodeprefix"
-        $ClassC = $Mesos_Node_num+$IPOffset
-        $ip="$subnet.$Range$ClassC"
+        
 
-        $Scriptblock = "echo 'server.$Mesos_Node_num=$($IP):2888:3888' >> /etc/zookeeper/conf/zoo.cfg"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5
-        $zk = "$Zk$($IP):2181,"
-        }
-    $ZK = "$($ZK.Substring(0,$ZK.Length-1))/mesos"
-    $Scriptblock = "systemctl enable docker"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/mesos.log
-
-    $Scriptblock = "systemctl start docker"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/mesos.log
-
-    $Scriptblock = "systemctl enable zookeeper"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/mesos.log
-
-    $Scriptblock = "systemctl start zookeeper"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/mesos.log
-
-    $Scriptblock = "echo '$ZK' > /etc/mesos/zk"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5
-    ### should be calced soon node/2+1
-    $Scriptblock = "echo 2 > /etc/mesos-master/quorum"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5
-
-
-    }
-if ($rexray.IsPresent)
-    {
-    foreach ($Node in $machinesBuilt)
-        {
-        $NodeClone = get-vmx $Node
-        Write-Verbose "trying rexray Install"
+        Write-Host -ForegroundColor Gray " ==>trying rexray Install"
         $Scriptblock = "$Rexray_script" #;$DVDCLI_script;$Isolator_script"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
         <#
         $Scriptblock = "echo 'com_emccode_mesos_DockerVolumeDriverIsolator' > /etc/mesos-slave/isolation;echo 'file:///usr/lib/dvdi-mod.json' > /etc/mesos-slave/modules"
         Write-Verbose $Scriptblock

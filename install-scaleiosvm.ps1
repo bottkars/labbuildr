@@ -18,7 +18,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://github.com/bottkars/labbuildr/wiki/SolutionPacks#install-scaleiosvm  
+   https://github.com/bottkars/labbuildr/wiki/install-scaleiosvm.ps1 
 .EXAMPLE
 .\install-scaleiosvm.ps1 -Sourcedir d:\sources
 .EXAMPLE
@@ -65,7 +65,7 @@ The extracte OVA will be dehydrated to a VMware Workstation Master #>
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "sdsonly",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
-<# Name of the domain, .local added#>
+<# Name of the domain, .$Custom_DomainSuffix added#>
 [Parameter(ParameterSetName = "sdsonly",Mandatory=$false)]
 [Parameter(ParameterSetName = "install",Mandatory=$False)]
 [ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain = "labbuildr",
@@ -81,7 +81,7 @@ The extracte OVA will be dehydrated to a VMware Workstation Master #>
 [Parameter(ParameterSetName = "sdsonly",Mandatory=$false)][switch]$sdc,
 <# Configure automatically configures the ScaleIO Cluster and will always install 3 Nodes !  #>
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$configure,
+[Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$configure = $true,
 <# we use SingleMDM parameter with Configure for test and dev to Showcase ScaleIO und LowMem Machines #>
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$False)][switch]$singlemdm,
@@ -113,6 +113,15 @@ If ($Defaults.IsPresent)
      $DefaultGateway = $labdefaults.DefaultGateway
      $Sourcedir = $labdefaults.Sourcedir
      }
+if ($LabDefaults.custom_domainsuffix)
+	{
+	$custom_domainsuffix = $LabDefaults.custom_domainsuffix
+	}
+else
+	{
+	$custom_domainsuffix = "local"
+	}
+
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 $rootuser = "root"
@@ -304,9 +313,7 @@ to remove all Nodes"
 
 }
 $Logfile = "/tmp/install_sio.log"
-Write-Host -ForegroundColor Gray " ==>Configuring Nodes, this may take a while
-logging to $Logfile
-"
+Write-Host -ForegroundColor Magenta " ==>Starting configuration of Nodes, logging to $Logfile"
 
 foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         {
@@ -321,7 +328,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         until ($ToolState.state -match "running")
         If (!$DefaultGateway) {$DefaultGateway = $Ip}
         Write-Host -ForegroundColor Gray " ==>Configuring $Nodeprefix$node with $ip"
-        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device eth0 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node" -suse -rootuser $rootuser -rootpassword $rootpassword | Out-Null
+        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device eth0 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.$Custom_DomainSuffix" -Hostname "$Nodeprefix$Node" -suse -rootuser $rootuser -rootpassword $rootpassword | Out-Null
         Write-Host -ForegroundColor Gray " ==>Installing GPG Key"
         $NodeClone | Invoke-VMXBash -Scriptblock "rpm --import /root/install/RPM-GPG-KEY-ScaleIO" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
         Write-Host -ForegroundColor Gray " ==>Installing OpenSSL Cert"
@@ -373,9 +380,8 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     }
 if ($configure.IsPresent)
     {
-    Write-Host -ForegroundColor Magenta "Configuring ScaleIO"
+    Write-Host -ForegroundColor Magenta " ==> Now configuring ScaleIO"
     $Logfile = "/tmp/configure_sio.log"
-    write-host "Configuring ScaleIO"
     $mdmconnect = "scli --login --username admin --password $MDMPassword --mdm_ip $mdm_ip"
 
     if ($Primary)

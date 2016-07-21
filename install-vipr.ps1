@@ -52,6 +52,14 @@ else
     {
     $subnet = "192.168.2.0"
     }
+if ($LabDefaults.custom_domainsuffix)
+	{
+	$custom_domainsuffix = $LabDefaults.custom_domainsuffix
+	}
+else
+	{
+	$custom_domainsuffix = "local"
+	}
 
 if (!(test-path $Sourcedir))
     {

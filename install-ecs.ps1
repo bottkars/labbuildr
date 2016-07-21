@@ -18,7 +18,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://github.com/bottkars/labbuildr/wiki/SolutionPacks#install-ecs
+   https://github.com/bottkars/labbuildr/wiki/install-ecs.ps1
 .EXAMPLE
 
 #>
@@ -69,7 +69,6 @@ $Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
 [switch]$offline,
 [switch]$pausebeforescript,
-$Domain_Suffix = "local",
 $Nodeprefix = "ECSNode",
 $Custom_IP
 
@@ -122,6 +121,14 @@ If ($Defaults.IsPresent)
      $DNS1 = $labdefaults.DNS1
      $DNS2 = $labdefaults.DNS2
      }
+if ($LabDefaults.custom_domainsuffix)
+	{
+	$custom_domainsuffix = $LabDefaults.custom_domainsuffix
+	}
+else
+	{
+	$custom_domainsuffix = "local"
+	}
 
 if (!$Masterpath) {$Masterpath = $Builddir}
 If (!$DNS1 -and !$DNS2)
@@ -293,34 +300,33 @@ catch [System.Management.Automation.DriveNotFoundException]
         }
     }
 foreach ($Node in $machinesBuilt)
-        {
-        Write-Host -ForegroundColor Gray " ==>Configuring GuestOS Network"
-        [int]$NodeNum = $Node -replace "$Nodeprefix"
-        $ClassC = $NodeNum+$IPOffset
-		if (!$Custom_IP)
-			{
-			 $ip="$subnet.$Range$ClassC"
-			}
-		else
-			{
-			$IP=$Custom_IP
-			}
-        $NodeClone = get-vmx $Node
-        Write-Host -ForegroundColor Magenta " ==>Waiting for VM to boot GuestOS $OS"
-    
-        do {
-            $ToolState = Get-VMXToolsState -config $NodeClone.config
-            Write-Verbose "VMware tools are in $($ToolState.State) state"
-            sleep 5
-            }
-        until ($ToolState.state -match "running")
-        Write-Verbose "Setting Shared Folders"
-        $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
-        Write-verbose "Cleaning Shared Folders"
-        $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | Out-Null
-        Write-Verbose "Adding Shared Folders"        
-        $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
-        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device eno16777984 -Peerdns -DNS1 $DNS1 -DNS2 $DNS2 -DNSDOMAIN "$BuildDomain.$($Domain_Suffix)" -Hostname $ECSName  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
+	{   
+    [int]$NodeNum = $Node -replace "$Nodeprefix"
+    $ClassC = $NodeNum+$IPOffset
+	if (!$Custom_IP)
+		{
+			$ip="$subnet.$Range$ClassC"
+		}
+	else
+		{
+		$IP=$Custom_IP
+		}
+    $NodeClone = get-vmx $Node
+    Write-Host -ForegroundColor Magenta " ==>Waiting for VM to boot GuestOS $OS"
+    do {
+        $ToolState = Get-VMXToolsState -config $NodeClone.config
+        Write-Verbose "VMware tools are in $($ToolState.State) state"
+        sleep 5
+        }
+    until ($ToolState.state -match "running")
+    Write-Host -ForegroundColor Magenta " ==>Configuring GuestOS"
+    Write-Verbose "Setting Shared Folders"
+    $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
+    Write-verbose "Cleaning Shared Folders"
+    $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | Out-Null
+    Write-Verbose "Adding Shared Folders"        
+    $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
+    $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device eno16777984 -Peerdns -DNS1 $DNS1 -DNS2 $DNS2 -DNSDOMAIN "$BuildDomain.$($custom_domainsuffix)" -Hostname $ECSName  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
     
 
     $Logfile = "/tmp/1_prepare.log"
@@ -338,21 +344,13 @@ foreach ($Node in $machinesBuilt)
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword    #-logfile $Logfile
     Write-Host -ForegroundColor Gray " ==>you can now use ssh into $ip with root:Password123! and Monitor $Logfile"
     ##### Prepare
-    Write-Host -ForegroundColor Cyan " ==>Testing default Route, make sure that Gateway is reachable ( install and start OpenWRT )
-    if failures occur, open a 2nd labbuildr window and run start-vmx OpenWRT "
-   
-    $Scriptblock = "DEFAULT_ROUTE=`$(ip route show default | awk '/default/ {print `$3}');ping -c 1 `$DEFAULT_ROUTE"
-    Write-Verbose $Scriptblock
-    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile     
-    
-      
-    Write-Host -ForegroundColor Magenta " ==>Configuring GuestOS"
+ 
     write-verbose "Disabling IPv&"
     $Scriptblock = "echo 'net.ipv6.conf.all.disable_ipv6 = 1' >> /etc/sysctl.conf;sysctl -p"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  
 
-    $Scriptblock =  "echo '$ip $($ECSName) $($ECSName).$BuildDomain.$($Domain_Suffix)'  >> /etc/hosts"
+    $Scriptblock =  "echo '$ip $($ECSName) $($ECSName).$BuildDomain.$($Custom_DomainSuffix)'  >> /etc/hosts"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword    #-logfile $Logfile  
 
@@ -405,15 +403,13 @@ foreach ($Node in $machinesBuilt)
     $Scriptblock = "sed -i 's/^.*\bDefaults    requiretty\b.*$/Defaults    !requiretty/' /etc/sudoers"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  
-
-
-    Write-Verbose "Changing Password for $Guestuser to $Guestpassword"
+    
+	Write-Verbose "Changing Password for $Guestuser to $Guestpassword"
     $Scriptblock = "echo $Guestpassword | passwd $Guestuser --stdin"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  
-
-
-    ### generate user ssh keys
+    
+	### generate user ssh keys
     $Scriptblock ="/usr/bin/ssh-keygen -t rsa -N '' -f /home/$Guestuser/.ssh/id_rsa"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword  
@@ -451,7 +447,14 @@ foreach ($Node in $machinesBuilt)
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword   # -logfile $Logfile
 
 	#### end ssh
-    
+	### testing default route
+    Write-Host -ForegroundColor Cyan " ==>Testing default Route, make sure that Gateway is reachable ( install and start OpenWRT )
+    if failures occur, open a 2nd labbuildr window and run start-vmx OpenWRT "
+   
+    $Scriptblock = "DEFAULT_ROUTE=`$(ip route show default | awk '/default/ {print `$3}');ping -c 1 `$DEFAULT_ROUTE"
+    Write-Verbose $Scriptblock
+    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile     
+   
 
 
     ### preparing yum
@@ -482,8 +485,6 @@ foreach ($Node in $machinesBuilt)
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
-
-    #### end ssh
     if ($update.IsPresent)
         {
         Write-Verbose "Performing yum update, this may take a while"

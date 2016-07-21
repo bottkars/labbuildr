@@ -115,6 +115,16 @@ if (!$DNS2)
     {
     $DNS2 = $DNS1
     }
+
+if ($LabDefaults.custom_domainsuffix)
+	{
+	$custom_domainsuffix = $LabDefaults.custom_domainsuffix
+	}
+else
+	{
+	$custom_domainsuffix = "local"
+	}
+
 if (!$Masterpath) {$Masterpath = $Builddir}
 
 $ip_startrange = $ip_startrange+$Startnode
@@ -178,6 +188,7 @@ if (!$MasterVMX.Template)
          Write-verbose "Base snap does not exist, creating now"
         $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
         }
+##
 $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
 ####Build Machines###### cecking for linux binaries
 ####Build Machines#
@@ -280,11 +291,11 @@ foreach ($Node in $machinesBuilt)
 
         If ($DefaultGateway)
             {
-            $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device $netdev -Peerdns -DNS1 $DNS1 -DNS2 $DNS2 -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $rootuser -rootpassword $Guestpassword | Out-Null
+            $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device $netdev -Peerdns -DNS1 $DNS1 -DNS2 $DNS2 -DNSDOMAIN "$BuildDomain.$Custom_DomainSuffix" -Hostname "$Nodeprefix$Node"  -rootuser $rootuser -rootpassword $Guestpassword | Out-Null
             }
         else
             {
-            $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $ip -device $netdev -Peerdns -DNS1 $DNS1 -DNS2 $DNS2 -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $rootuser -rootpassword $Guestpassword | Out-Null
+            $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $ip -device $netdev -Peerdns -DNS1 $DNS1 -DNS2 $DNS2 -DNSDOMAIN "$BuildDomain.$Custom_DomainSuffix" -Hostname "$Nodeprefix$Node"  -rootuser $rootuser -rootpassword $Guestpassword | Out-Null
             }
         $Scriptblock = "rm /etc/resolv.conf;systemctl restart network"
         Write-Verbose $Scriptblock

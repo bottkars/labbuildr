@@ -83,6 +83,15 @@ If ($Defaults.IsPresent)
      $Hostkey = $labdefaults.HostKey
      $DNS1 = $labdefaults.DNS1
      }
+if ($LabDefaults.custom_domainsuffix)
+	{
+	$custom_domainsuffix = $LabDefaults.custom_domainsuffix
+	}
+else
+	{
+	$custom_domainsuffix = "local"
+	}
+
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 
@@ -196,9 +205,9 @@ if (!(Test-path "$Sourcedir\Openstack"))
         $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | Out-Null
         write-Host -ForegroundColor Magenta "      ==> Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
-        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device $public_device -Peerdns -DNS1 $DNS1 -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
+        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device $public_device -Peerdns -DNS1 $DNS1 -DNSDOMAIN "$BuildDomain.$Custom_DomainSuffix" -Hostname "$Nodeprefix$Node"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
         # Configure Private Network
-        $NodeClone | Set-VMXLinuxNetwork -ipaddress $private_ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device $private_device -Peerdns -DNS1 $DNS1 -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$Node"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
+        $NodeClone | Set-VMXLinuxNetwork -ipaddress $private_ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device $private_device -Peerdns -DNS1 $DNS1 -DNSDOMAIN "$BuildDomain.$Custom_DomainSuffix" -Hostname "$Nodeprefix$Node"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
         write-Host -ForegroundColor Magenta "      ==> Installing Private Interface"
 
     write-Host -ForegroundColor Magenta "      ==> Setting Timezone"

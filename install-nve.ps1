@@ -19,7 +19,7 @@
    limitations under the License.
 
 .LINK
-   https://community.emc.com/blogs/bottk/2015/05/04/labbuildrannouncement-unattended-vipr-controller-deployment-for-vmware-workstation
+   https://github.com/bottkars/labbuildr/wiki/install-nve.ps1
 .EXAMPLE
 #>
 [CmdletBinding()]
@@ -27,7 +27,7 @@ Param(
 [Parameter(ParameterSetName = "import", Mandatory = $true)][switch]$import,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$Defaults = $true,
 [Parameter(ParameterSetName = "defaults",Mandatory = $true)]
-[Parameter(ParameterSetName = "import",Mandatory = $true)][ValidateSet('9.0.1-72')]$nve_ver,
+[Parameter(ParameterSetName = "import",Mandatory = $false)][ValidateSet('9.0.1-72')]$nve_ver = '9.0.1-72',
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
 )
 
@@ -70,6 +70,14 @@ $Gateway = $labdefaults.Gateway
 $DefaultGateway = $labdefaults.Defaultgateway
 $DNS1 = $labdefaults.DNS1
 $DNS2 = $labdefaults.DNS2
+if ($LabDefaults.custom_domainsuffix)
+	{
+	$custom_domainsuffix = $LabDefaults.custom_domainsuffix
+	}
+else
+	{
+	$custom_domainsuffix = "local"
+	}
 
 
 switch ($PsCmdlet.ParameterSetName)
@@ -88,13 +96,11 @@ switch ($PsCmdlet.ParameterSetName)
             Write-Host -ForegroundColor Gray " ==> Checking for $Product OVA package"
             Receive-LABNetworker -nve -nve_ver $nve_ver -Destination "$Sourcedir\$Product" -Confirm:$false
             $OVA_File = Get-ChildItem -Path "$Sourcedir\$Product" -Recurse -include "$Product_tag.ova"  -Exclude ".*" | Sort-Object -Descending | Select-Object -First 1
-            #$OVA_File = $OVApath[0]
-            #$OVA_Destination = join-path $Importfile.DirectoryName $Importfile.BaseName
             Write-Host -ForegroundColor Magenta " ==>Extraxting from OVA Package $OVA_File"
             $Expand = Expand-LAB7Zip -Archive $OVA_file.FullName -destination $nve_dir
             try
                 {
-                Write-Host -ForegroundColor Magenta " ==>Validating OVF from OVA Package"
+                Write-Host -ForegroundColor Gray " ==>Validating OVF from OVA Package"
                 $Importfile = Get-ChildItem -Filter "*.ovf" -Path $nve_dir -ErrorAction stop
                 }
             catch
@@ -103,7 +109,7 @@ switch ($PsCmdlet.ParameterSetName)
                 return
                 }
             ## tweak ovf
-            Write-Host -ForegroundColor Magenta " ==>Adjusting OVF file for VMwARE Workstation"
+            Write-Host -ForegroundColor Gray " ==>Adjusting OVF file for VMwARE Workstation"
             $content = Get-Content -Path $Importfile.FullName
             $Out_Line = $true
             $OutContent = @()
@@ -133,7 +139,7 @@ switch ($PsCmdlet.ParameterSetName)
             $mastername = $Importfile.BaseName
             }
 
-        Write-Host -ForegroundColor Magenta " ==>Checkin for VM $mastername"
+        Write-Host -ForegroundColor Gray " ==>Checkin for VM $mastername"
 
         if (Get-VMX -Path $masterpath\$mastername -WarningAction SilentlyContinue)
             {
@@ -142,7 +148,7 @@ switch ($PsCmdlet.ParameterSetName)
             }
         else
             {
-            Write-Host -ForegroundColor Magenta " ==>Importing Base VM, this may take a while"
+            Write-Host -ForegroundColor Gray " ==>Importing Base VM, this may take a while"
             if ((import-VMXOVATemplate -OVA $Importfile.FullName -Name $mastername -destination $masterpath  -acceptAllEulas).success -eq $true)
                 {
                 Write-Host -ForegroundColor Gray " ==> Preparation of Template done, please run $($MyInvocation.MyCommand) -Defaults -nve_ver $nve_ver"
@@ -167,85 +173,85 @@ switch ($PsCmdlet.ParameterSetName)
     
     }
 
-"defaults"
+	"defaults"
 
- {
+	{
 
-[System.Version]$subnet = $Subnet.ToString()
-$Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
-if (!$Defaultgateway)
-    {
-    $Defaultgateway = "$subnet.12"
-    }
-Write-Host -ForegroundColor Magenta " ==>Checking if node $targetname already exists"
-if (get-vmx $targetname -WarningAction SilentlyContinue)
-    {
-    Write-Warning " the Virtual Machine already exists"
-    Break
-    }
-$ip="$subnet.12"
-if (!($MasterVMX = Get-VMX -Path $masterpath\$Product_tag))
-    {
-    Write-Host -ForegroundColor White "No Master exists for $Product_tag"
-    return
-    }
+	[System.Version]$subnet = $Subnet.ToString()
+	$Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
+	if (!$Defaultgateway)
+		{
+		$Defaultgateway = "$subnet.12"
+		}
+	Write-Host -ForegroundColor Gray " ==>Checking if node $targetname already exists"
+	if (get-vmx $targetname -WarningAction SilentlyContinue)
+		{
+		Write-Warning " the Virtual Machine already exists"
+		Break
+		}
+	$ip="$subnet.12"
+	if (!($MasterVMX = Get-VMX -Path $masterpath\$Product_tag))
+		{
+		Write-Host -ForegroundColor White "No Master exists for $Product_tag"
+		return
+		}
 
-$Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
-if (!$Basesnap) 
-    {
-    $Content = Get-Content -Path $MasterVMX.config 
-    $content = $content -replace "independent_",""
-    $content | Set-Content -Path $MasterVMX.config
-    Write-Host -ForegroundColor Magenta " ==>Base snap does not exist, creating now"
-    $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
-    }
+	$Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
+	if (!$Basesnap) 
+		{
+		$Content = Get-Content -Path $MasterVMX.config 
+		$content = $content -replace "independent_",""
+		$content | Set-Content -Path $MasterVMX.config
+		Write-Host -ForegroundColor Gray " ==>Base snap does not exist, creating now"
+		$Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
+		}
 
-If (!($Basesnap))
-    {
-    Write-Error "Error creating/finding Basesnap"
-    exit
-    }
+	If (!($Basesnap))
+		{
+		Write-Error "Error creating/finding Basesnap"
+		exit
+		}
 
 
-Write-Host -ForegroundColor Magenta " ==>Creating Machine $targetname"
-$NodeClone = $Basesnap | New-VMXLinkedClone -CloneName $targetname -Path $Builddir
-Write-Host -ForegroundColor Magenta " ==>Configuring VM Network for vmnet $vmnet"
-$NodeClone | Set-VMXNetworkAdapter -Adapter 0 -AdapterType e1000 -ConnectionType custom -WarningAction SilentlyContinue | Out-Null
-$NodeClone | Set-VMXVnet -Adapter 0 -vnet $vmnet -WarningAction SilentlyContinue | Out-Null
-$NodeClone | Set-VMXDisplayName -DisplayName $targetname | Out-Null
-$Annotation = $NodeClone | Set-VMXAnnotation -Line1 "https://$ip" -Line2 "user:$rootuser" -Line3 "password:$rootpassword" -Line4 "add license from $masterpath" -Line5 "labbuildr by @hyperv_guy" -builddate
-$NodeClone | Start-VMX | Out-Null
-     do {
-        $ToolState = Get-VMXToolsState -config $NodeClone.config
-        Write-Verbose "VMware tools are in $($ToolState.State) state"
-        sleep 10
-        }
-    until ($ToolState.state -match "running")
-     do {
-        Write-Host -ForegroundColor Gray " ==> Waiting for $targetname to come up"
-        $Process = Get-VMXProcessesInGuest -config $NodeClone.config -Guestuser $rootuser -Guestpassword $rootpassword
-        sleep 10
-        }
-    until ($process -match "mingetty")
-    Write-Host -ForegroundColor Magenta " ==>Configuring Base OS"
-    Write-Host -ForegroundColor Gray " ==> Setting Network"
-    $NodeClone | Invoke-VMXBash -Scriptblock "yast2 lan edit id=0 ip=$IP netmask=255.255.255.0 prefix=24 verbose" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
-    $NodeClone | Invoke-VMXBash -Scriptblock "hostname $($NodeClone.CloneName)" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
-    $Scriptblock = "echo 'default "+$DefaultGateway+" - -' > /etc/sysconfig/network/routes"
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock  -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
-    $sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SEARCHLIST=\`"\`"/NETCONFIG_DNS_STATIC_SEARCHLIST=\`""+$BuildDomain+".local\`"/g' /etc/sysconfig/network/config" 
-    $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
-    $sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SERVERS=\`"\`"/NETCONFIG_DNS_STATIC_SERVERS=\`""+$subnet+".10\`"/g' /etc/sysconfig/network/config"
-    $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
-    $NodeClone | Invoke-VMXBash -Scriptblock "/sbin/netconfig -f update" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
-    $Scriptblock = "echo '"+$targetname+"."+$BuildDomain+".local'  > /etc/HOSTNAME"
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $rootpassword  | Out-Null
-    $NodeClone | Invoke-VMXBash -Scriptblock "/etc/init.d/network restart" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
-Write-Host -ForegroundColor Yellow "
-Successfully Deployed $targetname
+	Write-Host -ForegroundColor Magenta " ==>Creating Machine $targetname"
+	$NodeClone = $Basesnap | New-VMXLinkedClone -CloneName $targetname -Path $Builddir
+	Write-Host -ForegroundColor Gray " ==>Configuring VM Network for vmnet $vmnet"
+	$NodeClone | Set-VMXNetworkAdapter -Adapter 0 -AdapterType e1000 -ConnectionType custom -WarningAction SilentlyContinue | Out-Null
+	$NodeClone | Set-VMXVnet -Adapter 0 -vnet $vmnet -WarningAction SilentlyContinue | Out-Null
+	$NodeClone | Set-VMXDisplayName -DisplayName $targetname | Out-Null
+	$Annotation = $NodeClone | Set-VMXAnnotation -Line1 "https://$ip" -Line2 "user:$rootuser" -Line3 "password:$rootpassword" -Line4 "add license from $masterpath" -Line5 "labbuildr by @hyperv_guy" -builddate
+	$NodeClone | Start-VMX | Out-Null
+		 do {
+			$ToolState = Get-VMXToolsState -config $NodeClone.config
+			Write-Verbose "VMware tools are in $($ToolState.State) state"
+			sleep 10
+			}
+		until ($ToolState.state -match "running")
+		 do {
+			Write-Host -ForegroundColor Gray " ==> Waiting for $targetname to come up"
+			$Process = Get-VMXProcessesInGuest -config $NodeClone.config -Guestuser $rootuser -Guestpassword $rootpassword
+			sleep 10
+			}
+		until ($process -match "mingetty")
+		Write-Host -ForegroundColor Gray " ==>Configuring Base OS"
+		Write-Host -ForegroundColor Gray " ==> Setting Network"
+		$NodeClone | Invoke-VMXBash -Scriptblock "yast2 lan edit id=0 ip=$IP netmask=255.255.255.0 prefix=24 verbose" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
+		$NodeClone | Invoke-VMXBash -Scriptblock "hostname $($NodeClone.CloneName)" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
+		$Scriptblock = "echo 'default "+$DefaultGateway+" - -' > /etc/sysconfig/network/routes"
+		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock  -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
+		$sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SEARCHLIST=\`"\`"/NETCONFIG_DNS_STATIC_SEARCHLIST=\`""+$BuildDomain+"."+$Custom_DomainSuffix+"\`"/g' /etc/sysconfig/network/config" 
+		$NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
+		$sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SERVERS=\`"\`"/NETCONFIG_DNS_STATIC_SERVERS=\`""+$subnet+".10\`"/g' /etc/sysconfig/network/config"
+		$NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
+		$NodeClone | Invoke-VMXBash -Scriptblock "/sbin/netconfig -f update" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
+		$Scriptblock = "echo '"+$targetname+"."+$BuildDomain+"."+$Custom_DomainSuffix+"'  > /etc/HOSTNAME"
+		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $rootpassword  | Out-Null
+		$NodeClone | Invoke-VMXBash -Scriptblock "/etc/init.d/network restart" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
+	Write-Host -ForegroundColor Yellow "
+	Successfully Deployed $targetname
 
-point your browser to https://$($ip)
-Login with $rootuser/$rootpassword and follow the wizard steps
-"
-}
+	point your browser to https://$($ip)
+	Login with $rootuser/$rootpassword and follow the wizard steps
+	"
+	}
 }

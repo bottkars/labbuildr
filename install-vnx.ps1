@@ -68,6 +68,14 @@ If ($Defaults.IsPresent)
      $DNS1 = $labdefaults.DNS1
 
      }
+if ($LabDefaults.custom_domainsuffix)
+	{
+	$custom_domainsuffix = $LabDefaults.custom_domainsuffix
+	}
+else
+	{
+	$custom_domainsuffix = "local"
+	}
 
 If ($configurevdm.IsPresent)
     {
@@ -217,16 +225,15 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         }
     until ($Processlist -match 'avahi-daemon')
 
-        $NodeClone | Set-VMXLinuxNetwork -ipaddress $eth0ip -device eth0 -network "$subnet.0" -netmask 255.255.255.0 -gateway $Defaultgateway  -Peerdns -DNS1 $DNS1 -DNS2 $DNS1 -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$node" -rootuser $rootuser -rootpassword $rootpassword
-        $NodeClone | Set-VMXLinuxNetwork -ipaddress $eth1ip -device eth1 -network "$subnet.0" -netmask 255.255.255.0 -gateway $Defaultgateway  -Peerdns -DNS1 $DNS1 -DNS2 $DNS1 -DNSDOMAIN "$BuildDomain.local" -Hostname "$Nodeprefix$node" -rootuser $rootuser -rootpassword $rootpassword
-       #  $NodeClone | Set-VMXLinuxDNS -Nameserver1 $DNS1 -Nameserver2 $DNS1 -Search1 "$BuildDomain.local" -Domain "$BuildDomain.local" -rootuser $rootuser -rootpassword $rootpassword
+        $NodeClone | Set-VMXLinuxNetwork -ipaddress $eth0ip -device eth0 -network "$subnet.0" -netmask 255.255.255.0 -gateway $Defaultgateway  -Peerdns -DNS1 $DNS1 -DNS2 $DNS1 -DNSDOMAIN "$BuildDomain.$Custom_DomainSuffix" -Hostname "$Nodeprefix$node" -rootuser $rootuser -rootpassword $rootpassword
+        $NodeClone | Set-VMXLinuxNetwork -ipaddress $eth1ip -device eth1 -network "$subnet.0" -netmask 255.255.255.0 -gateway $Defaultgateway  -Peerdns -DNS1 $DNS1 -DNS2 $DNS1 -DNSDOMAIN "$BuildDomain.$Custom_DomainSuffix" -Hostname "$Nodeprefix$node" -rootuser $rootuser -rootpassword $rootpassword
         $Scriptblock = "/etc/init.d/network restart"
         $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $rootpassword
 
 
  # Starting NAS Config
         Write-Verbose "Configuring Datamover DNS Settings"
-        $Scriptblock = "export NAS_DB=/nas;/nas/bin/server_dns server_2 -protocol tcp $BuildDomain.local $subnet.10"
+        $Scriptblock = "export NAS_DB=/nas;/nas/bin/server_dns server_2 -protocol tcp $BuildDomain.$Custom_DomainSuffix $subnet.10"
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser nasadmin -Guestpassword $rootpassword
         Write-Verbose "Configuring Datamover Timezone Settings"
         $Scriptblock = "/usr/bin/perl /nas/http/webui/bin/timezone.pl -s $ZONE"
@@ -258,10 +265,10 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         $Scriptblock = "export NAS_DB=/nas;/nas/bin/server_ifconfig server_2 -create -Device cge0 -name IF_VDM_1 -protocol IP $subnet.85 255.255.255.0 $subnet.255"
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Nasuser -Guestpassword $rootpassword 
         write-Verbose "Creating Cifs Server VNX_$BuildDomain"
-        $Scriptblock = "export NAS_DB=/nas;/nas/bin/server_cifs VDM_$Builddomain -add compname=VNX_$Builddomain,domain=$Builddomain.local,interface=IF_VDM_1 -comment 'Virtual VNX built by labbuildr'"       
+        $Scriptblock = "export NAS_DB=/nas;/nas/bin/server_cifs VDM_$Builddomain -add compname=VNX_$Builddomain,domain=$Builddomain.$Custom_DomainSuffix,interface=IF_VDM_1 -comment 'Virtual VNX built by labbuildr'"       
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Nasuser -Guestpassword $rootpassword 
         write-Verbose "Joining Cifs Server VNX_$BuildDomain to $BuildDomain"
-        $Scriptblock = "export NAS_DB=/nas;/usr/bin/expect -c 'set timeout 30;spawn /nas/bin/server_cifs VDM_"+$BuildDomain+" -Join compname=VNX_"+$BuildDomain+",domain="+$BuildDomain+".local,admin=Administrator;expect `"assword:`" { send `"Password123!\r`" };interact'"
+        $Scriptblock = "export NAS_DB=/nas;/usr/bin/expect -c 'set timeout 30;spawn /nas/bin/server_cifs VDM_"+$BuildDomain+" -Join compname=VNX_"+$BuildDomain+",domain="+$BuildDomain+"."+"$custom_domainsuffix"+",admin=Administrator;expect `"assword:`" { send `"Password123!\r`" };interact'"
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Nasuser -Guestpassword $rootpassword
         write-Verbose "Clearing LOG File"
         $Scriptblock = "echo '#version 1' > /nas/log/webui/alert_log"

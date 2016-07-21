@@ -146,6 +146,14 @@ If ($Defaults.IsPresent)
      }
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
+if ($LabDefaults.custom_domainsuffix)
+	{
+	$custom_domainsuffix = $LabDefaults.custom_domainsuffix
+	}
+else
+	{
+	$custom_domainsuffix = "local"
+	}
 
                
 If (!$MasterPath)
@@ -265,10 +273,10 @@ Assign internal Addresses from .41 to .56 according to your Subnet
         External High IP ........: $Subnet.56
         Default Gateway..........: $DefaultGateway
         Configure Smartconnect
-        smartconnect Zone Name...:  onefs.$BuildDomain.local
+        smartconnect Zone Name...:  onefs.$BuildDomain.$Custom_DomainSuffix
         smartconnect Service IP :  $Subnet.40
         Configure DNS Settings
         DNS Server...............: $DNS1,$Subnet.10
-        Search Domain............: $BuildDomain.local"
+        Search Domain............: $BuildDomain.$Custom_DomainSuffix"
 }
 }

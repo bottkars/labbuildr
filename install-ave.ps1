@@ -111,6 +111,14 @@ switch ($PsCmdlet.ParameterSetName)
             $DNS2 = $labdefaults.DNS2
             $configure = $true
             }
+		if ($LabDefaults.custom_domainsuffix)
+			{
+			$custom_domainsuffix = $LabDefaults.custom_domainsuffix
+			}
+		else
+			{
+			$custom_domainsuffix = "local"
+			}
 
 
         if (!($MasterVMX=get-vmx AVEmaster))
@@ -308,15 +316,15 @@ switch ($PsCmdlet.ParameterSetName)
     $NodeClone | Invoke-VMXBash -Scriptblock "hostname $($NodeClone.CloneName)" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
     $Scriptblock = "echo 'default "+$DefaultGateway+" - -' > /etc/sysconfig/network/routes"
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock  -Guestuser $rootuser -Guestpassword $rootpassword -Verbose  | Out-Null
-    $sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SEARCHLIST=\`"\`"/NETCONFIG_DNS_STATIC_SEARCHLIST=\`""+$BuildDomain+".local\`"/g' /etc/sysconfig/network/config" 
+    $sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SEARCHLIST=\`"\`"/NETCONFIG_DNS_STATIC_SEARCHLIST=\`""+$BuildDomain+"."+$Custom_DomainSuffix+"\`"/g' /etc/sysconfig/network/config" 
     $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
     $sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SERVERS=\`"\`"/NETCONFIG_DNS_STATIC_SERVERS=\`""+$subnet+".10\`"/g' /etc/sysconfig/network/config"
     $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
     $NodeClone | Invoke-VMXBash -Scriptblock "/sbin/netconfig -f update" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
-    $Scriptblock = "echo '$ip $($Nodeprefix)$($Node) $($Nodeprefix)$($Node).$($BuildDomain).local'  >> /etc/hosts"
+    $Scriptblock = "echo '$ip $($Nodeprefix)$($Node) $($Nodeprefix)$($Node).$($BuildDomain).$Custom_DomainSuffix'  >> /etc/hosts"
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
 
-    $Scriptblock = "echo '"+$Nodeprefix+$Node+"."+$BuildDomain+".local'  > /etc/HOSTNAME"
+    $Scriptblock = "echo '"+$Nodeprefix+$Node+"."+$BuildDomain+"."+$Custom_DomainSuffix+"'  > /etc/HOSTNAME"
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
     $NodeClone | Invoke-VMXBash -Scriptblock "/etc/init.d/network restart" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
     do {

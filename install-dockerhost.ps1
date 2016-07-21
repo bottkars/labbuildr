@@ -74,6 +74,15 @@ If ($Defaults.IsPresent)
      $DNS1 = $labdefaults.DNS1
      $DNS2 = $labdefaults.DNS1
      }
+if ($LabDefaults.custom_domainsuffix)
+	{
+	$custom_domainsuffix = $LabDefaults.custom_domainsuffix
+	}
+else
+	{
+	$custom_domainsuffix = "local"
+	}
+
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 

@@ -112,6 +112,14 @@ switch ($PsCmdlet.ParameterSetName)
             $DNS1 = $labdefaults.DNS1
             $configure = $true
             }
+		if ($LabDefaults.custom_domainsuffix)
+			{
+			$custom_domainsuffix = $LabDefaults.custom_domainsuffix
+			}
+		else
+			{
+			$custom_domainsuffix = "local"
+			}
 
         $memsize = 4096
         $Numcpu = 2
@@ -258,8 +266,8 @@ Go to VMware Console an wait for system to boot"
     Type No for set system serial number at this time
     Type Yes for Configure Network
     Answer No for DHCP
-    Enter $Nodeprefix$Node.$BuildDomain.local as hostname
-    Enter $BuildDomain.local as DNSDomainname
+    Enter $Nodeprefix$Node.$BuildDomain.$Custom_DomainSuffix as hostname
+    Enter $BuildDomain.$Custom_DomainSuffix as DNSDomainname
     (The orde of the next command and Devicenames may vary from Version to Version )
 Ethernet Port ethV0
     Enter yes for Enable Ethernet ethV0

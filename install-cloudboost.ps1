@@ -129,6 +129,14 @@ default
 		 $DNS1 = $labdefaults.DNS1
 		 $DNS2 = $labdefaults.DNS2
 		}
+	if ($LabDefaults.custom_domainsuffix)
+		{
+		$custom_domainsuffix = $LabDefaults.custom_domainsuffix
+		}
+	else
+		{
+		$custom_domainsuffix = "local"
+		}
     [System.Version]$subnet = $Subnet.ToString()
     $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
     $Nodeprefix = "cloudboost"
@@ -187,7 +195,7 @@ default
 net config eth0 $subnet.7$Node netmask 255.255.255.0 
 route add 0.0.0.0 netmask 0.0.0.0 gw $DefaultGateway
 dns set primary $DNS1
-fqdn $Nodeprefix$Node.$BuildDomain.local
+fqdn $Nodeprefix$Node.$BuildDomain.$Custom_DomainSuffix
 "
 
     } # end default

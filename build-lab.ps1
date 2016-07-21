@@ -4228,7 +4228,7 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
         }
         invoke-postsection -wait
         $script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script configure-nmc.ps1 -interactive
-		Write-Host -ForegroundColor Gray " ==>Please finish NMC Setup by Double-Clicking Networker Management Console from Desktop on $NWNODE.$builddomain.local"
+		Write-Host -ForegroundColor Gray " ==>Please finish NMC Setup by Double-Clicking Networker Management Console from Desktop on $NWNODE"
 	    
 	}
 } #Networker End
