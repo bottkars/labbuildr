@@ -215,6 +215,8 @@ if ($rexray.IsPresent)
         Write-Warning "sdc Binaries not found for $OS, skipping autoinstall of RexRay for ScaleIO"
         }
     }
+####Build Machines#
+    $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
     $machinesBuilt = @()
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         {
@@ -642,9 +644,11 @@ $json = '
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -nowait| Out-Null
 }
-    Write-Host -ForegroundColor Magenta "Login to the VM´s with root/Password123! or with Pagent Auth
-    go to http://$($Masterip):5050 for mesos admin
-    go to http://$($Masterip):8080 for marathon admin"
+$StopWatch.Stop()
+Write-host -ForegroundColor White "Mesos Deployment took $($StopWatch.Elapsed.ToString())"
+Write-Host -ForegroundColor Magenta "Login to the VM´s with root/Password123! or with Pagent Auth
+go to http://$($Masterip):5050 for mesos admin
+go to http://$($Masterip):8080 for marathon admin"
     
 
 
