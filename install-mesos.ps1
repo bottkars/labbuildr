@@ -530,6 +530,15 @@ ScaleIO:
   systemName: $($SIO.system_name)
   protectionDomainName: $($SIO.pd_name)
   storagePoolName: $($SIO.pool_name)
+libstorage:
+  integration:
+    volume:
+      operations:
+        mount:
+          preempt: true
+        unmount:
+          ignoreUsedCount: true
+
 "       
             $yml | Set-Content -Path $Scriptdir\$scriptname
             convert-VMXdos2unix -Sourcefile $Scriptdir\$Scriptname -Verbose
