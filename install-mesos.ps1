@@ -427,7 +427,7 @@ if ($rexray.IsPresent)
                 $Scriptblock = "yum install $sdc_rpm -y"
                 Write-Verbose $Scriptblock
                 }
-            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -nowait | Out-Null
 
             }
         else
