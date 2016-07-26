@@ -41,7 +41,7 @@ $Sourcedir = 'h:\sources',
 
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateSet("release-2.1","Develop",'master','latest','2.2.0.1','2.2.0.2','2.2.0.3','2.2.1.0','2.2.1.0-a')]$Branch = 'master',
+[ValidateSet("release-2.1","Develop",'master','latest','2.2.0.1','2.2.0.2','2.2.0.3','2.2.1.0','2.2.1.0-a','2.2.1.1')]$Branch = 'master',
 <#Adjusts some Timeouts#>
 [switch]$AdjustTimeouts,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
@@ -76,6 +76,7 @@ $Custom_IP
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
+$latest_ecs = "2.2.1.1"
 $Range = "24"
 $Start = "1"
 $IPOffset = 5
@@ -202,7 +203,7 @@ switch ($Branch)
         {
         $Docker_image = "ecs-software-2.2.1"
         $Docker_imagename = "emccorp/ecs-software-2.2.1"
-        $Docker_imagetag = "latest"
+        $Docker_imagetag = $latest_ecs
         $Git_Branch = "master"
         }
     }
