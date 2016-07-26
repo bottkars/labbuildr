@@ -219,7 +219,7 @@ switch ($PsCmdlet.ParameterSetName)
 	$NodeClone | Set-VMXNetworkAdapter -Adapter 0 -AdapterType e1000 -ConnectionType custom -WarningAction SilentlyContinue | Out-Null
 	$NodeClone | Set-VMXVnet -Adapter 0 -vnet $vmnet -WarningAction SilentlyContinue | Out-Null
 	$NodeClone | Set-VMXDisplayName -DisplayName $targetname | Out-Null
-	$Annotation = $NodeClone | Set-VMXAnnotation -Line1 "https://$ip" -Line2 "user:$rootuser" -Line3 "password:$rootpassword" -Line4 "add license from $masterpath" -Line5 "labbuildr by @hyperv_guy" -builddate
+	$Annotation = $NodeClone | Set-VMXAnnotation -Line1 "https://$ip" -Line2 "user:$rootuser" -Line3 "password:$rootpassword" -Line4 "add license from $masterpath" -Line5 "labbuildr by @sddc_guy" -builddate
 	$NodeClone | Start-VMX | Out-Null
 		 do {
 			$ToolState = Get-VMXToolsState -config $NodeClone.config

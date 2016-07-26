@@ -191,7 +191,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     $NodeClone | Set-VMXDisconnectIDE | Out-Null
     $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
         $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
-    $Annotation = $NodeClone | Set-VMXAnnotation -Line1 "rootuser:$rootuser" -Line2 "rootpasswd:$rootpassword"  -Line5 "labbuildr by @hyperv_guy" -builddate
+    $Annotation = $NodeClone | Set-VMXAnnotation -Line1 "rootuser:$rootuser" -Line2 "rootpasswd:$rootpassword"  -Line5 "labbuildr by @sddc_guy" -builddate
 
     if ($DualDM.IsPresent)
         {

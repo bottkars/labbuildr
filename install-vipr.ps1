@@ -250,7 +250,7 @@ $config = $vmx | get-vmxconfig
     $config += 'ide0:0.fileName = "vipr.iso"'
     $config += 'ide0:0.deviceType = "cdrom-image"'
 $Config | set-Content -Path $vmx.config
-$Annotation = $VMX | Set-VMXAnnotation -Line1 "https://$subnet.9" -Line2 "user:root" -Line3 "password:ChangeMe" -Line4 "add license from $masterpath" -Line5 "labbuildr by @hyperv_guy" -builddate
+$Annotation = $VMX | Set-VMXAnnotation -Line1 "https://$subnet.9" -Line2 "user:root" -Line3 "password:ChangeMe" -Line4 "add license from $masterpath" -Line5 "labbuildr by @sddc_guy" -builddate
 $vmx | Start-VMX
 Write-Host -ForegroundColor Magenta "
 Successfully Deployed $viprmaster

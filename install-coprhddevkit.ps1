@@ -226,7 +226,7 @@ switch ($PsCmdlet.ParameterSetName)
             $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.CloneName)@$BuildDomain"
                 $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
 
-            $Annotation = $NodeClone | Set-VMXAnnotation -Line1 "rootuser:$rootuser" -Line2 "rootpasswd:$rootpassword" -Line3 "mdmuser:admin" -Line4 "mdmpassword:$MDMPassword" -Line5 "labbuildr by @hyperv_guy" -builddate
+            $Annotation = $NodeClone | Set-VMXAnnotation -Line1 "rootuser:$rootuser" -Line2 "rootpasswd:$rootpassword" -Line3 "mdmuser:admin" -Line4 "mdmpassword:$MDMPassword" -Line5 "labbuildr by @sddc_guy" -builddate
  
             $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname Scaleio -Scenario 6
             $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
