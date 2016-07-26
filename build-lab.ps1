@@ -494,7 +494,7 @@ Version Of Networker Modules
     'nmm8231','nmm8232',  
     'nmm8221','nmm8222','nmm8223','nmm8224','nmm8225',
     'nmm8218','nmm8217','nmm8216','nmm8214','nmm8212','nmm821'
-    will be downloaded by labbuiler if not found in sources
+    will be downloaded by labbuildr if not found in sources
 #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]

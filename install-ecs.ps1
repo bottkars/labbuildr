@@ -172,7 +172,7 @@ switch ($Branch)
         {
         $Docker_image = "ecs-software-2.2.1"
         $Docker_imagename = "emccorp/ecs-software-2.2.1"
-        $Docker_imagetag = "latest"
+        $Docker_imagetag = $latest_ecs
         $Git_Branch = $Branch
         }
     "develop"
