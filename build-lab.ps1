@@ -2043,15 +2043,14 @@ if ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG" -or $SPdbtyp
 
 #################################################
 ## Download Sewction       ######################
-#################################################
-Write-Verbose "Entering Download Section"
+#################################################skale 
+
+Write-Host -ForegroundColor Magenta " ==>Entering Download Section"
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     {
     write-host "Press enter to Continue to Automatic Downloads or ctrl-c to exit"
     Pause
     }
-Write-Host -ForegroundColor Magenta "==>Entering Download Section"
-
 ##### exchange downloads section
 if ($Exchange2010.IsPresent)
     {
