@@ -125,8 +125,9 @@ else
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 $rootuser = "root"
-$rootpassword = "admin"
+$old_rootpassword = "admin"
 $MDMPassword = "Password123!"
+$rootpassword = $MDMPassword
 [uint64]$Disksize = 100GB
 $scsi = 0
 $ScaleIO_OS = "VMware"
@@ -327,6 +328,10 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
             }
         until ($ToolState.state -match "running")
         If (!$DefaultGateway) {$DefaultGateway = $Ip}
+        Write-Host -ForegroundColor Gray " ==>Changing root password"
+        $Scriptblock = "echo -e '$rootpassword\n$rootpassword' | (passwd --stdin root)"
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $old_rootpassword -logfile $Logfile | Out-Null
+        
         Write-Host -ForegroundColor Gray " ==>Configuring $Nodeprefix$node with $ip"
         $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device eth0 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.$Custom_DomainSuffix" -Hostname "$Nodeprefix$Node" -suse -rootuser $rootuser -rootpassword $rootpassword | Out-Null
         Write-Host -ForegroundColor Gray " ==>Installing GPG Key"
