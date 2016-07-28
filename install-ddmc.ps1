@@ -256,9 +256,9 @@ switch ($PsCmdlet.ParameterSetName)
 
         }
     Write-host
-    Write-host -ForegroundColor Blue "****** To Configure  ddmc 1.4 ******
+    Write-host -ForegroundColor White "****** To Configure  ddmc 1.4 ******
 Go to VMware Console an wait for system to boot"
-    Write-host -ForegroundColor Blue "
+    Write-host -ForegroundColor White "
     Please login with 
     localhost login : sysadmin 
     Password: changeme

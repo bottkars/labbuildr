@@ -227,7 +227,7 @@ switch ($PsCmdlet.ParameterSetName)
             }
     }
 Write-host
-Write-host -ForegroundColor Blue "****** To Configure  Unity 4 ******
+Write-host -ForegroundColor White "****** To Configure  Unity 4 ******
         Go to VMware Console an wait for system to boot
         It might take up to 15 Minutes on First boot
         Login with  

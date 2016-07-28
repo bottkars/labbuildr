@@ -345,7 +345,7 @@ node_id=vipr1"
     $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword   | Out-Null
 	$StopWatch.Stop()
 	Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
-    Write-Host -ForegroundColor Blue "Installed CoprHD RPM
+    Write-host -ForegroundColor White "Installed CoprHD RPM
     StorageOS may take 5 Minutes to boot
     please Visit https://$ip for Configuration
     Login with root:ChangeMe

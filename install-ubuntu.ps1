@@ -379,7 +379,7 @@ foreach ($Node in $machinesBuilt)
                 Write-Verbose $Scriptblock
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-                Write-Host -ForegroundColor Blue " for full screen resolution, run /usr/bin/vmware-config-tools.pl -d"
+                Write-host -ForegroundColor White " for full screen resolution, run /usr/bin/vmware-config-tools.pl -d"
 
                 Write-Host -ForegroundColor Magenta " ==> starting login manager"
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null

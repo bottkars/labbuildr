@@ -345,9 +345,9 @@ switch ($PsCmdlet.ParameterSetName)
 
         }
     Write-host
-    Write-host -ForegroundColor Blue "****** To Configure  DDVE 5.7 ******
+    Write-host -ForegroundColor White "****** To Configure  DDVE 5.7 ******
 Go to VMware Console an wait for system to boot"
-    Write-host -ForegroundColor Blue "
+    Write-host -ForegroundColor White "
     Please login with 
     localhost login : sysadmin 
     Password: changeme
