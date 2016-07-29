@@ -208,6 +208,15 @@ switch ($PsCmdlet.ParameterSetName)
             $configure = $true
 			#$MasterPath = $labdefaults.Masterpath
             }
+		if ($LabDefaults.custom_domainsuffix)
+			{
+			$custom_domainsuffix = $LabDefaults.custom_domainsuffix
+			}
+		else
+			{
+			$custom_domainsuffix = "local"
+			}
+
        if ($MasterPath)        
                 {
                 $MasterVMX = get-vmx -path $MasterPath
@@ -369,24 +378,20 @@ switch ($PsCmdlet.ParameterSetName)
         }
     $Hostname = $NodeClone.CloneName.ToLower()
     Write-Host -ForegroundColor White "do NOT log in to Appliance until network configured"
-    #Write-Host -ForegroundColor Gray " ==>Configuring Disks in AVAMAR Appliance, this may take a while"
     $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/perl /usr/local/avamar/bin/ave-part.pl" -Guestuser $rootuser -Guestpassword changeme | Out-Null
-    #Write-Host -ForegroundColor Gray " ==>Configuring network with $IP"
     $NodeClone | Invoke-VMXBash -Scriptblock "yast2 lan edit id=0 ip=$IP netmask=255.255.255.0 prefix=24 verbose" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
-    #$NodeClone | Invoke-VMXBash -Scriptblock "yast2 dns edit hostname=$($Nodeprefix)$($Node).$($BuildDomain).local $nameserver verbose" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
     $NodeClone | Invoke-VMXBash -Scriptblock "hostname $Hostname" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
     $Scriptblock = "echo 'default "+$DefaultGateway+" - -' > /etc/sysconfig/network/routes"
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock  -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
-    $sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SEARCHLIST=\`"\`"/NETCONFIG_DNS_STATIC_SEARCHLIST=\`""+$BuildDomain+".local\`"/g' /etc/sysconfig/network/config" 
+    $sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SEARCHLIST=\`"\`"/NETCONFIG_DNS_STATIC_SEARCHLIST=\`""+$BuildDomain+"."+$custom_domainsuffix+"\`"/g' /etc/sysconfig/network/config" 
     $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
     $sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SERVERS=\`"\`"/NETCONFIG_DNS_STATIC_SERVERS=\`""+$subnet+".10\`"/g' /etc/sysconfig/network/config"
     $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
     $NodeClone | Invoke-VMXBash -Scriptblock "/sbin/netconfig -f update" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
-    $Scriptblock = "echo '$ip $Hostname $Hostname.$($BuildDomain).local'  >> /etc/hosts"
+    $Scriptblock = "echo '$ip $Hostname $Hostname.$($BuildDomain).$custom_domainsuffix'  >> /etc/hosts"
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
-    $Scriptblock = "echo '$Hostname.$BuildDomain.local'  > /etc/HOSTNAME"
+    $Scriptblock = "echo '$Hostname.$BuildDomain.$custom_domainsuffix'  > /etc/HOSTNAME"
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
-    #Write-Host -ForegroundColor Gray " ==>restarting Network"
     $NodeClone | Invoke-VMXBash -Scriptblock "/etc/init.d/network restart" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
     do {
         $ToolState = Get-VMXToolsState -config $NodeClone.config 
