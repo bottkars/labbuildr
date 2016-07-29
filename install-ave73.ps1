@@ -20,10 +20,10 @@
 .LINK
    https://community.emc.com/blogs/bottk/2015/01/27/labbuildrnew-solution-pack-install-ave-to-autodeploy-avamar-nodes
 .EXAMPLE
-    .\install-ave.ps1 -ovf D:\Sources\AVE-7.2.0.390.ovf\OVF\AVE-7.2.0.390.ovf 
+    .\install-ave73.ps1 -ovf  D:\EMC_VAs\AVE-7.3.0.233.ova 
     This extracts the AVE OVF into a template Ready Source
 .EXAMPLE
-    .\install-ave.ps1 -Defaults -MasterPath .\AVE-7.2.0.390 
+    .\install-ave73.ps1 -MasterPath c:\SharedMaster\AVE-7.3.0.233
     installs a AVE with labbuildrdefaults
 
 #>
@@ -171,7 +171,7 @@ switch ($PsCmdlet.ParameterSetName)
         $OutContent | Set-Content -Path $Importfile.FullName
         Write-Host -ForegroundColor Gray " ==>Checkin for VM $mastername"
 
-        if (Get-VMX -path $MasterPath\$mastername)
+        if (Get-VMX -path $MasterPath\$mastername -WarningAction SilentlyContinue)
             {
             Write-Warning "Base VM $mastername already exists, please delete first"
             exit
@@ -181,7 +181,7 @@ switch ($PsCmdlet.ParameterSetName)
             Write-Host -ForegroundColor Magenta " ==>Importing Base VM"
             if ((import-VMXOVATemplate -OVA $Importfile.FullName -Name $mastername -destination $MasterPath  -acceptAllEulas).success -eq $true)
                 {
-                Write-Host -ForegroundColor Gray "[Preparation of Template done, please run $($MyInvocation.MyCommand) -MasterPath $MasterPath\$mastername]"
+                Write-Host -ForegroundColor Gray "[Preparation of Template done, please run .\$($MyInvocation.MyCommand) -MasterPath $MasterPath\$mastername]"
                 }
             else
                 {
