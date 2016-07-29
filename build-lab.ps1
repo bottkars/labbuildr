@@ -1309,6 +1309,7 @@ function invoke-postsection
     param (
     [switch]$wait)
     #Write-Host -ForegroundColor Gray " ==>Setting Power Scheme"
+    $script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$IN_Guest_UNC_NodeScriptDir" -Script Set-Customlanguage.ps1 -Parameter "-LanguageTag $LanguageTag " -interactive # $CommonParameter
 	$script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$IN_Guest_UNC_NodeScriptDir" -Script powerconf.ps1 -interactive # $CommonParameter
 	#Write-Host -ForegroundColor Gray " ==>Configuring UAC"
     $script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$IN_Guest_UNC_NodeScriptDir" -Script set-uac.ps1 -interactive # $CommonParameter
@@ -1773,6 +1774,14 @@ else
 	{
 	$custom_domainsuffix = "local"
 	}
+if ($LabDefaults.LanguageTag)
+	{
+	$LanguageTag= $LabDefaults.LanguageTag
+	}
+else
+	{
+	$LanguageTag = "en_US"
+	}
 write-verbose "After defaults !!!! "
 Write-Verbose "Sourcedir : $Sourcedir"
 Write-Verbose "NWVER : $nw_ver"
@@ -1806,33 +1815,37 @@ if ($savedefaults.IsPresent)
 $defaultsfile = New-Item -ItemType file $Builddir\defaults.xml -Force
 Write-Host -ForegroundColor White  "saving defaults to $Builddir\defaults.xml"
 $config =@()
-$config += ("<config>")
-$config += ("<nmm_ver>$nmm_ver</nmm_ver>")
-$config += ("<nw_ver>$nw_ver</nw_ver>")
-$config += ("<master>$Master</master>")
-$config += ("<sqlver>$SQLVER</sqlver>")
-$config += ("<e14_ur>$e14_ur</e14_ur>")
-$config += ("<e14_sp>$e14_sp</e14_sp>")
-$config += ("<e15_cu>$e15_cu</e15_cu>")
-$config += ("<e16_cu>$e16_cu</e16_cu>")
-$config += ("<vmnet>$VMnet</vmnet>")
-$config += ("<BuildDomain>$BuildDomain</BuildDomain>")
-$config += ("<MySubnet>$MySubnet</MySubnet>")
-$config += ("<AddressFamily>$AddressFamily</AddressFamily>")
-$config += ("<IPV6Prefix>$IPV6Prefix</IPV6Prefix>")
-$config += ("<IPv6PrefixLength>$IPv6PrefixLength</IPv6PrefixLength>")
-$config += ("<Gateway>$($Gateway.IsPresent)</Gateway>")
-$config += ("<DefaultGateway>$($DefaultGateway)</DefaultGateway>")
-$config += ("<Sourcedir>$($Sourcedir)</Sourcedir>")
-$config += ("<ScaleIOVer>$($ScaleIOVer)</ScaleIOVer>")
-$config += ("<DNS1>$($DNS1)</DNS1>")
-$config += ("<NMM>$($NMM.IsPresent)</NMM>")
-$config += ("<Masterpath>$Masterpath</Masterpath>")
-$config += ("<NoDomainCheck>$NoDomainCheck</NoDomainCheck>")
-$config += ("<Puppet>$($LabDefaults.Puppet)</Puppet>")
-$config += ("<PuppetMaster>$($LabDefaults.PuppetMaster)</PuppetMaster>")
-$config += ("<Hostkey>$($LabDefaults.HostKey)</Hostkey>")
-$config += ("</config>")
+        $config += ("<config>")
+        $config += ("<LanguageTag>$($LanguageTag)</LanguageTag>")
+        $config += ("<nmm_ver>$($nmm_ver)</nmm_ver>")
+        $config += ("<nmm>$($nmm)</nmm>")
+        $config += ("<nw_ver>$($nw_ver)</nw_ver>")
+        $config += ("<master>$($Master)</master>")
+        $config += ("<sqlver>$($SQLVER)</sqlver>")
+        $config += ("<e14_ur>$($e14_ur)</e14_ur>")
+        $config += ("<e14_sp>$($e14_sp)</e14_sp>")
+        $config += ("<e15_cu>$($e15_cu)</e15_cu>")
+        $config += ("<e16_cu>$($e16_cu)</e16_cu>")
+        $config += ("<vmnet>$($VMnet)</vmnet>")
+        $config += ("<vlanID>$($vlanID)</vlanID>")
+        $config += ("<Custom_DomainSuffix>$($Custom_DomainSuffix)</Custom_DomainSuffix>")
+        $config += ("<BuildDomain>$($BuildDomain)</BuildDomain>")
+        $config += ("<MySubnet>$($MySubnet)</MySubnet>")
+        $config += ("<AddressFamily>$($AddressFamily)</AddressFamily>")
+        $config += ("<IPV6Prefix>$($IPV6Prefix)</IPV6Prefix>")
+        $config += ("<IPv6PrefixLength>$($IPv6PrefixLength)</IPv6PrefixLength>")
+        $config += ("<Gateway>$($Gateway.IsPresent)</Gateway>")
+        $config += ("<DefaultGateway>$($DefaultGateway)</DefaultGateway>")
+        $config += ("<DNS1>$($DNS1)</DNS1>")
+        $config += ("<DNS2>$($DNS2)</DNS2>")
+        $config += ("<Sourcedir>$($Sourcedir)</Sourcedir>")
+        $config += ("<ScaleIOVer>$($ScaleIOVer)</ScaleIOVer>")
+        $config += ("<Masterpath>$($Masterpath)</Masterpath>")
+        $config += ("<NoDomainCheck>$($NoDomainCheck)</NoDomainCheck>")
+        $config += ("<Puppet>$($Puppet)</Puppet>")
+        $config += ("<PuppetMaster>$($PuppetMaster)</PuppetMaster>")
+        $config += ("<Hostkey>$($HostKey)</Hostkey>")
+        $config += ("</config>")
 $config | Set-Content $defaultsfile
 }
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent -and $savedefaults.IsPresent )
@@ -2676,6 +2689,7 @@ else
         Write-Verbose "Gateway : $DefaultGateway"
         }
 	Write-Host -ForegroundColor Magenta " ==>We will Build Domain $BuildDomain and Subnet $IPv4subnet.0  on $VMnet for the Running Workorder"
+    Write-Host -ForegroundColor Gray " ==Setting Language to $LanguageTag"
     if ($DefaultGateway){ Write-Host -ForegroundColor Magenta " ==>The Gateway will be $DefaultGateway"}
 	if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
         {
