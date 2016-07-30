@@ -3568,7 +3568,10 @@ switch ($PsCmdlet.ParameterSetName)
 			#write-host
 			#Write-Host -ForegroundColor Gray " ==>Forming Hyper-V Cluster"
 			$script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix '$Clusterprefix' -IPAddress '$ClusterIP' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
-		}
+			Write-Host -ForegroundColor Gray " ==>Setting up Hyper-V Replica Broker"
+            $script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script new-new-hypervreplicabroker.ps1 -interactive
+ 
+        }
 	    if ($ScaleIO.IsPresent)
             {
             Write-Host -ForegroundColor Gray " ==>configuring mdm"
