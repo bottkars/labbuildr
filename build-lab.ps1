@@ -2633,6 +2633,7 @@ if (!($SourceOK = test-source -SourceVer $Sourcever -SourceDir $Sourcedir))
 }
 if ($DefaultGateway) {$AddGateway  = "-DefaultGateway $DefaultGateway"}
 If ($VMnet -ne "VMnet2") { debug "Setting different Network is untested and own Risk !" }
+
 if (!$NoDomainCheck.IsPresent){
 ####################################################################
 # DC Validation
@@ -2651,7 +2652,7 @@ if (test-vmx $DCNODE -WarningAction SilentlyContinue)
 	    $BuildDomain, $RunningIP, $VMnet, $MyGateway = test-domainsetup
 	    $IPv4Subnet = convert-iptosubnet $RunningIP
 	    Write-Host -ForegroundColor Magenta " ==>will Use Domain $BuildDomain and Subnet $IPv4Subnet.0 for on $VMnet the Running Workorder"
-	    $Starttime = Get-Date
+        $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
         If ($MyGateway) 
             {
             Write-Host -ForegroundColor Magenta " ==>We will configure Default Gateway at $MyGateway"
@@ -2661,14 +2662,14 @@ if (test-vmx $DCNODE -WarningAction SilentlyContinue)
     else
         {
         write-verbose " no domain check on IPv6only"
-        $Starttime = Get-Date
+        $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
         }
     }
 
 }#end test-domain
 else
 {
-    $Starttime = Get-Date
+    $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
 	###################################################
 	# Part 1, Definition of Domain Controller
 	###################################################
@@ -4273,9 +4274,9 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
 	    
 	}
 } #Networker End
-$endtime = Get-Date
-$Runtime = ($endtime - $Starttime).TotalMinutes
-Write-Host -ForegroundColor White  "Finished Creation of $my_repo in $Runtime Minutes "
+
+$StopWatch.Stop()
+Write-host -ForegroundColor White "ECS Deployment took $($StopWatch.Elapsed.ToString())"
 Write-Host -ForegroundColor White  "Deployed VM´s in Scenario $Scenarioname"
 get-vmx | where scenario -match $Scenarioname | ft vmxname,state,activationpreference
 return
