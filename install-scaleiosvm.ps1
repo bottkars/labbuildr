@@ -144,6 +144,7 @@ $tb_ip = "$subnet.193"
 $mdm_name_a = "Manager_A"
 $mdm_name_b = "Manager_B"
 $tb_name = "TB"
+$SparePercentage="35"
 $Labdefaults = Get-LABDefaults
 
 switch ($PsCmdlet.ParameterSetName)
@@ -427,15 +428,7 @@ if ($configure.IsPresent)
             Write-Verbose $sclicmd
             $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
             #>
-            Write-Host -ForegroundColor Gray " ==>Changing management IP´s on $mdm_ipb" 
-            $sclicmd = "scli --modify_management_ip --new_mdm_management_ip $mdm_ip --target_mdm_ip $mdm_ipb --allow_duplicate_management_ips --i_am_sure --mdm_ip $mdm_ip"
-            Write-Verbose $sclicmd
-            $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
-
-            Write-Host -ForegroundColor Gray " ==>Changing management IP´s on $mdm_ipa" 
-            $sclicmd = "scli --modify_management_ip --new_mdm_management_ip $mdm_ip --target_mdm_ip $mdm_ipa --allow_duplicate_management_ips --i_am_sure --mdm_ip $mdm_ip"
-            Write-Verbose $sclicmd
-            $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+            
             }
         else
             {
@@ -467,6 +460,12 @@ if ($configure.IsPresent)
             Write-Verbose $sclicmd
             $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
             }
+
+            Write-Host -ForegroundColor Gray " ==>Setting Storage Pool $StoragePoolName spare capacity to $SparePercentage %"
+            $sclicmd = "scli --modify_spare_policy --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --spare_percentage $SparePercentage --i_am_sure --mdm_ip $mdm_ip"
+            Write-Verbose $sclicmd
+            $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+
     write-host "Connect with ScaleIO UI to $mdm_ipa admin/Password123!"
     }
 
