@@ -247,7 +247,10 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$singlemdm,
     # <# Cluster modemdm automatically#>
     # [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$clusteredmdm,
-    <# SCVMM on last Node ? #>	
+    <# CLuster Number ? #>	
+    [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][ValidateSet(1,2)][int][alias('clunum')]$Clusternum = "1",
+	<# ScaleIO on hyper-v #>	
+    <# SCVMM on last Node ? #>
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$SCVMM,
     <# Configure VMM ?#>
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$ConfigureVMM,
@@ -2042,7 +2045,7 @@ if ($ScaleIO.IsPresent)
                 Write-Host -ForegroundColor Gray " ==>Need 3 nodes for ScaleIO, incrementing to 3"
                 $HyperVNodes = 3
                 }	
-Write-Host -ForegroundColor Magenta " ==>We are going to Install ScaleIO on $HyperVNodes Hyper-V  Nodes"
+Write-Host -ForegroundColor Magenta " ==>We are going to Install ScaleIO on $HyperVNodes Hyper-V Nodes in cluster HV$($Clusternum)Cluster"
     if ($DefaultGateway.IsPresent){ Write-Host -ForegroundColor Magenta " ==>The Gateway will be $DefaultGateway"}
 	# if ($Cluster.IsPresent) { write-verbose "The Nodes will be Clustered ( Single Node Clusters )" }
 }
@@ -2630,6 +2633,7 @@ if (!($SourceOK = test-source -SourceVer $Sourcever -SourceDir $Sourcedir))
 }
 if ($DefaultGateway) {$AddGateway  = "-DefaultGateway $DefaultGateway"}
 If ($VMnet -ne "VMnet2") { debug "Setting different Network is untested and own Risk !" }
+
 if (!$NoDomainCheck.IsPresent){
 ####################################################################
 # DC Validation
@@ -2648,7 +2652,7 @@ if (test-vmx $DCNODE -WarningAction SilentlyContinue)
 	    $BuildDomain, $RunningIP, $VMnet, $MyGateway = test-domainsetup
 	    $IPv4Subnet = convert-iptosubnet $RunningIP
 	    Write-Host -ForegroundColor Magenta " ==>will Use Domain $BuildDomain and Subnet $IPv4Subnet.0 for on $VMnet the Running Workorder"
-	    $Starttime = Get-Date
+        $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
         If ($MyGateway) 
             {
             Write-Host -ForegroundColor Magenta " ==>We will configure Default Gateway at $MyGateway"
@@ -2658,14 +2662,14 @@ if (test-vmx $DCNODE -WarningAction SilentlyContinue)
     else
         {
         write-verbose " no domain check on IPv6only"
-        $Starttime = Get-Date
+        $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
         }
     }
 
 }#end test-domain
 else
 {
-    $Starttime = Get-Date
+    $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
 	###################################################
 	# Part 1, Definition of Domain Controller
 	###################################################
@@ -3308,11 +3312,32 @@ switch ($PsCmdlet.ParameterSetName)
 
 
 ##### Hyper-V Block #####	
-	"HyperV" {
-        $Firstnode = "1" #for later use
-        $Clusternum = "1" # for later use
+	"HyperV" 
+    {
+        [int]$Base_IP = 150
+        switch ($Clusternum)
+            {
+            1
+                {
+                [int]$ipoffset = 0
+                [int]$Firstnode = 1
+                [int]$IPNum = $Base_IP + $ipoffset
+                $ClusterIP = "$IPv4Subnet.$IPNum"
+                }
+            2
+                {
+                [int]$ipoffset = 5
+                [int]$Firstnode = 1
+                [int]$IPNum = $Base_IP + $ipoffset
+                $ClusterIP = "$IPv4Subnet.$IPNum"
+                }
+            }
+        Write-Verbose "Clusterip = $ClusterIP"
+        #$Firstnode = "1" #for later use
+        #$Clusternum = "1" # for later use
+        $Clusterprefix = "HV$Clusternum"
         #$LASTVMX = "HVNODE$HyperVNodes"
-        $FirstVMX =  "HVNODE$Firstnode"
+        $FirstVMX =  "$($Clusterprefix)NODE$Firstnode"
 		$HVLIST = @()
         $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features, Hyper-V, Hyper-V-Tools, Hyper-V-PowerShell, WindowsStorageManagementService"
 		if ($ScaleIO.IsPresent)
@@ -3341,7 +3366,7 @@ switch ($PsCmdlet.ParameterSetName)
             
             }
         if ($Cluster.IsPresent) {$AddonFeatures = "$AddonFeatures, Failover-Clustering, RSAT-Clustering, WVR"}
-        If (!(get-vmx HVNODE* -WarningAction SilentlyContinue))
+        If (!(get-vmx "$($Clusterprefix)Node*" -WarningAction SilentlyContinue))
             {
             $newdeploy = $true
             Write-Host -ForegroundColor Magenta " ==>This is a Hyper-v Newdepoly"
@@ -3366,14 +3391,15 @@ switch ($PsCmdlet.ParameterSetName)
 			###################################################
 			# Hyper-V  Node Setup
 			# Init
-			$Nodeip = "$IPv4Subnet.15$HVNode"
-			$Nodename = "HVNODE$HVNode"
+            [int]$IPNum = $Base_IP+$ipoffset+$HVNODE
+			$Nodeip = "$IPv4Subnet.$IPNum"
+            Write-Verbose "Nodeip = $Nodeip"
+			$Nodename = "$($Clusterprefix)NODE$($HVNode)"
 			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
 			$IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\HyperV\"
             $In_Guest_UNC_SQLScriptDir = "$IN_Guest_UNC_Scriptroot\sql\"
             $In_Guest_UNC_SCVMMScriptDir = "$IN_Guest_UNC_Scriptroot\scvmm\"
-            Write-Verbose $IPv4Subnet
-            write-verbose $Nodeip
+            Write-Verbose "IPv4 Subnet = $IPv4Subnet"
             Write-Verbose $Nodename
             Write-Verbose $AddonFeatures
             if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
@@ -3405,18 +3431,21 @@ switch ($PsCmdlet.ParameterSetName)
                 
                 if ($ScaleIO.IsPresent)
                     {
-                    $SIO_ProtectionDomainName = "PD_$BuildDomain"
-                    $SIO_StoragePoolName = "SP_$BuildDomain"
-                    $SIO_SystemName = "ScaleIO@$BuildDomain"
+                    $SIO_ProtectionDomainName = "PD_$Clusterprefix"
+                    $SIO_StoragePoolName = "SP_$Clusterprefix"
+                    $SIO_SystemName = "ScaleIO@$Clusterprefix"
                     if ($singlemdm.IsPresent)
                         {
-                        $mdmipa = "$IPv4Subnet.151"
-                        $mdmipb = "$IPv4Subnet.151"
+                        [int]$IPNum = $Base_IP + $ipoffset + 1
+                        $mdmipa = "$IPv4Subnet.$IPNum"
+                        $mdmipb = "$IPv4Subnet.$IPNum"
                         }
                     else
                         {
-                        $mdmipa = "$IPv4Subnet.151"
-                        $mdmipb = "$IPv4Subnet.152"
+                        [int]$IPNum = $Base_IP + $ipoffset + 1
+                        $mdmipa = "$IPv4Subnet.$IPNum"
+                        [int]$IPNum = $Base_IP + $ipoffset + 2
+                        $mdmipb = "$IPv4Subnet.$IPNum"
                         }
                     switch ($HVNODE)
                         {
@@ -3444,7 +3473,7 @@ switch ($PsCmdlet.ParameterSetName)
                             else
                                 {
                                 #Write-Host -ForegroundColor Gray " == > Installing single MDM"
-                                $script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer  -mdmipa $mdmipa -mdmipb $mdmipb" -interactive 
+                                $script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer  -mdmipa $mdmipa -mdmipb $mdmipa" -interactive 
                                 }
                     
                             }
@@ -3482,7 +3511,7 @@ switch ($PsCmdlet.ParameterSetName)
                             else
                                 {
                                 #Write-Host -ForegroundColor Gray " ==>Installing single MDM"
-                                $script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer -mdmipa $mdmipa -mdmipb $mdmipb" -interactive 
+                                $script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer -mdmipa $mdmipa -mdmipb $mdmipa" -interactive 
                                 }
                             Write-Host -ForegroundColor Magenta "generating SIO Config File"
                             Set-LABSIOConfig -mdm_ipa $mdmipa -mdm_ipb $mdmipb -gateway_ip "$IPv4Subnet.153" -system_name $SIO_SystemName -pool_name $SIO_StoragePoolName -pd_name $SIO_ProtectionDomainName
@@ -3533,20 +3562,23 @@ switch ($PsCmdlet.ParameterSetName)
 		########### leaving NMM Section ###################
     If ($newdeploy)
         {
-        Write-Host -ForegroundColor Magenta " ==>Trying New Cluster Deployment !! "
+        Write-Host -ForegroundColor Magenta " ==>Trying New Cluster Deployment for $Clusterprefix!! "
         if ($Cluster.IsPresent)
 		{
 			#write-host
 			#Write-Host -ForegroundColor Gray " ==>Forming Hyper-V Cluster"
-			$script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix 'HVNODE' -IPAddress '$IPv4Subnet.150' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
-		}
+			$script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix '$Clusterprefix' -IPAddress '$ClusterIP' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
+			Write-Host -ForegroundColor Gray " ==>Setting up Hyper-V Replica Broker"
+            $script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script new-hypervreplicabroker.ps1 -interactive
+ 
+        }
 	    if ($ScaleIO.IsPresent)
             {
             Write-Host -ForegroundColor Gray " ==>configuring mdm"
             if ($singlemdm.IsPresent)
                     {
                     #Write-Host -ForegroundColor Gray " ==>Configuring Single MDM"
-                    $script_invoke = get-vmx $FirstVMX | invoke-vmxpowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script configure-mdm.ps1 -Parameter "-IPv4Subne $IPv4Subnet -singlemdm -CSVnum 3 -ScaleIO_Major $ScaleIO_Major"-interactive 
+                    $script_invoke = get-vmx $FirstVMX | invoke-vmxpowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script configure-mdm.ps1 -Parameter "-IPv4Subnet $IPv4Subnet -singlemdm -CSVnum 3 -ScaleIO_Major $ScaleIO_Major"-interactive 
                     }
             else
                     {
@@ -4245,9 +4277,9 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
 	    
 	}
 } #Networker End
-$endtime = Get-Date
-$Runtime = ($endtime - $Starttime).TotalMinutes
-Write-Host -ForegroundColor White  "Finished Creation of $my_repo in $Runtime Minutes "
+
+$StopWatch.Stop()
+Write-host -ForegroundColor White "ECS Deployment took $($StopWatch.Elapsed.ToString())"
 Write-Host -ForegroundColor White  "Deployed VM´s in Scenario $Scenarioname"
 get-vmx | where scenario -match $Scenarioname | ft vmxname,state,activationpreference
 return
