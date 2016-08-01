@@ -141,6 +141,9 @@ $FaultSetName = "Rack_"
 $mdm_ipa  = "$subnet.191"
 $mdm_ipb  = "$subnet.192"
 $tb_ip = "$subnet.193"
+$mdm_name_a = "Manager_A"
+$mdm_name_b = "Manager_B"
+$tb_name = "TB"
 $Labdefaults = Get-LABDefaults
 
 switch ($PsCmdlet.ParameterSetName)
@@ -186,7 +189,7 @@ switch ($PsCmdlet.ParameterSetName)
             write-verbose "Templating Master VMX"
             $MasterVMX | Set-VMXTemplate
             }
-      Write-Host -ForegroundColor Gray "[Preparation of Template done, please run $($MyInvocation.MyCommand) -ScaleIOMaster $MasterPath\$mastername]"		
+      Write-Host -ForegroundColor Gray "[Preparation of Template done, please run $($MyInvocation.MyCommand) -ScaleIOMaster $MasterPath$mastername]"		
         }
      default
         {
@@ -393,7 +396,7 @@ if ($configure.IsPresent)
         {
         Write-Host -ForegroundColor Magenta "We are now creating the ScaleIO Cluster"
         Write-Host -ForegroundColor Gray " ==>adding Primary MDM $mdm_ipa"
-        $sclicmd =  "scli  --create_mdm_cluster --master_mdm_ip $mdm_ipa  --master_mdm_management_ip $mdm_ipa --approve_certificate --accept_license;sleep 3"
+        $sclicmd =  "scli  --create_mdm_cluster --master_mdm_ip $mdm_ipa  --master_mdm_management_ip $mdm_ipa --master_mdm_name $mdm_name_a --approve_certificate --accept_license;sleep 3"
         Write-Verbose $sclicmd
         $Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
 
@@ -405,12 +408,12 @@ if ($configure.IsPresent)
         if (!$singlemdm.IsPresent)
             {
             Write-Host -ForegroundColor Gray " ==>adding standby MDM $mdm_ipb"
-            $sclicmd = "$mdmconnect;scli --add_standby_mdm --mdm_role manager --new_mdm_ip $mdm_ipb --new_mdm_management_ip $mdm_ipb --mdm_ip $mdm_ipa"
+            $sclicmd = "$mdmconnect;scli --add_standby_mdm --mdm_role manager --new_mdm_ip $mdm_ipb --new_mdm_management_ip $mdm_ipb --new_mdm_name $mdm_name_b --mdm_ip $mdm_ipa"
             Write-Verbose $sclicmd
             $Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null 
 
             Write-Host -ForegroundColor Gray " ==>adding tiebreaker $tb_ip"
-            $sclicmd = "$mdmconnect; scli --add_standby_mdm --mdm_role tb  --new_mdm_ip $tb_ip --mdm_ip $mdm_ipa"
+            $sclicmd = "$mdmconnect; scli --add_standby_mdm --mdm_role tb  --new_mdm_ip $tb_ip --tb_name $tb_name --mdm_ip $mdm_ipa"
             Write-Verbose $sclicmd
             $Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
             
