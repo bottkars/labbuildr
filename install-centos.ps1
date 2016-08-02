@@ -359,7 +359,7 @@ foreach ($Node in $machinesBuilt)
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
                 
                 Write-Host -ForegroundColor Gray " ==> Installing Display Manager"
-                $Scriptblock = "yum install -y lightdm cinnamon"
+                $Scriptblock = "yum install -y lightdm cinnamon xterm"
                 Write-Verbose $Scriptblock
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
@@ -384,8 +384,15 @@ foreach ($Node in $machinesBuilt)
                 {
 
                 }
-    }
-}
+    
+        }
+    $Scriptblock = "/usr/bin/vmware-config-tools.pl -d;shutdown -r now"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -nowait| Out-Null
+
+
+    }#end machines
+
 $StopWatch.Stop()
 Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
 write-Host -ForegroundColor White "Login to the VM´s with root/Password123!"
