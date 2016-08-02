@@ -343,13 +343,6 @@ foreach ($Node in $machinesBuilt)
         #$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/yum-requires.log | Out-Null
     
     #yum groupinstall "X Window system"
-        if ($Desktop -ne "none")
-            {
-            Write-Host -ForegroundColor Gray " ==> Installing X-Windows environment"
-            $Scriptblock = "yum groupinstall -y `'X Window system'"
-            Write-Verbose $Scriptblock
-            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-            }
         if ($docker)
             {
             Write-Host -ForegroundColor Gray " ==>installing latest docker engine"
@@ -358,14 +351,24 @@ foreach ($Node in $machinesBuilt)
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
             }
 
+        if ($Desktop -ne "none")
+            {
+            Write-Host -ForegroundColor Gray " ==> Installing X-Windows environment"
+            $Scriptblock = "yum groupinstall -y `'X Window system'"
+            Write-Verbose $Scriptblock
+            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+            }
+
         switch ($Desktop)
             {
                 'cinnamon'
                 {
-                Write-Host -ForegroundColor Gray " ==> adding EPEL Repo"
-                $Scriptblock = 'rpm -i http://dl.fedoraproject.org/pub/epel/x86_64/e/epel-release-7-7.noarch.rpm'
-                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-                
+                if (!$docker)
+                    {
+                    Write-Host -ForegroundColor Gray " ==> adding EPEL Repo"
+                    $Scriptblock = 'rpm -i http://dl.fedoraproject.org/pub/epel/x86_64/e/epel-release-7-7.noarch.rpm'
+                    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+                    }
                 Write-Host -ForegroundColor Gray " ==> Installing Display Manager"
                 $Scriptblock = "yum install -y lightdm cinnamon gnome-desktop3 xdm firefox"
                 Write-Verbose $Scriptblock
