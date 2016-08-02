@@ -358,9 +358,19 @@ foreach ($Node in $machinesBuilt)
         Write-Host -ForegroundColor Gray " ==> setting hostname $Node"
         $Scriptblock = "echo '127.0.0.1       localhost' > /etc/hosts; echo '$ip $Node $Node.$BuildDomain.$Custom_DomainSuffix' >> /etc/hosts; hostname $Node"
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-
         Write-Host -ForegroundColor Magenta "==> Restarting Guest Network"
-        $Scriptblock = "/etc/init.d/networking restart"
+
+        switch ($ubuntu_ver)
+            {
+            "14_4"
+                {
+                $Scriptblock = "/sbin/ifdown eth0 && /sbin/ifup eth0"
+                }
+            default
+                {
+                $Scriptblock = "/etc/init.d/networking restart"
+                }
+            }         
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
