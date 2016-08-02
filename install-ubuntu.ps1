@@ -393,7 +393,9 @@ foreach ($Node in $machinesBuilt)
             }
 
         ####
-
+        $Scriptblock = "/usr/bin/vmware-config-tools.pl -d;shutdown -r now"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -nowait| Out-Null
         $ip_startrange++
     
     
