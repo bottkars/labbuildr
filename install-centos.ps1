@@ -235,13 +235,8 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.CloneName)@$BuildDomain"
         $Annotation = $NodeClone | Set-VMXAnnotation -Line1 "rootuser:$Rootuser" -Line2 "rootpasswd:$Guestpassword" -Line3 "Guestuser:$Guestuser" -Line4 "Guestpassword:$Guestpassword" -Line5 "labbuildr by @sddc_guy" -builddate
         $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
-        if ($node -eq 3)
-            {
-            Write-Host -ForegroundColor Gray " ==> Setting Gateway Memory to 3 GB"
-            $NodeClone | Set-VMXmemory -MemoryMB 3072 | Out-Null
-            }
         $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname CentOS -Scenario 7
-        Write-Host -ForegroundColor Gray "setting vM size to $Size"
+        Write-Host -ForegroundColor Gray "setting VM size to $Size"
         $mysize = $NodeClone |Set-VMXSize -config $NodeClone.Config -Size $Size
 
         $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
@@ -348,13 +343,6 @@ foreach ($Node in $machinesBuilt)
         #$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/yum-requires.log | Out-Null
     
     #yum groupinstall "X Window system"
-        if ($docker)
-            {
-            Write-Host -ForegroundColor Gray " ==>installing latest docker engine"
-            $Scriptblock="curl -fsSL https://get.docker.com | sh;systemctl enable docker; systemctl start docker;usermod -aG docker stack"
-            Write-Verbose $Scriptblock
-            $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
-            }
         if ($Desktop -ne "none")
             {
             Write-Host -ForegroundColor Gray " ==> Installing X-Windows environment"
@@ -362,6 +350,14 @@ foreach ($Node in $machinesBuilt)
             Write-Verbose $Scriptblock
             $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
             }
+        if ($docker)
+            {
+            Write-Host -ForegroundColor Gray " ==>installing latest docker engine"
+            $Scriptblock="curl -fsSL https://get.docker.com | sh;systemctl enable docker; systemctl start docker;usermod -aG docker stack"
+            Write-Verbose $Scriptblock
+            $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+            }
+
         switch ($Desktop)
             {
                 'cinnamon'
