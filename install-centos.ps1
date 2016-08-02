@@ -370,7 +370,7 @@ foreach ($Node in $machinesBuilt)
                     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
                     }
                 Write-Host -ForegroundColor Gray " ==> Installing Display Manager"
-                $Scriptblock = "yum install -y lightdm cinnamon gnome-desktop3 xdm firefox"
+                $Scriptblock = "yum install -y lightdm cinnamon gnome-desktop3 firefox"
                 Write-Verbose $Scriptblock
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
