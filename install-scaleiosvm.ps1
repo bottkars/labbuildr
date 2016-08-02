@@ -319,7 +319,10 @@ to remove all Nodes"
 $Logfile = "/tmp/install_sio.log"
 Write-Host -ForegroundColor Magenta " ==>Starting configuration of Nodes, logging to $Logfile"
 $Percentage = [math]::Round(100/$nodes)+1
-
+if ($Percentage -lt 10)
+    {
+    $Percentage = 10
+    }
 foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         {
         Write-Host -ForegroundColor Gray " ==>waiting for Node $Nodeprefix$node"
@@ -460,7 +463,7 @@ if ($configure.IsPresent)
             $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
             }
     Write-Host -ForegroundColor Gray " ==>adjusting spare policy"
-    $sclicmd = "scli --modify_spare_policy --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName--spare_percentage $Percentage --i_am_sure --mdm_ip $mdm_ip"
+    $sclicmd = "scli --modify_spare_policy --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --spare_percentage $Percentage --i_am_sure --mdm_ip $mdm_ip"
     Write-Verbose $sclicmd
     $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
 
