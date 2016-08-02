@@ -318,6 +318,7 @@ to remove all Nodes"
 }
 $Logfile = "/tmp/install_sio.log"
 Write-Host -ForegroundColor Magenta " ==>Starting configuration of Nodes, logging to $Logfile"
+$Percentage = [math]::Round(100/$nodes)+1
 
 foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         {
@@ -427,15 +428,6 @@ if ($configure.IsPresent)
             Write-Verbose $sclicmd
             $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
             #>
-            Write-Host -ForegroundColor Gray " ==>Changing management IP´s on $mdm_ipb" 
-            $sclicmd = "scli --modify_management_ip --new_mdm_management_ip $mdm_ip --target_mdm_ip $mdm_ipb --allow_duplicate_management_ips --i_am_sure --mdm_ip $mdm_ip"
-            Write-Verbose $sclicmd
-            $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
-
-            Write-Host -ForegroundColor Gray " ==>Changing management IP´s on $mdm_ipa" 
-            $sclicmd = "scli --modify_management_ip --new_mdm_management_ip $mdm_ip --target_mdm_ip $mdm_ipa --allow_duplicate_management_ips --i_am_sure --mdm_ip $mdm_ip"
-            Write-Verbose $sclicmd
-            $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
             }
         else
             {
@@ -467,6 +459,11 @@ if ($configure.IsPresent)
             Write-Verbose $sclicmd
             $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
             }
+    Write-Host -ForegroundColor Gray " ==>adjusting spare policy"
+    $sclicmd = "scli --modify_spare_policy --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName--spare_percentage $Percentage --i_am_sure --mdm_ip $mdm_ip"
+    Write-Verbose $sclicmd
+    $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+
     write-host "Connect with ScaleIO UI to $mdm_ipa admin/Password123!"
     }
 
