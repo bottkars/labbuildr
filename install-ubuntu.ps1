@@ -36,7 +36,7 @@ Param(
 [int32]$Disks = 1,
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateSet('16_4','15_4','14_04')]
+[ValidateSet('16_4','15_4','14_4')]
 [string]$ubuntu_ver = "16_4",
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
