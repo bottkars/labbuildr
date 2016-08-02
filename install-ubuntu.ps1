@@ -257,7 +257,7 @@ foreach ($Node in $machinesBuilt)
         Write-Host -ForegroundColor Gray " ==> Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
         
-        If ($ubuntu_ver -lt "16")
+        If ($ubuntu_ver -match "15")
             {
             $Scriptblock = "systemctl disable iptables.service"
             Write-Verbose $Scriptblock
