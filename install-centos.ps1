@@ -378,9 +378,9 @@ foreach ($Node in $machinesBuilt)
                 Write-Verbose $Scriptblock
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-                $Scriptblock = "systemctl isolate graphical.target>> /tmp/lightdm.log"
-                Write-Verbose $Scriptblock
-                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+                #$Scriptblock = "systemctl isolate graphical.target>> /tmp/lightdm.log"
+                #Write-Verbose $Scriptblock
+                #$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
                 
                 $Scriptblock = "systemctl set-default graphical.target"
                 Write-Verbose $Scriptblock
