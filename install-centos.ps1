@@ -66,7 +66,9 @@ $vmnet = "vmnet2",
 $Defaultsfile=".\defaults.xml",
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$forcedownload,
-[int]$ip_startrange = 205
+[int]$ip_startrange = 205,
+[Switch]$docker,
+[ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL"
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
@@ -239,6 +241,9 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
             $NodeClone | Set-VMXmemory -MemoryMB 3072 | Out-Null
             }
         $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname CentOS -Scenario 7
+        Write-Host -ForegroundColor Gray "setting vM size to $Size"
+        $mysize = $NodeClone |Set-VMXSize -config $NodeClone.Config -Size $Size
+
         $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
         Write-Host -ForegroundColor Gray " ==> Starting CentosNode$Node"
         start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
@@ -343,19 +348,26 @@ foreach ($Node in $machinesBuilt)
         #$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/yum-requires.log | Out-Null
     
     #yum groupinstall "X Window system"
-    if ($Desktop -ne "none")
-        {
-        Write-Host -ForegroundColor Gray " ==> Installing X-Windows environment"
-        $Scriptblock = "yum groupinstall -y `'X Window system'"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-        }
+        if ($docker)
+            {
+            Write-Host -ForegroundColor Gray " ==>installing latest docker engine"
+            $Scriptblock="curl -fsSL https://get.docker.com | sh;systemctl enable docker; systemctl start docker;usermod -aG docker stack"
+            Write-Verbose $Scriptblock
+            $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+            }
+        if ($Desktop -ne "none")
+            {
+            Write-Host -ForegroundColor Gray " ==> Installing X-Windows environment"
+            $Scriptblock = "yum groupinstall -y `'X Window system'"
+            Write-Verbose $Scriptblock
+            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+            }
         switch ($Desktop)
             {
                 'cinnamon'
                 {
                 Write-Host -ForegroundColor Gray " ==> adding EPEL Repo"
-                $Scriptblock = 'rpm -i http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-7.noarch.rpm'
+                $Scriptblock = 'rpm -i http://dl.fedoraproject.org/pub/epel/x86_64/e/epel-release-7-7.noarch.rpm'
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
                 
                 Write-Host -ForegroundColor Gray " ==> Installing Display Manager"
