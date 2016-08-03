@@ -152,6 +152,7 @@ $Guestpassword = "Password123!"
 [uint64]$Disksize = 100GB
 $scsi = 0
 $Nodeprefix = "Centos"
+$epel = "http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
 try
     {
     $yumcachedir = join-path -Path $Sourcedir "$OS\cache\yum" -ErrorAction stop
@@ -366,7 +367,7 @@ foreach ($Node in $machinesBuilt)
                # if (!$docker.IsPresent)
                #     {
                     Write-Host -ForegroundColor Gray " ==> adding EPEL Repo"
-                    $Scriptblock = 'rpm -i http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-7.noarch.rpm'
+                    $Scriptblock = "rpm -i $epel"
                     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
                 #    }
                 Write-Host -ForegroundColor Gray " ==> Installing Display Manager"
@@ -374,9 +375,9 @@ foreach ($Node in $machinesBuilt)
                 Write-Verbose $Scriptblock
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-               # $Scriptblock = "yum groupinstall gnome -y"
-               # Write-Verbose $Scriptblock
-               # $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+                $Scriptblock = "yum groupinstall gnome -y"
+                Write-Verbose $Scriptblock
+                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
                 #$Scriptblock = "systemctl isolate graphical.target>> /tmp/lightdm.log"
                 #Write-Verbose $Scriptblock
