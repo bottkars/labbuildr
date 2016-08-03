@@ -367,12 +367,11 @@ if ($rexray.IsPresent)
         $Scriptblock = "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys;chmod 0600 /root/.ssh/authorized_keys"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
-	<#
-		write-verbose "Setting Hostname"
-    $Scriptblock = "hostnamectl set-hostname $Hostname --no-ask-password"
+	write-verbose "Setting Hostname"
+    $Scriptblock = "nmcli general hostname $Hostname.$BuildDomain.$custom_domainsuffix;systemctl restart systemd-hostnamed"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  | Out-Null
-	#>
+	
 
     $file = "/etc/yum.conf"
     $Property = "cachedir"
