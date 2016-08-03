@@ -349,12 +349,12 @@ if ($rexray.IsPresent)
     write-verbose "Setting Timezone"
     $Scriptblock = "timedatectl set-timezone $DefaultTimezone"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile -Confirm:$false -nowait | Out-Null
 
     write-verbose "Setting Hostname"
     $Scriptblock = "hostnamectl set-hostname $($NodeClone.vmxname)"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile -Confirm:$false -nowait | Out-Null
 
             
         $Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa"
