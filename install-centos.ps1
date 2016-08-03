@@ -400,17 +400,15 @@ foreach ($Node in $machinesBuilt)
                 Write-Verbose $Scriptblock
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
+				$Scriptblock = "/usr/bin/vmware-config-tools.pl -d;shutdown -r now"
+				Write-Verbose $Scriptblock
+				$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -nowait| Out-Null
                 }
             default
                 {
 
                 }
-    
         }
-    $Scriptblock = "/usr/bin/vmware-config-tools.pl -d;shutdown -r now"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -nowait| Out-Null
-
 
     }#end machines
 
