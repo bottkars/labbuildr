@@ -363,7 +363,7 @@ foreach ($Node in $machinesBuilt)
             {
                 'cinnamon'
                 {
-                if (!$docker)
+                if (!$docker.IsPresent)
                     {
                     Write-Host -ForegroundColor Gray " ==> adding EPEL Repo"
                     $Scriptblock = 'rpm -i http://dl.fedoraproject.org/pub/epel/x86_64/e/epel-release-7-7.noarch.rpm'
