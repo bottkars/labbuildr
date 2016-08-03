@@ -366,7 +366,7 @@ foreach ($Node in $machinesBuilt)
                # if (!$docker.IsPresent)
                #     {
                     Write-Host -ForegroundColor Gray " ==> adding EPEL Repo"
-                    $Scriptblock = 'rpm -i http://dl.fedoraproject.org/pub/epel/x86_64/e/epel-release-7-7.noarch.rpm'
+                    $Scriptblock = 'rpm -i http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-7.noarch.rpm'
                     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
                 #    }
                 Write-Host -ForegroundColor Gray " ==> Installing Display Manager"
