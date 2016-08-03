@@ -209,6 +209,7 @@ if ($rexray.IsPresent)
         $linux_source = $Sourcedir -replace "\\","/"
         $sdc_rpm = $sdc_rpm -replace $linux_source
         $sdc_rpm = "/mnt/hgfs/Sources$sdc_rpm"
+		Write-Verbose "using $sdc_rpm as install path"
         }
     else
         {
