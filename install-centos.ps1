@@ -36,7 +36,7 @@ Param(
 [int32]$Disks = 1,
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateSet('7')]
+[ValidateSet('7_1_1511','7')]
 [string]$centos_ver = "7_1_1511",
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
