@@ -340,7 +340,7 @@ if ($rexray.IsPresent)
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile -Confirm:$false -nowait | Out-Null
 
     write-verbose "Setting Hostname"
-    $Scriptblock = "hostnamectl set-hostname $Hostname.$BuildDomain.$Custom_DomainSuffix"
+    $Scriptblock = "hostnamectl set-hostname '$Hostname.$BuildDomain.$Custom_DomainSuffix'"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile -Confirm:$false -nowait | Out-Null
 
