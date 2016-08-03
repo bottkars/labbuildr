@@ -368,7 +368,7 @@ if ($rexray.IsPresent)
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
 	write-verbose "Setting Hostname"
-    $Scriptblock = "hostnamectl set-hostname $Hostname"
+    $Scriptblock = "hostnamectl set-hostname $Hostname --no-ask-password"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  | Out-Null
 
