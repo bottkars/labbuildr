@@ -265,7 +265,10 @@ foreach ($Node in $machinesBuilt)
         until ($ToolState.state -match "running")
         Write-Host -ForegroundColor Gray " ==> Setting Shared Folders"
         $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
-        $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | Out-Null
+        if ($centos_ver -eq '7')
+			{
+			$Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | Out-Null
+			}
         Write-Host -ForegroundColor Gray " ==> Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
 
