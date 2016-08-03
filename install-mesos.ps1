@@ -337,7 +337,7 @@ if ($rexray.IsPresent)
     write-verbose "Setting Hostname"
     $Scriptblock = "hostnamectl set-hostname '$Hostname.$BuildDomain.$Custom_DomainSuffix'"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile -Confirm:$false -nowait | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile -interactive | Out-Null
 
     write-verbose "Setting Timezone"
     $Scriptblock = "timedatectl set-timezone $DefaultTimezone"
