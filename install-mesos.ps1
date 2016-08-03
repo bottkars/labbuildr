@@ -123,6 +123,11 @@ catch
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 
+if ($Sourcedir[-1] -eq "\")
+	{
+	$Sourcedir = $Sourcedir -replace ".$"
+	Set-LABSources -Sourcedir $Sourcedir
+	}
 $DefaultTimezone = "Europe/Berlin"
 $Guestpassword = "Password123!"
 $Rootuser = "root"
