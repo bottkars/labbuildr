@@ -330,7 +330,7 @@ if ($rexray.IsPresent)
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 
-    $Scriptblock =  "echo '$ip $($NodeClone.vmxname) $($NodeClone.vmxname).$BuildDomain.$Custom_DomainSuffix'  >> /etc/hosts"
+    $Scriptblock =  "echo '$ip $($Hostname) $($Hostname).$BuildDomain.$Custom_DomainSuffix'  >> /etc/hosts"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null #-logfile $Logfile
 
