@@ -271,15 +271,16 @@ foreach ($Node in $machinesBuilt)
 			}
         Write-Host -ForegroundColor Gray " ==> Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
-
-        $Scriptblock = "systemctl disable iptables.service"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+		if ($centos_ver -eq "7")
+			{
+			$Scriptblock = "systemctl disable iptables.service"
+			Write-Verbose $Scriptblock
+			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
     
-        $Scriptblock = "systemctl stop iptables.service"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-            
+			$Scriptblock = "systemctl stop iptables.service"
+			Write-Verbose $Scriptblock
+			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+            }
         $Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
