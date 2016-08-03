@@ -26,9 +26,12 @@ This will install 3 Centos Nodes CentOSNode1 -CentOSNode3 from the Default CentO
 #>
 [CmdletBinding(DefaultParametersetName = "defaults")]
 Param(
-[Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
-#[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-#[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateRange(1,3)][int32]$Disks = 1,
+[Parameter(ParameterSetName = "defaults", Mandatory = $true)]
+[switch]$Defaults,
+[Parameter(ParameterSetName = "install",Mandatory = $false)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[ValidateSet('7_1_1511','7')]
+[string]$centos_ver = "7_1_1511",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('1024','2048','3072','4096','8192','12288','16384','20480','30720','51200','65536')]$Memory = "3072",
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
@@ -50,10 +53,6 @@ Param(
 [ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain = "labbuildr",
 [Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
-#[Parameter(ParameterSetName = "install",Mandatory = $false)]
-#[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$forcedownload,
-#[Parameter(ParameterSetName = "install",Mandatory = $false)]
-#[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$SIOGateway
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
@@ -119,6 +118,20 @@ catch
     $Masterpath = $Builddir
     }
 
+$OS = "Centos$centos_ver"
+switch ($centos_ver)
+    {
+    "7"
+        {
+        $netdev = "eno16777984"
+        $Required_Master = "$OS Master"
+        }
+    default
+        {
+        $netdev= "eno16777984"
+        $Required_Master = $OS
+        }
+    }
 
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
@@ -135,8 +148,6 @@ $Rootpassword  = "Password123!"
 
 $Guestuser = "$($Szenarioname.ToLower())user"
 $Guestpassword  = "Password123!"
-$Required_Master = "Centos7 Master"
-$OS = ($Required_Master.Split(" "))[0]
 ###### checking master Present
 try
     {
@@ -277,7 +288,10 @@ if ($rexray.IsPresent)
         until ($ToolState.state -match "running")
         Write-Verbose "Setting Shared Folders"
         $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
-        $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | Out-Null
+        if ($centos_ver -eq '7')
+			{
+			$Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | Out-Null
+			}
         Write-Verbose "Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
         
@@ -321,13 +335,16 @@ if ($rexray.IsPresent)
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null #-logfile $Logfile
 
  
-    $Scriptblock = "systemctl disable iptables.service"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+	if ($centos_ver -eq "7")
+		{
+		$Scriptblock = "systemctl disable iptables.service"
+		Write-Verbose $Scriptblock
+		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
     
-    $Scriptblock = "systemctl stop iptables.service"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+		$Scriptblock = "systemctl stop iptables.service"
+		Write-Verbose $Scriptblock
+		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+        }
 
     write-verbose "Setting Timezone"
     $Scriptblock = "timedatectl set-timezone $DefaultTimezone"
@@ -355,8 +372,6 @@ if ($rexray.IsPresent)
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
 
-        # Write-Host -ForegroundColor Magenta "Nodenumber : $Node_num"
-    ### preparing yum
     $file = "/etc/yum.conf"
     $Property = "cachedir"
     $Scriptblock = "grep -q '^$Property' $file && sed -i 's\^$Property=/var*.\$Property=/mnt/hgfs/Sources/$OS/\' $file || echo '$Property=/mnt/hgfs/Sources/$OS/yum/`$basearch/`$releasever/' >> $file"
