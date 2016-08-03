@@ -255,6 +255,8 @@ foreach ($Node in $machinesBuilt)
     {
         $ip="$subnet.$ip_startrange"
         $NodeClone = get-vmx $Node
+        $Hostname = $Node.ToLower()
+
         Write-Host -ForegroundColor Gray " ==> Waiting for $node to boot"
 
         do {
