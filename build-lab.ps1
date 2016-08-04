@@ -62,7 +62,12 @@ param (
     IP-Addresses: .10
     #>	
 	[Parameter(ParameterSetName = "DConly")][switch][alias('dc')]$DConly,	
-    <#
+	<#
+    Installs only a Docker host on 2016TP5. 
+    IP-Addresses: .19
+    #>	
+	[Parameter(ParameterSetName = "docker")][switch][alias('dc')]$Dockerhost,	    
+	<#
     Selects the Always On Scenario
     IP-Addresses: .160 - .169
     #>
@@ -321,6 +326,8 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
+
 	[switch]$defaults,
 
     <#do we want Tools Update? #>
@@ -339,7 +346,8 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
-    [Switch]$Toolsupdate,
+ 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
+   [Switch]$Toolsupdate,
 
     
     <# Wich version of OS Master should be installed
@@ -360,7 +368,8 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
-    [ValidateSet(
+   	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
+	[ValidateSet(
     '2016TP5','2016TP5_GER',
     '2012R2_Ger','2012_R2',
     '2012R2FallUpdate','2012R2Fall_Ger',
@@ -382,7 +391,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
-    #[ValidateScript({ Test-Path -Path $_ })]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 	$Masterpath,
     <# Do we want Additional Disks / of additional 100GB Disks for ScaleIO. The disk will be made ready for ScaleIO usage in Guest OS#>	
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
@@ -410,6 +419,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
     [ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet,
 
  #   [Parameter(Mandatory = $false, HelpMessage = "Enter a valid VMware network Number vmnet between 1 and 19 ")]
@@ -428,6 +438,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 	[switch]$savedefaults,
 
 <# Specify if Machines should be Clustered, valid for Hyper-V and Blanknodes Scenario  #>
@@ -456,6 +467,7 @@ Machine Sizes
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 	[ValidateSet('XS', 'S', 'M', 'L', 'XL', 'TXL', 'XXL', 'XXXL')]$Size = "M",
 	
 <# Specify your own Domain name#>
@@ -474,6 +486,7 @@ Machine Sizes
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 	[ValidateLength(1,63)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,63}[a-zA-Z0-9]+$")][string]$BuildDomain,
 	
 <# Turn this one on if you would like to install a Hypervisor inside a VM #>
@@ -533,6 +546,7 @@ Version Of Networker Modules
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 	[switch]$NW,
     <#
 Version Of Networker Server / Client to be installed
@@ -571,6 +585,7 @@ Version Of Networker Server / Client to be installed
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
     [ValidateSet(
     'nw9010',
     'nw90.DA','nw9001','nw9002','nw9003','nw9004','nw9005','nw9006','nw9007','nw9008',
@@ -611,6 +626,7 @@ This should be used in Distributed scenario´s
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
     [switch]$NoDomainCheck,
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
@@ -627,6 +643,7 @@ This should be used in Distributed scenario´s
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 	[Validatepattern(‘(?<Address>((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))’)]$MySubnet,
 
 <# Specify your IP Addressfamilie/s
@@ -646,8 +663,9 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
-     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
-   [Validateset('IPv4','IPv6','IPv4IPv6')]$AddressFamily, 
+    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
+	[Validateset('IPv4','IPv6','IPv4IPv6')]$AddressFamily, 
 
 <# Specify your IPv6 ULA Prefix, consider https://www.sixxs.net/tools/grh/ula/  #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
@@ -665,6 +683,7 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
     [ValidateScript({$_ -match [IPAddress]$_ })]$IPV6Prefix,
 
 <# Specify your IPv6 ULA Prefix Length, #>
@@ -683,6 +702,7 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
     $IPv6PrefixLength,
 <# 
@@ -706,6 +726,7 @@ Sources should be populated from a bases sources.zip
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
     [String]$Sourcedir,
 	#[Validatescript({Test-Path -Path $_ })][String]$Sourcedir,
 
@@ -731,6 +752,7 @@ Sources should be populated from a bases sources.zip
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 	[switch]$ConsoleLog
 ) # end Param
 
@@ -866,6 +888,7 @@ $latest_e14_sp = 'sp3'
 $latest_e14_ur = 'ur13'
 $latest_sqlver  = 'SQL2016'
 $latest_master = '2012R2FallUpdate'
+$Latest_2016 = '2016TP5'
 $latest_sql_2012 = 'SQL2012SP2'
 $SIOToolKit_Branch = "master"
 $NW85_requiredJava = "jre-7u61-windows-x64"
@@ -2590,36 +2613,19 @@ If ($Java8_required)
         Write-Verbose "Got $LatestJava"
         }
     }
+if ($Dockerhost.IsPresent)
+	{
+	if ($Master -lt "2016TP5")
+	Write-Host " ==>Setting Docker Master to $Latest_2016"
+	$master = $Latest_2016
+	pause
+	}
 ##end Autodownloaders
 ##### Master Downloader
+
 $MyMaster = test-labmaster -Masterpath "$Masterpath" -Master $Master -mastertype vmware -Confirm:$Confirm 
-<#
-$MyMaster = get-vmx -path "$Masterpath\$Master" -WarningAction SilentlyContinue
-if (!$MyMaster)
-    {
-    Write-Host -ForegroundColor Yellow " ==>Could not find $Masterpath\$Master"
-    Write-Host -ForegroundColor Gray " ==>Trying to load $Master from labbuildr Master Repo"
-    if (Receive-LABMaster -Master $Master -Destination $Masterpath -unzip -Confirm:$Confirm)
-        {
-        $MyMaster = get-vmx -path "$Masterpath\$Master" -ErrorAction SilentlyContinue
-        }
-    else
-        {
-        Write-Warning "No valid master found /downloaded"
-        break
-        }
-    $MyMaster = get-vmx -path "$Masterpath\$Master" -WarningAction SilentlyContinue
-    $MasterVMX = $mymaster.config		
-    }
-else
-    {
-    $MasterVMX = $mymaster.config		
-    Write-Verbose "We got master $MasterVMX"
-    }
-#>
-##### end Master Downloader
-    $MasterVMX = $mymaster.config		
-    Write-Verbose "We got master $MasterVMX"
+$MasterVMX = $mymaster.config		
+Write-Verbose "We got master $MasterVMX"
 
 
 
