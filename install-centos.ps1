@@ -137,17 +137,18 @@ switch ($centos_ver)
         {
         $netdev = "eno16777984"
         $Required_Master = "$OS Master"
+		$Guestuser = "stack"
         }
     default
         {
         $netdev= "eno16777984"
         $Required_Master = $OS
+		$Guestuser = "labbuildr"
         }
     }
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 $rootuser = "root"
-$Guestuser = "labbuildr"
 $Guestpassword = "Password123!"
 [uint64]$Disksize = 100GB
 $scsi = 0
@@ -359,7 +360,7 @@ foreach ($Node in $machinesBuilt)
         if ($docker)
             {
             Write-Host -ForegroundColor Gray " ==>installing latest docker engine"
-            $Scriptblock="curl -fsSL https://get.docker.com | sh;systemctl enable docker; systemctl start docker;usermod -aG docker stack"
+            $Scriptblock="curl -fsSL https://get.docker.com | sh;systemctl enable docker; systemctl start docker;usermod -aG docker $Guestuser"
             Write-Verbose $Scriptblock
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
             }
