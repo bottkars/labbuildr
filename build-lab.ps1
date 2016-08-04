@@ -3876,6 +3876,89 @@ switch ($PsCmdlet.ParameterSetName)
             }
 
 	} # End Switchblock Blanknode
+
+
+	"Blanknodes" {
+		$Disks = 2
+		$node = 1	
+        $VTbit = $True
+		[switch]$Cluster = $true
+        if ($Disks)
+            {
+		    $cloneparm = " -AddDisks -disks $Disks"
+            }
+        $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features, containers, Hyper-V, RSAT-Hyper-V-Tools, Multipath-IO"
+        if ($Cluster.IsPresent) {$AddonFeatures = "$AddonFeatures, Failover-Clustering, RSAT-Clustering, RSAT-Clustering-AutomationServer, RSAT-Clustering-CmdInterface, WVR"}
+		test-dcrunning
+			###################################################
+			# Setup of a DockerHost
+			# Init
+            $Node_range = 18
+            $Node_byte = $Node_range+$node
+            $Nodeip = "$IPv4Subnet.$Node_byte"
+            $Nodeprefix = "Host"
+            $NamePrefix = "Docker"
+		    $Nodename = "$NamePrefix$NodePrefix$Node"
+			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+            #$ClusterIP = "$IPv4Subnet.180"
+			###################################################
+		    Write-Verbose $IPv4Subnet
+            write-verbose $Nodename
+            write-verbose $Nodeip
+            Write-Verbose "Disks: $Disks"
+            Write-Verbose "dockerhost: $dockerhost"
+            #Write-Verbose "Cluster: $($Cluster.IsPresent)"
+            #Write-Verbose "Pre Clustername: $ClusterName"
+            #Write-Verbose "Pre ClusterIP: $ClusterIP"
+            if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+                { 
+                Write-verbose "Now Pausing"
+                pause
+                }
+			# Clone Base Machine
+			Write-Host -ForegroundColor White  "Creating Blank Node Host $Nodename with IP $Nodeip"
+			if ($VTbit)
+			{
+				$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir -SharedDisk $cloneparm"
+			}
+			else
+			{
+				$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir $cloneparm"
+			}
+			###################################################
+			If ($CloneOK)
+			{
+				Write-Host -ForegroundColor Gray " ==>Waiting for firstboot finished"
+				test-user -whois Administrator
+				Write-Host -ForegroundColor Gray " ==>Starting Customization"
+				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
+                if ($NW.IsPresent)
+                    {
+                    #Write-Host -ForegroundColor Gray " ==>Install NWClient"
+		            $script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter "-nw_ver $nw_ver"
+                    }
+				invoke-postsection
+			}# end Cloneok
+			
+		 # end foreach
+<#
+    	if ($Cluster.IsPresent)
+		    {
+			write-host
+			Write-Host -ForegroundColor Gray " ==>Forming Blanknode Cluster"
+            If ($ClusterName)
+                {    
+			    $script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix '$NodePrefix' -ClusterName $ClusterName -IPAddress '$IPv4Subnet.$ClusterIP' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive -Verbose
+                }
+            else
+                {
+			    $script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix '$NodePrefix' -IPAddress '$IPv4Subnet.$ClusterIP' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive -Verbose
+                }			
+		    
+            }
+#>
+	} # End Switchblock Blanknode
+
 	
 	"Spaces" {
 		
