@@ -3922,7 +3922,7 @@ switch ($PsCmdlet.ParameterSetName)
                 pause
                 }
 			# Clone Base Machine
-			Write-Host -ForegroundColor White  "Creating Blank Node Host $Nodename with IP $Nodeip"
+			Write-Host -ForegroundColor White  " ==>Creating Docker Host:$Nodename with IP $Nodeip"
 			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir -SharedDisk $cloneparm"
 			###################################################
 			If ($CloneOK)
