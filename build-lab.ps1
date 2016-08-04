@@ -66,7 +66,7 @@ param (
     Installs only a Docker host on 2016TP5. 
     IP-Addresses: .19
     #>	
-	[Parameter(ParameterSetName = "docker")][switch][alias('dc')]$Dockerhost,	    
+	[Parameter(ParameterSetName = "docker")][switch][alias('docker')]$Dockerhost,	    
 	<#
     Selects the Always On Scenario
     IP-Addresses: .160 - .169
