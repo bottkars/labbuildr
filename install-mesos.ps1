@@ -18,11 +18,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://github.com/bottkars/labbuildr/wiki/SolutionPacks#install-mesos
+   https://github.com/bottkars/labbuildr/wiki/install-mesos.ps1-%5Bwith-rexray%5D
 .EXAMPLE
-.\install-centos7_4scaleio.ps1 -Defaults
-This will install 3 Centos Nodes CentOSNode1 -CentOSNode3 from the Default CentOS7 Master , in the Default 192.168.2.0 network, IP .221 - .223
-
 #>
 [CmdletBinding(DefaultParametersetName = "defaults")]
 Param(

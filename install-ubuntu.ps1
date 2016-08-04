@@ -18,7 +18,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://community.emc.com/blogs/bottk/
+   https://github.com/bottkars/labbuildr/wiki/install-ubuntu.ps1
 .EXAMPLE
 .\install-Ubuntu.ps1
 This will install 3 Ubuntu Nodes Ubuntu1 -Ubuntu3 from the Default Ubuntu Master , in the Default 192.168.2.0 network, IP .221 - .223
