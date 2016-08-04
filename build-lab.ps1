@@ -2621,7 +2621,7 @@ if ($Dockerhost.IsPresent)
 		$master = $Latest_2016
 		pause
 		}
-	Receive-LABDocker -Destination $Sourcedir -ver 1.12 -arch win
+	Receive-LABDocker -Destination $Sourcedir -ver 1.12 -arch win  -branch beta
 	}
 ##end Autodownloaders
 ##### Master Downloader
