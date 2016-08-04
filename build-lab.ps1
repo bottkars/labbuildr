@@ -2620,7 +2620,9 @@ if ($Dockerhost.IsPresent)
 		Write-Host " ==>Setting Docker Master to $Latest_2016"
 		$master = $Latest_2016
 		}
-	Receive-LABDocker -Destination $Sourcedir -ver 1.12 -arch win  -branch beta
+	# Receive-LABDocker -Destination $Sourcedir -ver 1.12 -arch win -branch beta
+	if ($Size -lt "XXL")
+		{$Size = "XXL" }
 	}
 ##end Autodownloaders
 ##### Master Downloader
@@ -3921,14 +3923,7 @@ switch ($PsCmdlet.ParameterSetName)
                 }
 			# Clone Base Machine
 			Write-Host -ForegroundColor White  "Creating Blank Node Host $Nodename with IP $Nodeip"
-			if ($VTbit)
-			{
-				$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir -SharedDisk $cloneparm"
-			}
-			else
-			{
-				$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir $cloneparm"
-			}
+			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir -SharedDisk $cloneparm"
 			###################################################
 			If ($CloneOK)
 			{
