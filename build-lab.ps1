@@ -2621,6 +2621,7 @@ if ($Dockerhost.IsPresent)
 		$master = $Latest_2016
 		pause
 		}
+	Receive-LABDocker -Destination $Sourcedir -ver 1.12 -arch win
 	}
 ##end Autodownloaders
 ##### Master Downloader
@@ -3878,7 +3879,7 @@ switch ($PsCmdlet.ParameterSetName)
 	} # End Switchblock Blanknode
 
 
-	"dockerhost" {
+	"docker" {
 		$Disks = 2
 		$node = 1	
         $VTbit = $True
