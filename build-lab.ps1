@@ -3899,7 +3899,7 @@ switch ($PsCmdlet.ParameterSetName)
             $Node_range = 18
             $Node_byte = $Node_range+$node
             $Nodeip = "$IPv4Subnet.$Node_byte"
-            $Nodeprefix = "Host"
+            $Nodeprefix = "WINHost"
             $NamePrefix = "Docker"
 		    $Nodename = "$NamePrefix$NodePrefix$Node"
 			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
