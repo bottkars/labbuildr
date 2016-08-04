@@ -2619,7 +2619,6 @@ if ($Dockerhost.IsPresent)
 		{
 		Write-Host " ==>Setting Docker Master to $Latest_2016"
 		$master = $Latest_2016
-		pause
 		}
 	Receive-LABDocker -Destination $Sourcedir -ver 1.12 -arch win  -branch beta
 	}
