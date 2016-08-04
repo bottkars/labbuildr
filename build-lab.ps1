@@ -3878,10 +3878,11 @@ switch ($PsCmdlet.ParameterSetName)
 	} # End Switchblock Blanknode
 
 
-	"Blanknodes" {
+	"dockerhost" {
 		$Disks = 2
 		$node = 1	
         $VTbit = $True
+
 		[switch]$Cluster = $true
         if ($Disks)
             {
@@ -3900,6 +3901,9 @@ switch ($PsCmdlet.ParameterSetName)
             $NamePrefix = "Docker"
 		    $Nodename = "$NamePrefix$NodePrefix$Node"
 			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+			$Host_ScriptDir = "$Builddir\$Scripts\$NamePrefix\"
+			$IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NamePrefix\"
+
             #$ClusterIP = "$IPv4Subnet.180"
 			###################################################
 		    Write-Verbose $IPv4Subnet
