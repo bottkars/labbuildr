@@ -2616,9 +2616,11 @@ If ($Java8_required)
 if ($Dockerhost.IsPresent)
 	{
 	if ($Master -lt "2016TP5")
-	Write-Host " ==>Setting Docker Master to $Latest_2016"
-	$master = $Latest_2016
-	pause
+		{
+		Write-Host " ==>Setting Docker Master to $Latest_2016"
+		$master = $Latest_2016
+		pause
+		}
 	}
 ##end Autodownloaders
 ##### Master Downloader
