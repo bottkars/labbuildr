@@ -396,15 +396,15 @@ foreach ($Node in $machinesBuilt)
 				{
 				'14_4'
 					{
-					$deb = "deb https://apt.dockerproject.org/repo ubuntu-trusty main\n"
+					$deb = "deb https://apt.dockerproject.org/repo ubuntu-trusty main"
 					}
 				'15_10'
 					{
-					$deb = "deb https://apt.dockerproject.org/repo ubuntu-wily main\n"
+					$deb = "deb https://apt.dockerproject.org/repo ubuntu-wily main"
 					}
 				'16_4'
 					{
-					$deb = "deb https://apt.dockerproject.org/repo ubuntu-xenial main\n"
+					$deb = "deb https://apt.dockerproject.org/repo ubuntu-xenial main"
 					}
 				}
 			
