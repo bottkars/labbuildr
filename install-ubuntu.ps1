@@ -21,7 +21,7 @@
    https://github.com/bottkars/labbuildr/wiki/install-ubuntu.ps1
 .EXAMPLE
 .\install-Ubuntu.ps1
-This will install 3 Ubuntu Nodes Ubuntu1 -Ubuntu3 from the Default Ubuntu Master , in the Default 192.168.2.0 network, IP .221 - .223
+This will install 3 Ubuntu Nodes Ubuntu1 -Ubuntu3 from the Default Ubuntu Master
 
 #>
 [CmdletBinding(DefaultParametersetName = "defaults",
@@ -36,7 +36,7 @@ Param(
 [int32]$Disks = 1,
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateSet('16_4','15_10','15_4','14_4')]
+[ValidateSet('16_4','15_10','14_4')]
 [string]$ubuntu_ver = "16_4",
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
