@@ -394,7 +394,7 @@ foreach ($Node in $machinesBuilt)
             
 			switch ($ubuntu_ver)
 				{
-				'14_04'
+				'14_4'
 					{
 					$deb = "deb https://apt.dockerproject.org/repo ubuntu-trusty main\n"
 					}
@@ -402,13 +402,13 @@ foreach ($Node in $machinesBuilt)
 					{
 					$deb = "deb https://apt.dockerproject.org/repo ubuntu-wily main\n"
 					}
-				'16_04'
+				'16_4'
 					{
 					$deb = "deb https://apt.dockerproject.org/repo ubuntu-xenial main\n"
 					}
 				}
 			
-			$Scriptblock = "echo '$deb' >> /etc/apt/sources.list.d/docker.list;sudo apt-get update,sudo apt-get purge lxc-docker;apt-cache policy docker-engine"
+			$Scriptblock = "echo '$Deb' >> /etc/apt/sources.list.d/docker.list;sudo apt-get update,sudo apt-get purge lxc-docker;apt-cache policy docker-engine"
 			Write-Verbose $Scriptblock
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
