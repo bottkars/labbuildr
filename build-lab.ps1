@@ -3933,10 +3933,9 @@ switch ($PsCmdlet.ParameterSetName)
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
                 if ($NW.IsPresent)
                     {
-                    #Write-Host -ForegroundColor Gray " ==>Install NWClient"
 		            $script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter "-nw_ver $nw_ver"
                     }
-				invoke-postsection -wait		        
+				invoke-postsection -wait        
 				$script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-docker.ps1 -interactive
 
 			}# end Cloneok
