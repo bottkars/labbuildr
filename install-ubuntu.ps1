@@ -36,7 +36,7 @@ Param(
 [int32]$Disks = 1,
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateSet('16_4','15_10','14_4')]
+[ValidateSet('16_4','15_10','15_4','14_4')]
 [string]$ubuntu_ver = "16_4",
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
@@ -399,6 +399,10 @@ foreach ($Node in $machinesBuilt)
 				'14_4'
 					{
 					$deb = "deb https://apt.dockerproject.org/repo ubuntu-trusty main"
+					}
+				'15_4'
+					{
+					$deb = "deb https://apt.dockerproject.org/repo ubuntu-jessie main"
 					}
 				'15_10'
 					{
