@@ -138,6 +138,10 @@ switch ($ubuntu_ver)
         {
         $netdev = "ens160"
         }
+    "15_10"
+        {
+        $netdev= "eno16777984"
+        }
     default
         {
         $netdev= "eth0"
