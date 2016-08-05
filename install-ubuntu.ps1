@@ -131,7 +131,7 @@ if (!$DNS2)
 if (!$Masterpath) {$Masterpath = $Builddir}
 
 $ip_startrange = $ip_startrange+$Startnode
-
+$logfile = "/tmp/labbuildr.log"
 switch ($ubuntu_ver)
     {
     "16_4"
@@ -419,7 +419,7 @@ foreach ($Node in $machinesBuilt)
 			Write-Verbose $Scriptblock
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
-			$Scriptblock = "apt-get install docker-engine -y;service docker start;service docker statuse"
+			$Scriptblock = "apt-get install docker-engine -y;service docker start;service docker status"
 			Write-Verbose $Scriptblock
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
