@@ -36,7 +36,7 @@ Param(
 [int32]$Disks = 1,
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateSet('16_4','15_4','14_4')]
+[ValidateSet('16_4','15_10','14_4')]
 [string]$ubuntu_ver = "16_4",
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
@@ -66,6 +66,8 @@ $vmnet = "vmnet2",
 $Defaultsfile=".\defaults.xml",
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$forcedownload,
+[Switch]$docker,
+[ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL",
 [int]$ip_startrange = 200
 #[Parameter(ParameterSetName = "install",Mandatory = $false)]
 #[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$SIOGateway
@@ -226,6 +228,9 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
             $NodeClone | Set-VMXmemory -MemoryMB 3072 | Out-Null
             }#>
         $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname Ubuntu -Scenario 7
+		Write-Host -ForegroundColor Gray " ==>setting VM size to $Size"
+        $mysize = $NodeClone |Set-VMXSize -config $NodeClone.Config -Size $Size
+
         $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
         Write-Host -ForegroundColor Magenta " ==> Starting $Nodeprefix$Node"
         start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
@@ -379,7 +384,48 @@ foreach ($Node in $machinesBuilt)
         $Scriptblock = "DEFAULT_ROUTE=`$(ip route show default | awk '/default/ {print `$3}');ping -c 1 `$DEFAULT_ROUTE"
         Write-Verbose $Scriptblock
         $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword     
-        ###
+        
+		if ($docker)
+            {
+            Write-Host -ForegroundColor Gray " ==>installing latest docker engine"
+            $Scriptblock="apt-get install apt-transport-https ca-certificates;sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D"
+            Write-Verbose $Scriptblock
+            $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+            
+			switch ($ubuntu_ver)
+				{
+				'14_04'
+					{
+					$deb = 'deb https://apt.dockerproject.org/repo ubuntu-trusty main\n'
+					}
+				'15_10'
+					{
+					$deb = 'deb https://apt.dockerproject.org/repo ubuntu-wily main\n'
+					}
+				'16_04'
+					{
+					$deb = 'deb https://apt.dockerproject.org/repo ubuntu-xenial main\n'
+					}
+				}
+			
+			$Scriptblock = "echo $deb >> /etc/apt/sources.list.d/docker.list;sudo apt-get update,sudo apt-get purge lxc-docker;apt-cache policy docker-engine"
+			Write-Verbose $Scriptblock
+            $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+
+		
+			$Scriptblock = "apt-get install linux-image-extra-`$(uname -r)"
+			Write-Verbose $Scriptblock
+            $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+
+			$Scriptblock = "apt-get install docker-engine;service docker start"
+			Write-Verbose $Scriptblock
+            $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+
+			}
+
+
+		
+		###
         switch ($Desktop)
             {
                 'cinnamon'

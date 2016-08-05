@@ -237,7 +237,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         $Annotation = $NodeClone | Set-VMXAnnotation -Line1 "rootuser:$Rootuser" -Line2 "rootpasswd:$Guestpassword" -Line3 "Guestuser:$Guestuser" -Line4 "Guestpassword:$Guestpassword" -Line5 "labbuildr by @sddc_guy" -builddate
         $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
         $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname CentOS -Scenario 7
-        Write-Host -ForegroundColor Gray "setting VM size to $Size"
+        Write-Host -ForegroundColor Gray " ==>setting VM size to $Size"
         $mysize = $NodeClone |Set-VMXSize -config $NodeClone.Config -Size $Size
 
         $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
