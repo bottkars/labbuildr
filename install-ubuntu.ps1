@@ -248,7 +248,7 @@ foreach ($Node in $machinesBuilt)
     {
         $ip="$subnet.$ip_startrange"
         $NodeClone = get-vmx $Node
-        Write-Host -ForegroundColor Magenta " ==> Waiting for $node to boot"
+        Write-Host -ForegroundColor Magenta " ==>Waiting for $node to boot"
 
         do {
             $ToolState = Get-VMXToolsState -config $NodeClone.config
@@ -256,10 +256,12 @@ foreach ($Node in $machinesBuilt)
             sleep 5
             }
         until ($ToolState.state -match "running")
-        Write-Host -ForegroundColor Gray " ==> Setting Shared Folders"
+		Write-Host -ForegroundColor Magenta " ==>configuring  $node, will be reachable with $ip"
+
+        Write-Host -ForegroundColor Gray " ==>Setting Shared Folders"
         $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
         # $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources # | Out-Null
-        Write-Host -ForegroundColor Gray " ==> Adding Shared Folders"        
+        Write-Host -ForegroundColor Gray " ==>Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
         
         If ($ubuntu_ver -match "15")
@@ -384,7 +386,7 @@ foreach ($Node in $machinesBuilt)
         $Scriptblock = "DEFAULT_ROUTE=`$(ip route show default | awk '/default/ {print `$3}');ping -c 1 `$DEFAULT_ROUTE"
         Write-Verbose $Scriptblock
         $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword     
-        
+ ## docker       
 		if ($docker)
             {
             Write-Host -ForegroundColor Gray " ==>installing latest docker engine"
@@ -413,16 +415,16 @@ foreach ($Node in $machinesBuilt)
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
 		
-			$Scriptblock = "apt-get install linux-image-extra-`$(uname -r)"
+			$Scriptblock = "apt-get install linux-image-extra-`$(uname -r) -y"
 			Write-Verbose $Scriptblock
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
-			$Scriptblock = "apt-get install docker-engine;service docker start"
+			$Scriptblock = "apt-get install docker-engine -y ;service docker start"
 			Write-Verbose $Scriptblock
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
 			}
-
+## docker end
 
 		
 		###
