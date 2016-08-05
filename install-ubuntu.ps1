@@ -365,7 +365,9 @@ foreach ($Node in $machinesBuilt)
         Write-Host -ForegroundColor Gray " ==> setting hostname $Node"
         $Scriptblock = "echo '127.0.0.1       localhost' > /etc/hosts; echo '$ip $Node $Node.$BuildDomain.$Custom_DomainSuffix' >> /etc/hosts; hostname $Node"
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-        Write-Host -ForegroundColor Magenta "==> Restarting Guest Network"
+        $Scriptblock = "hostnamectl set-hostname $Node"
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+		Write-Host -ForegroundColor Magenta "==> Restarting Guest Network"
 
         switch ($ubuntu_ver)
             {
