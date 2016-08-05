@@ -201,21 +201,21 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
             }
         If ($Node -eq 1){$Primary = $NodeClone}
         $Config = Get-VMXConfig -config $NodeClone.config
-        Write-Host -ForegroundColor Magenta " ==> Tweaking Config"
-        Write-Host -ForegroundColor Magenta " ==> Creating Disks"
+        Write-Host -ForegroundColor Gray " ==>Tweaking Config"
+        Write-Host -ForegroundColor Gray " ==>Creating Disks"
         foreach ($LUN in (1..$Disks))
             {
             $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-            Write-Host -ForegroundColor Magenta " ==> Building new Disk $Diskname"
+            Write-Host -ForegroundColor Gray " ==>Building new Disk $Diskname"
             $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-            Write-Host -ForegroundColor Magenta " ==> Adding Disk $Diskname to $($NodeClone.VMXname)"
+            Write-Host -ForegroundColor Gray " ==>Adding Disk $Diskname to $($NodeClone.VMXname)"
             $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
             }
-        Write-Host -ForegroundColor Magenta " ==> Setting NIC0 to HostOnly"
+        Write-Host -ForegroundColor Gray " ==>Setting NIC0 to HostOnly"
         $Netadapter = Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config
         if ($vmnet)
             {
-            Write-Host -ForegroundColor Magenta " ==> Configuring NIC 0 for $vmnet"
+            Write-Host -ForegroundColor Gray " ==>Configuring NIC 0 for $vmnet"
             Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config -WarningAction SilentlyContinue | Out-Null
             Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config | Out-Null
             }
@@ -224,7 +224,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
        <# if ($node -eq 3)
             {
-            Write-Host -ForegroundColor Magenta " ==> Setting Gateway Memory to 3 GB"
+            Write-Host -ForegroundColor Gray " ==>Setting Gateway Memory to 3 GB"
             $NodeClone | Set-VMXmemory -MemoryMB 3072 | Out-Null
             }#>
         $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname Ubuntu -Scenario 7
@@ -232,7 +232,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         $mysize = $NodeClone |Set-VMXSize -config $NodeClone.Config -Size $Size
 
         $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
-        Write-Host -ForegroundColor Magenta " ==> Starting $Nodeprefix$Node"
+        Write-Host -ForegroundColor Gray " ==>Starting $Nodeprefix$Node"
         start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
         $machinesBuilt += $($NodeClone.cloneName).tolower()
         }
@@ -419,7 +419,7 @@ foreach ($Node in $machinesBuilt)
 			Write-Verbose $Scriptblock
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
-			$Scriptblock = "apt-get install docker-engine -y ;service docker start"
+			$Scriptblock = "apt-get install docker-engine -y;service docker start"
 			Write-Verbose $Scriptblock
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
@@ -432,14 +432,14 @@ foreach ($Node in $machinesBuilt)
             {
                 'cinnamon'
                 {
-                Write-Host -ForegroundColor Magenta " ==> downloading and configuring $Desktop as Desktop, this may take a while"
+                Write-Host -ForegroundColor Gray " ==>downloading and configuring $Desktop as Desktop, this may take a while"
                 $Scriptblock = "apt-get update >> /tmp/cinamon.log;apt-get install -y cinnamon-desktop-environment xinit >> /tmp/cinamon.log"
                 Write-Verbose $Scriptblock
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
                 Write-host -ForegroundColor White " for full screen resolution, run /usr/bin/vmware-config-tools.pl -d"
 
-                Write-Host -ForegroundColor Magenta " ==> starting login manager"
+                Write-Host -ForegroundColor Gray " ==>starting login manager"
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
                 $Scriptblock = "systemctl enable lightdm >> /tmp/lightdm.log;systemctl start lightdm >> /tmp/lightdm.log"
                 Write-Verbose $Scriptblock
