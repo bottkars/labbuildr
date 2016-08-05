@@ -419,7 +419,7 @@ foreach ($Node in $machinesBuilt)
 			Write-Verbose $Scriptblock
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
-			$Scriptblock = "apt-get install docker-engine -y;service docker start"
+			$Scriptblock = "apt-get install docker-engine -y;service docker start;service docker statuse"
 			Write-Verbose $Scriptblock
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
