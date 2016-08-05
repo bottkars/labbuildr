@@ -67,6 +67,11 @@ param (
     IP-Addresses: .19
     #>	
 	[Parameter(ParameterSetName = "docker")][switch][alias('docker')]$Dockerhost,	    
+	[Parameter(ParameterSetName = "docker")][ValidateSet(
+    '1.12.0','latest'
+    )]
+    $Docker_VER='latest',
+
 	<#
     Selects the Always On Scenario
     IP-Addresses: .160 - .169
@@ -2621,7 +2626,7 @@ if ($Dockerhost.IsPresent)
 		$master = $Latest_2016
 		}
 	# Receive-LABDocker -Destination $Sourcedir -ver 1.12 -arch win -branch beta
-	if ($Size -lt "XXL")
+	if ($Size -lt "TXL")
 		{$Size = "XXL" }
 	}
 ##end Autodownloaders
@@ -3936,7 +3941,7 @@ switch ($PsCmdlet.ParameterSetName)
 		            $script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter "-nw_ver $nw_ver"
                     }
 				invoke-postsection -wait        
-				$script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-docker.ps1 -interactive
+				$script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-docker.ps1 -interactive -Parameter "-Docker_VER $Docker_VER"
 
 			}# end Cloneok
 			
