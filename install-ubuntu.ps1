@@ -410,7 +410,7 @@ foreach ($Node in $machinesBuilt)
 					}
 				}
 			
-			$Scriptblock = "echo '$Deb' >> /etc/apt/sources.list.d/docker.list;sudo apt-get update,sudo apt-get purge lxc-docker;apt-cache policy docker-engine"
+			$Scriptblock = "echo '$Deb' >> /etc/apt/sources.list.d/docker.list;apt-get update;apt-get purge lxc-docker;apt-cache policy docker-engine"
 			Write-Verbose $Scriptblock
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
