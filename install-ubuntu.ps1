@@ -40,7 +40,7 @@ Param(
 [string]$ubuntu_ver = "16_4",
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateSet('cinnamon','none')]
+[ValidateSet('cinnamon','cinnamon-desktop-environment','xfce4','lxde','none')]
 [string]$Desktop = "none",
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]
@@ -440,11 +440,12 @@ foreach ($Node in $machinesBuilt)
 		###
         switch ($Desktop)
             {
-                'cinnamon'
+                default
                 {
+				$Desktop = $Desktop.ToLower()
                 Write-Host -ForegroundColor Gray " ==>downloading and configuring $Desktop as Desktop, this may take a while"
                 #$Scriptblock = "apt-get update >> /tmp/cinamon.log;apt-get install -y cinnamon-desktop-environment xinit >> /tmp/cinamon.log"
-                $Scriptblock = "apt-get update >> /tmp/cinamon.log;apt-get install -y cinnamon firefox xinit >> /tmp/cinamon.log"
+                $Scriptblock = "apt-get update >> /tmp/cinamon.log;apt-get install -y $Desktop firefox xinit >> /tmp/cinamon.log"
 				Write-Verbose $Scriptblock
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
@@ -456,7 +457,7 @@ foreach ($Node in $machinesBuilt)
                 Write-Verbose $Scriptblock
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
                 }
-            default
+            'none'
                 {
                 }
             }
