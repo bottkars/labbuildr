@@ -443,8 +443,9 @@ foreach ($Node in $machinesBuilt)
                 'cinnamon'
                 {
                 Write-Host -ForegroundColor Gray " ==>downloading and configuring $Desktop as Desktop, this may take a while"
-                $Scriptblock = "apt-get update >> /tmp/cinamon.log;apt-get install -y cinnamon-desktop-environment xinit >> /tmp/cinamon.log"
-                Write-Verbose $Scriptblock
+                #$Scriptblock = "apt-get update >> /tmp/cinamon.log;apt-get install -y cinnamon-desktop-environment xinit >> /tmp/cinamon.log"
+                $Scriptblock = "apt-get update >> /tmp/cinamon.log;apt-get install -y cinnamon firefox xinit >> /tmp/cinamon.log"
+				Write-Verbose $Scriptblock
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
                 Write-host -ForegroundColor White " for full screen resolution, run /usr/bin/vmware-config-tools.pl -d"
