@@ -445,17 +445,20 @@ foreach ($Node in $machinesBuilt)
 				$Desktop = $Desktop.ToLower()
                 Write-Host -ForegroundColor Gray " ==>downloading and configuring $Desktop as Desktop, this may take a while"
                 #$Scriptblock = "apt-get update >> /tmp/cinamon.log;apt-get install -y cinnamon-desktop-environment xinit lightdm >> /tmp/cinamon.log"
-                $Scriptblock = "apt-get update >> /tmp/cinamon.log;apt-get install -y $Desktop firefox lightdm xinit >> /tmp/cinamon.log"
+                $Scriptblock = "apt-get update >> /tmp/cinamon.log;apt-get install -y $Desktop firefox lightdm xinit"
 				Write-Verbose $Scriptblock
-                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-
-                Write-host -ForegroundColor White " for full screen resolution, run /usr/bin/vmware-config-tools.pl -d"
-
-                Write-Host -ForegroundColor Gray " ==>starting login manager"
-                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-                $Scriptblock = "systemctl enable lightdm >> /tmp/lightdm.log;systemctl start lightdm >> /tmp/lightdm.log"
+                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile| Out-Null
+				if ($Desktop -eq 'xfce4')
+					{
+					$Scriptblock = "/usr/lib/lightdm/lightdm-set-defaults --session xfce4-session"
+					Write-Verbose $Scriptblock
+					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
+					}
+                Write-Host -ForegroundColor Gray " ==>enabling login manager"
+                #$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+                $Scriptblock = "systemctl enable lightdm"
                 Write-Verbose $Scriptblock
-                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
                 }
             'none'
                 {
@@ -463,12 +466,14 @@ foreach ($Node in $machinesBuilt)
             }
 
         ####
-        $Scriptblock = "/usr/bin/vmware-config-tools.pl -d;shutdown -r now"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -nowait| Out-Null
+		if ($Desktop -ne 'none')
+			{
+			Write-Host -ForegroundColor Gray " ==>enabling login manager, system will be ready after reboot"
+			$Scriptblock = "/usr/bin/vmware-config-tools.pl -d;shutdown -r now"
+			Write-Verbose $Scriptblock
+			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -nowait| Out-Null
+			}
         $ip_startrange++
-    
-    
     }
 $StopWatch.Stop()
 Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
