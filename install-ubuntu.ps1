@@ -450,7 +450,8 @@ foreach ($Node in $machinesBuilt)
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile| Out-Null
 				if ($Desktop -eq 'xfce4')
 					{
-					$Scriptblock = "/usr/lib/lightdm/lightdm-set-defaults --session xfce4-session"
+					$Scriptblock = "apt-get install xubuntu-default-settings -y"
+					#$Scriptblock = "/usr/lib/lightdm/lightdm-set-defaults --session xfce4-session"
 					Write-Verbose $Scriptblock
 					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
 					}
