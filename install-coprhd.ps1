@@ -109,6 +109,7 @@ if (!$Masterpath) {$Masterpath = $Builddir}
 $ip_startrange = $ip_startrange+$Startnode
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
+$logfile = "/tmp/labbuildr.log"
 $OS = "OpenSUSE"
 $Required_Master = $OS
 $Scenarioname = "Coprhd"
@@ -249,6 +250,7 @@ if (!(Test-path $Scriptdir ))
         Write-Host -ForegroundColor Gray " ==>Restarting Network, please be patient"
         $NodeClone | Invoke-VMXBash -Scriptblock "/sbin/rcnetwork restart" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         
+		Write-Host -ForegroundColor Magenta " ==>Starting customization, all commands will be logged in $logfile on host, use tail -f $logfile on console/ssh"
 		###  ssh section
 		Write-Host -ForegroundColor Gray " ==>Configuring SSH Access"
 		$Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa"
@@ -264,15 +266,15 @@ if (!(Test-path $Scriptdir ))
 
 		$Scriptblock = "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys;chmod 0600 /root/.ssh/authorized_keys"
 		Write-Verbose $Scriptblock
-		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword   # -logfile $Logfile
+		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword   -logfile $Logfile
 
 		$Scriptblock = "{ echo -n '$($NodeClone.vmxname) '; cat /etc/ssh/ssh_host_rsa_key.pub; } >> ~/.ssh/known_hosts"
 		Write-Verbose $Scriptblock
-		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword   # -logfile $Logfile
+		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword   -logfile $Logfile
 
 		$Scriptblock = "{ echo -n 'localhost '; cat /etc/ssh/ssh_host_rsa_key.pub; } >> ~/.ssh/known_hosts"
 		Write-Verbose $Scriptblock
-		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword   # -logfile $Logfile
+		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword    -logfile $Logfile
 		Write-Host -ForegroundColor Gray " ==>ssh configuration finished"     
 		#### end ssh  
 	
@@ -292,13 +294,13 @@ if (!(Test-path $Scriptdir ))
 
         $Scriptblock = "zypper --non-interactive install --no-recommends git make; echo $?"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile "/tmp/zypper.log" | Out-Null
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
 
            
         Write-Host -ForegroundColor Gray " ==>Cloning into CoprHD"
         $Scriptblock = "git clone https://review.coprhd.org/scm/ch/coprhd-controller.git"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile "/tmp/git_clone.log" | Out-Null
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
 		
 
         Write-Host -ForegroundColor Gray " ==>Running Installation Tasks"
@@ -308,7 +310,7 @@ if (!(Test-path $Scriptdir ))
             Write-Host -ForegroundColor Gray " ==> Running Task $component"
             $Scriptblock = "/coprhd-controller/packaging/appliance-images/openSUSE/13.2/CoprHDDevKit/configure.sh $component"
             Write-Verbose $Scriptblock
-            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile "/tmp/$component.log"  | Out-Null       
+            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null       
             }
  
 }

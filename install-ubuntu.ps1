@@ -155,7 +155,6 @@ $Guestpassword = "Password123!"
 $scsi = 0
 $Nodeprefix = "Ubuntu"
 $Required_Master = "Ubuntu$ubuntu_ver"
-
 #$mastervmx = test-labmaster -Master $Required_Master -MasterPath $MasterPath -Confirm:$Confirm
 
 ###### checking master Present
@@ -434,7 +433,7 @@ foreach ($Node in $machinesBuilt)
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
 			}
-## docker end
+		## docker end
 
 		
 		###
