@@ -281,16 +281,16 @@ if (!(Test-path $Scriptdir ))
 		Write-Host -ForegroundColor Gray " ==>Starting zypper Tasks, this may take a while"
         $Scriptblock = "sed '\|# cachedir = /var/cache/zypp|icachedir = /mnt/hgfs/Sources/$OS/zypp/\n' /etc/zypp/zypp.conf -i"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
 
         $Scriptblock = "sudo zypper modifyrepo -k --all"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
 
     
         $Scriptblock = "sudo zypper ref"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
 
         $Scriptblock = "zypper --non-interactive install --no-recommends git make; echo $?"
         Write-Verbose $Scriptblock
@@ -338,13 +338,13 @@ node_id=vipr1"
     $NodeClone | copy-VMXfile2guest -Sourcefile $Scriptdir\$Scriptname -targetfile "/etc/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
     Write-Host -ForegroundColor Magenta " ==> Building CoprHD RPM"
 
-    $Scriptblock = "cd /coprhd-controller;make clobber BUILD_TYPE=oss rpm &> /tmp/build_coprhd.log"
+    $Scriptblock = "cd /coprhd-controller;make clobber BUILD_TYPE=oss rpm"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
     Write-Host -ForegroundColor Magenta " ==> Installing CoprHD RPM"
-    $Scriptblock = "/bin/rpm -Uhv /coprhd-controller/build/RPMS/x86_64/storageos*.x86_64.rpm" #;/sbin/shutdown -r now"
+    $Scriptblock = "/bin/rpm -Uhv /coprhd-controller/build/RPMS/x86_64/storageos*.x86_64.rpm;/sbin/shutdown -r now"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword   | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword  -logfile $logfile -nowait| Out-Null
 	$StopWatch.Stop()
 	Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
     Write-host -ForegroundColor White "Installed CoprHD RPM
