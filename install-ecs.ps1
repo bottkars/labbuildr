@@ -317,7 +317,7 @@ foreach ($Node in $machinesBuilt)
     $NodeClone = get-vmx $Node
     Write-Host -ForegroundColor Magenta " ==>Waiting for VM to boot GuestOS $OS"
     do {
-        $ToolState = Get-VMXToolsState -config $NodeClone.config$Hostanem
+        $ToolState = Get-VMXToolsState -config $NodeClone.config
         Write-Verbose "VMware tools are in $($ToolState.State) state"
         sleep 5
         }
