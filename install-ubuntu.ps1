@@ -424,7 +424,7 @@ foreach ($Node in $machinesBuilt)
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
 		
-			$Scriptblock = "apt-get install linux-image-extra-`$(uname -r) -y"
+			$Scriptblock = "apt-get install curl linux-image-extra-`$(uname -r) -y"
 			Write-Verbose $Scriptblock
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
