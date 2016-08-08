@@ -539,7 +539,7 @@ foreach ($Node in $machinesBuilt)
     write-verbose "installing requests package"
     $Scriptblock = "/usr/bin/easy_install requests"
     Write-Verbose $Scriptblock
-    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile#>
+    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile #>
 
 if (!(Test-Path "$Sourcedir\docker\$($Docker_image)_$Docker_imagetag.tgz") -and !($offline.IsPresent))
     {
@@ -642,13 +642,13 @@ you may chek the opject count with your bowser at http://$($IP):9101"
 Write-Host -ForegroundColor White "waiting for Webserver to accept logins"
 $Scriptblock = "curl -i -k https://$($ip):4443/login -u root:ChangeMe"
 Write-verbose $Scriptblock
-$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/curl.log" -Confirm:$false -SleepSec 60
+$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile $Logfile -Confirm:$false -SleepSec 60
 if ($AdjustTimeouts.isPresent)
     {
     Write-Host -ForegroundColor Gray " ==>Adjusting Timeouts"
     $Scriptblock = "/usr/bin/sudo -s sed -i -e 's\30, 60, InsertVDC\300, 300, InsertVDC\g' /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py"
     Write-verbose $Scriptblock
-    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "/tmp/SED.log"   # -Confirm:$false -SleepSec 60
+    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile $Logfile   # -Confirm:$false -SleepSec 60
     }
 <#
 if ($Branch -eq "feature-ecs-2.2")
@@ -676,7 +676,7 @@ $Method = 'CreateUser'
 Write-Host -ForegroundColor Gray " ==>running Method $Method"
 $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$Namespace_Name --ObjectVArray=$Pool_Name --ObjectVPool=$Replicaton_Group_Name --UserName=$Guestuser --DataStoreName=$Datastore_Name --VDCName=$VDC_NAME --MethodName=$Method;exit 0" 
 Write-verbose $Scriptblock
-$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile "$Logfile
+$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile $Logfile
 
 $Method = 'CreateSecretKey'
 Write-Host -ForegroundColor Gray " ==>running Method $Method"
@@ -688,4 +688,3 @@ $StopWatch.Stop()
 Write-host -ForegroundColor White "ECS Deployment took $($StopWatch.Elapsed.ToString())"
 
 Write-Host -ForegroundColor White "Success !? Browse to https://$($IP):443 and login with root/ChangeMe"
-
