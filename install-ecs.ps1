@@ -407,10 +407,6 @@ foreach ($Node in $machinesBuilt)
         $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  
         }
  
-    #write-verbose "Setting Timezone"
-    #$Scriptblock = "timedatectl set-timezone $DefaultTimezone"
-    #Write-Verbose $Scriptblock
-    #$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  
 
 	write-verbose "Setting Hostname"
 	$Scriptblock = "nmcli general hostname $Hostname.$BuildDomain.$custom_domainsuffix;systemctl restart systemd-hostnamed"
@@ -427,6 +423,11 @@ foreach ($Node in $machinesBuilt)
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  
     
+	write-verbose "Setting Timezone"
+    $Scriptblock = "timedatectl set-timezone $DefaultTimezone"
+    Write-Verbose $Scriptblock
+    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  
+
 	Write-Verbose "Changing Password for $Guestuser to $Guestpassword"
     $Scriptblock = "echo $Guestpassword | passwd $Guestuser --stdin"
     Write-Verbose $Scriptblock
