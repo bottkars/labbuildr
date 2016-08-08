@@ -155,6 +155,7 @@ $Guestpassword = "Password123!"
 $scsi = 0
 $Nodeprefix = "Ubuntu"
 $Required_Master = "Ubuntu$ubuntu_ver"
+$Default_Guestuser = "labbuildr"
 #$mastervmx = test-labmaster -Master $Required_Master -MasterPath $MasterPath -Confirm:$Confirm
 
 ###### checking master Present
@@ -427,13 +428,16 @@ foreach ($Node in $machinesBuilt)
 			$Scriptblock = "apt-get install curl linux-image-extra-`$(uname -r) -y"
 			Write-Verbose $Scriptblock
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
-
+			
 			$Scriptblock = "apt-get install docker-engine -y;service docker start;service docker status"
 			Write-Verbose $Scriptblock
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
-
 			$Scriptblock = "curl -L https://github.com/docker/compose/releases/download/1.8.0/run.sh > /usr/local/bin/docker-compose;chmod +x /usr/local/bin/docker-compose"
+		    Write-Verbose $Scriptblock
+            $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+			
+			$Scriptblock = "groupadd docker;usermod -aG docker $Default_Guestuser"
 		    Write-Verbose $Scriptblock
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 			}
