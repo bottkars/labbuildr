@@ -428,16 +428,6 @@ foreach ($Node in $machinesBuilt)
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  
 	
-	write-verbose "Setting Timezone"
-    $Scriptblock = "sudo timedatectl set-timezone $DefaultTimezone"
-    Write-Verbose $Scriptblock
-    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile $Logfile  
-	
-	write-verbose "Setting Hostname"
-    $Scriptblock = "sudo hostnamectl set-hostname $Hostname.$BuildDomain.$custom_domainsuffix"
-    Write-Verbose $Scriptblock
-    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile $Logfile  
-	
 	### generate user ssh keys
     $Scriptblock ="/usr/bin/ssh-keygen -t rsa -N '' -f /home/$Guestuser/.ssh/id_rsa"
     Write-Verbose $Scriptblock
