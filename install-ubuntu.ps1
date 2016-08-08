@@ -318,8 +318,17 @@ foreach ($Node in $machinesBuilt)
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-        Write-Host -ForegroundColor Magenta "==> Configuring Guest network for $netdev"
+		Write-Verbose "setting sudoers"
+		$Scriptblock = "echo '$Default_Guestuser ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers"
+		Write-Verbose $Scriptblock
+		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword #  -logfile $Logfile  
 
+    
+		$Scriptblock = "sed -i 's/^.*\bDefaults    requiretty\b.*$/Defaults    !requiretty/' /etc/sudoers"
+		Write-Verbose $Scriptblock
+		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  
+
+        Write-Host -ForegroundColor Magenta "==> Configuring Guest network for $netdev"
         $Scriptblock = "echo 'auto lo' > /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
