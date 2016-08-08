@@ -155,6 +155,23 @@ $Guestpassword  = "Password123!"
 $OS = 'CentOS'
 $OS_Version = '7_1_1511'
 $Master = "$OS$OS_Version"
+switch ($centos_ver)
+    {
+    "7"
+        {
+        $netdev = "eno16777984"
+        $Required_Master = "$OS Master"
+		$Guestuser = "stack"
+        }
+    default
+        {
+        $netdev= "eno16777984"
+        $Required_Master = $OS
+		$Guestuser = "labbuildr"
+        }
+    }
+
+
 # $OS = ($Master.Split(" "))[0]
 ###### checking master Present
 Write-Verbose  $Masterpath
@@ -323,16 +340,24 @@ foreach ($Node in $machinesBuilt)
         }
     until ($ToolState.state -match "running")
     Write-Host -ForegroundColor Magenta " ==>Configuring GuestOS"
-    Write-Verbose "Setting Shared Folders"
-    $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
-    Write-verbose "Cleaning Shared Folders"
-    $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | Out-Null
-    Write-Verbose "Adding Shared Folders"        
+    if ($centos_ver -eq '7')
+		{
+		$Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | Out-Null
+		}
+    Write-Host -ForegroundColor Gray " ==> Adding Shared Folders"        
     $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
-    $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device eno16777984 -Peerdns -DNS1 $DNS1 -DNS2 $DNS2 -DNSDOMAIN "$BuildDomain.$($custom_domainsuffix)" -Hostname $hostname  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
+	if ($centos_ver -eq "7")
+		{
+		$Scriptblock = "systemctl disable iptables.service"
+		Write-Verbose $Scriptblock
+		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
     
-
-    $Logfile = "/tmp/lbbuildr.log"
+		$Scriptblock = "systemctl stop iptables.service"
+		Write-Verbose $Scriptblock
+		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+        }
+    $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device $netdev -Peerdns -DNS1 $DNS1 -DNS2 $DNS2 -DNSDOMAIN "$BuildDomain.$($custom_domainsuffix)" -Hostname $hostname  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
+    $Logfile = "/tmp/labbuildr.log"
 
     $Scriptblock =  "systemctl start NetworkManager"
     Write-Verbose $Scriptblock
