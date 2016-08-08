@@ -442,8 +442,6 @@ foreach ($Node in $machinesBuilt)
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 			}
 		## docker end
-
-		
 		###
         switch ($Desktop)
             {
@@ -451,8 +449,7 @@ foreach ($Node in $machinesBuilt)
                 {
 				$Desktop = $Desktop.ToLower()
                 Write-Host -ForegroundColor Gray " ==>downloading and configuring $Desktop as Desktop, this may take a while"
-                #$Scriptblock = "apt-get update >> /tmp/cinamon.log;apt-get install -y cinnamon-desktop-environment xinit lightdm >> /tmp/cinamon.log"
-                $Scriptblock = "apt-get update >> /tmp/cinamon.log;apt-get install -y $Desktop firefox lightdm xinit"
+                $Scriptblock = "apt-get update;apt-get install -y $Desktop firefox lightdm xinit"
 				Write-Verbose $Scriptblock
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile| Out-Null
 				if ($Desktop -eq 'xfce4')
