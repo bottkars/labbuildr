@@ -618,7 +618,7 @@ else
 
     Write-Host -ForegroundColor Magenta "==>Calling step 1 with 
     $Scriptblock"
-    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logile $Logfile
+    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile $Logfile
 
 
     Write-Host -ForegroundColor Magenta " ==>Setting automatic startup of docker and ecs container"
