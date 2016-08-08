@@ -84,7 +84,7 @@ $Szenarioname = "ECS"
 $Builddir = $PSScriptRoot
 $Masterpath = $Builddir
 $scsi = 0
-$ecscli = "2.2.1"
+#$ecscli = "2.2.1"
 If ($Defaults.IsPresent)
     {
     $labdefaults = Get-labDefaults
@@ -229,7 +229,7 @@ catch [System.Management.Automation.DriveNotFoundException]
     write-warning "Sourcedir not found. Stick not inserted ?"
     break
     }
-$ECSCLI = Receive-LABECScli -Destination $Sourcedir
+#$ECSCLI = Receive-LABECScli -Destination $Sourcedir
 ################
 
 ####Build Machines#
@@ -526,10 +526,10 @@ foreach ($Node in $machinesBuilt)
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
-    write-verbose "installing ecs cli"
-    $Scriptblock = "mkdir /opt/storageos;tar xzfv /mnt/hgfs/Sources/ecscli/$ecscli -C /opt/storageos;ls /opt/storageos"
-    Write-Verbose $Scriptblock
-    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+    <#write-verbose "installing ecs cli"
+    # $Scriptblock = "mkdir /opt/storageos;tar xzfv /mnt/hgfs/Sources/ecscli/$ecscli -C /opt/storageos;ls /opt/storageos"
+    # Write-Verbose $Scriptblock
+    #$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
     write-verbose "configure ecs cli"
     $Scriptblock = "sed -i 's/.*ECS_HOSTNAME=.*/ECS_HOSTNAME=$($IP)/' /opt/storageos/cli/ecscli.profile"
@@ -539,7 +539,7 @@ foreach ($Node in $machinesBuilt)
     write-verbose "installing requests package"
     $Scriptblock = "/usr/bin/easy_install requests"
     Write-Verbose $Scriptblock
-    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile#>
 
 if (!(Test-Path "$Sourcedir\docker\$($Docker_image)_$Docker_imagetag.tgz") -and !($offline.IsPresent))
     {
