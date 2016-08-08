@@ -339,7 +339,8 @@ foreach ($Node in $machinesBuilt)
         sleep 5
         }
     until ($ToolState.state -match "running")
-    Write-Host -ForegroundColor Magenta " ==>Configuring GuestOS"
+	Write-Host -ForegroundColor Gray " ==> Setting Shared Folders"
+    $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
     if ($centos_ver -eq '7')
 		{
 		$Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | Out-Null
@@ -360,8 +361,9 @@ foreach ($Node in $machinesBuilt)
 		$Scriptblock = "useradd $Guestuser"
 		Write-Verbose $Scriptblock
 		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  
-		}
-    $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device $netdev -Peerdns -DNS1 $DNS1 -DNS2 $DNS2 -DNSDOMAIN "$BuildDomain.$($custom_domainsuffix)" -Hostname $hostname  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
+		}    
+	Write-Host -ForegroundColor Magenta " ==>Configuring GuestOS"
+	$NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device $netdev -Peerdns -DNS1 $DNS1 -DNS2 $DNS2 -DNSDOMAIN "$BuildDomain.$($custom_domainsuffix)" -Hostname $hostname  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
     $Logfile = "/tmp/labbuildr.log"
 
     $Scriptblock =  "systemctl start NetworkManager"
