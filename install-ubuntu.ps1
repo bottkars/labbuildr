@@ -28,30 +28,38 @@ This will install 3 Ubuntu Nodes Ubuntu1 -Ubuntu3 from the Default Ubuntu Master
     SupportsShouldProcess=$true,
     ConfirmImpact="Medium")]
 Param(
+[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)]
 [switch]$Defaults,
+[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$False)]
 [ValidateRange(1,3)]
 [int32]$Disks = 1,
+[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [ValidateSet('16_4','15_10','14_4')]
 [string]$ubuntu_ver = "16_4",
+[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [ValidateSet('cinnamon','cinnamon-desktop-environment','xfce4','lxde','none')]
 [string]$Desktop = "none",
+[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]
 $Sourcedir = 'h:\sources',
+[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateRange(1,9)]
 [int32]$Nodes=1,
+[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [int32]$Startnode = 1,
+[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateScript({$_ -match [IPAddress]$_ })]
 [ipaddress]$subnet = "192.168.2.0",
@@ -64,9 +72,15 @@ $vmnet = "vmnet2",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [ValidateScript({ Test-Path -Path $_ })]
 $Defaultsfile=".\defaults.xml",
+[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$forcedownload,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[switch]$forcedownload,
+[Parameter(ParameterSetName = "install", Mandatory = $false)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "docker", Mandatory = $true)]
 [Switch]$docker,
+[Parameter(ParameterSetName = "docker", Mandatory = $false)][ValidateSet('shipyard','dockerui')][string[]]$container,
 [ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL",
 [int]$ip_startrange = 200
 #[Parameter(ParameterSetName = "install",Mandatory = $false)]
@@ -452,6 +466,20 @@ foreach ($Node in $machinesBuilt)
 			$Scriptblock = "groupadd docker;usermod -aG docker $Default_Guestuser"
 		    Write-Verbose $Scriptblock
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+			
+			if ("shipyard" -in $container)
+				{
+				$Scriptblock = "curl -s https://shipyard-project.com/deploy | bash -s"
+				Write-Verbose $Scriptblock
+				$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+				}
+			if ("dockerui" -in $container)
+				{
+				$Scriptblock = "docker run -d -p 9000:9000 --privileged -v /var/run/docker.sock:/var/run/docker.sock dockerui/dockerui"
+				Write-Verbose $Scriptblock
+				$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+				}
+
 			}
 		## docker end
 		###
