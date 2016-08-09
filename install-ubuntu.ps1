@@ -275,8 +275,8 @@ foreach ($Node in $machinesBuilt)
             }
         until ($ToolState.state -match "running")
 		Write-Host -ForegroundColor Magenta " ==>configuring  $node, will be reachable with $ip"
-		$installmessage += "==>Configuration for $Node"
-		$installmessage += " ==>Node $node is reachable vi ssh $ip with root or $Default_Guestuser"
+		$installmessage += "==>Configuration for $Node`n"
+		$installmessage += " ==>Node $node is reachable vi ssh $ip with root or $Default_Guestuser`n"
         Write-Host -ForegroundColor Gray " ==>Setting Shared Folders"
         $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
         # $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources # | Out-Null
@@ -473,7 +473,7 @@ foreach ($Node in $machinesBuilt)
 				$Scriptblock = "curl -s https://shipyard-project.com/deploy | bash -s"
 				Write-Verbose $Scriptblock
 				$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
-				$installmessage += " ==>you can use shipyard with http://$($ip):8080"
+				$installmessage += " ==>you can use shipyard with http://$($ip):8080`n"
 
 				}
 			if ("uifd" -in $container)
@@ -481,7 +481,7 @@ foreach ($Node in $machinesBuilt)
 				$Scriptblock = "docker run -d -p 9000:9000 --privileged -v /var/run/docker.sock:/var/run/docker.sock uifd/ui-for-docker"
 				Write-Verbose $Scriptblock
 				$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
-				$installmessage += " ==>you can use container uifd http://$($ip):9000"
+				$installmessage += " ==>you can use container uifd with http://$($ip):9000`n"
 				}
 
 			}
@@ -526,7 +526,6 @@ foreach ($Node in $machinesBuilt)
     }
 $StopWatch.Stop()
 Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
-Write-Host -ForegroundColor White "Machines(s) will"
 Write-Host -ForegroundColor White $installmessage
     
 
