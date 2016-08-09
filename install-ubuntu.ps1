@@ -473,7 +473,7 @@ foreach ($Node in $machinesBuilt)
 				$Scriptblock = "curl -s https://shipyard-project.com/deploy | bash -s"
 				Write-Verbose $Scriptblock
 				$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
-				$installmessage += " ==>you can use shipyard with http://$($ip):8080`n"
+				$installmessage += " ==>you can use shipyard with http://$($ip):8080 with user admin/shipyard`n"
 
 				}
 			if ("uifd" -in $container)
