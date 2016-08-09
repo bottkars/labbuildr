@@ -80,7 +80,7 @@ $Defaultsfile=".\defaults.xml",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "docker", Mandatory = $true)]
 [Switch]$docker,
-[Parameter(ParameterSetName = "docker", Mandatory = $false)][ValidateSet('shipyard','dockerui')][string[]]$container,
+[Parameter(ParameterSetName = "docker", Mandatory = $false)][ValidateSet('shipyard','uifd')][string[]]$container,
 [ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL",
 [int]$ip_startrange = 200
 #[Parameter(ParameterSetName = "install",Mandatory = $false)]
@@ -473,9 +473,9 @@ foreach ($Node in $machinesBuilt)
 				Write-Verbose $Scriptblock
 				$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 				}
-			if ("dockerui" -in $container)
+			if ("uifd" -in $container)
 				{
-				$Scriptblock = "docker run -d -p 9000:9000 --privileged -v /var/run/docker.sock:/var/run/docker.sock dockerui/dockerui"
+				$Scriptblock = "docker run -d -p 9000:9000 --privileged -v /var/run/docker.sock:/var/run/docker.sock uifd/ui-for-docker"
 				Write-Verbose $Scriptblock
 				$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 				}
