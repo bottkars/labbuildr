@@ -37,6 +37,10 @@ $Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$FullClone,
 
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[ValidateSet('mosaicme')]$PrepareBuckets,
+
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('8192','12288','16384','20480','30720','51200','65536')]$Memory = "12288",
 
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
@@ -686,6 +690,14 @@ Write-Host -ForegroundColor Gray " ==>running Method $Method"
 $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$Namespace_Name --ObjectVArray=$Pool_Name --ObjectVPool=$Replicaton_Group_Name --UserName=$Guestuser --DataStoreName=$Datastore_Name --VDCName=$VDC_NAME --MethodName=$Method;exit 0" 
 Write-verbose $Scriptblock
 $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile $Logfile
+if ("mosaicme" -in $PrepareBuckets)
+	{
+	$Method = 'CreateUser'
+	Write-Host -ForegroundColor Gray " ==>running Method $Method"
+	$Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$Namespace_Name --ObjectVArray=$Pool_Name --ObjectVPool=$Replicaton_Group_Name --UserName=mosaicme --DataStoreName=$Datastore_Name --VDCName=$VDC_NAME --MethodName=$Method;exit 0" 
+	Write-verbose $Scriptblock
+	$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile $Logfile
+	}
 
 $Method = 'CreateSecretKey'
 Write-Host -ForegroundColor Gray " ==>running Method $Method"

@@ -251,9 +251,19 @@ Specify if Networker Scenario sould be installed
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][ValidateRange(1, 9)][int][alias('hvnodes')]$HyperVNodes = "1",
 	<# ScaleIO on hyper-v #>	
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch][alias('sc')]$ScaleIO,
-	<# ScaleIO on hyper-v #>	
+	<# ScaleIOVersion 
+	'2.0-7120.0.','2.0-6035.0','2.0-5014.0',
+	'1.32-277.0','1.32-402.1','1.32-403.2','1.32-2451.4','1.32-3455.5','1.32-4503.5',
+	'1.31-258.2','1.31-1277.3','1.31-2333.2',
+	'1.30-426.0'
+	#>	
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][string]
-    [ValidateSet('2.0-6035.0','2.0-5014.0','1.30-426.0','1.31-258.2','1.31-1277.3','1.31-2333.2','1.32-277.0','1.32-402.1','1.32-403.2','1.32-2451.4','1.32-3455.5','1.32-4503.5')]
+    [ValidateSet(
+	'2.0-7120.0.','2.0-6035.0','2.0-5014.0',
+	'1.32-277.0','1.32-402.1','1.32-403.2','1.32-2451.4','1.32-3455.5','1.32-4503.5',
+	'1.31-258.2','1.31-1277.3','1.31-2333.2',
+	'1.30-426.0'
+	)]
     [alias('siover')]$ScaleIOVer,
     <# single mode with mdm only on first node ( no secondary, no tb ) #>
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$singlemdm,
@@ -884,7 +894,7 @@ $Default_Subnet = "192.168.2.0"
 $Default_IPv6Prefix = "FD00::"
 $Default_IPv6PrefixLength = '8'
 $Default_AddressFamily = "IPv4"
-$latest_ScaleIOVer = '2.0-6035.0'
+$latest_ScaleIOVer = '2.0-7120.0'
 $ScaleIO_OS = "Windows"
 $ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
 $latest_nmm = 'nmm9011'
