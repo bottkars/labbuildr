@@ -195,12 +195,14 @@ Specify if Networker Scenario sould be installed
     <#
     Determines Exchange CU Version to be Installed
     Valid Versions are:
-    'Preview1'
+	'cu2','cu1','final'
     Default is latest
     CU Location is [Driveletter]:\sources\e2016[cuver], e.g. c:\sources\e2016Preview1
     #>
 	[Parameter(ParameterSetName = "E16", Mandatory = $false)]
-    [ValidateSet('cu2','cu1','final')]
+    [ValidateSet(
+	'cu2','cu1','final'
+	)]
     $e16_cu,
 <#
     Determines Exchange CU Version to be Installed
@@ -527,7 +529,7 @@ Version Of Networker Modules
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
     [ValidateSet(
-    'nmm9010',
+    'nmm9010','nmm9011',#
     'nmm90.DA','nmm9001','nmm9002','nmm9003','nmm9004','nmm9005','nmm9006','nmm9007','nmm9008',
     'nmm8231','nmm8232',  
     'nmm8221','nmm8222','nmm8223','nmm8224','nmm8225',
@@ -555,7 +557,7 @@ Version Of Networker Modules
 	[switch]$NW,
     <#
 Version Of Networker Server / Client to be installed
-    'nw9010',
+    'nw9010','nw9011',#
     'nw90.DA','nw9001','nw9002','nw9003','nw9004','nw9005','nw9006','nw9007','nw9008',
     'nw8232','nw8231',
     'nw8226','nw8225','nw8224','nw8223','nw8222','nw8221','nw822',
@@ -592,7 +594,7 @@ Version Of Networker Server / Client to be installed
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
     [ValidateSet(
-    'nw9010',
+    'nw9010','nw9011',#
     'nw90.DA','nw9001','nw9002','nw9003','nw9004','nw9005','nw9006','nw9007','nw9008',
     'nw8232','nw8231',
     'nw8226','nw8225','nw8224','nw8223','nw8222','nw8221','nw822',
@@ -874,7 +876,7 @@ $WAIKVER = "WAIK"
 $custom_domainsuffix = "local"
 $AAGDB = "AWORKS"
 $major = "2016"
-$Edition = "Summer #IAMDELL"
+$Edition = "3rd Anniversary"
 $Default_attachement = "https://www.emc.com/collateral/solution-overview/h12476-so-hybrid-cloud.pdf"
 $Default_vmnet = "vmnet2"
 $Default_BuildDomain = "labbuildr"
@@ -885,8 +887,8 @@ $Default_AddressFamily = "IPv4"
 $latest_ScaleIOVer = '2.0-6035.0'
 $ScaleIO_OS = "Windows"
 $ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
-$latest_nmm = 'nmm9010'
-$latest_nw = 'nw9010'
+$latest_nmm = 'nmm9011'
+$latest_nw = 'nw9011'
 $latest_e16_cu = 'cu2'
 $latest_e15_cu = 'cu13'
 $latest_e14_sp = 'sp3'
@@ -2605,7 +2607,7 @@ If ($Java8_required)
         {
 	    Write-Host -ForegroundColor Gray " ==>Java8 not found, trying download"
         Write-Verbose "Asking for latest Java8"
-        $LatestJava = (get-labJava64 -DownloadDir $Sourcedir).LatestJava8
+        $LatestJava = (receive-labjava64 -DownloadDir $Sourcedir).LatestJava8
         if (!$LatestJava)
             {
             break
