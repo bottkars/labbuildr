@@ -152,7 +152,7 @@ switch ($PsCmdlet.ParameterSetName)
 
         $Builddir = $PSScriptRoot
         $Nodeprefix = "DDvENode"
-        if (!$MasterVMX)
+        if (!$MasterPath)
             {
             $MasterVMX = get-vmx Ddve-5.7* -WarningAction SilentlyContinue
             iF ($MasterVMX)
