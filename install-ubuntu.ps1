@@ -120,7 +120,7 @@ If ($Defaults.IsPresent)
         }
     catch
         {
-        # Write-Host -ForegroundColor Gray " ==> No Masterpath specified, trying default"
+        # Write-Host -ForegroundColor Gray " ==>No Masterpath specified, trying default"
         $Masterpath = $Builddir
         }
      $Hostkey = $labdefaults.HostKey
@@ -302,7 +302,7 @@ foreach ($Node in $machinesBuilt)
 
             }
 
-        Write-Host -ForegroundColor Gray " ==> Configuring SSH"
+        Write-Host -ForegroundColor Gray " ==>Configuring SSH"
         $Scriptblock = "sed -i '/PermitRootLogin without-password/ c\PermitRootLogin yes' /etc/ssh/sshd_config"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
@@ -362,12 +362,12 @@ foreach ($Node in $machinesBuilt)
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-        Write-Host -ForegroundColor Gray " ==> Setting IP $ip for $netdev"
+        Write-Host -ForegroundColor Gray " ==>Setting IP $ip for $netdev"
         $Scriptblock = "echo 'address $ip' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-        Write-Host -ForegroundColor Gray " ==> Setting Gateway $DefaultGateway"
+        Write-Host -ForegroundColor Gray " ==>Setting Gateway $DefaultGateway"
         $Scriptblock = "echo 'gateway $DefaultGateway' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
@@ -384,7 +384,7 @@ foreach ($Node in $machinesBuilt)
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         
-        Write-Host -ForegroundColor Gray " ==> Setting DNS $DNS1 $DNS2"
+        Write-Host -ForegroundColor Gray " ==>Setting DNS $DNS1 $DNS2"
         $Scriptblock = "echo 'dns-nameservers $DNS1 $DNS2' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
@@ -393,7 +393,7 @@ foreach ($Node in $machinesBuilt)
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         
-        Write-Host -ForegroundColor Gray " ==> setting hostname $Node"
+        Write-Host -ForegroundColor Gray " ==>setting hostname $Node"
         $Scriptblock = "echo '127.0.0.1       localhost' > /etc/hosts; echo '$ip $Node $Node.$BuildDomain.$Custom_DomainSuffix' >> /etc/hosts; hostname $Node"
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         $Scriptblock = "hostnamectl set-hostname $Node"

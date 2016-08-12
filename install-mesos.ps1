@@ -111,7 +111,7 @@ try
     }
 catch
     {
-    # Write-Host -ForegroundColor Gray " ==> No Masterpath specified, trying default"
+    # Write-Host -ForegroundColor Gray " ==>No Masterpath specified, trying default"
     $Masterpath = $Builddir
     }
 
@@ -568,7 +568,7 @@ libstorage:
 "       
             $yml | Set-Content -Path $Scriptdir\$scriptname
             convert-VMXdos2unix -Sourcefile $Scriptdir\$Scriptname -Verbose
-            Write-Host -ForegroundColor Magenta " ==> Injecting RexRay Config from config.yml"
+            Write-Host -ForegroundColor Magenta " ==>Injecting RexRay Config from config.yml"
             $NodeClone | copy-VMXfile2guest -Sourcefile $Scriptdir\$Scriptname -targetfile "/etc/rexray/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
             $Scriptblock = "rexray service start;systemctl enable rexray"
             Write-Verbose $Scriptblock
