@@ -2,7 +2,7 @@
 .Synopsis
    Short description
 .DESCRIPTION
-   labbuildr is a Self Installing Windows/Networker/NMM Environemnt Supporting Exchange 2013 and NMM 3.0
+   labbuildr builds your on-demand labs
 .LINK
    https://community.emc.com/blogs/bottk/2015/03/30/labbuildrbeta
 #>

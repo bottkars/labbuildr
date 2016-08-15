@@ -144,7 +144,10 @@ $tb_ip = "$subnet.193"
 $mdm_name_a = "Manager_A"
 $mdm_name_b = "Manager_B"
 $tb_name = "TB"
+<<<<<<< HEAD
 $SparePercentage="35"
+=======
+>>>>>>> testing
 $Labdefaults = Get-LABDefaults
 
 switch ($PsCmdlet.ParameterSetName)
@@ -319,7 +322,11 @@ to remove all Nodes"
 }
 $Logfile = "/tmp/install_sio.log"
 Write-Host -ForegroundColor Magenta " ==>Starting configuration of Nodes, logging to $Logfile"
-
+$Percentage = [math]::Round(100/$nodes)+1
+if ($Percentage -lt 10)
+    {
+    $Percentage = 10
+    }
 foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         {
         Write-Host -ForegroundColor Gray " ==>waiting for Node $Nodeprefix$node"
@@ -397,7 +404,7 @@ if ($configure.IsPresent)
         {
         Write-Host -ForegroundColor Magenta "We are now creating the ScaleIO Cluster"
         Write-Host -ForegroundColor Gray " ==>adding Primary MDM $mdm_ipa"
-        $sclicmd =  "scli  --create_mdm_cluster --master_mdm_ip $mdm_ipa  --master_mdm_management_ip $mdm_ipa --approve_certificate --accept_license;sleep 3"
+        $sclicmd =  "scli  --create_mdm_cluster --master_mdm_ip $mdm_ipa  --master_mdm_management_ip $mdm_ipa --master_mdm_name $mdm_name_a --approve_certificate --accept_license;sleep 3"
         Write-Verbose $sclicmd
         $Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
 
@@ -409,12 +416,12 @@ if ($configure.IsPresent)
         if (!$singlemdm.IsPresent)
             {
             Write-Host -ForegroundColor Gray " ==>adding standby MDM $mdm_ipb"
-            $sclicmd = "$mdmconnect;scli --add_standby_mdm --mdm_role manager --new_mdm_ip $mdm_ipb --new_mdm_management_ip $mdm_ipb --mdm_ip $mdm_ipa"
+            $sclicmd = "$mdmconnect;scli --add_standby_mdm --mdm_role manager --new_mdm_ip $mdm_ipb --new_mdm_management_ip $mdm_ipb --new_mdm_name $mdm_name_b --mdm_ip $mdm_ipa"
             Write-Verbose $sclicmd
             $Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null 
 
             Write-Host -ForegroundColor Gray " ==>adding tiebreaker $tb_ip"
-            $sclicmd = "$mdmconnect; scli --add_standby_mdm --mdm_role tb  --new_mdm_ip $tb_ip --mdm_ip $mdm_ipa"
+            $sclicmd = "$mdmconnect; scli --add_standby_mdm --mdm_role tb  --new_mdm_ip $tb_ip --tb_name $tb_name --mdm_ip $mdm_ipa"
             Write-Verbose $sclicmd
             $Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
             
@@ -428,7 +435,10 @@ if ($configure.IsPresent)
             Write-Verbose $sclicmd
             $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
             #>
+<<<<<<< HEAD
             
+=======
+>>>>>>> testing
             }
         else
             {
@@ -460,11 +470,18 @@ if ($configure.IsPresent)
             Write-Verbose $sclicmd
             $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
             }
+<<<<<<< HEAD
 
             Write-Host -ForegroundColor Gray " ==>Setting Storage Pool $StoragePoolName spare capacity to $SparePercentage %"
             $sclicmd = "scli --modify_spare_policy --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --spare_percentage $SparePercentage --i_am_sure --mdm_ip $mdm_ip"
             Write-Verbose $sclicmd
             $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+=======
+    Write-Host -ForegroundColor Gray " ==>adjusting spare policy"
+    $sclicmd = "scli --modify_spare_policy --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --spare_percentage $Percentage --i_am_sure --mdm_ip $mdm_ip"
+    Write-Verbose $sclicmd
+    $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+>>>>>>> testing
 
     write-host "Connect with ScaleIO UI to $mdm_ipa admin/Password123!"
     }

@@ -20,8 +20,7 @@
 .LINK
    https://github.com/bottkars/labbuildr/wiki/install-centos.ps1
 .EXAMPLE
-.\install-centos7_4scaleio.ps1 -Defaults
-This will install 3 Centos Nodes CentOSNode1 -CentOSNode3 from the Default CentOS7 Master , in the Default 192.168.2.0 network, IP .221 - .223
+
 
 #>
 [CmdletBinding(DefaultParametersetName = "defaults",
@@ -36,8 +35,8 @@ Param(
 [int32]$Disks = 1,
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateSet('7')]
-[string]$centos_ver = "7",
+[ValidateSet('7_1_1511','7')]
+[string]$centos_ver = "7_1_1511",
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [ValidateSet('cinnamon','none')]
@@ -59,14 +58,16 @@ $Sourcedir = 'h:\sources',
 [ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")]
 [string]$BuildDomain = "labbuildr",
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
-[ValidateSet('vmnet1', 'vmnet2','vmnet3')]
+[ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]
 $vmnet = "vmnet2",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [ValidateScript({ Test-Path -Path $_ })]
 $Defaultsfile=".\defaults.xml",
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$forcedownload,
-[int]$ip_startrange = 205
+[int]$ip_startrange = 205,
+[Switch]$docker,
+[ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL"
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
@@ -102,7 +103,7 @@ If ($Defaults.IsPresent)
         }
     catch
         {
-        # Write-Host -ForegroundColor Gray " ==> No Masterpath specified, trying default"
+        # Write-Host -ForegroundColor Gray " ==>No Masterpath specified, trying default"
         $Masterpath = $Builddir
         }
      $Hostkey = $labdefaults.HostKey
@@ -135,21 +136,23 @@ switch ($centos_ver)
         {
         $netdev = "eno16777984"
         $Required_Master = "$OS Master"
+		$Guestuser = "stack"
         }
     default
         {
         $netdev= "eno16777984"
         $Required_Master = $OS
+		$Guestuser = "labbuildr"
         }
     }
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 $rootuser = "root"
-$Guestuser = "labbuildr"
 $Guestpassword = "Password123!"
 [uint64]$Disksize = 100GB
 $scsi = 0
 $Nodeprefix = "Centos"
+$epel = "http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
 try
     {
     $yumcachedir = join-path -Path $Sourcedir "$OS\cache\yum" -ErrorAction stop
@@ -211,21 +214,21 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
             }
         If ($Node -eq 1){$Primary = $NodeClone}
         $Config = Get-VMXConfig -config $NodeClone.config
-        Write-Host -ForegroundColor Gray " ==> Tweaking Config"
-        Write-Host -ForegroundColor Gray " ==> Creating Disks"
+        Write-Host -ForegroundColor Gray " ==>Tweaking Config"
+        Write-Host -ForegroundColor Gray " ==>Creating Disks"
         foreach ($LUN in (1..$Disks))
             {
             $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-            Write-Host -ForegroundColor Gray " ==> Building new Disk $Diskname"
+            Write-Host -ForegroundColor Gray " ==>Building new Disk $Diskname"
             $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-            Write-Host -ForegroundColor Gray " ==> Adding Disk $Diskname to $($NodeClone.VMXname)"
+            Write-Host -ForegroundColor Gray " ==>Adding Disk $Diskname to $($NodeClone.VMXname)"
             $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
             }
-        Write-Host -ForegroundColor Gray " ==> Setting NIC0 to HostOnly"
+        Write-Host -ForegroundColor Gray " ==>Setting NIC0 to HostOnly"
         $Netadapter = Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config
         if ($vmnet)
             {
-            Write-Host -ForegroundColor Gray " ==> Configuring NIC 0 for $vmnet"
+            Write-Host -ForegroundColor Gray " ==>Configuring NIC 0 for $vmnet"
             Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config -WarningAction SilentlyContinue | Out-Null
             Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config | Out-Null
             }
@@ -233,14 +236,12 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.CloneName)@$BuildDomain"
         $Annotation = $NodeClone | Set-VMXAnnotation -Line1 "rootuser:$Rootuser" -Line2 "rootpasswd:$Guestpassword" -Line3 "Guestuser:$Guestuser" -Line4 "Guestpassword:$Guestpassword" -Line5 "labbuildr by @sddc_guy" -builddate
         $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
-        if ($node -eq 3)
-            {
-            Write-Host -ForegroundColor Gray " ==> Setting Gateway Memory to 3 GB"
-            $NodeClone | Set-VMXmemory -MemoryMB 3072 | Out-Null
-            }
         $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname CentOS -Scenario 7
+        Write-Host -ForegroundColor Gray " ==>setting VM size to $Size"
+        $mysize = $NodeClone |Set-VMXSize -config $NodeClone.Config -Size $Size
+
         $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
-        Write-Host -ForegroundColor Gray " ==> Starting CentosNode$Node"
+        Write-Host -ForegroundColor Gray " ==>Starting CentosNode$Node"
         start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
         $machinesBuilt += $($NodeClone.cloneName)
     }
@@ -254,7 +255,9 @@ foreach ($Node in $machinesBuilt)
     {
         $ip="$subnet.$ip_startrange"
         $NodeClone = get-vmx $Node
-        Write-Host -ForegroundColor Gray " ==> Waiting for $node to boot"
+        $Hostname = $Node.ToLower()
+
+        Write-Host -ForegroundColor Gray " ==>Waiting for $node to boot"
 
         do {
             $ToolState = Get-VMXToolsState -config $NodeClone.config
@@ -262,20 +265,24 @@ foreach ($Node in $machinesBuilt)
             sleep 5
             }
         until ($ToolState.state -match "running")
-        Write-Host -ForegroundColor Gray " ==> Setting Shared Folders"
+        Write-Host -ForegroundColor Gray " ==>Setting Shared Folders"
         $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
-        $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | Out-Null
-        Write-Host -ForegroundColor Gray " ==> Adding Shared Folders"        
+        if ($centos_ver -eq '7')
+			{
+			$Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | Out-Null
+			}
+        Write-Host -ForegroundColor Gray " ==>Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
-
-        $Scriptblock = "systemctl disable iptables.service"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+		if ($centos_ver -eq "7")
+			{
+			$Scriptblock = "systemctl disable iptables.service"
+			Write-Verbose $Scriptblock
+			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
     
-        $Scriptblock = "systemctl stop iptables.service"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-            
+			$Scriptblock = "systemctl stop iptables.service"
+			Write-Verbose $Scriptblock
+			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+            }
         $Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
@@ -303,6 +310,12 @@ foreach ($Node in $machinesBuilt)
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
 
+		write-verbose "Setting Hostname"
+		$Scriptblock = "nmcli general hostname $Hostname.$BuildDomain.$custom_domainsuffix;systemctl restart systemd-hostnamed"
+		Write-Verbose $Scriptblock
+		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  | Out-Null
+
+
         Write-Host -ForegroundColor Cyan " ==>Testing default Route, make sure that Gateway is reachable ( install and start OpenWRT )
         if failures occur, open a 2nd labbuildr windows and run start-vmx OpenWRT "
    
@@ -314,13 +327,13 @@ foreach ($Node in $machinesBuilt)
         $Property = "cachedir"
         $Scriptblock = "grep -q '^$Property' $file && sed -i 's\^$Property=/var*.\$Property=/mnt/hgfs/Sources/$OS/\' $file || echo '$Property=/mnt/hgfs/Sources/$OS/yum/`$basearch/`$releasever/' >> $file"
         Write-Verbose $Scriptblock
-        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword #-logfile $Logfile
 
         $file = "/etc/yum.conf"
         $Property = "keepcache"
         $Scriptblock = "grep -q '^$Property' $file && sed -i 's\$Property=0\$Property=1\' $file || echo '$Property=1' >> $file"
         Write-Verbose $Scriptblock
-        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword #-logfile $Logfile
 
         Write-Host -ForegroundColor Gray " ==>Generating Yum Cache on $Sourcedir"
         $Scriptblock="yum makecache"
@@ -337,34 +350,50 @@ foreach ($Node in $machinesBuilt)
         Write-Verbose $Scriptblock
         $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
-        #Write-Host -ForegroundColor Gray " ==> Installing Required RPM´s on $Nodeprefix$Node_num"
+        #Write-Host -ForegroundColor Gray " ==>Installing Required RPM´s on $Nodeprefix$Node_num"
         # $Scriptblock = "yum install $requires -y"
         #Write-Verbose $Scriptblock
         #$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5 -logfile /tmp/yum-requires.log | Out-Null
     
     #yum groupinstall "X Window system"
-    if ($Desktop -ne "none")
-        {
-        Write-Host -ForegroundColor Gray " ==> Installing X-Windows environment"
-        $Scriptblock = "yum groupinstall -y `'X Window system'"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-        }
+        if ($docker)
+            {
+            Write-Host -ForegroundColor Gray " ==>installing latest docker engine"
+            $Scriptblock="curl -fsSL https://get.docker.com | sh;systemctl enable docker; systemctl start docker;usermod -aG docker $Guestuser"
+            Write-Verbose $Scriptblock
+            $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+            }
+
+        if ($Desktop -ne "none")
+            {
+            Write-Host -ForegroundColor Gray " ==>Installing X-Windows environment"
+            $Scriptblock = "yum groupinstall -y `'X Window system'"
+            Write-Verbose $Scriptblock
+            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+            }
+
         switch ($Desktop)
             {
                 'cinnamon'
                 {
-                Write-Host -ForegroundColor Gray " ==> adding EPEL Repo"
-                $Scriptblock = 'rpm -i http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-7.noarch.rpm'
-                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-                
-                Write-Host -ForegroundColor Gray " ==> Installing Display Manager"
-                $Scriptblock = "yum install -y lightdm cinnamon"
+               # if (!$docker.IsPresent)
+               #     {
+                    Write-Host -ForegroundColor Gray " ==>adding EPEL Repo"
+                    $Scriptblock = "rpm -i $epel"
+                    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+                #    }
+                Write-Host -ForegroundColor Gray " ==>Installing Display Manager"
+                $Scriptblock = "yum install -y lightdm cinnamon gnome-desktop3 firefox"
                 Write-Verbose $Scriptblock
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-                $Scriptblock = "systemctl isolate graphical.target>> /tmp/lightdm.log"
-                
+                $Scriptblock = "yum groupinstall gnome -y"
+                Write-Verbose $Scriptblock
+                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+
+                #$Scriptblock = "systemctl isolate graphical.target>> /tmp/lightdm.log"
+                #Write-Verbose $Scriptblock
+                #$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
                 
                 $Scriptblock = "systemctl set-default graphical.target"
                 Write-Verbose $Scriptblock
@@ -379,13 +408,18 @@ foreach ($Node in $machinesBuilt)
                 Write-Verbose $Scriptblock
                 $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
+				$Scriptblock = "/usr/bin/vmware-config-tools.pl -d;shutdown -r now"
+				Write-Verbose $Scriptblock
+				$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -nowait| Out-Null
                 }
             default
                 {
 
                 }
-    }
-}
+        }
+
+    }#end machines
+
 $StopWatch.Stop()
 Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
 write-Host -ForegroundColor White "Login to the VM´s with root/Password123!"

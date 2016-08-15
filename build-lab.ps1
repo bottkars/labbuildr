@@ -62,7 +62,17 @@ param (
     IP-Addresses: .10
     #>	
 	[Parameter(ParameterSetName = "DConly")][switch][alias('dc')]$DConly,	
-    <#
+	<#
+    Installs only a Docker host on 2016TP5. 
+    IP-Addresses: .19
+    #>	
+	[Parameter(ParameterSetName = "docker")][switch][alias('docker')]$Dockerhost,	    
+	[Parameter(ParameterSetName = "docker")][ValidateSet(
+    '1.12.0','latest'
+    )]
+    $Docker_VER='latest',
+
+	<#
     Selects the Always On Scenario
     IP-Addresses: .160 - .169
     #>
@@ -185,12 +195,14 @@ Specify if Networker Scenario sould be installed
     <#
     Determines Exchange CU Version to be Installed
     Valid Versions are:
-    'Preview1'
+	'cu2','cu1','final'
     Default is latest
     CU Location is [Driveletter]:\sources\e2016[cuver], e.g. c:\sources\e2016Preview1
     #>
 	[Parameter(ParameterSetName = "E16", Mandatory = $false)]
-    [ValidateSet('cu2','cu1','final')]
+    [ValidateSet(
+	'cu2','cu1','final'
+	)]
     $e16_cu,
 <#
     Determines Exchange CU Version to be Installed
@@ -239,15 +251,28 @@ Specify if Networker Scenario sould be installed
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][ValidateRange(1, 9)][int][alias('hvnodes')]$HyperVNodes = "1",
 	<# ScaleIO on hyper-v #>	
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch][alias('sc')]$ScaleIO,
-	<# ScaleIO on hyper-v #>	
+	<# ScaleIOVersion 
+	'2.0-7120.0','2.0-6035.0','2.0-5014.0',
+	'1.32-277.0','1.32-402.1','1.32-403.2','1.32-2451.4','1.32-3455.5','1.32-4503.5',
+	'1.31-258.2','1.31-1277.3','1.31-2333.2',
+	'1.30-426.0'
+	#>	
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][string]
-    [ValidateSet('2.0-6035.0','2.0-5014.0','1.30-426.0','1.31-258.2','1.31-1277.3','1.31-2333.2','1.32-277.0','1.32-402.1','1.32-403.2','1.32-2451.4','1.32-3455.5','1.32-4503.5')]
+    [ValidateSet(
+	'2.0-7120.0','2.0-6035.0','2.0-5014.0',
+	'1.32-277.0','1.32-402.1','1.32-403.2','1.32-2451.4','1.32-3455.5','1.32-4503.5',
+	'1.31-258.2','1.31-1277.3','1.31-2333.2',
+	'1.30-426.0'
+	)]
     [alias('siover')]$ScaleIOVer,
     <# single mode with mdm only on first node ( no secondary, no tb ) #>
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$singlemdm,
     # <# Cluster modemdm automatically#>
     # [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$clusteredmdm,
-    <# SCVMM on last Node ? #>	
+    <# CLuster Number ? #>	
+    [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][ValidateSet(1,2)][int][alias('clunum')]$Clusternum = "1",
+	<# ScaleIO on hyper-v #>	
+    <# SCVMM on last Node ? #>
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$SCVMM,
     <# Configure VMM ?#>
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$ConfigureVMM,
@@ -318,6 +343,8 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
+
 	[switch]$defaults,
 
     <#do we want Tools Update? #>
@@ -336,7 +363,8 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
-    [Switch]$Toolsupdate,
+ 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
+   [Switch]$Toolsupdate,
 
     
     <# Wich version of OS Master should be installed
@@ -357,7 +385,8 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
-    [ValidateSet(
+   	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
+	[ValidateSet(
     '2016TP5','2016TP5_GER',
     '2012R2_Ger','2012_R2',
     '2012R2FallUpdate','2012R2Fall_Ger',
@@ -379,7 +408,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
-    #[ValidateScript({ Test-Path -Path $_ })]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 	$Masterpath,
     <# Do we want Additional Disks / of additional 100GB Disks for ScaleIO. The disk will be made ready for ScaleIO usage in Guest OS#>	
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
@@ -407,6 +436,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
     [ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet,
 
  #   [Parameter(Mandatory = $false, HelpMessage = "Enter a valid VMware network Number vmnet between 1 and 19 ")]
@@ -425,6 +455,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 	[switch]$savedefaults,
 
 <# Specify if Machines should be Clustered, valid for Hyper-V and Blanknodes Scenario  #>
@@ -453,6 +484,7 @@ Machine Sizes
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 	[ValidateSet('XS', 'S', 'M', 'L', 'XL', 'TXL', 'XXL', 'XXXL')]$Size = "M",
 	
 <# Specify your own Domain name#>
@@ -471,6 +503,7 @@ Machine Sizes
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 	[ValidateLength(1,63)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,63}[a-zA-Z0-9]+$")][string]$BuildDomain,
 	
 <# Turn this one on if you would like to install a Hypervisor inside a VM #>
@@ -506,7 +539,7 @@ Version Of Networker Modules
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
     [ValidateSet(
-    'nmm9010',
+    'nmm9010','nmm9011',#
     'nmm90.DA','nmm9001','nmm9002','nmm9003','nmm9004','nmm9005','nmm9006','nmm9007','nmm9008',
     'nmm8231','nmm8232',  
     'nmm8221','nmm8222','nmm8223','nmm8224','nmm8225',
@@ -530,10 +563,11 @@ Version Of Networker Modules
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 	[switch]$NW,
     <#
 Version Of Networker Server / Client to be installed
-    'nw9010',
+    'nw9010','nw9011',#
     'nw90.DA','nw9001','nw9002','nw9003','nw9004','nw9005','nw9006','nw9007','nw9008',
     'nw8232','nw8231',
     'nw8226','nw8225','nw8224','nw8223','nw8222','nw8221','nw822',
@@ -568,8 +602,9 @@ Version Of Networker Server / Client to be installed
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
     [ValidateSet(
-    'nw9010',
+    'nw9010','nw9011',#
     'nw90.DA','nw9001','nw9002','nw9003','nw9004','nw9005','nw9006','nw9007','nw9008',
     'nw8232','nw8231',
     'nw8226','nw8225','nw8224','nw8223','nw8222','nw8221','nw822',
@@ -608,6 +643,7 @@ This should be used in Distributed scenario´s
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
     [switch]$NoDomainCheck,
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
@@ -624,6 +660,7 @@ This should be used in Distributed scenario´s
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 	[Validatepattern(‘(?<Address>((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))’)]$MySubnet,
 
 <# Specify your IP Addressfamilie/s
@@ -643,8 +680,9 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
-     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
-   [Validateset('IPv4','IPv6','IPv4IPv6')]$AddressFamily, 
+    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
+	[Validateset('IPv4','IPv6','IPv4IPv6')]$AddressFamily, 
 
 <# Specify your IPv6 ULA Prefix, consider https://www.sixxs.net/tools/grh/ula/  #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
@@ -662,6 +700,7 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
     [ValidateScript({$_ -match [IPAddress]$_ })]$IPV6Prefix,
 
 <# Specify your IPv6 ULA Prefix Length, #>
@@ -680,6 +719,7 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
     $IPv6PrefixLength,
 <# 
@@ -703,6 +743,7 @@ Sources should be populated from a bases sources.zip
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
     [String]$Sourcedir,
 	#[Validatescript({Test-Path -Path $_ })][String]$Sourcedir,
 
@@ -728,6 +769,7 @@ Sources should be populated from a bases sources.zip
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
+	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 	[switch]$ConsoleLog
 ) # end Param
 
@@ -844,7 +886,7 @@ $WAIKVER = "WAIK"
 $custom_domainsuffix = "local"
 $AAGDB = "AWORKS"
 $major = "2016"
-$Edition = "Summer #IAMDELL"
+$Edition = "3rd Anniversary"
 $Default_attachement = "https://www.emc.com/collateral/solution-overview/h12476-so-hybrid-cloud.pdf"
 $Default_vmnet = "vmnet2"
 $Default_BuildDomain = "labbuildr"
@@ -852,17 +894,18 @@ $Default_Subnet = "192.168.2.0"
 $Default_IPv6Prefix = "FD00::"
 $Default_IPv6PrefixLength = '8'
 $Default_AddressFamily = "IPv4"
-$latest_ScaleIOVer = '2.0-6035.0'
+$latest_ScaleIOVer = '2.0-7120.0'
 $ScaleIO_OS = "Windows"
 $ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
-$latest_nmm = 'nmm9010'
-$latest_nw = 'nw9010'
+$latest_nmm = 'nmm9011'
+$latest_nw = 'nw9011'
 $latest_e16_cu = 'cu2'
 $latest_e15_cu = 'cu13'
 $latest_e14_sp = 'sp3'
 $latest_e14_ur = 'ur13'
 $latest_sqlver  = 'SQL2016'
 $latest_master = '2012R2FallUpdate'
+$Latest_2016 = '2016TP5'
 $latest_sql_2012 = 'SQL2012SP2'
 $SIOToolKit_Branch = "master"
 $NW85_requiredJava = "jre-7u61-windows-x64"
@@ -2042,7 +2085,7 @@ if ($ScaleIO.IsPresent)
                 Write-Host -ForegroundColor Gray " ==>Need 3 nodes for ScaleIO, incrementing to 3"
                 $HyperVNodes = 3
                 }	
-Write-Host -ForegroundColor Magenta " ==>We are going to Install ScaleIO on $HyperVNodes Hyper-V  Nodes"
+Write-Host -ForegroundColor Magenta " ==>We are going to Install ScaleIO on $HyperVNodes Hyper-V Nodes in cluster HV$($Clusternum)Cluster"
     if ($DefaultGateway.IsPresent){ Write-Host -ForegroundColor Magenta " ==>The Gateway will be $DefaultGateway"}
 	# if ($Cluster.IsPresent) { write-verbose "The Nodes will be Clustered ( Single Node Clusters )" }
 }
@@ -2574,7 +2617,7 @@ If ($Java8_required)
         {
 	    Write-Host -ForegroundColor Gray " ==>Java8 not found, trying download"
         Write-Verbose "Asking for latest Java8"
-        $LatestJava = (get-labJava64 -DownloadDir $Sourcedir).LatestJava8
+        $LatestJava = (receive-labjava64 -DownloadDir $Sourcedir).LatestJava8
         if (!$LatestJava)
             {
             break
@@ -2587,36 +2630,23 @@ If ($Java8_required)
         Write-Verbose "Got $LatestJava"
         }
     }
+if ($Dockerhost.IsPresent)
+	{
+	if ($Master -lt "2016TP5")
+		{
+		Write-Host " ==>Setting Docker Master to $Latest_2016"
+		$master = $Latest_2016
+		}
+	# Receive-LABDocker -Destination $Sourcedir -ver 1.12 -arch win -branch beta
+	if ($Size -lt "TXL")
+		{$Size = "XXL" }
+	}
 ##end Autodownloaders
 ##### Master Downloader
+
 $MyMaster = test-labmaster -Masterpath "$Masterpath" -Master $Master -mastertype vmware -Confirm:$Confirm 
-<#
-$MyMaster = get-vmx -path "$Masterpath\$Master" -WarningAction SilentlyContinue
-if (!$MyMaster)
-    {
-    Write-Host -ForegroundColor Yellow " ==>Could not find $Masterpath\$Master"
-    Write-Host -ForegroundColor Gray " ==>Trying to load $Master from labbuildr Master Repo"
-    if (Receive-LABMaster -Master $Master -Destination $Masterpath -unzip -Confirm:$Confirm)
-        {
-        $MyMaster = get-vmx -path "$Masterpath\$Master" -ErrorAction SilentlyContinue
-        }
-    else
-        {
-        Write-Warning "No valid master found /downloaded"
-        break
-        }
-    $MyMaster = get-vmx -path "$Masterpath\$Master" -WarningAction SilentlyContinue
-    $MasterVMX = $mymaster.config		
-    }
-else
-    {
-    $MasterVMX = $mymaster.config		
-    Write-Verbose "We got master $MasterVMX"
-    }
-#>
-##### end Master Downloader
-    $MasterVMX = $mymaster.config		
-    Write-Verbose "We got master $MasterVMX"
+$MasterVMX = $mymaster.config		
+Write-Verbose "We got master $MasterVMX"
 
 
 
@@ -2630,6 +2660,7 @@ if (!($SourceOK = test-source -SourceVer $Sourcever -SourceDir $Sourcedir))
 }
 if ($DefaultGateway) {$AddGateway  = "-DefaultGateway $DefaultGateway"}
 If ($VMnet -ne "VMnet2") { debug "Setting different Network is untested and own Risk !" }
+
 if (!$NoDomainCheck.IsPresent){
 ####################################################################
 # DC Validation
@@ -2648,7 +2679,7 @@ if (test-vmx $DCNODE -WarningAction SilentlyContinue)
 	    $BuildDomain, $RunningIP, $VMnet, $MyGateway = test-domainsetup
 	    $IPv4Subnet = convert-iptosubnet $RunningIP
 	    Write-Host -ForegroundColor Magenta " ==>will Use Domain $BuildDomain and Subnet $IPv4Subnet.0 for on $VMnet the Running Workorder"
-	    $Starttime = Get-Date
+        $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
         If ($MyGateway) 
             {
             Write-Host -ForegroundColor Magenta " ==>We will configure Default Gateway at $MyGateway"
@@ -2658,14 +2689,14 @@ if (test-vmx $DCNODE -WarningAction SilentlyContinue)
     else
         {
         write-verbose " no domain check on IPv6only"
-        $Starttime = Get-Date
+        $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
         }
     }
 
 }#end test-domain
 else
 {
-    $Starttime = Get-Date
+    $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
 	###################################################
 	# Part 1, Definition of Domain Controller
 	###################################################
@@ -3308,11 +3339,32 @@ switch ($PsCmdlet.ParameterSetName)
 
 
 ##### Hyper-V Block #####	
-	"HyperV" {
-        $Firstnode = "1" #for later use
-        $Clusternum = "1" # for later use
+	"HyperV" 
+    {
+        [int]$Base_IP = 150
+        switch ($Clusternum)
+            {
+            1
+                {
+                [int]$ipoffset = 0
+                [int]$Firstnode = 1
+                [int]$IPNum = $Base_IP + $ipoffset
+                $ClusterIP = "$IPv4Subnet.$IPNum"
+                }
+            2
+                {
+                [int]$ipoffset = 5
+                [int]$Firstnode = 1
+                [int]$IPNum = $Base_IP + $ipoffset
+                $ClusterIP = "$IPv4Subnet.$IPNum"
+                }
+            }
+        Write-Verbose "Clusterip = $ClusterIP"
+        #$Firstnode = "1" #for later use
+        #$Clusternum = "1" # for later use
+        $Clusterprefix = "HV$Clusternum"
         #$LASTVMX = "HVNODE$HyperVNodes"
-        $FirstVMX =  "HVNODE$Firstnode"
+        $FirstVMX =  "$($Clusterprefix)NODE$Firstnode"
 		$HVLIST = @()
         $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features, Hyper-V, Hyper-V-Tools, Hyper-V-PowerShell, WindowsStorageManagementService"
 		if ($ScaleIO.IsPresent)
@@ -3341,7 +3393,7 @@ switch ($PsCmdlet.ParameterSetName)
             
             }
         if ($Cluster.IsPresent) {$AddonFeatures = "$AddonFeatures, Failover-Clustering, RSAT-Clustering, WVR"}
-        If (!(get-vmx HVNODE* -WarningAction SilentlyContinue))
+        If (!(get-vmx "$($Clusterprefix)Node*" -WarningAction SilentlyContinue))
             {
             $newdeploy = $true
             Write-Host -ForegroundColor Magenta " ==>This is a Hyper-v Newdepoly"
@@ -3366,14 +3418,15 @@ switch ($PsCmdlet.ParameterSetName)
 			###################################################
 			# Hyper-V  Node Setup
 			# Init
-			$Nodeip = "$IPv4Subnet.15$HVNode"
-			$Nodename = "HVNODE$HVNode"
+            [int]$IPNum = $Base_IP+$ipoffset+$HVNODE
+			$Nodeip = "$IPv4Subnet.$IPNum"
+            Write-Verbose "Nodeip = $Nodeip"
+			$Nodename = "$($Clusterprefix)NODE$($HVNode)"
 			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
 			$IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\HyperV\"
             $In_Guest_UNC_SQLScriptDir = "$IN_Guest_UNC_Scriptroot\sql\"
             $In_Guest_UNC_SCVMMScriptDir = "$IN_Guest_UNC_Scriptroot\scvmm\"
-            Write-Verbose $IPv4Subnet
-            write-verbose $Nodeip
+            Write-Verbose "IPv4 Subnet = $IPv4Subnet"
             Write-Verbose $Nodename
             Write-Verbose $AddonFeatures
             if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
@@ -3405,18 +3458,21 @@ switch ($PsCmdlet.ParameterSetName)
                 
                 if ($ScaleIO.IsPresent)
                     {
-                    $SIO_ProtectionDomainName = "PD_$BuildDomain"
-                    $SIO_StoragePoolName = "SP_$BuildDomain"
-                    $SIO_SystemName = "ScaleIO@$BuildDomain"
+                    $SIO_ProtectionDomainName = "PD_$Clusterprefix"
+                    $SIO_StoragePoolName = "SP_$Clusterprefix"
+                    $SIO_SystemName = "ScaleIO@$Clusterprefix"
                     if ($singlemdm.IsPresent)
                         {
-                        $mdmipa = "$IPv4Subnet.151"
-                        $mdmipb = "$IPv4Subnet.151"
+                        [int]$IPNum = $Base_IP + $ipoffset + 1
+                        $mdmipa = "$IPv4Subnet.$IPNum"
+                        $mdmipb = "$IPv4Subnet.$IPNum"
                         }
                     else
                         {
-                        $mdmipa = "$IPv4Subnet.151"
-                        $mdmipb = "$IPv4Subnet.152"
+                        [int]$IPNum = $Base_IP + $ipoffset + 1
+                        $mdmipa = "$IPv4Subnet.$IPNum"
+                        [int]$IPNum = $Base_IP + $ipoffset + 2
+                        $mdmipb = "$IPv4Subnet.$IPNum"
                         }
                     switch ($HVNODE)
                         {
@@ -3444,7 +3500,7 @@ switch ($PsCmdlet.ParameterSetName)
                             else
                                 {
                                 #Write-Host -ForegroundColor Gray " == > Installing single MDM"
-                                $script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer  -mdmipa $mdmipa -mdmipb $mdmipb" -interactive 
+                                $script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer  -mdmipa $mdmipa -mdmipb $mdmipa" -interactive 
                                 }
                     
                             }
@@ -3482,7 +3538,7 @@ switch ($PsCmdlet.ParameterSetName)
                             else
                                 {
                                 #Write-Host -ForegroundColor Gray " ==>Installing single MDM"
-                                $script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer -mdmipa $mdmipa -mdmipb $mdmipb" -interactive 
+                                $script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role SDS -disks $Disks -ScaleIOVer $ScaleIOVer -mdmipa $mdmipa -mdmipb $mdmipa" -interactive 
                                 }
                             Write-Host -ForegroundColor Magenta "generating SIO Config File"
                             Set-LABSIOConfig -mdm_ipa $mdmipa -mdm_ipb $mdmipb -gateway_ip "$IPv4Subnet.153" -system_name $SIO_SystemName -pool_name $SIO_StoragePoolName -pd_name $SIO_ProtectionDomainName
@@ -3533,20 +3589,23 @@ switch ($PsCmdlet.ParameterSetName)
 		########### leaving NMM Section ###################
     If ($newdeploy)
         {
-        Write-Host -ForegroundColor Magenta " ==>Trying New Cluster Deployment !! "
+        Write-Host -ForegroundColor Magenta " ==>Trying New Cluster Deployment for $Clusterprefix!! "
         if ($Cluster.IsPresent)
 		{
 			#write-host
 			#Write-Host -ForegroundColor Gray " ==>Forming Hyper-V Cluster"
-			$script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix 'HVNODE' -IPAddress '$IPv4Subnet.150' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
-		}
+			$script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix '$Clusterprefix' -IPAddress '$ClusterIP' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
+			Write-Host -ForegroundColor Gray " ==>Setting up Hyper-V Replica Broker"
+            $script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script new-hypervreplicabroker.ps1 -interactive
+ 
+        }
 	    if ($ScaleIO.IsPresent)
             {
             Write-Host -ForegroundColor Gray " ==>configuring mdm"
             if ($singlemdm.IsPresent)
                     {
                     #Write-Host -ForegroundColor Gray " ==>Configuring Single MDM"
-                    $script_invoke = get-vmx $FirstVMX | invoke-vmxpowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script configure-mdm.ps1 -Parameter "-IPv4Subne $IPv4Subnet -singlemdm -CSVnum 3 -ScaleIO_Major $ScaleIO_Major"-interactive 
+                    $script_invoke = get-vmx $FirstVMX | invoke-vmxpowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script configure-mdm.ps1 -Parameter "-IPv4Subnet $IPv4Subnet -singlemdm -CSVnum 3 -ScaleIO_Major $ScaleIO_Major"-interactive 
                     }
             else
                     {
@@ -3836,6 +3895,87 @@ switch ($PsCmdlet.ParameterSetName)
             }
 
 	} # End Switchblock Blanknode
+
+
+	"docker" {
+		$Disks = 2
+		$node = 1	
+        $VTbit = $True
+
+		[switch]$Cluster = $true
+        if ($Disks)
+            {
+		    $cloneparm = " -AddDisks -disks $Disks"
+            }
+        $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features, containers, Hyper-V, RSAT-Hyper-V-Tools, Multipath-IO"
+        if ($Cluster.IsPresent) {$AddonFeatures = "$AddonFeatures, Failover-Clustering, RSAT-Clustering, RSAT-Clustering-AutomationServer, RSAT-Clustering-CmdInterface, WVR"}
+		test-dcrunning
+			###################################################
+			# Setup of a DockerHost
+			# Init
+            $Node_range = 18
+            $Node_byte = $Node_range+$node
+            $Nodeip = "$IPv4Subnet.$Node_byte"
+            $Nodeprefix = "WINHost"
+            $NamePrefix = "Docker"
+		    $Nodename = "$NamePrefix$NodePrefix$Node"
+			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+			$Host_ScriptDir = "$Builddir\$Scripts\$NamePrefix\"
+			$IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NamePrefix\"
+
+            #$ClusterIP = "$IPv4Subnet.180"
+			###################################################
+		    Write-Verbose $IPv4Subnet
+            write-verbose $Nodename
+            write-verbose $Nodeip
+            Write-Verbose "Disks: $Disks"
+            Write-Verbose "dockerhost: $dockerhost"
+            #Write-Verbose "Cluster: $($Cluster.IsPresent)"
+            #Write-Verbose "Pre Clustername: $ClusterName"
+            #Write-Verbose "Pre ClusterIP: $ClusterIP"
+            if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+                { 
+                Write-verbose "Now Pausing"
+                pause
+                }
+			# Clone Base Machine
+			Write-Host -ForegroundColor White  " ==>Creating Docker Host:$Nodename with IP $Nodeip"
+			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir -SharedDisk $cloneparm"
+			###################################################
+			If ($CloneOK)
+			{
+				Write-Host -ForegroundColor Gray " ==>Waiting for firstboot finished"
+				test-user -whois Administrator
+				Write-Host -ForegroundColor Gray " ==>Starting Customization"
+				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
+                if ($NW.IsPresent)
+                    {
+		            $script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter "-nw_ver $nw_ver"
+                    }
+				invoke-postsection -wait        
+				$script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-docker.ps1 -interactive -Parameter "-Docker_VER $Docker_VER"
+
+			}# end Cloneok
+			
+		 # end foreach
+<#
+    	if ($Cluster.IsPresent)
+		    {
+			write-host
+			Write-Host -ForegroundColor Gray " ==>Forming Blanknode Cluster"
+            If ($ClusterName)
+                {    
+			    $script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix '$NodePrefix' -ClusterName $ClusterName -IPAddress '$IPv4Subnet.$ClusterIP' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive -Verbose
+                }
+            else
+                {
+			    $script_invoke = invoke-vmxpowershell -config $CloneVMX -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix '$NodePrefix' -IPAddress '$IPv4Subnet.$ClusterIP' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive -Verbose
+                }			
+		    
+            }
+#>
+	} # End Switchblock Blanknode
+
 	
 	"Spaces" {
 		
@@ -4245,9 +4385,9 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
 	    
 	}
 } #Networker End
-$endtime = Get-Date
-$Runtime = ($endtime - $Starttime).TotalMinutes
-Write-Host -ForegroundColor White  "Finished Creation of $my_repo in $Runtime Minutes "
+
+$StopWatch.Stop()
+Write-host -ForegroundColor White "ECS Deployment took $($StopWatch.Elapsed.ToString())"
 Write-Host -ForegroundColor White  "Deployed VM´s in Scenario $Scenarioname"
 get-vmx | where scenario -match $Scenarioname | ft vmxname,state,activationpreference
 return

@@ -1,8 +1,8 @@
 <config>
 <LanguageTag>en_US</LanguageTag>
-<nmm_ver>nmm9010</nmm_ver>
+<nmm_ver>nmm9011</nmm_ver>
 <nmm>False</nmm>
-<nw_ver>nw9010</nw_ver>
+<nw_ver>nw9011</nw_ver>
 <master>2012R2FallUpdate</master>
 <sqlver>SQL2014</sqlver>
 <e14_ur>ur13</e14_ur>

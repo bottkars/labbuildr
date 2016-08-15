@@ -18,40 +18,48 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://community.emc.com/blogs/bottk/
+   https://github.com/bottkars/labbuildr/wiki/install-ubuntu.ps1
 .EXAMPLE
 .\install-Ubuntu.ps1
-This will install 3 Ubuntu Nodes Ubuntu1 -Ubuntu3 from the Default Ubuntu Master , in the Default 192.168.2.0 network, IP .221 - .223
+This will install 3 Ubuntu Nodes Ubuntu1 -Ubuntu3 from the Default Ubuntu Master
 
 #>
 [CmdletBinding(DefaultParametersetName = "defaults",
     SupportsShouldProcess=$true,
     ConfirmImpact="Medium")]
 Param(
+[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)]
 [switch]$Defaults,
+[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$False)]
 [ValidateRange(1,3)]
 [int32]$Disks = 1,
+[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateSet('16_4','15_4')]
+[ValidateSet('16_4','15_10','14_4')]
 [string]$ubuntu_ver = "16_4",
+[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateSet('cinnamon','none')]
+[ValidateSet('cinnamon','cinnamon-desktop-environment','xfce4','lxde','none')]
 [string]$Desktop = "none",
+[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]
 $Sourcedir = 'h:\sources',
+[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateRange(1,9)]
 [int32]$Nodes=1,
+[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [int32]$Startnode = 1,
+[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateScript({$_ -match [IPAddress]$_ })]
 [ipaddress]$subnet = "192.168.2.0",
@@ -64,8 +72,16 @@ $vmnet = "vmnet2",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [ValidateScript({ Test-Path -Path $_ })]
 $Defaultsfile=".\defaults.xml",
+[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$forcedownload,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[switch]$forcedownload,
+[Parameter(ParameterSetName = "install", Mandatory = $false)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "docker", Mandatory = $true)]
+[Switch]$docker,
+[Parameter(ParameterSetName = "docker", Mandatory = $false)][ValidateSet('shipyard','uifd')][string[]]$container,
+[ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL",
 [int]$ip_startrange = 200
 #[Parameter(ParameterSetName = "install",Mandatory = $false)]
 #[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$SIOGateway
@@ -104,7 +120,7 @@ If ($Defaults.IsPresent)
         }
     catch
         {
-        # Write-Host -ForegroundColor Gray " ==> No Masterpath specified, trying default"
+        # Write-Host -ForegroundColor Gray " ==>No Masterpath specified, trying default"
         $Masterpath = $Builddir
         }
      $Hostkey = $labdefaults.HostKey
@@ -129,12 +145,16 @@ if (!$DNS2)
 if (!$Masterpath) {$Masterpath = $Builddir}
 
 $ip_startrange = $ip_startrange+$Startnode
-
+$logfile = "/tmp/labbuildr.log"
 switch ($ubuntu_ver)
     {
     "16_4"
         {
         $netdev = "ens160"
+        }
+    "15_10"
+        {
+        $netdev= "eno16777984"
         }
     default
         {
@@ -149,7 +169,7 @@ $Guestpassword = "Password123!"
 $scsi = 0
 $Nodeprefix = "Ubuntu"
 $Required_Master = "Ubuntu$ubuntu_ver"
-
+$Default_Guestuser = "labbuildr"
 #$mastervmx = test-labmaster -Master $Required_Master -MasterPath $MasterPath -Confirm:$Confirm
 
 ###### checking master Present
@@ -199,21 +219,21 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
             }
         If ($Node -eq 1){$Primary = $NodeClone}
         $Config = Get-VMXConfig -config $NodeClone.config
-        Write-Host -ForegroundColor Magenta " ==> Tweaking Config"
-        Write-Host -ForegroundColor Magenta " ==> Creating Disks"
+        Write-Host -ForegroundColor Gray " ==>Tweaking Config"
+        Write-Host -ForegroundColor Gray " ==>Creating Disks"
         foreach ($LUN in (1..$Disks))
             {
             $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-            Write-Host -ForegroundColor Magenta " ==> Building new Disk $Diskname"
+            Write-Host -ForegroundColor Gray " ==>Building new Disk $Diskname"
             $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-            Write-Host -ForegroundColor Magenta " ==> Adding Disk $Diskname to $($NodeClone.VMXname)"
+            Write-Host -ForegroundColor Gray " ==>Adding Disk $Diskname to $($NodeClone.VMXname)"
             $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
             }
-        Write-Host -ForegroundColor Magenta " ==> Setting NIC0 to HostOnly"
+        Write-Host -ForegroundColor Gray " ==>Setting NIC0 to HostOnly"
         $Netadapter = Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config
         if ($vmnet)
             {
-            Write-Host -ForegroundColor Magenta " ==> Configuring NIC 0 for $vmnet"
+            Write-Host -ForegroundColor Gray " ==>Configuring NIC 0 for $vmnet"
             Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config -WarningAction SilentlyContinue | Out-Null
             Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config | Out-Null
             }
@@ -222,12 +242,15 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
        <# if ($node -eq 3)
             {
-            Write-Host -ForegroundColor Magenta " ==> Setting Gateway Memory to 3 GB"
+            Write-Host -ForegroundColor Gray " ==>Setting Gateway Memory to 3 GB"
             $NodeClone | Set-VMXmemory -MemoryMB 3072 | Out-Null
             }#>
         $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname Ubuntu -Scenario 7
+		Write-Host -ForegroundColor Gray " ==>setting VM size to $Size"
+        $mysize = $NodeClone |Set-VMXSize -config $NodeClone.Config -Size $Size
+
         $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
-        Write-Host -ForegroundColor Magenta " ==> Starting $Nodeprefix$Node"
+        Write-Host -ForegroundColor Gray " ==>Starting $Nodeprefix$Node"
         start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
         $machinesBuilt += $($NodeClone.cloneName).tolower()
         }
@@ -238,12 +261,12 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     }
 Write-Host -ForegroundColor White "Starting Node Configuration"
 
-    
+$installmessage = @()    
 foreach ($Node in $machinesBuilt)
     {
         $ip="$subnet.$ip_startrange"
         $NodeClone = get-vmx $Node
-        Write-Host -ForegroundColor Magenta " ==> Waiting for $node to boot"
+        Write-Host -ForegroundColor Magenta " ==>Waiting for $node to boot"
 
         do {
             $ToolState = Get-VMXToolsState -config $NodeClone.config
@@ -251,13 +274,16 @@ foreach ($Node in $machinesBuilt)
             sleep 5
             }
         until ($ToolState.state -match "running")
-        Write-Host -ForegroundColor Gray " ==> Setting Shared Folders"
+		Write-Host -ForegroundColor Magenta " ==>configuring  $node, will be reachable with $ip"
+		$installmessage += "==>Configuration for $Node`n"
+		$installmessage += " ==>Node $node is reachable vi ssh $ip with root or $Default_Guestuser`n"
+        Write-Host -ForegroundColor Gray " ==>Setting Shared Folders"
         $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
         # $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources # | Out-Null
-        Write-Host -ForegroundColor Gray " ==> Adding Shared Folders"        
+        Write-Host -ForegroundColor Gray " ==>Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
         
-        If ($ubuntu_ver -lt "16")
+        If ($ubuntu_ver -match "15")
             {
             $Scriptblock = "systemctl disable iptables.service"
             Write-Verbose $Scriptblock
@@ -276,7 +302,7 @@ foreach ($Node in $machinesBuilt)
 
             }
 
-        Write-Host -ForegroundColor Gray " ==> Configuring SSH"
+        Write-Host -ForegroundColor Gray " ==>Configuring SSH"
         $Scriptblock = "sed -i '/PermitRootLogin without-password/ c\PermitRootLogin yes' /etc/ssh/sshd_config"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
@@ -298,14 +324,26 @@ foreach ($Node in $machinesBuilt)
             $Scriptblock = "echo '$Hostkey' >> /root/.ssh/authorized_keys"
             Write-Verbose $Scriptblock
             $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+            $Scriptblock = "mkdir /home/$Default_Guestuser/.ssh/;echo '$Hostkey' >> /home/$Default_Guestuser/.ssh/authorized_keys;chmod 0600 /home/$Default_Guestuser/.ssh/authorized_keys"
+            Write-Verbose $Scriptblock
+            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
             }
 
         $Scriptblock = "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys;chmod 0600 /root/.ssh/authorized_keys"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-        Write-Host -ForegroundColor Magenta "==> Configuring Guest network for $netdev"
+		Write-Verbose "setting sudoers"
+		$Scriptblock = "echo '$Default_Guestuser ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers"
+		Write-Verbose $Scriptblock
+		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword #  -logfile $Logfile  
 
+    
+		$Scriptblock = "sed -i 's/^.*\bDefaults    requiretty\b.*$/Defaults    !requiretty/' /etc/sudoers"
+		Write-Verbose $Scriptblock
+		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  
+
+        Write-Host -ForegroundColor Magenta "==> Configuring Guest network for $netdev"
         $Scriptblock = "echo 'auto lo' > /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
@@ -324,12 +362,12 @@ foreach ($Node in $machinesBuilt)
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-        Write-Host -ForegroundColor Gray " ==> Setting IP $ip for $netdev"
+        Write-Host -ForegroundColor Gray " ==>Setting IP $ip for $netdev"
         $Scriptblock = "echo 'address $ip' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-        Write-Host -ForegroundColor Gray " ==> Setting Gateway $DefaultGateway"
+        Write-Host -ForegroundColor Gray " ==>Setting Gateway $DefaultGateway"
         $Scriptblock = "echo 'gateway $DefaultGateway' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
@@ -346,7 +384,7 @@ foreach ($Node in $machinesBuilt)
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         
-        Write-Host -ForegroundColor Gray " ==> Setting DNS $DNS1 $DNS2"
+        Write-Host -ForegroundColor Gray " ==>Setting DNS $DNS1 $DNS2"
         $Scriptblock = "echo 'dns-nameservers $DNS1 $DNS2' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
@@ -355,12 +393,24 @@ foreach ($Node in $machinesBuilt)
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         
-        Write-Host -ForegroundColor Gray " ==> setting hostname $Node"
+        Write-Host -ForegroundColor Gray " ==>setting hostname $Node"
         $Scriptblock = "echo '127.0.0.1       localhost' > /etc/hosts; echo '$ip $Node $Node.$BuildDomain.$Custom_DomainSuffix' >> /etc/hosts; hostname $Node"
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+        $Scriptblock = "hostnamectl set-hostname $Node"
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+		Write-Host -ForegroundColor Magenta "==> Restarting Guest Network"
 
-        Write-Host -ForegroundColor Magenta "==> Restarting Guest Network"
-        $Scriptblock = "/etc/init.d/networking restart"
+        switch ($ubuntu_ver)
+            {
+            "14_4"
+                {
+                $Scriptblock = "/sbin/ifdown eth0 && /sbin/ifup eth0"
+                }
+            default
+                {
+                $Scriptblock = "/etc/init.d/networking restart"
+                }
+            }         
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
@@ -369,38 +419,114 @@ foreach ($Node in $machinesBuilt)
         $Scriptblock = "DEFAULT_ROUTE=`$(ip route show default | awk '/default/ {print `$3}');ping -c 1 `$DEFAULT_ROUTE"
         Write-Verbose $Scriptblock
         $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword     
-        ###
+ ## docker       
+		if ($docker)
+            {
+            Write-Host -ForegroundColor Gray " ==>installing latest docker engine"
+            $Scriptblock="apt-get install apt-transport-https ca-certificates;sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D"
+            Write-Verbose $Scriptblock
+            $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+            
+			switch ($ubuntu_ver)
+				{
+				'14_4'
+					{
+					$deb = "deb https://apt.dockerproject.org/repo ubuntu-trusty main"
+					}
+				'15_4'
+					{
+					$deb = "deb https://apt.dockerproject.org/repo ubuntu-jessie main"
+					}
+				'15_10'
+					{
+					$deb = "deb https://apt.dockerproject.org/repo ubuntu-wily main"
+					}
+				'16_4'
+					{
+					$deb = "deb https://apt.dockerproject.org/repo ubuntu-xenial main"
+					}
+				}
+			
+			$Scriptblock = "echo '$Deb' >> /etc/apt/sources.list.d/docker.list;apt-get update;apt-get purge lxc-docker;apt-cache policy docker-engine"
+			Write-Verbose $Scriptblock
+            $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+
+		
+			$Scriptblock = "apt-get install curl linux-image-extra-`$(uname -r) -y"
+			Write-Verbose $Scriptblock
+            $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+			
+			$Scriptblock = "apt-get install docker-engine -y;service docker start;service docker status"
+			Write-Verbose $Scriptblock
+            $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+
+			$Scriptblock = "curl -L https://github.com/docker/compose/releases/download/1.8.0/docker-compose-``uname -s``-``uname -m`` > /usr/local/bin/docker-compose;chmod +x /usr/local/bin/docker-compose"
+		    Write-Verbose $Scriptblock
+            $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+			
+			$Scriptblock = "groupadd docker;usermod -aG docker $Default_Guestuser"
+		    Write-Verbose $Scriptblock
+            $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+			
+			if ("shipyard" -in $container)
+				{
+				$Scriptblock = "curl -s https://shipyard-project.com/deploy | bash -s"
+				Write-Verbose $Scriptblock
+				$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+				$installmessage += " ==>you can use shipyard with http://$($ip):8080 with user admin/shipyard`n"
+
+				}
+			if ("uifd" -in $container)
+				{
+				$Scriptblock = "docker run -d -p 9000:9000 --privileged -v /var/run/docker.sock:/var/run/docker.sock uifd/ui-for-docker"
+				Write-Verbose $Scriptblock
+				$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+				$installmessage += " ==>you can use container uifd with http://$($ip):9000`n"
+				}
+
+			}
+		## docker end
+		###
         switch ($Desktop)
             {
-                'cinnamon'
+                default
                 {
-                Write-Host -ForegroundColor Magenta " ==> downloading and configuring $Desktop as Desktop, this may take a while"
-                $Scriptblock = "apt-get update >> /tmp/cinamon.log;apt-get install -y cinnamon-desktop-environment xinit >> /tmp/cinamon.log"
+				$Desktop = $Desktop.ToLower()
+                Write-Host -ForegroundColor Gray " ==>downloading and configuring $Desktop as Desktop, this may take a while"
+                $Scriptblock = "apt-get update;apt-get install -y $Desktop firefox lightdm xinit"
+				Write-Verbose $Scriptblock
+                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile| Out-Null
+				if ($Desktop -eq 'xfce4')
+					{
+					$Scriptblock = "apt-get install xubuntu-default-settings -y"
+					#$Scriptblock = "/usr/lib/lightdm/lightdm-set-defaults --session xfce4-session"
+					Write-Verbose $Scriptblock
+					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
+					}
+                Write-Host -ForegroundColor Gray " ==>enabling login manager"
+                #$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+                $Scriptblock = "systemctl enable lightdm"
                 Write-Verbose $Scriptblock
-                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-
-                Write-host -ForegroundColor White " for full screen resolution, run /usr/bin/vmware-config-tools.pl -d"
-
-                Write-Host -ForegroundColor Magenta " ==> starting login manager"
-                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-                $Scriptblock = "systemctl enable lightdm >> /tmp/lightdm.log;systemctl start lightdm >> /tmp/lightdm.log"
-                Write-Verbose $Scriptblock
-                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
                 }
-            default
+            'none'
                 {
                 }
             }
 
         ####
-
+		if ($Desktop -ne 'none')
+			{
+			Write-Host -ForegroundColor Gray " ==>reconfiguring vmwaretools, system will be ready after login manager restart"
+			$Scriptblock = "/usr/bin/vmware-config-tools.pl -d;systemctl restart lightdm"
+			Write-Verbose $Scriptblock
+			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -nowait| Out-Null
+			}
         $ip_startrange++
-    
-    
     }
 $StopWatch.Stop()
 Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
-Write-Host -ForegroundColor Yellow "Login to the VM´s with root/Password123!"
+Write-Host -ForegroundColor White $installmessage
     
 
 

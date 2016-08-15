@@ -18,17 +18,17 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://github.com/bottkars/labbuildr/wiki/SolutionPacks#install-mesos
+   https://github.com/bottkars/labbuildr/wiki/install-mesos.ps1-%5Bwith-rexray%5D
 .EXAMPLE
-.\install-centos7_4scaleio.ps1 -Defaults
-This will install 3 Centos Nodes CentOSNode1 -CentOSNode3 from the Default CentOS7 Master , in the Default 192.168.2.0 network, IP .221 - .223
-
 #>
 [CmdletBinding(DefaultParametersetName = "defaults")]
 Param(
-[Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
-#[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-#[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateRange(1,3)][int32]$Disks = 1,
+[Parameter(ParameterSetName = "defaults", Mandatory = $true)]
+[switch]$Defaults,
+[Parameter(ParameterSetName = "install",Mandatory = $false)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[ValidateSet('7_1_1511','7')]
+[string]$centos_ver = "7_1_1511",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('1024','2048','3072','4096','8192','12288','16384','20480','30720','51200','65536')]$Memory = "3072",
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
@@ -50,10 +50,6 @@ Param(
 [ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain = "labbuildr",
 [Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
-#[Parameter(ParameterSetName = "install",Mandatory = $false)]
-#[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$forcedownload,
-#[Parameter(ParameterSetName = "install",Mandatory = $false)]
-#[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$SIOGateway
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
@@ -115,14 +111,33 @@ try
     }
 catch
     {
-    # Write-Host -ForegroundColor Gray " ==> No Masterpath specified, trying default"
+    # Write-Host -ForegroundColor Gray " ==>No Masterpath specified, trying default"
     $Masterpath = $Builddir
     }
 
+$OS = "Centos$centos_ver"
+switch ($centos_ver)
+    {
+    "7"
+        {
+        $netdev = "eno16777984"
+        $Required_Master = "$OS Master"
+        }
+    default
+        {
+        $netdev= "eno16777984"
+        $Required_Master = $OS
+        }
+    }
 
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 
+if ($Sourcedir[-1] -eq "\")
+	{
+	$Sourcedir = $Sourcedir -replace ".$"
+	Set-LABSources -Sourcedir $Sourcedir
+	}
 $DefaultTimezone = "Europe/Berlin"
 $Guestpassword = "Password123!"
 $Rootuser = "root"
@@ -130,8 +145,6 @@ $Rootpassword  = "Password123!"
 
 $Guestuser = "$($Szenarioname.ToLower())user"
 $Guestpassword  = "Password123!"
-$Required_Master = "Centos7 Master"
-$OS = ($Required_Master.Split(" "))[0]
 ###### checking master Present
 try
     {
@@ -209,6 +222,7 @@ if ($rexray.IsPresent)
         $linux_source = $Sourcedir -replace "\\","/"
         $sdc_rpm = $sdc_rpm -replace $linux_source
         $sdc_rpm = "/mnt/hgfs/Sources$sdc_rpm"
+		Write-Verbose "using $sdc_rpm as install path"
         }
     else
         {
@@ -271,7 +285,10 @@ if ($rexray.IsPresent)
         until ($ToolState.state -match "running")
         Write-Verbose "Setting Shared Folders"
         $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
-        $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | Out-Null
+        if ($centos_ver -eq '7')
+			{
+			$Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | Out-Null
+			}
         Write-Verbose "Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
         
@@ -310,28 +327,27 @@ if ($rexray.IsPresent)
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 
-    $Scriptblock =  "echo '$ip $($NodeClone.vmxname) $($NodeClone.vmxname).$BuildDomain.$Custom_DomainSuffix'  >> /etc/hosts"
+    $Scriptblock =  "echo '$ip $($Hostname) $($Hostname).$BuildDomain.$Custom_DomainSuffix'  >> /etc/hosts"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null #-logfile $Logfile
 
- 
-    $Scriptblock = "systemctl disable iptables.service"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-    
-    $Scriptblock = "systemctl stop iptables.service"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 
     write-verbose "Setting Timezone"
     $Scriptblock = "timedatectl set-timezone $DefaultTimezone"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile -Confirm:$false -nowait | Out-Null
 
-    write-verbose "Setting Hostname"
-    $Scriptblock = "hostnamectl set-hostname $($NodeClone.vmxname)"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  | Out-Null
+	if ($centos_ver -eq "7")
+		{
+		$Scriptblock = "systemctl disable iptables.service"
+		Write-Verbose $Scriptblock
+		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+    
+		$Scriptblock = "systemctl stop iptables.service"
+		Write-Verbose $Scriptblock
+		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+        }
+
 
             
         $Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa"
@@ -344,13 +360,16 @@ if ($rexray.IsPresent)
             Write-Verbose $Scriptblock
             $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
             }
-
+			
         $Scriptblock = "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys;chmod 0600 /root/.ssh/authorized_keys"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
+	write-verbose "Setting Hostname"
+    $Scriptblock = "nmcli general hostname $Hostname.$BuildDomain.$custom_domainsuffix;systemctl restart systemd-hostnamed"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  | Out-Null
+	
 
-        # Write-Host -ForegroundColor Magenta "Nodenumber : $Node_num"
-    ### preparing yum
     $file = "/etc/yum.conf"
     $Property = "cachedir"
     $Scriptblock = "grep -q '^$Property' $file && sed -i 's\^$Property=/var*.\$Property=/mnt/hgfs/Sources/$OS/\' $file || echo '$Property=/mnt/hgfs/Sources/$OS/yum/`$basearch/`$releasever/' >> $file"
@@ -549,7 +568,7 @@ libstorage:
 "       
             $yml | Set-Content -Path $Scriptdir\$scriptname
             convert-VMXdos2unix -Sourcefile $Scriptdir\$Scriptname -Verbose
-            Write-Host -ForegroundColor Magenta " ==> Injecting RexRay Config from config.yml"
+            Write-Host -ForegroundColor Magenta " ==>Injecting RexRay Config from config.yml"
             $NodeClone | copy-VMXfile2guest -Sourcefile $Scriptdir\$Scriptname -targetfile "/etc/rexray/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
             $Scriptblock = "rexray service start;systemctl enable rexray"
             Write-Verbose $Scriptblock
