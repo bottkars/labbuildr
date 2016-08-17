@@ -54,6 +54,12 @@ Param(
 	<# future use, initializes nfs on DC#>
 	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 	[Parameter(ParameterSetName = "install",Mandatory = $false)][switch]$initnfs,
+	<# future use, extracts the ovftool from nfs datastore#>
+	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+	[Parameter(ParameterSetName = "install",Mandatory = $false)][switch]$ovftool,
+	<# future use, installs the vcsa from nfs datastore#>
+	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+	[Parameter(ParameterSetName = "install",Mandatory = $false)][switch]$vcsa,
 	<# should we use a differnt vmnet#>
 	[Parameter(ParameterSetName = "install",Mandatory = $false)]
 	[ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]
@@ -260,12 +266,16 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
 
     $Content += Get-Content .\Scripts\ESX\KS_SECONDBOOT.cfg
     #### finished
-if ($nfs.IsPresent)
-    {
-    $Content += "esxcli storage nfs add --host $Subnet.10 --share /$BuildDomain"+"nfs --volume-name=SWDEPOT --readonly"
-    $Content += "tar xzfv  /vmfs/volumes/SWDEPOT/ovf.tar.gz  -C /vmfs/volumes/Datastore1@$Nodeprefix$Node/"
-    # $Content += '/vmfs/volumes/Datastore1@ESXiNode1/ovf/tools/ovftool --diskMode=thin --datastore=Datastore1@'+$Nodeprefix+$Node+' --noSSLVerify --X:injectOvfEnv --powerOn "--net:Network 1=VM Network" --acceptAllEulas --prop:vami.ip0.VMware_vCenter_Server_Appliance='+$Subnet+'.89 --prop:vami.netmask0.VMware_vCenter_Server_Appliance=255.255.255.0 --prop:vami.gateway.VMware_vCenter_Server_Appliance='+$Subnet+'.103 --prop:vami.DNS.VMware_vCenter_Server_Appliance='+$Subnet+'.10 --prop:vami.hostname=vcenter1.labbuildr.'+$custom_domainsuffix+' /vmfs/volumes/SWDEPOT/VMware-vCenter-Server-Appliance-5.5.0.20200-2183109_OVF10.ova "vi://root:'+$Password+'@127.0.0.1"'
-    }
+	if ($nfs.IsPresent)
+		{
+		$Content += "esxcli storage nfs add --host $Subnet.10 --share /$BuildDomain"+"nfs --volume-name=SWDEPOT --readonly"
+		if ($ovftool.IsPresent)
+			{
+			$Content += "tar xzfv  /vmfs/volumes/SWDEPOT/ovf.tar.gz  -C /vmfs/volumes/Datastore1@$Nodeprefix$Node/"
+			# $Content += '/vmfs/volumes/Datastore1@ESXiNode1/ovf/tools/ovftool --diskMode=thin --datastore=Datastore1@'+$Nodeprefix+$Node+' --noSSLVerify --X:injectOvfEnv --powerOn "--net:Network 1=VM Network" --acceptAllEulas --prop:vami.ip0.VMware_vCenter_Server_Appliance='+$Subnet+'.89 --prop:vami.netmask0.VMware_vCenter_Server_Appliance=255.255.255.0 --prop:vami.gateway.VMware_vCenter_Server_Appliance='+$Subnet+'.103 --prop:vami.DNS.VMware_vCenter_Server_Appliance='+$Subnet+'.10 --prop:vami.hostname=vcenter1.labbuildr.'+$custom_domainsuffix+' /vmfs/volumes/SWDEPOT/VMware-vCenter-Server-Appliance-5.5.0.20200-2183109_OVF10.ova "vi://root:'+$Password+'@127.0.0.1"'
+			}
+		}
+
     $Content | Set-Content $KSDirectory\KS.CFG 
 
     if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
