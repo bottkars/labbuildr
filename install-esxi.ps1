@@ -152,7 +152,6 @@ catch
     }
 
 $ESX_ISO_PATH = Receive-LABlabbuildresxiISO -labbuildresxi_ver $esxi_ver -Destination "$Sourcedir\ISO"
-pause
 Write-Verbose "Builddir is $Builddir"
 if ($nfs.IsPresent -or $initnfs.IsPresent)
     {
@@ -174,7 +173,6 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     Write-Verbose "Checking VM $Nodeprefix$node already Exists"
     If (!(get-vmx $Nodeprefix$node))
     {
-    Write-Host -ForegroundColor Gray "Creating VM $Nodeprefix$Node"
     Write-Verbose "Clearing out old content"
     if (Test-Path .\iso\ks) { Remove-Item -Path .\iso\ks -Recurse }
     $KSDirectory = New-Item -ItemType Directory .\iso\KS
@@ -274,11 +272,6 @@ if ($nfs.IsPresent)
 
     ####have to work on abs pathnames here
 
-    write-verbose "Cloning $Nodeprefix$node"
-    $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$node 
-    write-verbose "Config : $($Nodeclone.config)"
-    
-
     IF (!(Test-Path $VMWAREpath\mkisofs.exe))
         {
         Write-Warning "VMware ISO Tools not found, exiting"
@@ -356,6 +349,19 @@ if ($nfs.IsPresent)
         }
         $Config | set-Content -Path $NodeClone.Config 
 		#>
+    Write-Host -ForegroundColor Gray "Creating VM $Nodeprefix$Node"
+    write-verbose "Cloning $Nodeprefix$node"
+		try
+            {
+            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node  -clonepath $Builddir
+            }
+        catch
+            {
+            Write-Warning "Error creating VM"
+            return
+            }    
+		write-verbose "Config : $($Nodeclone.config)"
+    
 
         Write-Host -ForegroundColor Gray " ==>Creating Disks"
         foreach ($LUN in (1..$Disks))
