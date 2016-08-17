@@ -32,100 +32,128 @@
 #>
 [CmdletBinding()]
 Param(
-[Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory = $false)][int32]$Nodes =1,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory = $false)][int32]$Startnode = 1,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory = $false)][int32]$Disks = 1,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet(36GB,72GB,146GB)][uint64]$Disksize = 146GB,
-<# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
-[Parameter(ParameterSetName = "install",Mandatory=$true)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet,
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain = "labbuildr",
-[Parameter(ParameterSetName = "defaults", Mandatory = $TRUE)]
-[Parameter(ParameterSetName = "install",Mandatory = $true)][ValidateScript({Test-Path -Path $_ -PathType Leaf -Include "*.iso"})]$esxiso,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(Mandatory=$false)][ValidateScript({ Test-Path -Path $_ -ErrorAction Stop})]$ESXIMasterPath = ".\esximaster",
- <# NFS Parameter configures the NFS Default Datastore from DCNODE#>
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory = $false)][switch]$nfs,
-<# future use, initializes nfs on DC#>
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory = $false)][switch]$initnfs,
-<# should we use a differnt vmnet#>
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
-<# injects the kdriver for recoverpoint #>
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory = $false)][switch]$kdriver,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory = $false)][switch]$esxui,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateScript({ Test-Path -Path $_ })]
-$Defaultsfile=".\defaults.xml",
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install", Mandatory = $false)]
-[ValidateSet('shipyard','uifd')][string[]]$container,
-[ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL"
-
-
+	[Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
+	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+	[Parameter(ParameterSetName = "install",Mandatory = $false)][int32]$Nodes =1,
+	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+	[Parameter(ParameterSetName = "install",Mandatory = $false)][int32]$Startnode = 1,
+	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+	[Parameter(ParameterSetName = "install",Mandatory = $false)]
+	[ValidateRange('1..6')][int32]$Disks = 1,
+	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+	[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet(36GB,72GB,146GB)][uint64]$Disksize = 146GB,
+	<# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
+	[Parameter(ParameterSetName = "install",Mandatory=$true)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet,
+	[Parameter(ParameterSetName = "install",Mandatory=$false)]
+	[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain = "labbuildr",
+	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+	[Parameter(ParameterSetName = "install",Mandatory = $false)]
+    [Parameter(ParameterSetName = "1", Mandatory = $true)]
+    [ValidateSet(
+    '6.0.0.update01','6.0.0.update02'
+        )]
+    [string]$esxi_ver,
+	 <# NFS Parameter configures the NFS Default Datastore from DCNODE#>
+	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+	[Parameter(ParameterSetName = "install",Mandatory = $false)][switch]$nfs,
+	<# future use, initializes nfs on DC#>
+	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+	[Parameter(ParameterSetName = "install",Mandatory = $false)][switch]$initnfs,
+	<# should we use a differnt vmnet#>
+	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+	[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
+	<# injects the kdriver for recoverpoint #>
+	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+	[Parameter(ParameterSetName = "install",Mandatory = $false)][switch]$kdriver,
+	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+	[Parameter(ParameterSetName = "install",Mandatory = $false)][switch]$esxui,
+	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+	[ValidateScript({ Test-Path -Path $_ })]
+	$Defaultsfile=".\defaults.xml",
+	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+	[Parameter(ParameterSetName = "install", Mandatory = $false)]
+	[ValidateSet('shipyard','uifd')][string[]]$container,
+	[ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL"
 )
-
 #requires -version 3.0
 #requires -module vmxtoolkit 
-
-
+If ($ConfirmPreference -match "none")
+    {$Confirm = $false}
+else
+    {$Confirm = $true}
+$Builddir = $PSScriptRoot
+$Scriptdir = Join-Path $Builddir "Scripts"
 If ($Defaults.IsPresent)
     {
-     $labdefaults = Get-labDefaults
-     if (!($labdefaults))
+    $labdefaults = Get-labDefaults
+    $vmnet = $labdefaults.vmnet
+    $subnet = $labdefaults.MySubnet
+    $BuildDomain = $labdefaults.BuildDomain
+    try
         {
-        try
-            {
-            $labdefaults = Get-labDefaults -Defaultsfile ".\defaults.xml.example"
-            }
-        catch
-            {
-            Write-Warning "no  defaults or example defaults found, exiting now"
-            exit
-            }
-        Write-Host -ForegroundColor Gray "Using generic defaults from labbuildr"
+        $Sourcedir = $labdefaults.Sourcedir
         }
-     $vmnet = $labdefaults.vmnet
-     $subnet = $labdefaults.MySubnet
-     $BuildDomain = $labdefaults.BuildDomain
-     if (!$Sourcedir)
-            {
-            try
-                {
-                $Sourcedir = $labdefaults.Sourcedir
-                }
-            catch [System.Management.Automation.ParameterBindingException]
-                {
-                Write-Warning "No sources specified, trying default"
-                $Sourcedir = "C:\Sources"
-                }
-            }
-
-     #$Sourcedir = $labdefaults.Sourcedir
+    catch [System.Management.Automation.ValidationMetadataException]
+        {
+        Write-Warning "Could not test Sourcedir Found from Defaults, USB stick connected ?"
+        Break
+        }
+    catch [System.Management.Automation.ParameterBindingException]
+        {
+        Write-Warning "No valid Sourcedir Found from Defaults, USB stick connected ?"
+        Break
+        }
+    try
+        {
+        $Masterpath = $LabDefaults.Masterpath
+        }
+    catch
+        {
+        # Write-Host -ForegroundColor Gray " ==>No Masterpath specified, trying default"
+        $Masterpath = $Builddir
+        }
+     $Hostkey = $labdefaults.HostKey
      $Gateway = $labdefaults.Gateway
      $DefaultGateway = $labdefaults.Defaultgateway
      $DNS1 = $labdefaults.DNS1
-     $MasterPath = $labdefaults.MasterPath
-     }
+     $DNS2 = $labdefaults.DNS2
+    }
+if (!$DNS2)
+    {
+    $DNS2 = $DNS1
+    }
 
+if ($LabDefaults.custom_domainsuffix)
+	{
+	$custom_domainsuffix = $LabDefaults.custom_domainsuffix
+	}
+else
+	{
+	$custom_domainsuffix = "local"
+	}
 
-
+if (!$Masterpath) {$Masterpath = $Builddir}
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 write-verbose "Subnet will be $subnet"
 $Nodeprefix = "ESXiNode"
-$MasterVMX = get-vmx -path $ESXIMasterPath
 $Password = "Password123!"
 $Builddir = $PSScriptRoot
+$Required_Master = "esximaster"
+try
+    {
+    $MasterVMX = test-labmaster -Masterpath $MasterPath -Master $Required_Master -Confirm:$Confirm -erroraction stop
+    }
+catch
+    {
+    Write-Warning "Required Master $Required_Master not found
+    please download and extraxt $Required_Master to .\$Required_Master
+    see: 
+    ------------------------------------------------
+    get-help $($MyInvocation.MyCommand.Name) -online
+    ------------------------------------------------"
+    exit
+    }
 Write-Verbose "Builddir is $Builddir"
 if ($nfs.IsPresent -or $initnfs.IsPresent)
     {
@@ -138,18 +166,7 @@ if ($nfs.IsPresent -or $initnfs.IsPresent)
         }
     }
 
-if (!$MasterVMX.Template) 
-    {
-    write-verbose "Templating Master VMX"
-    $template = $MasterVMX | Set-VMXTemplate
-    }
-$Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
 
-if (!$Basesnap) 
-    {
-    Write-verbose "Base snap does not exist, creating now"
-    $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
-    }
 
 ####Build Machines#
 
@@ -165,7 +182,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     $Content = Get-Content .\Scripts\ESX\KS.CFG
     ####modify $content
     #$Content = $Content | where {$_ -NotMatch "network"}
-    $Content += "network --bootproto=static --device=vmnic0 --ip=$subnet.8$Node --netmask=255.255.255.0 --gateway=$DefaultGateway --nameserver=$DNS1 --hostname=$Nodeprefix$node.$Builddomain.local"
+    $Content += "network --bootproto=static --device=vmnic0 --ip=$subnet.8$Node --netmask=255.255.255.0 --gateway=$DefaultGateway --nameserver=$DNS1 --hostname=$Nodeprefix$node.$Builddomain.$custom_domainsuffix"
     $Content += "keyboard German"
     foreach ( $Disk in 1..$Disks)
         {
@@ -173,7 +190,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         $Content += "partition Datastore$Disk@$Nodeprefix$node --ondisk=mpx.vmhba1:C0:T$Disk"+":L0"
         }
     $Content += Get-Content .\Scripts\ESX\KS_PRE.cfg
-    $Content += "echo 'network --bootproto=static --device=vmnic0 --ip=$subnet.8$Node --netmask=255.255.255.0 --gateway=$DefaultGateway --nameserver=$DNS1 --hostname=$Nodeprefix$node.$Builddomain.local' /tmp/networkconfig" 
+    $Content += "echo 'network --bootproto=static --device=vmnic0 --ip=$subnet.8$Node --netmask=255.255.255.0 --gateway=$DefaultGateway --nameserver=$DNS1 --hostname=$Nodeprefix$node.$Builddomain.$custom_domainsuffix' /tmp/networkconfig" 
     if ($esxui.IsPresent)
         {
         $Content += Get-Content .\Scripts\ESX\KS_POST.cfg
@@ -240,7 +257,7 @@ if ($nfs.IsPresent)
     {
     $Content += "esxcli storage nfs add --host $Subnet.10 --share /$BuildDomain"+"nfs --volume-name=SWDEPOT --readonly"
     $Content += "tar xzfv  /vmfs/volumes/SWDEPOT/ovf.tar.gz  -C /vmfs/volumes/Datastore1@$Nodeprefix$Node/"
-    $Content += '/vmfs/volumes/Datastore1@ESXiNode1/ovf/tools/ovftool --diskMode=thin --datastore=Datastore1@'+$Nodeprefix+$Node+' --noSSLVerify --X:injectOvfEnv --powerOn "--net:Network 1=VM Network" --acceptAllEulas --prop:vami.ip0.VMware_vCenter_Server_Appliance='+$Subnet+'.89 --prop:vami.netmask0.VMware_vCenter_Server_Appliance=255.255.255.0 --prop:vami.gateway.VMware_vCenter_Server_Appliance='+$Subnet+'.103 --prop:vami.DNS.VMware_vCenter_Server_Appliance='+$Subnet+'.10 --prop:vami.hostname=vcenter1.labbuildr.local /vmfs/volumes/SWDEPOT/VMware-vCenter-Server-Appliance-5.5.0.20200-2183109_OVF10.ova "vi://root:'+$Password+'@127.0.0.1"'
+    $Content += '/vmfs/volumes/Datastore1@ESXiNode1/ovf/tools/ovftool --diskMode=thin --datastore=Datastore1@'+$Nodeprefix+$Node+' --noSSLVerify --X:injectOvfEnv --powerOn "--net:Network 1=VM Network" --acceptAllEulas --prop:vami.ip0.VMware_vCenter_Server_Appliance='+$Subnet+'.89 --prop:vami.netmask0.VMware_vCenter_Server_Appliance=255.255.255.0 --prop:vami.gateway.VMware_vCenter_Server_Appliance='+$Subnet+'.103 --prop:vami.DNS.VMware_vCenter_Server_Appliance='+$Subnet+'.10 --prop:vami.hostname=vcenter1.labbuildr.'+$custom_domainsuffix+' /vmfs/volumes/SWDEPOT/VMware-vCenter-Server-Appliance-5.5.0.20200-2183109_OVF10.ova "vi://root:'+$Password+'@127.0.0.1"'
     }
     $Content | Set-Content $KSDirectory\KS.CFG 
 
@@ -262,7 +279,7 @@ if ($nfs.IsPresent)
     $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$node 
     write-verbose "Config : $($Nodeclone.config)"
     
-    $Config = Get-VMXConfig -config $NodeClone.config
+
     IF (!(Test-Path $VMWAREpath\mkisofs.exe))
         {
         Write-Warning "VMware ISO Tools not found, exiting"
@@ -280,6 +297,8 @@ if ($nfs.IsPresent)
                 Break
                 }
         }
+    <#
+	$Config = Get-VMXConfig -config $NodeClone.config
     Write-Host -ForegroundColor Gray " ==>Creating Disks"
     foreach ($Disk in 1..$Disks)
         {
@@ -336,8 +355,19 @@ if ($nfs.IsPresent)
         $AddDrives += @('scsi'+$scsi+':'+$LUN+'.writeThrough = "false"')
         $Config += $AddDrives
         }
-    
-    $Config | set-Content -Path $NodeClone.Config 
+        $Config | set-Content -Path $NodeClone.Config 
+		#>
+
+        Write-Host -ForegroundColor Gray " ==>Creating Disks"
+        foreach ($LUN in (1..$Disks))
+            {
+            $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
+            Write-Host -ForegroundColor Gray " ==>Building new Disk $Diskname"
+            $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
+            Write-Host -ForegroundColor Gray " ==>Adding Disk $Diskname to $($NodeClone.VMXname)"
+            $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
+            }
+
     Write-Host -ForegroundColor Gray " ==>injecting kickstart CDROM"
     $Nodeclone | Set-VMXIDECDrom -IDEcontroller 1 -IDElun 0 -ISOfile "ks.iso" | Out-Null
     Write-Host -ForegroundColor Gray " ==>injecting $esxiso CDROM"
