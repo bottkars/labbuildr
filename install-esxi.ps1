@@ -35,7 +35,7 @@ Param(
 	[Parameter(ParameterSetName = "install",Mandatory = $false)][int32]$Startnode = 1,
 	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 	[Parameter(ParameterSetName = "install",Mandatory = $false)]
-	[ValidateRange('1..6')][int32]$Disks = 1,
+	[ValidateRange(1,6)][int32]$Disks = 1,
 	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 	[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet(36GB,72GB,146GB)][uint64]$Disksize = 146GB,
 	<# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
@@ -56,8 +56,9 @@ Param(
 	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 	[Parameter(ParameterSetName = "install",Mandatory = $false)][switch]$initnfs,
 	<# should we use a differnt vmnet#>
-	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-	[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
+	[Parameter(ParameterSetName = "install",Mandatory = $false)]
+	[ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]
+	$vmnet = "vmnet2",
 	<# injects the kdriver for recoverpoint #>
 	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 	[Parameter(ParameterSetName = "install",Mandatory = $false)][switch]$kdriver,
@@ -68,7 +69,6 @@ Param(
 	$Defaultsfile=".\defaults.xml",
 	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 	[Parameter(ParameterSetName = "install", Mandatory = $false)]
-	[ValidateSet('shipyard','uifd')][string[]]$container,
 	[ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL"
 )
 #requires -version 3.0
