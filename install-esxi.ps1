@@ -8,9 +8,6 @@
 
    The script will generate a kickstart cd with all required parameters, clones a master vmx and injects disk drives and cd´d into is.
 
-   The Required vmware Master can be downloaded fro https://community.emc.com/blogs/bottk/2015/03/30/labbuildrbeta#OtherTable,
-   the customized esxi installimage can be found in https://community.emc.com/blogs/bottk/2015/03/30/labbuildrbeta#SoftwareTable
-
    Copyright 2014 Karsten Bott
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,9 +23,8 @@
    limitations under the License.
 
 .LINK
-   https://community.emc.com/blogs/bottk/2015/03/30/labbuildrbeta
+	https://github.com/bottkars/labbuildr/wiki/install-esxi.ps1
 .EXAMPLE
-    PS E:\LABBUILDR> .\install-esxi.ps1 -Nodes 2 -Startnode 2 -Disks 3 -Disksize 146GB -subnet 10.0.0.0 -BuildDomain labbuildr -esxiso C:\sources\ESX\ESXi-5.5.0-1331820-labbuildr-ks.iso -ESXIMasterPath '.\VMware ESXi 5' -Verbose
 #>
 [CmdletBinding()]
 Param(
@@ -154,6 +150,9 @@ catch
     ------------------------------------------------"
     exit
     }
+
+$ESX_ISO_PATH = Receive-LABlabbuildresxiISO -labbuildresxi_ver $esxi_ver -Destination "$Sourcedir\ISO"
+pause
 Write-Verbose "Builddir is $Builddir"
 if ($nfs.IsPresent -or $initnfs.IsPresent)
     {
@@ -370,8 +369,8 @@ if ($nfs.IsPresent)
 
     Write-Host -ForegroundColor Gray " ==>injecting kickstart CDROM"
     $Nodeclone | Set-VMXIDECDrom -IDEcontroller 1 -IDElun 0 -ISOfile "ks.iso" | Out-Null
-    Write-Host -ForegroundColor Gray " ==>injecting $esxiso CDROM"
-    $Nodeclone | Set-VMXIDECDrom -IDEcontroller 0 -IDElun 0 -ISOfile $esxiso | Out-Null
+    Write-Host -ForegroundColor Gray " ==>injecting $esxi_ver CDROM"
+    $Nodeclone | Set-VMXIDECDrom -IDEcontroller 0 -IDElun 0 -ISOfile $ESX_ISO_PATH | Out-Null
     $Nodeclone | Set-VMXSize -Size $Size | Out-Null
 
     Write-Host -ForegroundColor Gray " ==>Setting NICs"
