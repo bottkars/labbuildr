@@ -138,7 +138,7 @@ $Required_Master = "esximaster"
 $SCSI = 0
 try
     {
-    $MasterVMX = test-labmaster -Masterpath $MasterPath -Master $Required_Master -Confirm:$false-erroraction stop
+    $MasterVMX = test-labmaster -Masterpath $MasterPath -Master $Required_Master -Confirm:$false -erroraction stop
     }
 catch
     {
