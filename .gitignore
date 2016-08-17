@@ -1,7 +1,11 @@
 #################
 ## Eclipse
 #################
-
+*.pssproj 
+*.pssproj.*
+*.sln
+.vs
+./.vs
 *.pydevproject
 .project
 .metadata
