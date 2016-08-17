@@ -171,7 +171,7 @@ if ($nfs.IsPresent -or $initnfs.IsPresent)
 foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     {
     Write-Verbose "Checking VM $Nodeprefix$node already Exists"
-    If (!(get-vmx $Nodeprefix$node))
+    If (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue))
     {
     Write-Verbose "Clearing out old content"
     if (Test-Path .\iso\ks) { Remove-Item -Path .\iso\ks -Recurse }
