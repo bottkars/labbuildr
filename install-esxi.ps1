@@ -42,9 +42,8 @@ Param(
 	[Parameter(ParameterSetName = "install",Mandatory=$true)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet,
 	[Parameter(ParameterSetName = "install",Mandatory=$false)]
 	[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain = "labbuildr",
-	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-	[Parameter(ParameterSetName = "install",Mandatory = $false)]
-    [Parameter(ParameterSetName = "1", Mandatory = $true)]
+	[Parameter(ParameterSetName = "defaults", Mandatory = $true)]
+	[Parameter(ParameterSetName = "install",Mandatory = $true)]
     [ValidateSet(
     '6.0.0.update01','6.0.0.update02'
         )]
