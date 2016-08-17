@@ -165,7 +165,17 @@ if ($nfs.IsPresent -or $initnfs.IsPresent)
     }
 
 
-
+if ($esxui.IsPresent)
+	{
+	try
+		{
+		$esxui_vib = (Receive-LABFling -Destination "$Sourcedir\ESX" -FLING esxi-embedded-host-client).filename 
+		}
+	catch
+		{
+		write-host "no fling available"
+		}
+	}
 ####Build Machines#
 
 foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
@@ -196,7 +206,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         Write-Host -ForegroundColor Gray " ==>injecting ESX-UI"
         try 
             {
-            $Drivervib = Get-ChildItem "$Sourcedir\ESX\esxui*.vib" -ErrorAction Stop
+            $Drivervib = Get-ChildItem "$Sourcedir\ESX\$esxui_vib" -ErrorAction Stop
             }
  
         catch [Exception] 
@@ -205,7 +215,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
             write-host $_.Exception.Message
             break
             }
-        $Drivervib| Sort-Object -Descending | Select-Object -First 1 | Copy-Item -Destination .\iso\KS\ESXUI.VIB
+        $Drivervib| Copy-Item -Destination .\iso\KS\ESXUI.VIB
         $Content += "cp -a /vmfs/volumes/mpx.vmhba32:C0:T0:L0/KS/ESXUI.VIB /vmfs/volumes/Datastore1@$Nodeprefix$node"
         }
         if ($kdriver.IsPresent)
