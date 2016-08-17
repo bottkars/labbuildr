@@ -161,9 +161,10 @@ $ESX_ISO_PATH = Receive-LABlabbuildresxiISO -labbuildresxi_ver $esxi_ver -Destin
 Write-Verbose "Builddir is $Builddir"
 if ($nfs.IsPresent -or $initnfs.IsPresent)
     {
-    try {
-    (Get-vmx -path $Builddir\dcnode).state -eq 'running'
-    }
+    try 
+		{
+		$running = (Get-vmx -path $Builddir\dcnode).state -eq 'running'
+		}
     catch
         {
         
@@ -292,7 +293,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
 
     ####have to work on abs pathnames here
 
-    IF (!(Test-Path $VMWAREpath\mkisofs.exe))
+    IF (!(Test-Path $VMWAREpath\mkisofs.exe | Out-Null))
         {
         Write-Warning "VMware ISO Tools not found, exiting"
         }
