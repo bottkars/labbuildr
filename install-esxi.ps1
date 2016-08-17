@@ -374,7 +374,7 @@ if ($nfs.IsPresent)
             }
 
     Write-Host -ForegroundColor Gray " ==>injecting kickstart CDROM"
-    $Nodeclone | Set-VMXIDECDrom -IDEcontroller 1 -IDElun 0 -ISOfile "ks.iso" | Out-Null
+    $Nodeclone | Set-VMXIDECDrom -IDEcontroller 1 -IDElun 0 -ISOfile "$($NodeClone.path)\ks.iso" | Out-Null
     Write-Host -ForegroundColor Gray " ==>injecting $esxi_ver CDROM"
     $Nodeclone | Set-VMXIDECDrom -IDEcontroller 0 -IDElun 0 -ISOfile $ESX_ISO_PATH | Out-Null
     $Nodeclone | Set-VMXSize -Size $Size | Out-Null
