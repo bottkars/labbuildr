@@ -278,77 +278,6 @@ if ($nfs.IsPresent)
         }
 
     Write-Verbose "Node Clonepath =  $($NodeClone.Path)"
-    Write-Host -ForegroundColor Gray " ==>Creating Kickstart CD"
-
-    .$VMWAREpath\mkisofs.exe -o "$($NodeClone.path)\ks.iso"  "$Builddir\iso"   | Out-Null
-    switch ($LASTEXITCODE)
-        {
-            2
-                {
-                Write-Warning "could not create CD"
-                Break
-                }
-        }
-    <#
-	$Config = Get-VMXConfig -config $NodeClone.config
-    Write-Host -ForegroundColor Gray " ==>Creating Disks"
-    foreach ($Disk in 1..$Disks)
-        {
-     if ($Disk -le 6)
-        {
-        $SCSI = 0
-        $Lun = $Disk
-        }
-     if (($Disk -gt 6) -and ($Disk -le 14))
-        {
-        $SCSI = 0
-        $Lun = $Disk+1
-        }
-     if (($Disk -gt 14) -and ($Disk -le 21))
-        {
-        $SCSI = 1
-        $Lun = $Disk-15
-        }
-     if (($Disk -gt 21) -and ($Disk -le 29))
-        {
-        $SCSI = 1
-        $Lun = $Disk-14
-        }
-     if (($Disk -gt 29) -and ($Disk -le 36))
-        {
-        $SCSI = 2
-        $Lun = $Disk-30
-        }
-     if (($Disk -gt 36) -and ($Disk -le 44))
-        {
-        $SCSI = 2
-        $Lun = $Disk-29
-        }
-     if (($Disk -gt 44) -and ($Disk -le 51))
-        {
-        $SCSI = 3
-        $Lun = $Disk-45
-        }
-     if (($Disk -gt 51) -and ($Disk -le 59))
-        {
-        $SCSI = 3
-        $Lun = $Disk-44
-        }
-
-        Write-Verbose "SCSI$($Scsi):$lun"
-        $Diskname = "SCSI$SCSI"+"_LUN$LUN.vmdk"
-        $Diskpath = "$($NodeClone.Path)\$Diskname"
-        Write-Host -ForegroundColor Gray " ==>Creating Disk #$Disk with $Diskname and a size of $($Disksize/1GB) GB"
-        & $VMWAREpath\vmware-vdiskmanager.exe -c -s "$($Disksize/1GB)GB" -a lsilogic -t 0 $Diskpath 2>> error.txt | Out-Null
-        $AddDrives  = @('scsi'+$scsi+':'+$LUN+'.present = "TRUE"')
-        $AddDrives += @('scsi'+$scsi+':'+$LUN+'.deviceType = "disk"')
-        $AddDrives += @('scsi'+$scsi+':'+$LUN+'.fileName = "'+$Diskname+'"')
-        $AddDrives += @('scsi'+$scsi+':'+$LUN+'.mode = "persistent"')
-        $AddDrives += @('scsi'+$scsi+':'+$LUN+'.writeThrough = "false"')
-        $Config += $AddDrives
-        }
-        $Config | set-Content -Path $NodeClone.Config 
-		#>
     Write-Host -ForegroundColor Gray "Creating VM $Nodeprefix$Node"
     write-verbose "Cloning $Nodeprefix$node"
 		try
@@ -361,8 +290,17 @@ if ($nfs.IsPresent)
             return
             }    
 		write-verbose "Config : $($Nodeclone.config)"
-    
-
+		Write-Host -ForegroundColor Gray " ==>Creating Kickstart CD"
+		.$VMWAREpath\mkisofs.exe -o "$($NodeClone.path)\ks.iso"  "$Builddir\iso"   | Out-Null
+		switch ($LASTEXITCODE)
+			{
+				2
+					{
+					Write-Warning "could not create CD"
+					$NodeClone | Remove-vmx -Confirm:$false
+					Break
+					}
+			}
         Write-Host -ForegroundColor Gray " ==>Creating Disks"
         foreach ($LUN in (1..$Disks))
             {
