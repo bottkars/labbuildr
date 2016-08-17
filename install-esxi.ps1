@@ -137,7 +137,7 @@ $Builddir = $PSScriptRoot
 $Required_Master = "esximaster"
 try
     {
-    $MasterVMX = test-labmaster -Masterpath $MasterPath -Master $Required_Master -Confirm:$Confirm -erroraction stop
+    $MasterVMX = test-labmaster -Masterpath $MasterPath -Master $Required_Master -Confirm:$false-erroraction stop
     }
 catch
     {
