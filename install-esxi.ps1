@@ -293,7 +293,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
 
     ####have to work on abs pathnames here
 
-    IF (!(Test-Path $VMWAREpath\mkisofs.exe | Out-Null))
+    IF (!(Test-Path $VMWAREpath\mkisofs.exe))
         {
         Write-Warning "VMware ISO Tools not found, exiting"
         }
