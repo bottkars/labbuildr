@@ -274,3 +274,4 @@ CloudArray-ESXi5-5.0.1.6497/CloudArray-ESXi5-5.0.1.6497-Snapshot1.vmsn
 *.vmem
 *.vmss
 *.nvram
+*.pssproj
