@@ -91,7 +91,7 @@ switch ($PsCmdlet.ParameterSetName)
 			$OVFfile = Get-Item $ovf
             $mastername = $OVFfile.BaseName
             }
-        $OVA = Import-VMXOVATemplate -OVA $ovf -acceptAllEulas -AllowExtraConfig -quiet -destination $MasterPath | Out-Null
+        $OVA = Import-VMXOVATemplate -OVA $ovf -acceptAllEulas -AllowExtraConfig -quiet -destination $MasterPath 
         #   & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $ovf $PSScriptRoot #
         Write-Host -ForegroundColor Magenta  "Use .\install-esxova.ps1 -Defaults -Mastername $($OVA.vmname) to try defaults"
         }
