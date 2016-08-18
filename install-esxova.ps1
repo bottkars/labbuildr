@@ -231,8 +231,9 @@ default
 			$config += "guestinfo.password = `"$Password`""
 			$config += "guestinfo.createvmfs = `"false`""
 			$config | Set-Content -Path $NodeClone.config
-			$Displayname = $NodeClone | Set-VMXGuestOS -GuestOS vmkernel6
-            $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
+			$result = $NodeClone | Set-VMXGuestOS -GuestOS vmkernel6
+			$result = $NodeClone | Set-VMXVTBit -VTBit:$true
+            $result = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
             $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
             $Annotation = $Nodeclone | Set-VMXAnnotation -Line1 "Login Credentials" -Line2 "root" -Line3 "Password" -Line4 "$Password"
             Write-Host -ForegroundColor Gray " ==>Starting VM $($NodeClone.Clonename)"
