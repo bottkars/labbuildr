@@ -237,7 +237,7 @@ Write-host -ForegroundColor White "****** VCSA Deployed successful******
 allow up to 10 minutes to configure and install.
 once you see the appliance login console,
 browse to
-https://$ip and login with Administrator@$BuildDomain.$SSO_Domain / Password123#
+https://$ip and login with Administrator@$BuildDomain.$SSO_Domain / $Password
 "
 
     }# end default
