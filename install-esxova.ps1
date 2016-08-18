@@ -44,6 +44,15 @@ Param(
 [Parameter(ParameterSetName = "defaults",Mandatory=$False)]
 [Parameter(ParameterSetName = "import",Mandatory=$false)]
 [Parameter(ParameterSetName = "install",Mandatory=$true)]$MasterPath,
+[Parameter(ParameterSetName = "defaults",Mandatory=$False)]
+[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[ValidateRange(1,6)]
+[int]$Startnode = 1,
+[Parameter(ParameterSetName = "defaults",Mandatory=$False)]
+[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[ValidateRange(1,6)]
+[int]$Nodes = 1,
+
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
@@ -154,8 +163,6 @@ default
 		}
 
 	Write-Verbose $MasterPath
-    $Startnode = 1
-    $Nodes = 1
 
     [System.Version]$subnet = $Subnet.ToString()
     $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
