@@ -38,6 +38,11 @@
 Param(
 [Parameter(ParameterSetName = "import",Mandatory=$false)][String]
 [ValidateScript({ Test-Path -Path $_ -Filter *.ova -PathType Leaf -ErrorAction SilentlyContinue })]$ovf,
+[Parameter(ParameterSetName = "Import", Mandatory = $true)]
+[ValidateSet(
+'Nested_ESXi6','Nested_ESXi5'
+)]
+[string]$nestedesx_ver = "Nested_ESXi6",
 [Parameter(ParameterSetName = "defaults",Mandatory=$False)]
 [Parameter(ParameterSetName = "install",Mandatory=$true)]
 [Parameter(ParameterSetName = "import",Mandatory=$false)][String]$Mastername,
@@ -52,7 +57,6 @@ Param(
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateRange(1,6)]
 [int]$Nodes = 1,
-
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
@@ -61,14 +65,8 @@ Param(
 [Parameter(ParameterSetName = "install",Mandatory=$False)]
 [ValidateLength(1,63)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,63}[a-zA-Z0-9]+$")][string]$BuildDomain = "labbuildr",
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
-[ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = "vmnet2",
-[int]$Disks = 3,
-[Parameter(ParameterSetName = "Import", Mandatory = $true)]
-[ValidateSet(
-'Nested_ESXi6','Nested_ESXi5'
-)]
-[string]$nestedesx_ver = "Nested_ESXi6"
-
+[ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]
+$VMnet = "vmnet2"
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
