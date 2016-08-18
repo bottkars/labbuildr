@@ -93,7 +93,7 @@ switch ($PsCmdlet.ParameterSetName)
             }
         $OVA = Import-VMXOVATemplate -OVA $ovf -acceptAllEulas -AllowExtraConfig -quiet -destination $MasterPath 
         #   & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $ovf $PSScriptRoot #
-        Write-Host -ForegroundColor Magenta  "Use .\install-esxova.ps1 -Defaults -Mastername $($OVA.vmname) to try defaults"
+        Write-Host -ForegroundColor White  "Use `".\install-esxova.ps1 -Defaults -Mastername $($OVA.vmname)`" to try defaults"
         }
 
 default
@@ -164,7 +164,7 @@ default
     $Nodeprefix = "NestedESX"
     if (!$MasterVMX)
         {
-        $MasterVMX = get-vmx -path $Masterpath -VMXName $Mastername -verbose
+        $MasterVMX = get-vmx -path $Masterpath -VMXName $Mastername
 		$Mastervmx
 		Pause
         iF ($MasterVMX)
@@ -186,32 +186,32 @@ default
         write-Host -ForegroundColor Magenta "Could not find existing esxovaMaster"
         return
         }
-    Write-Host -ForegroundColor Magenta " ==>Checking Base VM Snapshot"
+    Write-Host -ForegroundColor Gray " ==>Checking Base VM Snapshot"
     if (!$MasterVMX.Template) 
         {
-        Write-Host -ForegroundColor Magenta " ==>Templating Master VMX"
+        Write-Host -ForegroundColor Gray " ==>Templating Master VMX"
         $template = $MasterVMX | Set-VMXTemplate
         }
     $Basesnap = $MasterVMX | Get-VMXSnapshot -WarningAction SilentlyContinue| where Snapshot -Match "Base" 
 
     if (!$Basesnap) 
         {
-        Write-Host -ForegroundColor Magenta " ==>Base snap does not exist, creating now"
+        Write-Host -ForegroundColor Gray " ==>Base snap does not exist, creating now"
         $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName Base
         }
 
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         {
         $ipoffset = 80+$Node
-        Write-Host -ForegroundColor Magenta " ==>Checking VM $Nodeprefix$node already Exists"
+        Write-Host -ForegroundColor Gray " ==>Checking VM $Nodeprefix$node already Exists"
         If (!(get-vmx -path $Nodeprefix$node -WarningAction SilentlyContinue))
             {
-            write-Host -ForegroundColor Magenta " ==>Creating clone $Nodeprefix$node"
+            write-Host -ForegroundColor Gray " ==>Creating clone $Nodeprefix$node"
             $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXlinkedClone -CloneName $Nodeprefix$node -Clonepath "$Builddir" 
-            Write-Host -ForegroundColor Magenta " ==>Configuring NICs"
+            Write-Host -ForegroundColor Gray " ==>Configuring NICs"
             foreach ($nic in 0..0)
                 {
-                Write-Host -ForegroundColor Gray "  ==>Configuring NIC$nic"
+                Write-Host -ForegroundColor Gray " ==>Configuring NIC$nic"
                 $Netadater0 = $NodeClone | Set-VMXVnet -Adapter $nic -vnet $VMnet -WarningAction SilentlyContinue
                 }
 			[string]$ip="$($subnet.ToString()).$($ipoffset.ToString())"
@@ -232,7 +232,7 @@ default
             $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
             $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
             $Annotation = $Nodeclone | Set-VMXAnnotation -Line1 "Login Credentials" -Line2 "Administrator@$BuildDomain.$SSO_Domain" -Line3 "Password" -Line4 "$Password"
-            Write-Host -ForegroundColor Magenta " ==>Starting VM $($NodeClone.Clonename)"
+            Write-Host -ForegroundColor Gray " ==>Starting VM $($NodeClone.Clonename)"
             $NodeClone | start-vmx | Out-Null
             }
         else
