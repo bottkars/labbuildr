@@ -237,16 +237,17 @@ default
             $Annotation = $Nodeclone | Set-VMXAnnotation -Line1 "Login Credentials" -Line2 "root" -Line3 "Password" -Line4 "$Password"
             Write-Host -ForegroundColor Gray " ==>Starting VM $($NodeClone.Clonename)"
             $NodeClone | start-vmx | Out-Null
+			Write-host
+			Write-host -ForegroundColor White "****** Nested ESXi OVA Deployed successful******
+			login with root/$Password at console /ssh
+			"
             }
         else
             {
             Write-Warning "Node $Nodeprefix$node already exists"
             }
     }
-Write-host
-Write-host -ForegroundColor White "****** Nested ESXi OVA Deployed successful******
-login with root/$Password at console /ssh
-"
+
 
     }# end default
 }
