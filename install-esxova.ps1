@@ -229,7 +229,7 @@ default
 			$Displayname = $NodeClone | Set-VMXGuestOS -GuestOS vmkernel6
             $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
             $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
-            $Annotation = $Nodeclone | Set-VMXAnnotation -Line1 "Login Credentials" -Line2 "Administrator@$BuildDomain.$SSO_Domain" -Line3 "Password" -Line4 "$Password"
+            $Annotation = $Nodeclone | Set-VMXAnnotation -Line1 "Login Credentials" -Line2 "root" -Line3 "Password" -Line4 "$Password"
             Write-Host -ForegroundColor Gray " ==>Starting VM $($NodeClone.Clonename)"
             $NodeClone | start-vmx | Out-Null
             }
@@ -239,8 +239,8 @@ default
             }
     }
 Write-host
-Write-host -ForegroundColor White "****** esxova Deployed successful******
-login with root/$Password
+Write-host -ForegroundColor White "****** Nested ESXi OVA Deployed successful******
+login with root/$Password at console /ssh
 "
 
     }# end default
