@@ -36,7 +36,7 @@
 #>
 [CmdletBinding(DefaultParametersetName = "default")]
 Param(
-[Parameter(ParameterSetName = "import",Mandatory=$true)][String]
+[Parameter(ParameterSetName = "import",Mandatory=$false)][String]
 [ValidateScript({ Test-Path -Path $_ -Filter *.ova -PathType Leaf -ErrorAction SilentlyContinue })]$ovf,
 [Parameter(ParameterSetName = "defaults",Mandatory=$False)]
 [Parameter(ParameterSetName = "install",Mandatory=$true)]
@@ -54,7 +54,7 @@ Param(
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = "vmnet2",
 [int]$Disks = 3,
-[Parameter(ParameterSetName = "Import", Mandatory = $false)]
+[Parameter(ParameterSetName = "Import", Mandatory = $true)]
 [ValidateSet(
 'Nested_ESXi6','Nested_ESXi5'
 )]
@@ -83,7 +83,7 @@ switch ($PsCmdlet.ParameterSetName)
                 $Masterpath = $Builddir
                 }
             }
-        if (!($mastername)) 
+        if (!($ovf)) 
             {
             #download template
 			Write-Host -ForegroundColor Gray " ==>No OVA Template specified, checking for latest $nestedesx_ver"
@@ -91,10 +91,9 @@ switch ($PsCmdlet.ParameterSetName)
 			$OVFfile = Get-Item $ovf
             $mastername = $OVFfile.BaseName
             }
-		Pause
-        Import-VMXOVATemplate -OVA $ovf -acceptAllEulas -AllowExtraConfig -destination $MasterPath
+        $OVA = Import-VMXOVATemplate -OVA $ovf -acceptAllEulas -AllowExtraConfig -destination $MasterPath
         #   & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $ovf $PSScriptRoot #
-        Write-Host -ForegroundColor Magenta  "Use .\install-esxova.ps1 -Defaults -Mastername $Template to try defaults"
+        Write-Host -ForegroundColor Magenta  "Use .\install-esxova.ps1 -Defaults -Mastername $($OVA.vmname) to try defaults"
         }
 
 default
@@ -154,8 +153,7 @@ default
 		$custom_domainsuffix = "local"
 		}
 
-	if (!$Masterpath) {$Masterpath = $Builddir}
-
+	Write-Verbose $MasterPath
     $Startnode = 1
     $Nodes = 1
 
@@ -163,10 +161,12 @@ default
     $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 
     $Builddir = $PSScriptRoot
-    $Nodeprefix = "esxovaNode"
+    $Nodeprefix = "NestedESX"
     if (!$MasterVMX)
         {
-        $MasterVMX = get-vmx -path $Masterpath -VMXName $Template
+        $MasterVMX = get-vmx -path $Masterpath -VMXName $Mastername -verbose
+		$Mastervmx
+		Pause
         iF ($MasterVMX)
             {
             $MasterVMX = $MasterVMX | Sort-Object -Descending
@@ -202,7 +202,7 @@ default
 
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         {
-        $ipoffset = 79+$Node
+        $ipoffset = 80+$Node
         Write-Host -ForegroundColor Magenta " ==>Checking VM $Nodeprefix$node already Exists"
         If (!(get-vmx -path $Nodeprefix$node -WarningAction SilentlyContinue))
             {
@@ -216,19 +216,19 @@ default
                 }
 			[string]$ip="$($subnet.ToString()).$($ipoffset.ToString())"
 			$config = Get-VMXConfig -config $NodeClone.config
-			$config += "guestinfo.cis.deployment.node.type = `"embedded`""
-			$config += "guestinfo.cis.vmdir.domain-name = `"$BuildDomain.$SSO_Domain`""
-			$config += "guestinfo.cis.vmdir.site-name = `"$BuildDomain`""
-			$config += "guestinfo.cis.vmdir.password = `"$Password`""
-			$config += "guestinfo.cis.appliance.net.addr.family = `"ipv4`""
-			$config += "guestinfo.cis.appliance.net.addr = `"$ip`""
-			$config += "guestinfo.cis.appliance.net.pnid = `"$ip`""
-			$config += "guestinfo.cis.appliance.net.prefix = `"24`""
-			$config += "guestinfo.cis.appliance.net.mode = `"static`""
-			$config += "guestinfo.cis.appliance.net.dns.servers = `"$DNS1`""
-			$config += "guestinfo.cis.appliance.net.gateway = `"$DefaultGateway`""
-			$config += "guestinfo.cis.appliance.root.passwd = `"$Password`""
-			$config += "guestinfo.cis.appliance.ssh.enabled = `"true`""
+			$config += "guestinfo.hostname = `"$($NodeClone.CloneName).$BuildDomain.$custom_domainsuffix`""
+			$config += "guestinfo.ipaddress = `"$ip`""
+			$config += "guestinfo.netmask = `"255.255.255.0`""
+			$config += "guestinfo.gateway = `"$Gateway`""
+			$config += "guestinfo.dns = `"$DNS1`""
+			$config += "guestinfo.domain = `"$Nodeprefix$Node.$BuildDomain.$custom_domainsuffix`""
+			$config += "guestinfo.ntp = `"$DNS1`""
+			$config += "guestinfo.ssh = `"true`""
+			$config += "guestinfo.syslog = `"$ip`""
+			$config += "guestinfo.password = `"$Password`""
+			$config += "guestinfo.createvmfs = `"false`""
+			$config
+			pause
 			$config | Set-Content -Path $NodeClone.config
             $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
             $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
@@ -243,10 +243,7 @@ default
     }
 Write-host
 Write-host -ForegroundColor White "****** esxova Deployed successful******
-allow up to 10 minutes to configure and install.
-once you see the appliance login console,
-browse to
-https://$ip and login with Administrator@$BuildDomain.$SSO_Domain / Password123#
+login with root/$Password
 "
 
     }# end default
