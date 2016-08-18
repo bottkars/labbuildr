@@ -165,7 +165,6 @@ default
     if (!$MasterVMX)
         {
         $MasterVMX = get-vmx -path $Masterpath -VMXName $Mastername
-		$Mastervmx
         iF ($MasterVMX)
             {
             $MasterVMX = $MasterVMX | Sort-Object -Descending
