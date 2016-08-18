@@ -91,7 +91,7 @@ switch ($PsCmdlet.ParameterSetName)
 			$OVFfile = Get-Item $ovf
             $mastername = $OVFfile.BaseName
             }
-        $OVA = Import-VMXOVATemplate -OVA $ovf -acceptAllEulas -AllowExtraConfig -destination $MasterPath
+        $OVA = Import-VMXOVATemplate -OVA $ovf -acceptAllEulas -AllowExtraConfig -quiet -destination $MasterPath | Out-Null
         #   & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $ovf $PSScriptRoot #
         Write-Host -ForegroundColor Magenta  "Use .\install-esxova.ps1 -Defaults -Mastername $($OVA.vmname) to try defaults"
         }
@@ -227,9 +227,8 @@ default
 			$config += "guestinfo.syslog = `"$ip`""
 			$config += "guestinfo.password = `"$Password`""
 			$config += "guestinfo.createvmfs = `"false`""
-			$config
-			pause
 			$config | Set-Content -Path $NodeClone.config
+			$Displayname = $NodeClone | Set-VMXGuestOS -GuestOS vmkernel6
             $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
             $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
             $Annotation = $Nodeclone | Set-VMXAnnotation -Line1 "Login Credentials" -Line2 "Administrator@$BuildDomain.$SSO_Domain" -Line3 "Password" -Line4 "$Password"
