@@ -238,9 +238,7 @@ default
             Write-Host -ForegroundColor Gray " ==>Starting VM $($NodeClone.Clonename)"
             $NodeClone | start-vmx | Out-Null
 			Write-host
-			Write-host -ForegroundColor White "****** Nested ESXi OVA Deployed successful******
-			login with root/$Password at console /ssh
-			"
+			Write-host -ForegroundColor White "==>Nested ESXi OVA Deployed successful,login with root/$Password at console /ssh"
             }
         else
             {
