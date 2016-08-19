@@ -220,7 +220,7 @@ switch ($PsCmdlet.ParameterSetName)
                     $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
                     Write-Host -ForegroundColor Gray "  ==>Building new Disk $Diskname"
                     $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-                    Write-Host -ForegroundColor Gray "  ==>Adding Disk $Diskname to $($NodeClone.VMXname)"
+                    Write-Host -ForegroundColor Gray "  ==>Adding Disk $Diskname to $($NodeClone.clonename)"
                     $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
                     }
                 }
