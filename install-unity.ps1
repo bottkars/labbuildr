@@ -207,7 +207,6 @@ switch ($PsCmdlet.ParameterSetName)
             Write-Host -ForegroundColor Gray " ==>Configuring NICs"
             foreach ($nic in 0..5)
                 {
-                Write-Host -ForegroundColor Gray "  ==>Configuring NIC$nic"
                 $Netadater0 = $NodeClone | Set-VMXVnet -Adapter $nic -vnet $VMnet -WarningAction SilentlyContinue
                 }
             Write-Host -ForegroundColor Gray " ==>Creating Disks"
