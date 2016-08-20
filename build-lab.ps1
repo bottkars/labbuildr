@@ -1020,7 +1020,7 @@ function update-fromGit
             exit
             }
         [datetime]$latest_OnGit = $request.Headers.'Last-Modified'
-                Write-Verbose "We have $repo version $latest_local_Git, $latest_OnGit is online !"
+                Write-Verbose "we have $repo version $latest_local_Git, $latest_OnGit is online !"
                 $latest_local_Git -lt $latest_OnGit
                 if ($latest_local_Git -lt $latest_OnGit -or $force.IsPresent )
                     {
@@ -1029,7 +1029,7 @@ function update-fromGit
 					        {
 						    $newDir = New-Item -ItemType Directory -Path "$Updatepath" | out-null
                             }
-                    Write-Host -ForegroundColor Gray "We found a newer Version for $repo on Git Dated $($request.Headers.'Last-Modified')"
+                    Write-Host -ForegroundColor Gray "we found a newer Version for $repo on Git Dated $($request.Headers.'Last-Modified')"
                     if ($delete.IsPresent)
                         {
                         Write-Verbose "Cleaning $Destination"
@@ -1154,7 +1154,7 @@ function write-log
 }
 <#	
 	.SYNOPSIS
-		We test if the Domaincontroller DCNODE is up and Running
+		we test if the Domaincontroller DCNODE is up and Running
 	
 	.DESCRIPTION
 		A detailed description of the test-dcrunning function.
@@ -2072,7 +2072,7 @@ if (!$EXnodes)
     {$EXNodes = 1}
 if ($Blanknode.IsPresent)
 {
-	Write-Host -ForegroundColor Magenta " ==>We are going to Install $BlankNodes Blank Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
+	Write-Host -ForegroundColor Magenta " ==>we are going to Install $BlankNodes Blank Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
 
     Write-Host -ForegroundColor Magenta " ==>The Gateway will be $DefaultGateway"
 	if ($VTbit) { write-verbose "Virtualization will be enabled in the Nodes" }
@@ -2080,7 +2080,7 @@ if ($Blanknode.IsPresent)
 }
 if ($SOFS.IsPresent)
 {
-	Write-Host -ForegroundColor Magenta " ==>We are going to Install $SOFSNODES SOFS Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
+	Write-Host -ForegroundColor Magenta " ==>we are going to Install $SOFSNODES SOFS Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
     if ($DefaultGateway.IsPresent){ Write-Host -ForegroundColor Magenta " ==>The Gateway will be $DefaultGateway"}
 	if ($Cluster.IsPresent) { write-verbose "The Nodes will be Clustered ( Single Node Clusters )" }
 }
@@ -2096,13 +2096,13 @@ if ($ScaleIO.IsPresent)
                 Write-Host -ForegroundColor Gray " ==>Need 3 nodes for ScaleIO, incrementing to 3"
                 $HyperVNodes = 3
                 }	
-Write-Host -ForegroundColor Magenta " ==>We are going to Install ScaleIO on $HyperVNodes Hyper-V Nodes in cluster HV$($Clusternum)Cluster"
+Write-Host -ForegroundColor Magenta " ==>we are going to Install ScaleIO on $HyperVNodes Hyper-V Nodes in cluster HV$($Clusternum)Cluster"
     if ($DefaultGateway.IsPresent){ Write-Host -ForegroundColor Magenta " ==>The Gateway will be $DefaultGateway"}
 	# if ($Cluster.IsPresent) { write-verbose "The Nodes will be Clustered ( Single Node Clusters )" }
 }
 if ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG" -or $SPdbtype -eq "AlwaysOn")
 {
-	Write-Host -ForegroundColor Magenta " ==>We are going to Install an SQL Always On Cluster with $AAGNodes Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet"
+	Write-Host -ForegroundColor Magenta " ==>we are going to Install an SQL Always On Cluster with $AAGNodes Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet"
 	$AlwaysOn = $true
     # if ($NoNMM -eq $false) {Write-Host -ForegroundColor White  "Networker Modules will be installed on each Node"}
 }
@@ -2138,7 +2138,7 @@ if ($Exchange2010.IsPresent)
         }
     If (!(Receive-LABExchange -Exchange2010 -e14_sp $e14_sp -e14_ur $e14_ur  -e14_lang $e14_lang -Destination $Sourcedir -unzip))
         {
-        Write-Host -ForegroundColor Gray " ==>We could not receive Exchange 2010 $e14_sp"
+        Write-Host -ForegroundColor Gray " ==>we could not receive Exchange 2010 $e14_sp"
         return
         }
 
@@ -2168,7 +2168,7 @@ if ($Exchange2010.IsPresent)
     
 	    if ($DAG.IsPresent)
 	        {
-		    Write-Host -ForegroundColor Magenta " ==>We will form a $EX_Version $EXNodes-Node DAG"
+		    Write-Host -ForegroundColor Magenta " ==>we will form a $EX_Version $EXNodes-Node DAG"
 	        }
 
 }
@@ -2191,7 +2191,7 @@ if ($Exchange2013.IsPresent)
         }
     If (!(Receive-LABExchange -Exchange2013 -e15_cu $e15_cu -Destination $Sourcedir -unzip))
         {
-        Write-Host -ForegroundColor Gray " ==>We could not receive Exchange 2013 $e15_cu"
+        Write-Host -ForegroundColor Gray " ==>we could not receive Exchange 2013 $e15_cu"
         return
         }
 
@@ -2221,7 +2221,7 @@ if ($Exchange2013.IsPresent)
     
 	    if ($DAG.IsPresent)
 	        {
-		    Write-Host -ForegroundColor Magenta " ==>We will form a $EX_Version $EXNodes-Node DAG"
+		    Write-Host -ForegroundColor Magenta " ==>we will form a $EX_Version $EXNodes-Node DAG"
 	        }
 
 }
@@ -2244,7 +2244,7 @@ if ($Exchange2016.IsPresent)
         }
     If (!(Receive-LABExchange -Exchange2016 -e16_cu $e16_cu -Destination $Sourcedir -unzip))
         {
-        Write-Warning "We could not receive Exchange 2016 $e16_cu"
+        Write-Warning "we could not receive Exchange 2016 $e16_cu"
         return
         }
 
@@ -2272,7 +2272,7 @@ if ($Exchange2016.IsPresent)
     
 	    if ($DAG.IsPresent)
 	        {
-		    Write-Host -ForegroundColor Magenta " ==>We will form a $EXNodes-Node DAG"
+		    Write-Host -ForegroundColor Magenta " ==>we will form a $EXNodes-Node DAG"
 	        }
 
 }
@@ -2284,7 +2284,7 @@ if ($NMM.IsPresent)
 if ($Sharepoint.IsPresent)
     {
     $Prereqdir = "$spver"+"prereq"
-    Write-Verbose "We are now going to Test Sharepoint Prereqs"
+    Write-Verbose "we are now going to Test Sharepoint Prereqs"
     $DownloadUrls = (
 		    "http://download.microsoft.com/download/9/1/3/9138773A-505D-43E2-AC08-9A77E1E0490B/1033/x64/sqlncli.msi", # Microsoft SQL Server 2008 R2 SP1 Native Client
 		    "http://download.microsoft.com/download/E/0/0/E0060D8F-2354-4871-9596-DC78538799CC/Synchronization.msi", # Microsoft Sync Framework Runtime v1.0 SP1 (x64)
@@ -2347,7 +2347,7 @@ if ($Sharepoint.IsPresent)
             Write-Verbose "Extracting $FileName"
             Start-Process -FilePath "$Sourcedir\$FileName" -ArgumentList "/extract:$Sourcedir\$SPver /quiet /passive" -Wait
             }
-    Write-Host -ForegroundColor Magenta " ==>We are going to Install Sharepoint 2013 in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet and SQL"
+    Write-Host -ForegroundColor Magenta " ==>we are going to Install Sharepoint 2013 in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet and SQL"
     }# end SPPREREQ
 if ($ConfigureVMM.IsPresent)
     {
@@ -2366,7 +2366,7 @@ if ($SCVMM.IsPresent)
         }
     If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCVMM -Destination $Sourcedir -unzip -WarningAction SilentlyContinue))
         {
-        Write-Warning "We could not receive scvmm"
+        Write-Warning "we could not receive scvmm"
         return
         }
 
@@ -2386,7 +2386,7 @@ if ($SCOM.IsPresent)
 
     If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCOM -Destination $Sourcedir -unzip -WarningAction SilentlyContinue))
         {
-        Write-Warning "We could not receive scom"
+        Write-Warning "we could not receive scom"
         return
         }
 
@@ -2434,7 +2434,7 @@ if ($Panorama.IsPresent)
         }
     else
         {
-        Write-Host -ForegroundColor Gray " ==>We need to get Panorama trying Automated Download"
+        Write-Host -ForegroundColor Gray " ==>we need to get Panorama trying Automated Download"
         $url = "https://download.syncplicity.com/panorama-connector/Syncplicity Panorama.msi"
         if ($url)
             {
@@ -2454,7 +2454,7 @@ if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
         }
     else #if ($nw_ver -lt "nw84")
         {
-        Write-Host -ForegroundColor Gray " ==>We need to get $NW_ver, trying Automated Download"
+        Write-Host -ForegroundColor Gray " ==>we need to get $NW_ver, trying Automated Download"
         $NW_download_ok  =  receive-LABNetworker -nw_ver $nw_ver -arch win_x64 -Destination $NW_Sourcedir -unzip # $CommonParameter
         if ($NW_download_ok)
             {
@@ -2462,7 +2462,7 @@ if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
             }
         else
             {
-            Write-Warning "We can only autodownload Cumulative Updates from ftp, please get $nw_ver from support.emc.com"
+            Write-Warning "we can only autodownload Cumulative Updates from ftp, please get $nw_ver from support.emc.com"
             break
             }
 
@@ -2477,7 +2477,7 @@ if ($NMM.IsPresent)
         }
     else
         {
-        Write-Host -ForegroundColor Gray " ==>We need to get $NMM_ver, trying Automated Download"
+        Write-Host -ForegroundColor Gray " ==>we need to get $NMM_ver, trying Automated Download"
         $Nmm_download_ok  =  receive-LABnmm -nmm_ver $nmm_ver -Destination $NW_Sourcedir -unzip # $CommonParameterReceive-LABnmm -
       }
     }
@@ -2631,7 +2631,7 @@ if ($Dockerhost.IsPresent)
 
 $MyMaster = test-labmaster -Masterpath "$Masterpath" -Master $Master -mastertype vmware -Confirm:$Confirm 
 $MasterVMX = $mymaster.config		
-Write-Verbose "We got master $MasterVMX"
+Write-Verbose "we got master $MasterVMX"
 
 
 
@@ -2667,7 +2667,7 @@ if (test-vmx $DCNODE -WarningAction SilentlyContinue)
         $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
         If ($MyGateway) 
             {
-            Write-Host -ForegroundColor Magenta " ==>We will configure Default Gateway at $MyGateway"
+            Write-Host -ForegroundColor Magenta " ==>we will configure Default Gateway at $MyGateway"
             $AddGateway  = "-DefaultGateway $MyGateway"
             Write-Verbose -Message "we will add a Gateway with $AddGateway"
             }
@@ -2704,7 +2704,7 @@ else
         {
         Write-Verbose "Gateway : $DefaultGateway"
         }
-	Write-Host -ForegroundColor White " ==>We will Build Domain $BuildDomain and Subnet $IPv4subnet.0  on $VMnet for the Running Workorder"
+	Write-Host -ForegroundColor White " ==>we will Build Domain $BuildDomain and Subnet $IPv4subnet.0  on $VMnet for the Running Workorder"
     Write-Host -ForegroundColor Gray " ==setting Language to $LanguageTag"
     if ($DefaultGateway){ Write-Host -ForegroundColor Magenta " ==>The Gateway will be $DefaultGateway"}
 	if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
@@ -3389,7 +3389,7 @@ switch ($PsCmdlet.ParameterSetName)
             {
             if (!$Cluster.IsPresent)
                 {
-                Write-Host -ForegroundColor Gray " ==>We want a Cluster for Automated SCALEIO Deployment, adjusting"
+                Write-Host -ForegroundColor Gray " ==>we want a Cluster for Automated SCALEIO Deployment, adjusting"
                 [switch]$Cluster = $true
                 }   
             If (!$Disks){$Disks = 1} 
