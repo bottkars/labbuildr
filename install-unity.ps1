@@ -199,17 +199,13 @@ switch ($PsCmdlet.ParameterSetName)
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         {
         $ipoffset = 84+$Node
-        Write-Host -ForegroundColor Gray " ==>Checking VM $Nodeprefix$node already Exists"
         If (!(get-vmx -path $Nodeprefix$node -WarningAction SilentlyContinue))
             {
-            write-Host -ForegroundColor Magenta " ==>Creating clone $Nodeprefix$node"
             $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXlinkedClone -CloneName $Nodeprefix$node -Clonepath "$Builddir" 
-            Write-Host -ForegroundColor Gray " ==>Configuring NICs"
             foreach ($nic in 0..5)
                 {
                 $Netadater0 = $NodeClone | Set-VMXVnet -Adapter $nic -vnet $VMnet -WarningAction SilentlyContinue
                 }
-            Write-Host -ForegroundColor Gray " ==>Creating Disks"
             $SCSI = 1
             [uint64]$Disksize = 100GB
             if ($Disks -ne 0)
@@ -232,7 +228,6 @@ switch ($PsCmdlet.ParameterSetName)
 				{
 				$Annotation = $Nodeclone | Set-VMXAnnotation -Line1 "System User" -Line2 "sysadmin:sysadmin" -Line3 "Unity User" -Line4 "admin:$oldpasswd"
 				}
-            Write-Host -ForegroundColor Magenta " ==>Starting VM $($NodeClone.Clonename)"
             $NodeClone | start-vmx | Out-Null
 			$sleep = 2
 			if ($configure.IsPresent)
