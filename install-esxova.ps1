@@ -161,7 +161,6 @@ default
 		}
 
 	Write-Verbose $MasterPath
-
     [System.Version]$subnet = $Subnet.ToString()
     $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 
@@ -192,7 +191,6 @@ default
     Write-Host -ForegroundColor Gray " ==>Checking Base VM Snapshot"
     if (!$MasterVMX.Template) 
         {
-        Write-Host -ForegroundColor Gray " ==>Templating Master VMX"
         $template = $MasterVMX | Set-VMXTemplate
         }
     $Basesnap = $MasterVMX | Get-VMXSnapshot -WarningAction SilentlyContinue| where Snapshot -Match "Base" 
@@ -209,12 +207,9 @@ default
         Write-Host -ForegroundColor Gray " ==>Checking VM $Nodeprefix$node already Exists"
         If (!(get-vmx -path $Nodeprefix$node -WarningAction SilentlyContinue))
             {
-            write-Host -ForegroundColor Gray " ==>Creating clone $Nodeprefix$node"
             $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXlinkedClone -CloneName $Nodeprefix$node -Clonepath "$Builddir" 
-            Write-Host -ForegroundColor Gray " ==>Configuring NICs"
             foreach ($nic in 0..0)
                 {
-                Write-Host -ForegroundColor Gray " ==>Configuring NIC$nic"
                 $Netadater0 = $NodeClone | Set-VMXVnet -Adapter $nic -vnet $VMnet -WarningAction SilentlyContinue
                 }
 			[string]$ip="$($subnet.ToString()).$($ipoffset.ToString())"
@@ -236,7 +231,6 @@ default
             $result = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
             $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
             $Annotation = $Nodeclone | Set-VMXAnnotation -Line1 "Login Credentials" -Line2 "root" -Line3 "Password" -Line4 "$Password"
-            Write-Host -ForegroundColor Gray " ==>Starting VM $($NodeClone.Clonename)"
             $NodeClone | start-vmx | Out-Null
 			Write-host
 			Write-host -ForegroundColor White "==>Nested ESXi $($NodeClone.Clonename) Deployed successful,login with root/$Password at console or ssh:$($ip):22"
