@@ -44,7 +44,7 @@ $BuildDate = Get-Date -Format "MM.dd.yyyy hh:mm:ss"
 ### Karsten Bott
 ### 08.10.2013 Added vmrun errorcheck on initial base snap
 ###################################################
-$VMrunErrorCondition = @("Error: The virtual machine is not powered on","Waiting for Command execution Available","Error","Unable to connect to host.","Error: The operation is not supported for the specified parameters","Unable to connect to host. Error: The operation is not supported for the specified parameters")
+$VMrunErrorCondition = @("Error: The virtual machine is not powered on","waiting for Command execution Available","Error","Unable to connect to host.","Error: The operation is not supported for the specified parameters","Unable to connect to host. Error: The operation is not supported for the specified parameters")
 function write-log {
     Param ([string]$line)
     $Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
@@ -52,10 +52,22 @@ function write-log {
 }
 
 function test-user {param ($whois)
+$sleep = 1
 $Origin = $MyInvocation.MyCommand
-do {([string]$cmdresult = &$vmrun -gu $Adminuser -gp $Adminpassword listProcessesInGuest $Clone.config )2>&1 | Out-Null
-Write-Debug $cmdresult
-Start-Sleep 5
+do {
+([string]$cmdresult = &$vmrun -gu $Adminuser -gp $Adminpassword listProcessesInGuest $Clone.config )2>&1 | Out-Null
+	Write-Debug $cmdresult
+	foreach ($i in (1..$sleep))
+		{
+		Write-Host -ForegroundColor Yellow "-`b" -NoNewline
+		sleep 1
+		Write-Host -ForegroundColor Yellow "\`b" -NoNewline
+		sleep 1
+		Write-Host -ForegroundColor Yellow "|`b" -NoNewline
+		sleep 1
+		Write-Host -ForegroundColor Yellow "/`b" -NoNewline
+		sleep 1
+		}
 }
 until (($cmdresult -match $whois) -and ($VMrunErrorCondition -notcontains $cmdresult))
 write-log "$origin $UserLoggedOn"
@@ -87,10 +99,7 @@ return $false
 else
 {
 $Displayname = "$Nodename@$Domainname"
-Write-Host -ForegroundColor DarkCyan " ==> Creating Linked Clone $Nodename from $MasterVMX, VMsize is $Size"
 Write-verbose "Creating linked $Nodename of $MasterVMX"
-# while (!(Get-ChildItem $MasterVMX)) {
-# write-Host "Try Snapshot"
 
 $Clone = $Snapshot | New-VMXLinkedClone -CloneName $Nodename -clonepath $Builddir
 write-verbose "starting customization of $($Clone.config)"
@@ -221,36 +230,33 @@ Set-VMXscenario -config $Clone.config -Scenario 9 -Scenarioname labbuildr
 if ($bridge.IsPresent)
     {
     write-verbose "configuring network for bridge"
-    Set-VMXNetworkAdapter -config $Clone.config -Adapter 1 -ConnectionType bridged -AdapterType vmxnet3
-    Set-VMXNetworkAdapter -config $Clone.config -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -WarningAction SilentlyContinue
-    Set-VMXVnet -config $Clone.config -Adapter 0 -vnet $vmnet
+    $Clone | Set-VMXNetworkAdapter -Adapter 1 -ConnectionType bridged -AdapterType vmxnet3
+    $Clone | Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -WarningAction SilentlyContinue
+    $Clone | Set-VMXVnet -Adapter 0 -vnet $vmnet
     }
 elseif($NW -and $gateway.IsPresent) 
     {
     write-verbose "configuring network for gateway"
-    Set-VMXNetworkAdapter -config $Clone.config -Adapter 1 -ConnectionType nat -AdapterType vmxnet3
-    Set-VMXNetworkAdapter -config $Clone.config -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -WarningAction SilentlyContinue
-    Set-VMXVnet -config $Clone.config -Adapter 0 -vnet $vmnet
+    $Clone | Set-VMXNetworkAdapter -Adapter 1 -ConnectionType nat -AdapterType vmxnet3
+    $Clone | Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -WarningAction SilentlyContinue
+    $Clone | Set-VMXVnet -Adapter 0 -vnet $vmnet
     }
 elseif(!$Isilon.IsPresent)
         {
-        Set-VMXNetworkAdapter -config $Clone.config -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -WarningAction SilentlyContinue
-        Set-VMXVnet -config $Clone.config -Adapter 0 -vnet $vmnet
+        $Clone | Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -WarningAction SilentlyContinue
+        $Clone | Set-VMXVnet -Adapter 0 -vnet $vmnet
         }
 
 $Clone | Set-VMXToolsReminder -enabled:$false
-
-Write-Host -ForegroundColor DarkCyan " ==> Booting into Machine Customization, this may take a while"
 $Clone | Start-VMX
 if (!$Isilon.IsPresent)
     {
-    Write-Host -ForegroundColor DarkCyan " ==> Enabling Shared Folders"
     $Clone | Set-VMXSharedFolderState -enabled
-    # $Clone | Write-Host -ForegroundColor Gray
     $Clone | Set-VMXSharedFolder -add -Sharename Scripts -Folder "$Builddir\Scripts"
-    Write-verbose "Waiting for Pass 1 (sysprep Finished)"
-    Write-Host -ForegroundColor DarkCyan " ==> Waiting for Sysprep finished"
-    test-user -whois Administrator
+    Write-verbose "waiting for Pass 1 (sysprep Finished)"
+    Write-Host -ForegroundColor Gray " ==>waiting for Sysprep finished " -NoNewline
+	test-user -whois Administrator
+	Write-Host -ForegroundColor Green "[sysprep finished]"
     } #end not isilon
 return,[bool]$True
 }
