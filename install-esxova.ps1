@@ -44,8 +44,8 @@ Param(
 )]
 [string]$nestedesx_ver = "Nested_ESXi6",
 [Parameter(ParameterSetName = "defaults",Mandatory=$False)]
-[Parameter(ParameterSetName = "install",Mandatory=$true)]
-[Parameter(ParameterSetName = "import",Mandatory=$false)][String]$Mastername,
+[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[String]$Mastername,
 [Parameter(ParameterSetName = "defaults",Mandatory=$False)]
 [Parameter(ParameterSetName = "import",Mandatory=$false)]
 [Parameter(ParameterSetName = "install",Mandatory=$true)]$MasterPath,
