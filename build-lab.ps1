@@ -1020,7 +1020,7 @@ function update-fromGit
             exit
             }
         [datetime]$latest_OnGit = $request.Headers.'Last-Modified'
-                Write-Verbose "we have $repo version $latest_local_Git, $latest_OnGit is online !"
+                Write-Verbose " ==>we have $repo version $latest_local_Git, $latest_OnGit is online !"
                 $latest_local_Git -lt $latest_OnGit
                 if ($latest_local_Git -lt $latest_OnGit -or $force.IsPresent )
                     {
@@ -1029,7 +1029,7 @@ function update-fromGit
 					        {
 						    $newDir = New-Item -ItemType Directory -Path "$Updatepath" | out-null
                             }
-                    Write-Host -ForegroundColor Gray "we found a newer Version for $repo on Git Dated $($request.Headers.'Last-Modified')"
+                    Write-Host -ForegroundColor Gray " ==>we found a newer Version for $repo on Git Dated $($request.Headers.'Last-Modified')"
                     if ($delete.IsPresent)
                         {
                         Write-Verbose "Cleaning $Destination"
@@ -1174,14 +1174,14 @@ function test-dcrunning
 	{
 		if ((get-vmx $DCNODE).state -ne "running")
 		    {
-			Write-Host -ForegroundColor White  "Domaincontroller not running, we need to start him first"
+			Write-Host -ForegroundColor White  " ==>Domaincontroller not running, we need to start him first"
             Write-Host -ForegroundColor Gray " ==>Starting DCNODE"
 			$Started = get-vmx $DCNODE | Start-vmx 
 		    }
 	}#end if
 	else
 	{
-		debug "Domaincontroller not found, giving up"
+		debug " ==>Domaincontroller not found, giving up"
 		break
 	}#end else
 } # end nodomaincheck
@@ -2244,7 +2244,7 @@ if ($Exchange2016.IsPresent)
         }
     If (!(Receive-LABExchange -Exchange2016 -e16_cu $e16_cu -Destination $Sourcedir -unzip))
         {
-        Write-Warning "we could not receive Exchange 2016 $e16_cu"
+        Write-Warning " ==>we could not receive Exchange 2016 $e16_cu"
         return
         }
 
@@ -2284,7 +2284,7 @@ if ($NMM.IsPresent)
 if ($Sharepoint.IsPresent)
     {
     $Prereqdir = "$spver"+"prereq"
-    Write-Verbose "we are now going to Test Sharepoint Prereqs"
+    Write-Verbose " ==>we are now going to Test Sharepoint Prereqs"
     $DownloadUrls = (
 		    "http://download.microsoft.com/download/9/1/3/9138773A-505D-43E2-AC08-9A77E1E0490B/1033/x64/sqlncli.msi", # Microsoft SQL Server 2008 R2 SP1 Native Client
 		    "http://download.microsoft.com/download/E/0/0/E0060D8F-2354-4871-9596-DC78538799CC/Synchronization.msi", # Microsoft Sync Framework Runtime v1.0 SP1 (x64)
@@ -2366,7 +2366,7 @@ if ($SCVMM.IsPresent)
         }
     If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCVMM -Destination $Sourcedir -unzip -WarningAction SilentlyContinue))
         {
-        Write-Warning "we could not receive scvmm"
+        Write-Warning " ==>we could not receive scvmm"
         return
         }
 
@@ -2386,7 +2386,7 @@ if ($SCOM.IsPresent)
 
     If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCOM -Destination $Sourcedir -unzip -WarningAction SilentlyContinue))
         {
-        Write-Warning "we could not receive scom"
+        Write-Warning " ==>we could not receive scom"
         return
         }
 
@@ -2462,7 +2462,7 @@ if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
             }
         else
             {
-            Write-Warning "we can only autodownload Cumulative Updates from ftp, please get $nw_ver from support.emc.com"
+            Write-Warning " ==>we can only autodownload Cumulative Updates from ftp, please get $nw_ver from support.emc.com"
             break
             }
 
@@ -2631,7 +2631,7 @@ if ($Dockerhost.IsPresent)
 
 $MyMaster = test-labmaster -Masterpath "$Masterpath" -Master $Master -mastertype vmware -Confirm:$Confirm 
 $MasterVMX = $mymaster.config		
-Write-Verbose "we got master $MasterVMX"
+Write-Verbose " ==>we got master $MasterVMX"
 
 
 
@@ -2653,7 +2653,7 @@ $Nodename = $DCNODE
 $CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
 if (test-vmx $DCNODE -WarningAction SilentlyContinue)
 {
-	Write-Host -ForegroundColor White  "Domaincontroller already deployed, Comparing Workorder Parameters with Running Environment"
+	Write-Host -ForegroundColor White  " ==>Domaincontroller already deployed, Comparing Workorder Parameters with Running Environment"
 	test-dcrunning
     if ( $AddressFamily -match 'IPv4' )
         {
@@ -2669,7 +2669,7 @@ if (test-vmx $DCNODE -WarningAction SilentlyContinue)
             {
             Write-Host -ForegroundColor Magenta " ==>we will configure Default Gateway at $MyGateway"
             $AddGateway  = "-DefaultGateway $MyGateway"
-            Write-Verbose -Message "we will add a Gateway with $AddGateway"
+            Write-Verbose -Message " ==>we will add a Gateway with $AddGateway"
             }
     else
         {
