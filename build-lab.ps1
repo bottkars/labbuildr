@@ -1082,7 +1082,7 @@ function domainjoin
         Write-Verbose $ToolState.State
         }
     until ($ToolState.state -match "running")
-	Write-Host -ForegroundColor Green "[success]"
+	# Write-Host -ForegroundColor Green "[success]"
     Write-Verbose "Paranoia, checking shared folders second time"
     $Folderstate = Set-VMXSharedFolderState -VMXName $nodename -config $CloneVMX -enabled
     Write-Verbose "Please Check inside VM for Network Warnings"
