@@ -15,4 +15,4 @@
 .\install-isi.ps1
 .\install-centos4scaleio.ps1
 .\start-scenario.ps1
-.\stop-scenario.ps1
+.\*-scenario.ps1

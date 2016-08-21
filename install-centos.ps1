@@ -1,9 +1,9 @@
 ﻿<#
 .Synopsis
-   .\install-scaleio.ps1 
+   .\install-scaleio.ps1
 .DESCRIPTION
   install-centos7_4scaleio is  the a vmxtoolkit solutionpack for configuring and deploying centos VM´s for ScaleIO Implementation
-      
+
       Copyright 2014 Karsten Bott
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -167,20 +167,20 @@ catch
     {
     Write-Warning "Required Master $Required_Master not found
     please download and extraxt $Required_Master to .\$Required_Master
-    see: 
+    see:
     ------------------------------------------------
     get-help $($MyInvocation.MyCommand.Name) -online
     ------------------------------------------------"
     exit
     }
 ####
-if (!$MasterVMX.Template) 
+if (!$MasterVMX.Template)
             {
             write-verbose "Templating Master VMX"
             $template = $MasterVMX | Set-VMXTemplate
             }
         $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
-        if (!$Basesnap) 
+        if (!$Basesnap)
         {
          Write-verbose "Base snap does not exist, creating now"
         $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
@@ -213,7 +213,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
             {
             $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
             Write-Host -ForegroundColor Gray " ==>Building new Disk $Diskname"
-            $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
+            $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path
             Write-Host -ForegroundColor Gray " ==>Adding Disk $Diskname to $($NodeClone.VMXname)"
             $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
             }
@@ -260,14 +260,14 @@ foreach ($Node in $machinesBuilt)
 			{
 			$Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | Out-Null
 			}
-        Write-Host -ForegroundColor Gray " ==>Adding Shared Folders"        
+        Write-Host -ForegroundColor Gray " ==>Adding Shared Folders"
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
 		if ($centos_ver -eq "7")
 			{
 			$Scriptblock = "systemctl disable iptables.service"
 			Write-Verbose $Scriptblock
 			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-    
+
 			$Scriptblock = "systemctl stop iptables.service"
 			Write-Verbose $Scriptblock
 			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
@@ -301,10 +301,10 @@ foreach ($Node in $machinesBuilt)
 		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  | Out-Null
         Write-Host -ForegroundColor Cyan " ==>Testing default Route, make sure that Gateway is reachable ( install and start OpenWRT )
         if failures occur, open a 2nd labbuildr windows and run start-vmx OpenWRT "
-   
+
         $Scriptblock = "DEFAULT_ROUTE=`$(ip route show default | awk '/default/ {print `$3}');ping -c 1 `$DEFAULT_ROUTE"
         Write-Verbose $Scriptblock
-        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile     
+        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
         ### preparing yum
         $file = "/etc/yum.conf"
         $Property = "cachedir"

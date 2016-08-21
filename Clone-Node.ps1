@@ -76,7 +76,7 @@ if (!(Get-ChildItem $MasterVMX -ErrorAction SilentlyContinue)) { write-host "Pan
 # Setting Base Snapshot upon First Run
 if (!($Master = get-vmx  -Path $MasterVMX))
     { Write-Error "where is our master ?! "
-    break 
+    break
     }
 write-verbose "Checking template"
 if (!($Master.Template))
@@ -121,7 +121,7 @@ $Content += 'sharedFolder0.expiration = "never"'
 $Content += 'sharedFolder.maxNum = "1"'
 
 switch ($Size)
-{ 
+{
 "XS"{
 $content += 'memsize = "512"'
 $Content += 'numvcpus = "1"'
@@ -167,14 +167,8 @@ $Content += 'virtualHW.version = "'+"$($Global:vmwareversion.Major)"+'"'
 Set-Content -Path $Clone.config -Value $content -Force
 $Clone | Set-VMXMainMemory -usefile:$false
 $Clone | Set-VMXDisplayName -DisplayName $Displayname
-#($Clone | Get-VMXConfig) | foreach-object {$_ -replace 'guestOS = "windows8srv-64"', 'guestOS = "winhyperv"' } | set-content $Clone.config
-#($Clone | Get-VMXConfig) | foreach-object {$_ -replace 'guestOS = "windows9srv-64"', 'guestOS = "winhyperv"' } | set-content $Clone.config
-
 $Clone | Set-VMXAnnotation -builddate -Line1 "This is node $Nodename for domain $Domainname"-Line2 "Adminpasswords: Password123!" -Line3 "Userpasswords: Welcome1"
-######### next commands will be moved in vmrunfunction soon 
-# KB , 06.10.2013 ##
 $Clone | Set-VMXAnnotation -builddate -Line1 "This is node $Nodename for domain $Domainname"-Line2 "Adminpasswords: Password123!" -Line3 "Userpasswords: Welcome1"
-
 if ($sql.IsPresent)
     {
     $Diskname =  "DATA_LUN.vmdk"
@@ -182,26 +176,25 @@ if ($sql.IsPresent)
     Write-Verbose "Adding Disk $Diskname to $($Clone.VMXname)"
     $AddDisk = $Clone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN 1 -Controller 0
     $Diskname =  "LOG_LUN.vmdk"
-    $Newdisk = New-VMXScsiDisk -NewDiskSize 100GB -NewDiskname $Diskname -Verbose -VMXName $Clone.VMXname -Path $Clone.Path 
+    $Newdisk = New-VMXScsiDisk -NewDiskSize 100GB -NewDiskname $Diskname -Verbose -VMXName $Clone.VMXname -Path $Clone.Path
     Write-Verbose "Adding Disk $Diskname to $($Clone.VMXname)"
     $AddDisk = $Clone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN 2 -Controller 0
     $Diskname =  "TEMPDB_LUN.vmdk"
-    $Newdisk = New-VMXScsiDisk -NewDiskSize 100GB -NewDiskname $Diskname -Verbose -VMXName $Clone.VMXname -Path $Clone.Path 
+    $Newdisk = New-VMXScsiDisk -NewDiskSize 100GB -NewDiskname $Diskname -Verbose -VMXName $Clone.VMXname -Path $Clone.Path
     Write-Verbose "Adding Disk $Diskname to $($Clone.VMXname)"
     $AddDisk = $Clone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN 3 -Controller 0
     $Diskname =  "TEMPLOG_LUN.vmdk"
-    $Newdisk = New-VMXScsiDisk -NewDiskSize 50GB -NewDiskname $Diskname -Verbose -VMXName $Clone.VMXname -Path $Clone.Path 
+    $Newdisk = New-VMXScsiDisk -NewDiskSize 50GB -NewDiskname $Diskname -Verbose -VMXName $Clone.VMXname -Path $Clone.Path
     Write-Verbose "Adding Disk $Diskname to $($Clone.VMXname)"
     $AddDisk = $Clone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN 4 -Controller 0
     }
-
 
 if ($AddDisks.IsPresent)
     {
     if ($SharedDisk.IsPresent)
         {
         $SCSI = "1"
-        $Clone | Set-VMXScsiController -SCSIController $SCSI -Type pvscsi
+        $Clone | Set-VMXScsiController -SCSIController $SCSI -Type pvscsi 
         }
     else
         {
@@ -211,22 +204,22 @@ if ($AddDisks.IsPresent)
         {
         $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
         Write-Verbose "Building new Disk $Diskname"
-        $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -VMXName $Clone.VMXname -Path $Clone.Path 
+        $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -VMXName $Clone.VMXname -Path $Clone.Path
         Write-Verbose "Adding Disk $Diskname to $($Clone.VMXname)"
         if ($SharedDisk.ispresent)
             {
             $AddDisk = $Clone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI -Shared
             }
         else
-            {    
+            {
             $AddDisk = $Clone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
             }
         }
     }
 
-Set-VMXActivationPreference -config $Clone.config -activationpreference $ActivationPreference
-Set-VMXscenario -config $Clone.config -Scenario $Scenario -Scenarioname $scenarioname
-Set-VMXscenario -config $Clone.config -Scenario 9 -Scenarioname labbuildr
+Set-VMXActivationPreference -config $Clone.config -activationpreference $ActivationPreference | Out-Null
+Set-VMXscenario -config $Clone.config -Scenario $Scenario -Scenarioname $scenarioname |Out-Null
+Set-VMXscenario -config $Clone.config -Scenario 9 -Scenarioname labbuildr | Out-Null
 if ($bridge.IsPresent)
     {
     write-verbose "configuring network for bridge"
@@ -234,7 +227,7 @@ if ($bridge.IsPresent)
     $Clone | Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -WarningAction SilentlyContinue
     $Clone | Set-VMXVnet -Adapter 0 -vnet $vmnet
     }
-elseif($NW -and $gateway.IsPresent) 
+elseif($NW -and $gateway.IsPresent)
     {
     write-verbose "configuring network for gateway"
     $Clone | Set-VMXNetworkAdapter -Adapter 1 -ConnectionType nat -AdapterType vmxnet3
