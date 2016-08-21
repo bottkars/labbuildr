@@ -1005,7 +1005,7 @@ function update-fromGit
                     }
                 else
                     {
-                    Write-Host -ForegroundColor Gray " ==>No update required for $repo on $branch, already newest version "
+                    Write-Host -ForegroundColor Gray " ==>no update required for $repo on $branch, already newest version "
                     }
 if ($Isnew) {return $true}
 }
