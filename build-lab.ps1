@@ -1077,7 +1077,7 @@ function domainjoin
         $domainadd = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script configure-node.ps1 -Parameter "-nodeip $Nodeip -nodename $Nodename -Domain $BuildDomain -domainsuffix $custom_domainsuffix -IPv4subnet $IPv4subnet -IPV6Subnet $IPv6Prefix -AddressFamily $AddressFamily -IPv4PrefixLength $IPv4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -IPv6Prefix $IPv6Prefix $AddGateway -AddOnfeatures '$AddonFeatures' $CommonParameter" -nowait -interactive # $CommonParameter
         }
     until ($domainadd -match "success")
-    # Write-Host -ForegroundColor Gray " ==>Waiting for Phase Domain Joined"
+    # Write-Host -ForegroundColor Gray " ==>waiting for Phase Domain Joined"
     do {
         $ToolState = Get-VMXToolsState -config $CloneVMX
         Write-Verbose $ToolState.State
@@ -1274,7 +1274,7 @@ function checkpoint-progress
 	$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$IN_Guest_UNC_Scriptroot\Node" -Script set-step.ps1 -nowait -interactive -Parameter " -step $step $AddParameter" # $CommonParameter
     if (!$Nowait.IsPresent)
         {
-	    write-Host -ForegroundColor Gray " ==>Waiting on reboot Checkpoint $step" -NoNewline
+	    write-Host -ForegroundColor Gray " ==>waiting on reboot Checkpoint $step" -NoNewline
         do {
             $ToolState = Get-VMXToolsState -config $CloneVMX
             Write-Verbose $ToolState.State
@@ -2713,7 +2713,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 			If ($CloneOK)
 			{
 		$NodeClone = Get-VMX -Path $CloneVMX
-				Write-Host -ForegroundColor Gray " ==>Waiting for firstboot finished"
+				Write-Host -ForegroundColor Gray " ==>waiting for firstboot finished"
 				test-user -whois Administrator
 				Write-Host -ForegroundColor Magenta " ==>Starting Customization"
 			    domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
@@ -2830,7 +2830,7 @@ switch ($PsCmdlet.ParameterSetName)
                 {
 				$NodeClone = Get-VMX -Path $CloneVMX
                 $EXnew = $True
-			    Write-Host -ForegroundColor Gray " ==>Waiting for firstboot finished"
+			    Write-Host -ForegroundColor Gray " ==>waiting for firstboot finished"
 			    test-user -whois Administrator
 			    domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $EXAddressFamiliy -AddOnfeatures $AddonFeatures
 			    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script prepare-disks.ps1
@@ -2849,7 +2849,7 @@ switch ($PsCmdlet.ParameterSetName)
             $CloneVMX = $Nodeclone.config
             #
 			test-user -whois Administrator
-            Write-Host -ForegroundColor White  "Waiting for Pass 4 ($EX_Version Installed) for $Nodename "
+            Write-Host -ForegroundColor White  " ==>waiting for Pass 4 ($EX_Version Installed) for $Nodename "
             #$EXSetupStart = Get-Date
 			While ($FileOK = (&$vmrun -gu $BuildDomain\Administrator -gp Password123! fileExistsInGuest $CloneVMX "$IN_Guest_LogDir\exchange.pass") -ne "The file exists.")
 				{
@@ -2958,7 +2958,7 @@ switch ($PsCmdlet.ParameterSetName)
         {
 		$NodeClone = Get-VMX -Path $CloneVMX
         $EXnew = $True
-		Write-Host -ForegroundColor Gray " ==>Waiting for firstboot finished"
+		Write-Host -ForegroundColor Gray " ==>waiting for firstboot finished"
 		test-user -whois Administrator
 		Write-Host -ForegroundColor Magenta " ==>Starting Customization"
 		domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $EXAddressFamiliy -AddOnfeatures $AddonFeatures
@@ -2980,7 +2980,7 @@ switch ($PsCmdlet.ParameterSetName)
 		$NodeClone = Get-VMX $Nodename
         $CloneVMX = $Nodeclone.config
 		test-user -whois Administrator
-        Write-Host -ForegroundColor White  "Waiting for Pass 4 (E15 Installed) for $Nodename "
+        Write-Host -ForegroundColor White  " ==>waiting for Pass 4 (E15 Installed) for $Nodename "
         #$EXSetupStart = Get-Date
 			While ($FileOK = (&$vmrun -gu $BuildDomain\Administrator -gp Password123! fileExistsInGuest $CloneVMX $IN_Guest_LogDir\exchange.pass) -ne "The file exists.")
 			{
@@ -3099,7 +3099,7 @@ switch ($PsCmdlet.ParameterSetName)
                 {
 				$NodeClone = Get-VMX -Path $CloneVMX
                 $EXnew = $True
-			    Write-Host -ForegroundColor Gray " ==>Waiting for firstboot finished"
+			    Write-Host -ForegroundColor Gray " ==>waiting for firstboot finished"
 			    test-user -whois Administrator
 			    #Write-Host -ForegroundColor Gray " ==>Starting Customization"
 			    domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $EXAddressFamiliy -AddOnfeatures $AddonFeatures
@@ -3133,7 +3133,7 @@ switch ($PsCmdlet.ParameterSetName)
 			$NodeClone = Get-VMX $Nodename
             $CloneVMX = $Nodeclone.config
 			test-user -whois Administrator
-            Write-Host -ForegroundColor White  "Waiting for Exchange Installed on $Nodename " -NoNewline
+            Write-Host -ForegroundColor White  " ==>waiting for Exchange Installed on $Nodename " -NoNewline
             #$EXSetupStart = Get-Date
 			$Sleep = 2
 			    While ($FileOK = (&$vmrun -gu $BuildDomain\Administrator -gp Password123! fileExistsInGuest $CloneVMX "$IN_Guest_LogDir\exchange.pass") -ne "The file exists.")
@@ -3303,7 +3303,7 @@ switch ($PsCmdlet.ParameterSetName)
             If ($CloneOK)
 			    {
 				$NodeClone = Get-VMX -Path $CloneVMX
-                Write-Host -ForegroundColor Gray " ==>Waiting for firstboot finished"
+                Write-Host -ForegroundColor Gray " ==>waiting for firstboot finished"
 				test-user -whois Administrator
 				Write-Host -ForegroundColor Gray " ==>Starting Customization"
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
@@ -3523,7 +3523,7 @@ switch ($PsCmdlet.ParameterSetName)
 			If ($CloneOK)
 				{
 				$NodeClone = Get-VMX -Path $CloneVMX
-				Write-Host -ForegroundColor Gray " ==>Waiting for firstboot finished"
+				Write-Host -ForegroundColor Gray " ==>waiting for firstboot finished"
 				test-user -whois Administrator
 				Write-Host -ForegroundColor Gray " ==>Starting Customization"
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddonFeatures $AddonFeatures
@@ -3583,7 +3583,7 @@ switch ($PsCmdlet.ParameterSetName)
 			If ($CloneOK)
 				{
 				$NodeClone = Get-VMX -Path $CloneVMX
-				Write-Host -ForegroundColor Gray "Waiting for firstboot finished"
+				Write-Host -ForegroundColor Gray " ==>waiting for firstboot finished"
 				test-user -whois Administrator
 				Write-Host -ForegroundColor Gray " ==>Starting Customization"
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
@@ -3687,7 +3687,7 @@ switch ($PsCmdlet.ParameterSetName)
 			If ($CloneOK)
 				{
 				$NodeClone = Get-VMX -Path $CloneVMX
-				Write-Host -ForegroundColor Gray " ==>Waiting for firstboot finished"
+				Write-Host -ForegroundColor Gray " ==>waiting for firstboot finished"
 				test-user -whois Administrator
 				Write-Host -ForegroundColor Gray " ==>Starting Customization"
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
@@ -3759,7 +3759,7 @@ switch ($PsCmdlet.ParameterSetName)
 			If ($CloneOK)
 				{
 				$NodeClone = Get-VMX -Path $CloneVMX
-				Write-Host -ForegroundColor Gray " ==>Waiting for firstboot finished"
+				Write-Host -ForegroundColor Gray " ==>waiting for firstboot finished"
 				test-user -whois Administrator
 				Write-Host -ForegroundColor Gray " ==>Starting Customization"
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
@@ -3820,7 +3820,7 @@ switch ($PsCmdlet.ParameterSetName)
 				$NodeClone = Get-VMX -Path $CloneVMX
 				write-verbose "Copy Configuration files, please be patient"
 				copy-tovmx -Sourcedir $IN_Guest_UNC_NodeScriptDir
-				Write-Host -ForegroundColor Gray " ==>Waiting for firstboot finished"
+				Write-Host -ForegroundColor Gray " ==>waiting for firstboot finished"
 				test-user -whois Administrator
 				Write-Host -ForegroundColor Gray " ==>Starting Customization"
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
