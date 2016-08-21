@@ -1997,14 +1997,14 @@ if (!$EXnodes)
     {$EXNodes = 1}
 if ($Blanknode.IsPresent)
 {
-	Write-Host -ForegroundColor Magenta " ==>we are going to Install $BlankNodes Blank Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
+	$Work_Items +=  " ==>we are going to Install $BlankNodes Blank Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
     Write-Host -ForegroundColor Magenta " ==>The Gateway will be $DefaultGateway"
 	if ($VTbit) { write-verbose "Virtualization will be enabled in the Nodes" }
 	if ($Cluster.IsPresent) { write-verbose "The Nodes will be Clustered" }
 }
 if ($SOFS.IsPresent)
 {
-	Write-Host -ForegroundColor Magenta " ==>we are going to Install $SOFSNODES SOFS Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
+	$Work_Items +=  " ==>we are going to Install $SOFSNODES SOFS Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
     if ($DefaultGateway.IsPresent){ Write-Host -ForegroundColor Magenta " ==>The Gateway will be $DefaultGateway"}
 	if ($Cluster.IsPresent) { write-verbose "The Nodes will be Clustered ( Single Node Clusters )" }
 }
@@ -2018,20 +2018,21 @@ if ($ScaleIO.IsPresent)
                 Write-Host -ForegroundColor Gray " ==>Need 3 nodes for ScaleIO, incrementing to 3"
                 $HyperVNodes = 3
                 }
-Write-Host -ForegroundColor Magenta " ==>we are going to Install ScaleIO on $HyperVNodes Hyper-V Nodes in cluster HV$($Clusternum)Cluster"
+$Work_Items +=  " ==>we are going to Install ScaleIO on $HyperVNodes Hyper-V Nodes in cluster HV$($Clusternum)Cluster"
     if ($DefaultGateway.IsPresent){ Write-Host -ForegroundColor Magenta " ==>The Gateway will be $DefaultGateway"}
 	# if ($Cluster.IsPresent) { write-verbose "The Nodes will be Clustered ( Single Node Clusters )" }
 }
 if ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG" -or $SPdbtype -eq "AlwaysOn")
 {
-	Write-Host -ForegroundColor Magenta " ==>we are going to Install an SQL Always On Cluster with $AAGNodes Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet"
+	$Work_Items +=  " ==>we are going to Install an SQL Always On Cluster with $AAGNodes Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet"
 	$AlwaysOn = $true
     # if ($NoNMM -eq $false) {Write-Host -ForegroundColor White  "Networker Modules will be installed on each Node"}
 }
 #if ($NWServer.IsPresent -or $NW.IsPresent)
 #################################################
 ## Download Sewction       ######################
-#################################################skale
+#################################################
+$Work_Items = $()
 Write-Host -ForegroundColor Magenta " ==>Entering Download Section"
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     {
@@ -2083,7 +2084,7 @@ if ($Exchange2010.IsPresent)
         }
 	    if ($DAG.IsPresent)
 	        {
-		    Write-Host -ForegroundColor Magenta " ==>we will form a $EX_Version $EXNodes-Node DAG"
+		    $Work_Items +=  " ==>we will form a $EX_Version $EXNodes-Node DAG"
 	        }
 }
 #########
@@ -2128,7 +2129,7 @@ if ($Exchange2013.IsPresent)
         }
 	    if ($DAG.IsPresent)
 	        {
-		    Write-Host -ForegroundColor Magenta " ==>we will form a $EX_Version $EXNodes-Node DAG"
+		    $Work_Items +=  " ==>we will form a $EX_Version $EXNodes-Node DAG"
 	        }
 }
 #########
@@ -2171,7 +2172,7 @@ if ($Exchange2016.IsPresent)
         }
 	    if ($DAG.IsPresent)
 	        {
-		    Write-Host -ForegroundColor Magenta " ==>we will form a $EXNodes-Node DAG"
+		    $Work_Items +=  " ==>we will form a $EXNodes-Node DAG"
 	        }
 }
 #########
@@ -2241,7 +2242,7 @@ if ($Sharepoint.IsPresent)
             Write-Verbose "Extracting $FileName"
             Start-Process -FilePath "$Sourcedir\$FileName" -ArgumentList "/extract:$Sourcedir\$SPver /quiet /passive" -Wait
             }
-    Write-Host -ForegroundColor Magenta " ==>we are going to Install Sharepoint 2013 in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet and SQL"
+    $Work_Items +=  " ==>we are going to Install Sharepoint 2013 in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet and SQL"
     }# end SPPREREQ
 if ($ConfigureVMM.IsPresent)
     {
@@ -2506,6 +2507,7 @@ $MasterVMX = $mymaster.config
 Write-Verbose " ==>we got master $MasterVMX"
 ##########################################
 Write-Host -ForegroundColor Magenta " ==>leaving download section"
+Write-Host -ForegroundColor Magenta $Work_Items
 if (!($SourceOK = test-source -SourceVer $Sourcever -SourceDir $Sourcedir))
 {
 	Write-Verbose "Sourcecomplete: $SourceOK"
@@ -2530,11 +2532,11 @@ if ($Nodeclone = get-vmx $DCNODE -WarningAction SilentlyContinue)
 	    $Checkdom = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$IN_Guest_UNC_Scriptroot\$DCNODE" -Script checkdom.ps1 # $CommonParameter
 	    $BuildDomain, $RunningIP, $VMnet, $MyGateway = test-domainsetup
 	    $IPv4Subnet = convert-iptosubnet $RunningIP
-	    Write-Host -ForegroundColor Magenta " ==>will Use Domain $BuildDomain and Subnet $IPv4Subnet.0 for on $VMnet the Running Workorder"
+	    $Work_Items +=  " ==>will Use Domain $BuildDomain and Subnet $IPv4Subnet.0 for on $VMnet the Running Workorder"
         $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
         If ($MyGateway)
             {
-            Write-Host -ForegroundColor Magenta " ==>we will configure Default Gateway at $MyGateway"
+            $Work_Items +=  " ==>we will configure Default Gateway at $MyGateway"
             $AddGateway  = "-DefaultGateway $MyGateway"
             Write-Verbose -Message " ==>we will add a Gateway with $AddGateway"
             }
