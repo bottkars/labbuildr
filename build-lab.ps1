@@ -1067,7 +1067,7 @@ function domainjoin
     $Origin = $MyInvocation.MyCommand
     if ($Toolsupdate.IsPresent)
         {
-        Write-Host -ForegroundColor Gray " ==>Preparing VMware Tools Upgrade by injecting tools CD ( update will start before next reboot of VM )"
+        Write-Host -ForegroundColor Gray " ==>preparing VMware Tools Upgrade by injecting tools CD ( update will start before next reboot of VM )"
         Start-Process 'C:\Program Files (x86)\VMware\VMware Workstation\vmrun.exe' -ArgumentList  "installTools $CloneVMX" -NoNewWindow
         }
 	do
@@ -2038,7 +2038,7 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
 ##### exchange downloads section
 if ($Exchange2010.IsPresent)
     {
-    Write-Host  -ForegroundColor White " ==>Preparing Exchange 2010 $e14_sp $e14_ur"
+    Write-Host  -ForegroundColor White " ==>preparing Exchange 2010 $e14_sp $e14_ur"
     if (!$e14_sp)
         {
         $e14_sp = $Latest_e14_sp
@@ -2087,7 +2087,7 @@ if ($Exchange2010.IsPresent)
 ##### exchange downloads section
 if ($Exchange2013.IsPresent)
     {
-    Write-Host  -ForegroundColor White " ==>Preparing Exchange 2013 $e15_cu"
+    Write-Host  -ForegroundColor White " ==>preparing Exchange 2013 $e15_cu"
     if (!$e15_cu)
         {
         $e15_cu = $Latest_e15_cu
@@ -2132,7 +2132,7 @@ if ($Exchange2013.IsPresent)
 ##### exchange 2016 downloads section
 if ($Exchange2016.IsPresent)
     {
-    Write-Host  -ForegroundColor White " ==>Preparing Exchange $EX_Version $e16_cu"
+    Write-Host  -ForegroundColor White " ==>preparing Exchange $EX_Version $e16_cu"
     if (!$e16_cu)
         {
         $e16_cu = $Latest_e16_cu
@@ -2587,7 +2587,7 @@ else
 		$NodeClone = Get-VMX -Path $CloneVMX
 		test-user -whois Administrator
         $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script new-dc.ps1 -Parameter "-dcname $DCName -Domain $BuildDomain -IPv4subnet $IPv4subnet -IPv4Prefixlength $IPv4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -IPv6Prefix $IPv6Prefix  -AddressFamily $AddressFamily $AddGateway $CommonParameter" -interactive -nowait
-        Write-Host -ForegroundColor White  " ==>Preparing Domain " -NoNewline
+        Write-Host -ForegroundColor White  " ==>preparing Domain " -NoNewline
         if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
             {
             write-verbose "verbose enabled, Please press any key within VM $Dcname"
@@ -2628,7 +2628,7 @@ else
 		test-user -whois Administrator
         if ($Toolsupdate.IsPresent)
             {
-            Write-Host -ForegroundColor Gray " ==>Preparing VMware Tools Upgrade by injecting tools CD ( update will start before next reboot of VM )"
+            Write-Host -ForegroundColor Gray " ==>preparing VMware Tools Upgrade by injecting tools CD ( update will start before next reboot of VM )"
             Start-Process 'C:\Program Files (x86)\VMware\VMware Workstation\vmrun.exe' -ArgumentList  "installTools $CloneVMX" -NoNewWindow
             }
 		$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script finish-domain.ps1 -Parameter "-domain $BuildDomain -domainsuffix $custom_domainsuffix $CommonParameter" -interactive -nowait
