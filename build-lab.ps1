@@ -1370,7 +1370,7 @@ switch ($PsCmdlet.ParameterSetName)
             }
         else
             {
-            Write-Host -ForegroundColor Gray " ==>No Deletions required"
+            Write-Host -ForegroundColor Gray " ==>no Deletions required"
             }
         ####
         $Repo = "labbuildr-scripts"
