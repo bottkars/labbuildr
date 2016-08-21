@@ -995,7 +995,7 @@ function update-fromGit
                     Write-Host -ForegroundColor Gray " ==>we found a newer Version for $repo on Git Dated $($request.Headers.'Last-Modified')"
                     if ($delete.IsPresent)
                         {
-                        Write-Verbose "Cleaning $Destination"
+                        Write-Host -ForegroundColor Gray "==>cleaning $Destination"
                         Remove-Item -Path $Destination -Recurse -ErrorAction SilentlyContinue
                         }
                     Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\$repo-$branch.zip" -ignoresize
