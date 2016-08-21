@@ -1188,7 +1188,7 @@ function test-user
 {
 	param ($whois)
 	$Origin = $MyInvocation.MyCommand
-	Write-Host -ForegroundColor Gray -NoNewline " ==>waiting for user $whois logged in"
+	Write-Host -ForegroundColor Gray -NoNewline " ==>waiting for user $whois logged in "
 	do
 		{
 		$sleep = 1
@@ -2810,7 +2810,6 @@ switch ($PsCmdlet.ParameterSetName)
                 {
 				$NodeClone = Get-VMX -Path $CloneVMX
                 $EXnew = $True
-			    Write-Host -ForegroundColor Gray " ==>waiting for firstboot finished"
 			    test-user -whois Administrator
 			    domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $EXAddressFamiliy -AddOnfeatures $AddonFeatures
 			    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script prepare-disks.ps1
@@ -3058,7 +3057,6 @@ switch ($PsCmdlet.ParameterSetName)
                 {
 				$NodeClone = Get-VMX -Path $CloneVMX
                 $EXnew = $True
-			    Write-Host -ForegroundColor Gray " ==>waiting for firstboot finished"
 			    test-user -whois Administrator
 			    domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $EXAddressFamiliy -AddOnfeatures $AddonFeatures
 			    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script prepare-disks.ps1
@@ -3250,7 +3248,6 @@ switch ($PsCmdlet.ParameterSetName)
             If ($CloneOK)
 			    {
 				$NodeClone = Get-VMX -Path $CloneVMX
-                Write-Host -ForegroundColor Gray " ==>waiting for firstboot finished"
 				test-user -whois Administrator
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
 				test-user Administrator
@@ -3434,7 +3431,6 @@ switch ($PsCmdlet.ParameterSetName)
 			If ($CloneOK)
 				{
 				$NodeClone = Get-VMX -Path $CloneVMX
-				Write-Host -ForegroundColor Gray " ==>waiting for firstboot finished"
 				test-user -whois Administrator
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddonFeatures $AddonFeatures
 				invoke-postsection -wait
@@ -3492,7 +3488,6 @@ switch ($PsCmdlet.ParameterSetName)
 			If ($CloneOK)
 				{
 				$NodeClone = Get-VMX -Path $CloneVMX
-				Write-Host -ForegroundColor Gray " ==>waiting for firstboot finished"
 				test-user -whois Administrator
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
                 $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script powerconf.ps1 -interactive
@@ -3591,7 +3586,6 @@ switch ($PsCmdlet.ParameterSetName)
 			If ($CloneOK)
 				{
 				$NodeClone = Get-VMX -Path $CloneVMX
-				Write-Host -ForegroundColor Gray " ==>waiting for firstboot finished"
 				test-user -whois Administrator
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
                 if ($NW.IsPresent)
@@ -3714,8 +3708,6 @@ switch ($PsCmdlet.ParameterSetName)
 				{
 				$NodeClone = Get-VMX -Path $CloneVMX
 				write-verbose "Copy Configuration files, please be patient"
-#				copy-tovmx -Sourcedir $IN_Guest_UNC_NodeScriptDir
-				Write-Host -ForegroundColor Gray " ==>waiting for firstboot finished"
 				test-user -whois Administrator
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
 				invoke-postsection -wait
