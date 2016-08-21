@@ -2505,7 +2505,7 @@ $MyMaster = test-labmaster -Masterpath "$Masterpath" -Master $Master -mastertype
 $MasterVMX = $mymaster.config
 Write-Verbose " ==>we got master $MasterVMX"
 ##########################################
-Write-Host -ForegroundColor Gray " ==>end download section"
+Write-Host -ForegroundColor Magenta " ==>leaving download section"
 if (!($SourceOK = test-source -SourceVer $Sourcever -SourceDir $Sourcedir))
 {
 	Write-Verbose "Sourcecomplete: $SourceOK"
