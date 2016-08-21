@@ -2570,7 +2570,7 @@ else
         Write-Verbose "Gateway : $DefaultGateway"
         }
 	Write-Host -ForegroundColor White " ==>we will Build Domain $BuildDomain and Subnet $IPv4subnet.0  on $VMnet for the Running Workorder"
-    Write-Host -ForegroundColor Gray " ==setting Language to $LanguageTag"
+    Write-Host -ForegroundColor Gray " ==>setting Language to $LanguageTag"
     if ($DefaultGateway){ Write-Host -ForegroundColor Magenta " ==>The Gateway will be $DefaultGateway"}
 	if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
         {
