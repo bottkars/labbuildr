@@ -916,7 +916,7 @@ function copy-tovmx
 	$incr = 1
 	foreach ($file in Get-ChildItem -Path $Sourcedir -file)
 	{
-		Write-Progress -Activity "Copy Files to $Nodename" -Status $file -PercentComplete (100/$count * $incr)
+		Write-Progress -Activity "Copy Files to $Nodename " -Status $file -PercentComplete (100/$count * $incr)
 		do
 		{
 			($cmdresult = &$vmrun -gu $Adminuser -gp $Adminpassword copyfilefromhosttoguest $CloneVMX $Sourcedir$file $IN_Guest_UNC_Scriptroot$file) 2>&1 | Out-Null
@@ -2720,7 +2720,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
                 invoke-postsection -wait
                 #Write-Host -ForegroundColor Magenta " ==>Setup Database Drives"
 			    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script prepare-disks.ps1 -interactive
-				##Write-Host -ForegroundColor Gray " ==>Starting $SQLVER Setup on $Nodename"
+				##Write-Host -ForegroundColor Gray " ==>Starting $SQLVER Setup on $Nodename "
 				$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $In_Guest_UNC_SQLScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -reboot" -interactive -nowait
                 $SQLSetupStart = Get-Date
 			}
@@ -2734,7 +2734,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 			    {
 				While ($FileOK = (&$vmrun -gu $builddomain\Administrator -gp Password123! fileExistsInGuest $AAGNode $IN_Guest_LogDir\sql.pass) -ne "The file exists.")
 				    {
-				    runtime $SQLSetupStart "$SQLVER $Nodename"
+				    runtime $SQLSetupStart "$SQLVER $Nodename "
 				    }
                 #Write-Host -ForegroundColor Gray " ==>setting SQL Server Roles on $AAGNode"
                 $script_invoke = invoke-vmxpowershell -config $AAGNode -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$IN_Guest_UNC_Scriptroot\SQL" -Script set-sqlroles.ps1 -interactive
@@ -2849,7 +2849,7 @@ switch ($PsCmdlet.ParameterSetName)
             $CloneVMX = $Nodeclone.config
             #
 			test-user -whois Administrator
-            Write-Host -ForegroundColor White  "Waiting for Pass 4 ($EX_Version Installed) for $Nodename"
+            Write-Host -ForegroundColor White  "Waiting for Pass 4 ($EX_Version Installed) for $Nodename "
             #$EXSetupStart = Get-Date
 			While ($FileOK = (&$vmrun -gu $BuildDomain\Administrator -gp Password123! fileExistsInGuest $CloneVMX "$IN_Guest_LogDir\exchange.pass") -ne "The file exists.")
 				{
@@ -2980,7 +2980,7 @@ switch ($PsCmdlet.ParameterSetName)
 		$NodeClone = Get-VMX $Nodename
         $CloneVMX = $Nodeclone.config
 		test-user -whois Administrator
-        Write-Host -ForegroundColor White  "Waiting for Pass 4 (E15 Installed) for $Nodename"
+        Write-Host -ForegroundColor White  "Waiting for Pass 4 (E15 Installed) for $Nodename "
         #$EXSetupStart = Get-Date
 			While ($FileOK = (&$vmrun -gu $BuildDomain\Administrator -gp Password123! fileExistsInGuest $CloneVMX $IN_Guest_LogDir\exchange.pass) -ne "The file exists.")
 			{
@@ -3133,7 +3133,7 @@ switch ($PsCmdlet.ParameterSetName)
 			$NodeClone = Get-VMX $Nodename
             $CloneVMX = $Nodeclone.config
 			test-user -whois Administrator
-            Write-Host -ForegroundColor White  "Waiting for Exchange Installed on $Nodename" -NoNewline
+            Write-Host -ForegroundColor White  "Waiting for Exchange Installed on $Nodename " -NoNewline
             #$EXSetupStart = Get-Date
 			$Sleep = 2
 			    While ($FileOK = (&$vmrun -gu $BuildDomain\Administrator -gp Password123! fileExistsInGuest $CloneVMX "$IN_Guest_LogDir\exchange.pass") -ne "The file exists.")
@@ -3295,7 +3295,7 @@ switch ($PsCmdlet.ParameterSetName)
                 }
 			###################################################
 			# Clone BAse Machine
-			Write-Host -ForegroundColor White  "creating Hyper-V Node  $Nodename"
+			Write-Host -ForegroundColor White  "creating Hyper-V Node  $Nodename "
 			# Write-Host -ForegroundColor White  "Hyper-V Development is still not finished and untested, be careful"
 			test-dcrunning
 			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $HVNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir $cloneparm"
@@ -3908,7 +3908,7 @@ switch ($PsCmdlet.ParameterSetName)
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NodePrefix"
     [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features,Web-Mgmt-Console, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI"
 	###################################################
-	Write-Host -ForegroundColor White  "creating Panorama Server $Nodename"
+	Write-Host -ForegroundColor White  "creating Panorama Server $Nodename "
   	Write-Verbose $IPv4Subnet
     write-verbose $Nodename
     write-verbose $Nodeip
@@ -3945,7 +3945,7 @@ switch ($PsCmdlet.ParameterSetName)
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NodePrefix"
     [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS"
 	###################################################
-	Write-Host -ForegroundColor White  "creating SRM Server $Nodename"
+	Write-Host -ForegroundColor White  "creating SRM Server $Nodename "
   	Write-Verbose $IPv4Subnet
     write-verbose $Nodename
     write-verbose $Nodeip
@@ -3988,7 +3988,7 @@ switch ($PsCmdlet.ParameterSetName)
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NodePrefix"
     [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, Desktop-Experience"
 	###################################################
-	Write-Host -ForegroundColor White  "creating APPSYNC Server $Nodename"
+	Write-Host -ForegroundColor White  "creating APPSYNC Server $Nodename "
   	Write-Verbose $IPv4Subnet
     write-verbose $Nodename
     write-verbose $Nodeip
@@ -4031,7 +4031,7 @@ switch ($PsCmdlet.ParameterSetName)
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\SCOM"
     $In_Guest_UNC_SQLScriptDir = "$IN_Guest_UNC_Scriptroot\sql\"
 	###################################################
-	Write-Host -ForegroundColor White  "creating $SC_Version Server $Nodename"
+	Write-Host -ForegroundColor White  "creating $SC_Version Server $Nodename "
   	Write-Verbose $IPv4Subnet
     write-verbose $Nodename
     write-verbose $Nodeip
@@ -4109,7 +4109,7 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
     [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features"
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NWNODE"
 	###################################################
-	Write-Host -ForegroundColor White  " ==>creating Networker Server $Nodename"
+	Write-Host -ForegroundColor White  " ==>creating Networker Server $Nodename "
   	Write-Verbose $IPv4Subnet
     write-verbose $Nodename
     write-verbose "Node has ip: $Nodeip"
