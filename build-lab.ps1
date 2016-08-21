@@ -2038,7 +2038,6 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
 ##### exchange downloads section
 if ($Exchange2010.IsPresent)
     {
-    Write-Host  -ForegroundColor White " ==>preparing Exchange 2010 $e14_sp $e14_ur"
     if (!$e14_sp)
         {
         $e14_sp = $Latest_e14_sp
@@ -2087,7 +2086,6 @@ if ($Exchange2010.IsPresent)
 ##### exchange downloads section
 if ($Exchange2013.IsPresent)
     {
-    Write-Host  -ForegroundColor White " ==>preparing Exchange 2013 $e15_cu"
     if (!$e15_cu)
         {
         $e15_cu = $Latest_e15_cu
@@ -2132,7 +2130,6 @@ if ($Exchange2013.IsPresent)
 ##### exchange 2016 downloads section
 if ($Exchange2016.IsPresent)
     {
-    Write-Host  -ForegroundColor White " ==>preparing Exchange $EX_Version $e16_cu"
     if (!$e16_cu)
         {
         $e16_cu = $Latest_e16_cu
