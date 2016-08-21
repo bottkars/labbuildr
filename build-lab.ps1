@@ -1144,7 +1144,6 @@ function test-dcrunning
 		if ((get-vmx $DCNODE).state -ne "running")
 		    {
 			Write-Host -ForegroundColor White  " ==>Domaincontroller not running, we need to start him first"
-            Write-Host -ForegroundColor Gray " ==>Starting DCNODE"
 			$Started = get-vmx $DCNODE | Start-vmx
 		    }
 	}#end if
@@ -2672,7 +2671,6 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 {
 		# we need a DC, so check it is running
 		test-dcrunning
-		Write-Host -ForegroundColor White  "Avalanching SQL Install on $AAGNodes Always On Nodes"
         $ListenerIP = "$IPv4Subnet.169"
         $IN_Guest_UNC_ScenarioScriptDir = Join-Path $IN_Guest_UNC_Scriptroot "AAG"
         $In_Guest_UNC_SQLScriptDir = Join-Path $IN_Guest_UNC_Scriptroot "SQL"
@@ -2709,9 +2707,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 			If ($CloneOK)
 			{
 		$NodeClone = Get-VMX -Path $CloneVMX
-				Write-Host -ForegroundColor Gray " ==>waiting for firstboot finished"
 				test-user -whois Administrator
-				Write-Host -ForegroundColor Magenta " ==>Starting Customization"
 			    domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
                 invoke-postsection -wait
 			    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script prepare-disks.ps1 -interactive
@@ -2759,7 +2755,6 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 switch ($PsCmdlet.ParameterSetName)
 {
 "E14"{
-        Write-Host -ForegroundColor Magenta " ==>Starting $EX_Version $e14_sp Setup"
         $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$EX_Version"
         $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, Server-Media-Foundation"
         $AddonFeatures = "$AddonFeatures, NET-Framework-Features,NET-HTTP-Activation,RPC-over-HTTP-proxy,RSAT-Clustering,Web-Mgmt-Console,WAS-Process-Model,Web-Asp-Net,Web-Basic-Auth,Web-Client-Auth,Web-Digest-Auth,Web-Dir-Browsing,Web-Dyn-Compression,Web-Http-Errors,Web-Http-Logging,Web-Http-Redirect,Web-Http-Tracing,Web-ISAPI-Ext,Web-ISAPI-Filter,Web-Lgcy-Mgmt-Console,Web-Metabase,Web-Net-Ext,Web-Request-Monitor,Web-Server,Web-Static-Content,Web-Windows-Auth,Web-WMI"
@@ -2774,7 +2769,6 @@ switch ($PsCmdlet.ParameterSetName)
         }
         if ($DAG.IsPresent)
             {
-            Write-Host -ForegroundColor Gray " ==>Running $EX_Version Avalanche Install"
             $AddonFeatures = "$AddonFeatures, Failover-Clustering, RSAT-Clustering"
             if ($DAGNOIP.IsPresent)
 			    {
@@ -2900,7 +2894,6 @@ switch ($PsCmdlet.ParameterSetName)
     if ($DAG.IsPresent)
         {
         $AddonFeatures = "$AddonFeatures, Failover-Clustering"
-        Write-Host -ForegroundColor Gray " ==>Running E15 Avalanche Install"
         if ($DAGNOIP.IsPresent)
 			{
 			$DAGIP = ([System.Net.IPAddress])::None
@@ -2941,9 +2934,7 @@ switch ($PsCmdlet.ParameterSetName)
         {
 		$NodeClone = Get-VMX -Path $CloneVMX
         $EXnew = $True
-		Write-Host -ForegroundColor Gray " ==>waiting for firstboot finished"
 		test-user -whois Administrator
-		Write-Host -ForegroundColor Magenta " ==>Starting Customization"
 		domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $EXAddressFamiliy -AddOnfeatures $AddonFeatures
 		$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script prepare-disks.ps1
 		$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchangeprereqs.ps1 -interactive
@@ -3011,7 +3002,6 @@ switch ($PsCmdlet.ParameterSetName)
 } #End Switchblock Exchange
 "E16"
 	{
-        Write-Host -ForegroundColor Magenta " ==>Starting $EX_Version $e16_cu Setup"
         $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\E2016"
             $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features"
             $AddonFeatures = "$AddonFeatures, RSAT-DNS-Server, AS-HTTP-Activation, Desktop-Experience, NET-Framework-45-Features, RPC-over-HTTP-proxy, RSAT-Clustering, RSAT-Clustering-CmdInterface, RSAT-Clustering-Mgmt, RSAT-Clustering-PowerShell, Web-Mgmt-Console, WAS-Process-Model, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI, Windows-Identity-Foundation"
@@ -3027,7 +3017,6 @@ switch ($PsCmdlet.ParameterSetName)
         if ($DAG.IsPresent)
             {
             $AddonFeatures = "$AddonFeatures, Failover-Clustering"
-            Write-Host -ForegroundColor Gray " ==>Running e16 Avalanche Install"
             if ($DAGNOIP.IsPresent)
 			    {
 				$DAGIP = ([System.Net.IPAddress])::None
@@ -3263,7 +3252,6 @@ switch ($PsCmdlet.ParameterSetName)
 				$NodeClone = Get-VMX -Path $CloneVMX
                 Write-Host -ForegroundColor Gray " ==>waiting for firstboot finished"
 				test-user -whois Administrator
-				Write-Host -ForegroundColor Gray " ==>Starting Customization"
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
 				test-user Administrator
 				$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script configure-hyperv.ps1 -interactive
@@ -3448,7 +3436,6 @@ switch ($PsCmdlet.ParameterSetName)
 				$NodeClone = Get-VMX -Path $CloneVMX
 				Write-Host -ForegroundColor Gray " ==>waiting for firstboot finished"
 				test-user -whois Administrator
-				Write-Host -ForegroundColor Gray " ==>Starting Customization"
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddonFeatures $AddonFeatures
 				invoke-postsection -wait
 			}# end Cloneok
@@ -3507,7 +3494,6 @@ switch ($PsCmdlet.ParameterSetName)
 				$NodeClone = Get-VMX -Path $CloneVMX
 				Write-Host -ForegroundColor Gray " ==>waiting for firstboot finished"
 				test-user -whois Administrator
-				Write-Host -ForegroundColor Gray " ==>Starting Customization"
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
                 $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script powerconf.ps1 -interactive
                 $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-spprereqs.ps1 -interactive
@@ -3607,7 +3593,6 @@ switch ($PsCmdlet.ParameterSetName)
 				$NodeClone = Get-VMX -Path $CloneVMX
 				Write-Host -ForegroundColor Gray " ==>waiting for firstboot finished"
 				test-user -whois Administrator
-				Write-Host -ForegroundColor Gray " ==>Starting Customization"
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
                 if ($NW.IsPresent)
                     {
@@ -3672,9 +3657,7 @@ switch ($PsCmdlet.ParameterSetName)
 			If ($CloneOK)
 				{
 				$NodeClone = Get-VMX -Path $CloneVMX
-				Write-Host -ForegroundColor Gray " ==>waiting for firstboot finished"
 				test-user -whois Administrator
-				Write-Host -ForegroundColor Gray " ==>Starting Customization"
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
                 if ($NW.IsPresent)
                     {
@@ -3731,10 +3714,9 @@ switch ($PsCmdlet.ParameterSetName)
 				{
 				$NodeClone = Get-VMX -Path $CloneVMX
 				write-verbose "Copy Configuration files, please be patient"
-				copy-tovmx -Sourcedir $IN_Guest_UNC_NodeScriptDir
+#				copy-tovmx -Sourcedir $IN_Guest_UNC_NodeScriptDir
 				Write-Host -ForegroundColor Gray " ==>waiting for firstboot finished"
 				test-user -whois Administrator
-				Write-Host -ForegroundColor Gray " ==>Starting Customization"
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
 				invoke-postsection -wait
 			}# end Cloneok
@@ -3774,9 +3756,7 @@ switch ($PsCmdlet.ParameterSetName)
 		If ($CloneOK)
 			{
 			$NodeClone = Get-VMX -Path $CloneVMX
-			Write-Host -ForegroundColor Gray " ==>Waiting for firstboot finished"
 			test-user -whois Administrator
-			Write-Host -ForegroundColor Gray " ==>Starting Customization"
 			domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
 			invoke-postsection -wait
             $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script prepare-disks.ps1
@@ -3817,9 +3797,7 @@ switch ($PsCmdlet.ParameterSetName)
 	If ($CloneOK)
 		{
 		$NodeClone = Get-VMX -Path $CloneVMX
-		Write-Host -ForegroundColor Gray " ==>Waiting for firstboot finished"
 		test-user -whois Administrator
-		Write-Host -ForegroundColor Gray " ==>Starting Customization"
 		domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddonFeatures $AddonFeatures
 		While (([string]$UserLoggedOn = (&$vmrun -gu Administrator -gp Password123! listProcessesInGuest $CloneVMX)) -notmatch "owner=$BuildDomain\\Administrator") { write-host -NoNewline "." }
         Write-Host -ForegroundColor Gray " ==>Building Panorama Server"
@@ -3853,9 +3831,7 @@ switch ($PsCmdlet.ParameterSetName)
 	If ($CloneOK)
 		{
 		$NodeClone = Get-VMX -Path $CloneVMX
-		Write-Host -ForegroundColor Gray " ==>Waiting for firstboot finished"
 		test-user -whois Administrator
-		Write-Host -ForegroundColor Gray " ==>Starting Customization"
 		domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddonFeatures $AddonFeatures
 		While (([string]$UserLoggedOn = (&$vmrun -gu Administrator -gp Password123! listProcessesInGuest $CloneVMX)) -notmatch "owner=$BuildDomain\\Administrator") { write-host -NoNewline "." }
         if ($NW.IsPresent)
@@ -3894,9 +3870,7 @@ switch ($PsCmdlet.ParameterSetName)
 	If ($CloneOK)
 	{
 		$NodeClone = Get-VMX -Path $CloneVMX
-		Write-Host -ForegroundColor Gray " ==>Waiting for firstboot finished"
 		test-user -whois Administrator
-		Write-Host -ForegroundColor Gray " ==>Starting Customization"
 		domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddonFeatures $AddonFeatures
 		While (([string]$UserLoggedOn = (&$vmrun -gu Administrator -gp Password123! listProcessesInGuest $CloneVMX)) -notmatch "owner=$BuildDomain\\Administrator") { write-host -NoNewline "." }
         if ($NW.IsPresent)
@@ -3934,9 +3908,7 @@ switch ($PsCmdlet.ParameterSetName)
 	If ($CloneOK)
 	{
 		$NodeClone = Get-VMX -Path $CloneVMX
-		Write-Host -ForegroundColor Gray " ==>Waiting for firstboot finished"
 		test-user -whois Administrator
-		Write-Host -ForegroundColor Gray " ==>Starting Customization"
 		domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddonFeatures $AddonFeatures
 		While (([string]$UserLoggedOn = (&$vmrun -gu Administrator -gp Password123! listProcessesInGuest $CloneVMX)) -notmatch "owner=$BuildDomain\\Administrator") { write-host -NoNewline "." }
         if ($NW.IsPresent)
@@ -4016,9 +3988,7 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
 	If ($CloneOK)
 	    {
 		$NodeClone = Get-VMX -Path $CloneVMX
-		Write-Host -ForegroundColor Gray
 		test-user -whois Administrator
-		Write-Host -ForegroundColor Gray " ==>Starting Customization"
 		domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddonFeatures $AddonFeatures
 		# Setup Networker
 		While (([string]$UserLoggedOn = (&$vmrun -gu Administrator -gp Password123! listProcessesInGuest $CloneVMX)) -notmatch "owner=$BuildDomain\\Administrator") { write-host -NoNewline "." }
