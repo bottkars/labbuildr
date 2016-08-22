@@ -2717,9 +2717,10 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 			$NodeClone = Get-VMX -Path $CloneVMX
 			###### Check for all SQl Setups Done .. ####
 			Write-Host -ForegroundColor Magenta " ==>Checking SQL INSTALLED and Rebooted on All Machines"
-			foreach ($AAGNode in $AAGLIST)
+			foreach ($CconeVMX in $AAGLIST)
 			    {
-				While ($FileOK = (&$vmrun -gu $builddomain\Administrator -gp Password123! fileExistsInGuest $AAGNode $IN_Guest_LogDir\sql.pass) -ne "The file exists.")
+				$NodeClone = Get-VMX -Path $CloneVMX
+				While ($FileOK = (&$vmrun -gu $builddomain\Administrator -gp Password123! fileExistsInGuest $CloneVMX $IN_Guest_LogDir\sql.pass) -ne "The file exists.")
 				    {
 				    runtime $SQLSetupStart "$SQLVER $Nodename "
 				    }
