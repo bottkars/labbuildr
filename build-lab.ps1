@@ -2500,7 +2500,10 @@ $MasterVMX = $mymaster.config
 Write-Verbose " ==>we got master $MasterVMX"
 ##########################################
 Write-Host -ForegroundColor Magenta " ==>leaving download section"
-Write-Host -ForegroundColor Magenta $Work_Items
+if ($Work_Items)
+	{ 
+	Write-Host -ForegroundColor Magenta $Work_Items
+	}
 if (!($SourceOK = test-source -SourceVer $Sourcever -SourceDir $Sourcedir))
 {
 	Write-Verbose "Sourcecomplete: $SourceOK"
