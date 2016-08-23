@@ -210,17 +210,13 @@ switch ($PsCmdlet.ParameterSetName)
             [uint64]$Disksize = 100GB
             if ($Disks -ne 0)
                 {
-				$Vdisks = @()
-                foreach ($LUN in (1..$Disks))
+                foreach ($LUN in (1..($Disks+2)))
                     {
-					$Vdisks += "vdisk_$LUN"
-					$LUN = $LUN+2
                     $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
                     $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
                     $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
                     }
                 }
-			$Vdisks = $Vdisks -join ","
             [string]$ip="$($subnet.ToString()).$($ipoffset.ToString())"
             $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
             $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
@@ -259,7 +255,14 @@ switch ($PsCmdlet.ParameterSetName)
 				$Network = $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/sudo -n /EMC/Platform/bin/svc_initial_config -4 '192.168.2.85 255.255.255.0 192.168.2.4'" -Guestuser $guestuser -Guestpassword $guestpassword -SleepSec 60 -Confirm:$False -WarningAction SilentlyContinue
 				$UEMCLI = $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/uemcli -u admin -p $oldpasswd /sys/eula set -agree yes" -Guestuser $guestuser -Guestpassword $guestpassword -SleepSec 5 -Confirm:$False -WarningAction SilentlyContinue
 				$UEMCLI = $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/uemcli -u admin -p $oldpasswd /user/account -id user_admin set -passwd $Password -oldpasswd $oldpasswd" -Guestuser $guestuser -Guestpassword $guestpassword 
-                $UEMCLI = $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/uemcli -u admin -p $Password /stor/config/pool create -name vPool -descr 'labbuildr pool' -disk $Vdisks"
+				$Vdisks =  @()
+					foreach ($Disk in 1..$Disks)
+						{
+						$UEMCLI = $Nodeclone | Invoke-VMXBash -Scriptblock "/usr/bin/uemcli -u admin -p $Password /env/disk -id vdisk_$Disk set -tier extreme" -Guestuser $guestuser -Guestpassword $guestpassword 
+						$vdisks += "vdisk_$Disk"
+						}
+				$Vdisks = $Vdisks -join ","
+                $UEMCLI = $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/uemcli -u admin -p $Password /stor/config/pool create -name vPool -descr 'labbuildr pool' -disk $Vdisks" -Guestuser $guestuser -Guestpassword $guestpassword 
 				if ($Lic_file)
 					{
 					Write-Host -ForegroundColor Gray " ==>Trying to license with provided licfile"
