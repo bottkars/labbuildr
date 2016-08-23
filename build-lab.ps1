@@ -1461,7 +1461,8 @@ Write-Host
 ####################################################
 if (!(test-path (Join-path $builddir $scripts )))
 	{
-	Write-Warning "labbuildr changed the sriptdir to $Scripts. we can not find scripts $Scripts, please run buildr-lab -update -force"
+	Write-Warning "labbuildr changed the sriptdir to $Scripts. we can not find scripts $Scripts, please run
+	 .\build-lab.ps1 -update -force"
 	Break
 	}
 
