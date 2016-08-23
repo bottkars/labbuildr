@@ -890,7 +890,7 @@ $Scenarioname = "default"
 $Scenario = 1
 $AddonFeatures = ("RSAT-ADDS", "RSAT-ADDS-TOOLS", "AS-HTTP-Activation", "NET-Framework-45-Features")
 $Gatewayhost = "11"
-$Host_ScriptDir = "$Builddir\$Scripts\"
+$Default_Host_ScriptDir = Join-Path = $Builddir $Scripts
 $IN_Guest_UNC_Scriptroot = "\\vmware-host\Shared Folders\$Scripts"
 $IN_Guest_UNC_Sourcepath = "\\vmware-host\Shared Folders\Sources"
 $IN_Guest_UNC_NodeScriptDir = "$IN_Guest_UNC_Scriptroot\Node"
@@ -1167,17 +1167,18 @@ function test-dcrunning
 function test-domainsetup
 {
 	test-dcrunning
-    Write-Host -ForegroundColor Gray " ==>testing shared folders on DCNODE"
+	$DC_Scriptdir = Join-Path $Default_Host_ScriptDir $DCNODE
+	Write-Host -ForegroundColor Gray " ==>testing shared folders on DCNODE"
     $enable_Folders =  get-vmx $DCNODE | Set-VMXSharedFolderState -Enabled
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing Domain Name ...: "
-	$holdomain = Get-Content "$Builddir\$Scripts\$DCNODE\domain.txt"
+	$holdomain = Get-Content (Join-path $DC_Scriptdir "domain.txt")
 	Write-Host -ForegroundColor White  $holdomain
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing Subnet.........: "
-	$DomainIP = Get-Content "$Builddir\$Scripts\$DCNODE\ip.txt"
+	$DomainIP = Get-Content (Join-path $DC_Scriptdir "ip.txt")
 	$IPv4subnet = convert-iptosubnet $DomainIP
 	Write-Host -ForegroundColor White  $ipv4Subnet
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing Default Gateway: "
-	$DomainGateway = Get-Content "$Builddir\$Scripts\$DCNODE\Gateway.txt"
+	$DomainGateway = Get-Content (Join-path $DC_Scriptdir "Gateway.txt")
 	Write-Host -ForegroundColor White  $DomainGateway
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing VMnet .........: "
     $MyVMnet = (get-vmx .\DCNODE | Get-VMXNetwork -WarningAction SilentlyContinue).network
@@ -1374,7 +1375,7 @@ switch ($PsCmdlet.ParameterSetName)
         $Repo = "labbuildr-scripts"
         $RepoLocation = "bottkars"
         $Latest_local_git = $Latest_labbuildr_scripts_git
-        $Destination = "$Builddir\$Scripts"
+        $Destination = "$Default_Host_ScriptDir"
         $Has_update = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -delete
         foreach ($Repo in $labbuildr_modules_required)
             {
@@ -2689,7 +2690,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 			$Nodename = "AAGNODE" + $AAGNODE
 			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
 			$AAGLIST += $CloneVMX
-            #$In_Guest_UNC_SQLScriptDir = "$Builddir\$Scripts\sql\"
+            #$In_Guest_UNC_SQLScriptDir = "$Default_Host_ScriptDir\sql\"
             $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features, Failover-Clustering, RSAT-Clustering, WVR"
             ###################################################
 			Write-Verbose $IPv4Subnet
@@ -3413,7 +3414,7 @@ switch ($PsCmdlet.ParameterSetName)
 			$Nodeip = "$IPv4Subnet.21$Node"
 			$Nodename = "SOFSNode$Node"
 			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
-			$Host_ScriptDir = "$Builddir\$Scripts\SOFS\"
+			$Host_ScriptDir = "$Default_Host_ScriptDir\SOFS\"
             $Size = "XL"
 			###################################################
 			# we need a DC, so check it is running
@@ -3633,7 +3634,7 @@ switch ($PsCmdlet.ParameterSetName)
             $NamePrefix = "Docker"
 		    $Nodename = "$NamePrefix$NodePrefix$Node"
 			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
-			$Host_ScriptDir = "$Builddir\$Scripts\$NamePrefix\"
+			$Host_ScriptDir = "$Default_Host_ScriptDir\$NamePrefix\"
 			$IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NamePrefix\"
             #$ClusterIP = "$IPv4Subnet.180"
 			###################################################
