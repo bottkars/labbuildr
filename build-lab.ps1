@@ -1272,7 +1272,7 @@ function checkpoint-progress
 	$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$IN_Guest_UNC_Scriptroot\Node" -Script set-step.ps1 -nowait -interactive -Parameter " -step $step $AddParameter" # $CommonParameter
     if (!$Nowait.IsPresent)
         {
-	    write-Host -ForegroundColor Gray " ==>waiting on reboot Checkpoint $step" -NoNewline
+	    write-Host -ForegroundColor Gray " ==>waiting on reboot Checkpoint $step " -NoNewline
         do {
             $ToolState = Get-VMXToolsState -config $CloneVMX
             Write-Verbose $ToolState.State
@@ -3994,9 +3994,23 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
             {
             checkpoint-progress -step networker -reboot
             }
-        Write-Host -ForegroundColor Gray " ==>Waiting for NSR Media Daemon to start"
-#		While (([string]$UserLoggedOn = (&$vmrun -gu Administrator -gp Password123! listProcessesInGuest $CloneVMX)) -notmatch "nsrd.exe") { write-host -NoNewline "." }
-		test-user -whois Administrator 
+        Write-Host -ForegroundColor Gray " ==>Waiting for NSR Media Daemon to start "
+		While (([string]$UserLoggedOn = (&$vmrun -gu Administrator -gp Password123! listProcessesInGuest $CloneVMX)) -notmatch "nsrd.exe")
+			{
+			$sleep = 1
+			foreach ($i in (1..$sleep)) 
+				{
+				Write-Host -ForegroundColor Yellow "-`b" -NoNewline
+				sleep 1
+				Write-Host -ForegroundColor Yellow "\`b" -NoNewline
+				sleep 1
+				Write-Host -ForegroundColor Yellow "|`b" -NoNewline
+				sleep 1
+				Write-Host -ForegroundColor Yellow "/`b" -NoNewline
+				sleep 1
+				}
+			}
+		write-host -ForegroundColor Green "[started]"
 		$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script nsruserlist.ps1 -interactive
 		$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script create-nsrdevice.ps1 -interactive -Parameter "-AFTD AFTD1"
         If ($DefaultGateway -match $Nodeip){
