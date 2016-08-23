@@ -1,4 +1,3 @@
-.\labbuildr\
 .\scaleio.ps1
 .\viprmaster\viprmaster.ovf
 .\Disks
@@ -8,7 +7,6 @@
 .\import-viprova.ps1
 .\install-scaleio.ps1
 .\get-*.ps1
-.\deletefiles.txt
 .\install-isi8.ps1
 .\install-rdostack.ps1
 .\Install\
@@ -18,3 +16,4 @@
 .\*-scenario.ps1
 .\Scripts
 .\install-dockerhost.ps1
+.\deletefiles.txt
