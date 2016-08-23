@@ -204,10 +204,8 @@ $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
 $machinesBuilt = @()
 foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     {
-        Write-Host -ForegroundColor White "Checking for $Nodeprefix$node"
         If (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue))
         {
-        Write-Host -ForegroundColor Magenta "==>Creating $Nodeprefix$node"
         try
             {
             $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node # -clonepath $Builddir
@@ -219,21 +217,15 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
             }
         If ($Node -eq 1){$Primary = $NodeClone}
         $Config = Get-VMXConfig -config $NodeClone.config
-        Write-Host -ForegroundColor Gray " ==>Tweaking Config"
-        Write-Host -ForegroundColor Gray " ==>Creating Disks"
         foreach ($LUN in (1..$Disks))
             {
             $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-            Write-Host -ForegroundColor Gray " ==>Building new Disk $Diskname"
             $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-            Write-Host -ForegroundColor Gray " ==>Adding Disk $Diskname to $($NodeClone.VMXname)"
             $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
             }
-        Write-Host -ForegroundColor Gray " ==>Setting NIC0 to HostOnly"
         $Netadapter = Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config
         if ($vmnet)
             {
-            Write-Host -ForegroundColor Gray " ==>Configuring NIC 0 for $vmnet"
             Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config -WarningAction SilentlyContinue | Out-Null
             Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config | Out-Null
             }
@@ -246,11 +238,9 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
             $NodeClone | Set-VMXmemory -MemoryMB 3072 | Out-Null
             }#>
         $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname Ubuntu -Scenario 7
-		Write-Host -ForegroundColor Gray " ==>setting VM size to $Size"
         $mysize = $NodeClone |Set-VMXSize -config $NodeClone.Config -Size $Size
 
         $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
-        Write-Host -ForegroundColor Gray " ==>Starting $Nodeprefix$Node"
         start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
         $machinesBuilt += $($NodeClone.cloneName).tolower()
         }
@@ -266,7 +256,6 @@ foreach ($Node in $machinesBuilt)
     {
         $ip="$subnet.$ip_startrange"
         $NodeClone = get-vmx $Node
-        Write-Host -ForegroundColor Magenta " ==>Waiting for $node to boot"
 
         do {
             $ToolState = Get-VMXToolsState -config $NodeClone.config
@@ -274,15 +263,10 @@ foreach ($Node in $machinesBuilt)
             sleep 5
             }
         until ($ToolState.state -match "running")
-		Write-Host -ForegroundColor Magenta " ==>configuring  $node, will be reachable with $ip"
 		$installmessage += "==>Configuration for $Node`n"
 		$installmessage += " ==>Node $node is reachable vi ssh $ip with root or $Default_Guestuser`n"
-        Write-Host -ForegroundColor Gray " ==>Setting Shared Folders"
         $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
-        # $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources # | Out-Null
-        Write-Host -ForegroundColor Gray " ==>Adding Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
-        
         If ($ubuntu_ver -match "15")
             {
             $Scriptblock = "systemctl disable iptables.service"
@@ -302,7 +286,6 @@ foreach ($Node in $machinesBuilt)
 
             }
 
-        Write-Host -ForegroundColor Gray " ==>Configuring SSH"
         $Scriptblock = "sed -i '/PermitRootLogin without-password/ c\PermitRootLogin yes' /etc/ssh/sshd_config"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
@@ -338,21 +321,17 @@ foreach ($Node in $machinesBuilt)
 		Write-Verbose $Scriptblock
 		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword #  -logfile $Logfile  
 
-    
-		$Scriptblock = "sed -i 's/^.*\bDefaults    requiretty\b.*$/Defaults    !requiretty/' /etc/sudoers"
+ 		$Scriptblock = "sed -i 's/^.*\bDefaults    requiretty\b.*$/Defaults    !requiretty/' /etc/sudoers"
 		Write-Verbose $Scriptblock
 		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  
 
-        Write-Host -ForegroundColor Magenta "==> Configuring Guest network for $netdev"
         $Scriptblock = "echo 'auto lo' > /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-
         $Scriptblock = "echo 'iface lo inet loopback' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-
 
         $Scriptblock = "echo 'auto $netdev' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
@@ -362,12 +341,10 @@ foreach ($Node in $machinesBuilt)
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-        Write-Host -ForegroundColor Gray " ==>Setting IP $ip for $netdev"
         $Scriptblock = "echo 'address $ip' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-        Write-Host -ForegroundColor Gray " ==>Setting Gateway $DefaultGateway"
         $Scriptblock = "echo 'gateway $DefaultGateway' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
@@ -384,7 +361,6 @@ foreach ($Node in $machinesBuilt)
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         
-        Write-Host -ForegroundColor Gray " ==>Setting DNS $DNS1 $DNS2"
         $Scriptblock = "echo 'dns-nameservers $DNS1 $DNS2' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
@@ -393,12 +369,10 @@ foreach ($Node in $machinesBuilt)
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         
-        Write-Host -ForegroundColor Gray " ==>setting hostname $Node"
         $Scriptblock = "echo '127.0.0.1       localhost' > /etc/hosts; echo '$ip $Node $Node.$BuildDomain.$Custom_DomainSuffix' >> /etc/hosts; hostname $Node"
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         $Scriptblock = "hostnamectl set-hostname $Node"
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-		Write-Host -ForegroundColor Magenta "==> Restarting Guest Network"
 
         switch ($ubuntu_ver)
             {

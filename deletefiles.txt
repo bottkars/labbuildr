@@ -17,3 +17,4 @@
 .\start-scenario.ps1
 .\*-scenario.ps1
 .\Scripts
+.\install-dockerhost.ps1

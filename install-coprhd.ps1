@@ -192,7 +192,7 @@ if (!$MasterVMX.Template)
         $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
         if (!$Basesnap) 
         {
-         Write-verbose "Base snap does not exist, creating now"
+        Write-verbose "Base snap does not exist, creating now"
         $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
         }
 $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
@@ -200,20 +200,14 @@ if (!(Test-path $Scriptdir ))
     {
     $CoprHD_Dir = New-Item -ItemType Directory $Scriptdir -Force
     }
-
-	    Write-Host -ForegroundColor Magenta "Checking for $Nodename"
         If (!(get-vmx $Nodename -WarningAction SilentlyContinue))
         {
-        write-host -ForegroundColor White " ==>Creating $Nodename"
         $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodename -clonepath $Builddir
         If ($Node -eq 1){$Primary = $NodeClone}
         $Config = Get-VMXConfig -config $NodeClone.config
-        Write-Host -ForegroundColor Gray " ==>Tweaking Config"
-        Write-Host -ForegroundColor Gray " ==>Setting NIC0 to HostOnly"
         Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config | Out-Null
         if ($vmnet)
             {
-            Write-Host -ForegroundColor Gray " ==>Configuring NIC 0 for $vmnet"
             Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config -WarningAction SilentlyContinue| Out-Null
             Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config | Out-Null
             }
@@ -221,15 +215,11 @@ if (!(Test-path $Scriptdir ))
         $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
         $Annotation = $NodeClone | Set-VMXAnnotation -Line1 "rootuser:$Rootuser" -Line2 "rootpasswd:$Guestpassword" -Line3 "Guestuser:$Guestuser" -Line4 "Guestpassword:$Guestpassword" -Line5 "labbuildr by @sddc_guy" -builddate
         $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname $Nodeprefix -Scenario 6
-        # $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
-        Write-Host -ForegroundColor Gray " ==>Setting VM Size"
         $NodeClone | Set-VMXprocessor -Processorcount 4 | Out-Null
         $NodeClone | Set-VMXmemory -MemoryMB 6144 | Out-Null
         $Config = $Nodeclone | Get-VMXConfig
         $Config = $Config -notmatch "ide1:0.fileName"
         $Config | Set-Content -Path $NodeClone.config 
-        
-        write-host -ForegroundColor Magenta "Starting Virtual Machine $($NodeClone.CloneName)"
         start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
         $machinesBuilt += $($NodeClone.cloneName)
 
@@ -239,20 +229,14 @@ if (!(Test-path $Scriptdir ))
             sleep 5
             }
         until ($ToolState.state -match "running")
-        Write-Host -ForegroundColor Gray " ==>Setting Shared Folders enabled"
         $NodeClone | Set-VMXSharedFolderState -enabled |Out-Null
-        Write-Host -ForegroundColor Gray " ==>Cleaning Shared Folders"
         $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | out-null 
-        Write-Host -ForegroundColor Gray " ==>Adding $Sourcedir to Shared Folders"        
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir |Out-Null
-        Write-Host -ForegroundColor Gray " ==>Configuring Network with $IP for $Nodename"
         $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -suse -device eno16777984 -Peerdns -DNS1 "$DNS1" -DNSDOMAIN "$BuildDomain.$custom_domainsuffix" -Hostname "$Nodename"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
-        Write-Host -ForegroundColor Gray " ==>Restarting Network, please be patient"
         $NodeClone | Invoke-VMXBash -Scriptblock "/sbin/rcnetwork restart" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         
 		Write-Host -ForegroundColor Magenta " ==>Starting customization, all commands will be logged in $logfile on host, use tail -f $logfile on console/ssh"
 		###  ssh section
-		Write-Host -ForegroundColor Gray " ==>Configuring SSH Access"
 		$Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa"
 		Write-Verbose $Scriptblock
 		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  
@@ -278,7 +262,6 @@ if (!(Test-path $Scriptdir ))
 		Write-Host -ForegroundColor Gray " ==>ssh configuration finished"     
 		#### end ssh  
 	
-		Write-Host -ForegroundColor Gray " ==>Starting zypper Tasks, this may take a while"
         $Scriptblock = "sed '\|# cachedir = /var/cache/zypp|icachedir = /mnt/hgfs/Sources/$OS/zypp/\n' /etc/zypp/zypp.conf -i"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
@@ -286,7 +269,6 @@ if (!(Test-path $Scriptdir ))
         $Scriptblock = "sudo zypper modifyrepo -k --all"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
-
     
         $Scriptblock = "sudo zypper ref"
         Write-Verbose $Scriptblock
@@ -295,16 +277,15 @@ if (!(Test-path $Scriptdir ))
         $Scriptblock = "zypper --non-interactive install --no-recommends git make; echo $?"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
-
            
-        Write-Host -ForegroundColor Gray " ==>Cloning into CoprHD"
         $Scriptblock = "git clone https://review.coprhd.org/scm/ch/coprhd-controller.git"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
 		
 
         Write-Host -ForegroundColor Gray " ==>Running Installation Tasks"
-        $Components = ('installRepositories','installPackages','installNginx','installJava 8','installStorageOS')
+        $Components = ('installRepositories','installPackages','installJava 8','installStorageOS')
+#        $Components = ('installRepositories','installPackages','installNginx','installJava 8','installStorageOS')
         Foreach ($component in $Components)
             {
             Write-Host -ForegroundColor Gray " ==>Running Task $component"

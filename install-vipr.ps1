@@ -192,7 +192,6 @@ foreach ($Disk in $Disks)
 
 # & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck  --name=$targetname $masterpath\viprmaster.ovf $PSScriptRoot 
 Write-Verbose " Copy base vm config to new master"
-
 Copy-Item $PSScriptRoot\scripts\viprmaster\viprmaster.vmx $targetname\$targetname.vmx
 $vmx = get-vmx $targetname
 $vmx | Set-VMXTemplate -unprotect
@@ -200,7 +199,6 @@ $vmx | Set-VMXNetworkAdapter -Adapter 0 -AdapterType vmxnet3 -ConnectionType cus
 $vmx | Set-VMXVnet -Adapter 0 -vnet $vmnet
 $vmx | Set-VMXDisplayName -DisplayName $targetname
 Write-Verbose "Generating CDROM"
-
 Write-Verbose "Creating OVFenvironment"
 $ovfenv = '<?xml version="1.0" encoding="UTF-8"?>
 <Environment
