@@ -30,7 +30,8 @@ Param(
 [switch]$Bridge,
 [switch]$Gateway,
 [switch]$sql,
-$Sourcedir
+$Sourcedir,
+$Scripts = "labbuildr-scripts"
 # $Machinetype
 )
 # $SharedFolder = "Sources"
@@ -245,7 +246,7 @@ $Clone | Start-VMX
 if (!$Isilon.IsPresent)
     {
     $Clone | Set-VMXSharedFolderState -enabled
-    $Clone | Set-VMXSharedFolder -add -Sharename Scripts -Folder "$Builddir\Scripts"
+    $Clone | Set-VMXSharedFolder -add -Sharename Scripts -Folder (join-path $Builddir $Scripts)
     Write-verbose "waiting for Pass 1 (sysprep Finished)"
     Write-Host -ForegroundColor Gray " ==>waiting for Sysprep finished " -NoNewline
 	test-user -whois Administrator
