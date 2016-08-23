@@ -902,6 +902,11 @@ $Java7_Url = "https://labbuildrmaster.blob.core.windows.net/master/Java/jre-7u80
 # labbuildr special statics
 $my_repo = "labbuildr"
 $labbuildr_modules_required = ('labtools','vmxtoolkit')
+if (!(testpath (Join-path $builddir $scripts )))
+	{
+	Write-Warning "labbuildr changed the sriptdir to $Scripts. we can not find scripts $Scripts, please run buildr-lab -update  a second time"
+	Break
+	}
 #$IN_Guest_UNC_NodeScriptDir = "$IN_Guest_UNC_Scriptroot\Node"
 ##################
 ### VMrun Error Condition help to tune the Bug wher the VMRUN Command can not communicate with the Host !
