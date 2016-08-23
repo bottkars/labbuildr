@@ -884,7 +884,7 @@ $SPPrefix = "SP2013"
 $Sleep = 10
 [string]$Sources = "Sources"
 $Sourcedirdefault = "c:\$Sources"
-[string]$Scripts = "labbuildr-sripts"
+[string]$Scripts = "labbuildr-scripts"
 $Buildname = Split-Path -Leaf $Builddir
 $Scenarioname = "default"
 $Scenario = 1
@@ -1461,7 +1461,7 @@ Write-Host
 ####################################################
 if (!(test-path (Join-path $builddir $scripts )))
 	{
-	Write-Warning "labbuildr changed the sriptdir to $Scripts. we can not find scripts $Scripts, please run
+	Write-Warning "labbuildr changed the scriptdir to $Scripts. we can not find scripts $Scripts, please run
 	 .\build-lab.ps1 -update -force"
 	Break
 	}
