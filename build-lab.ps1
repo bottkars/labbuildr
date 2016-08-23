@@ -2714,19 +2714,20 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 		} ## end foreach AAGNODE
 		If ($CloneOK)
 		{
-			$NodeClone = Get-VMX -Path $CloneVMX
+			# $NodeClone = Get-VMX -Path $CloneVMX
 			###### Check for all SQl Setups Done .. ####
 			Write-Host -ForegroundColor Magenta " ==>Checking SQL INSTALLED and Rebooted on All Machines"
 			foreach ($CloneVMX in $AAGLIST)
 			    {
-				$NodeClone = Get-VMX -Path $CloneVMX
+                Write-Host "Testing $CloneVMX"
+                $NodeClone = Get-VMX -Path $CloneVMX
 				While ($FileOK = (&$vmrun -gu $builddomain\Administrator -gp Password123! fileExistsInGuest $CloneVMX $IN_Guest_LogDir\sql.pass) -ne "The file exists.")
 				    {
 				    runtime $SQLSetupStart "$SQLVER $Nodename "
 				    }
-                $script_invoke = invoke-vmxpowershell -config $AAGNode -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$IN_Guest_UNC_Scriptroot\SQL" -Script set-sqlroles.ps1 -interactive
+                $script_invoke = $nodeclone | invoke-vmxpowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$IN_Guest_UNC_Scriptroot\SQL" -Script set-sqlroles.ps1 -interactive
 			    } # end aaglist
-			write-host
+			$NodeClone = Get-VMX -Path $CloneVMX
 	        $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix 'AAGNODE' -IPAddress '$IPv4Subnet.160' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
 			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script enable-aag.ps1 -interactive
 			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script create-aag.ps1 -interactive -Parameter "-Nodeprefix 'AAGNODE' -AgName '$AAGName' -DatabaseList 'AdventureWorks2012' -BackupShare '\\vmware-host\Shared Folders\Sources\AWORKS' -IPv4Subnet $IPv4Subnet -IPV6Prefix $IPV6Prefix -AddressFamily $AddressFamily $CommonParameter"
