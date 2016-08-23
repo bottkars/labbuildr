@@ -259,7 +259,7 @@ switch ($PsCmdlet.ParameterSetName)
 				$Network = $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/sudo -n /EMC/Platform/bin/svc_initial_config -4 '192.168.2.85 255.255.255.0 192.168.2.4'" -Guestuser $guestuser -Guestpassword $guestpassword -SleepSec 60 -Confirm:$False -WarningAction SilentlyContinue
 				$UEMCLI = $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/uemcli -u admin -p $oldpasswd /sys/eula set -agree yes" -Guestuser $guestuser -Guestpassword $guestpassword -SleepSec 5 -Confirm:$False -WarningAction SilentlyContinue
 				$UEMCLI = $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/uemcli -u admin -p $oldpasswd /user/account -id user_admin set -passwd $Password -oldpasswd $oldpasswd" -Guestuser $guestuser -Guestpassword $guestpassword 
-                $UEMCLI = $Nodes | Invoke-VMXBash -Scriptblock "/usr/bin/uemcli -u admin -p $Password /stor/config/pool create -name vPool -descr 'labbuildr pool' -disk $Vdisks"
+                $UEMCLI = $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/uemcli -u admin -p $Password /stor/config/pool create -name vPool -descr 'labbuildr pool' -disk $Vdisks"
 				if ($Lic_file)
 					{
 					Write-Host -ForegroundColor Gray " ==>Trying to license with provided licfile"
