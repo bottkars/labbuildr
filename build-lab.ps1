@@ -891,6 +891,8 @@ $Scenario = 1
 $AddonFeatures = ("RSAT-ADDS", "RSAT-ADDS-TOOLS", "AS-HTTP-Activation", "NET-Framework-45-Features")
 $Gatewayhost = "11"
 $Default_Host_ScriptDir = Join-Path $Builddir $Scripts
+$DC_Scriptdir = Join-Path $Default_Host_ScriptDir $DCNODE
+$DCNode_VMX = Join-Path $Builddir (Join-Path $DCNODE "$DCNODE.vmx")
 $IN_Guest_UNC_Scriptroot = "\\vmware-host\Shared Folders\$Scripts"
 $IN_Guest_UNC_Sourcepath = "\\vmware-host\Shared Folders\Sources"
 $IN_Guest_UNC_NodeScriptDir = "$IN_Guest_UNC_Scriptroot\Node"
@@ -1137,22 +1139,21 @@ function write-log
 #>
 function test-dcrunning
 {
-	$Origin = $MyInvocation.MyCommand
-    if (!$NoDomainCheck.IsPresent){
-	if (Test-Path "$Builddir\$DCNODE\$DCNODE.vmx" -WarningAction SilentlyContinue)
+$Origin = $MyInvocation.MyCommand
+if (!$NoDomainCheck.IsPresent)
 	{
-		if ((get-vmx $DCNODE).state -ne "running")
-		    {
-			Write-Host -ForegroundColor White  " ==>Domaincontroller not running, we need to start him first"
-			$Started = get-vmx $DCNODE | Start-vmx
-		    }
-	}#end if
+	$DomainController = get-vmx $DCNODE
+	if ($DomainController.state -ne "running")
+		{
+		Write-Host -ForegroundColor White  " ==>Domaincontroller not running, we need to start him first"
+		$Started = get-vmx $DCNODE | Start-vmx
+		}
 	else
-	{
+		{
 		debug " ==>Domaincontroller not found, giving up"
 		break
-	}#end else
-} # end nodomaincheck
+		}#end else
+	} # end nodomaincheck
 } #end test-dcrunning
 <#
 	.SYNOPSIS
@@ -1167,7 +1168,6 @@ function test-dcrunning
 function test-domainsetup
 {
 	test-dcrunning
-	$DC_Scriptdir = Join-Path $Default_Host_ScriptDir $DCNODE
 	Write-Host -ForegroundColor Gray " ==>testing shared folders on DCNODE"
     $enable_Folders =  get-vmx $DCNODE | Set-VMXSharedFolderState -Enabled
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing Domain Name ...: "
@@ -1181,7 +1181,7 @@ function test-domainsetup
 	$DomainGateway = Get-Content (Join-path $DC_Scriptdir "Gateway.txt")
 	Write-Host -ForegroundColor White  $DomainGateway
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing VMnet .........: "
-    $MyVMnet = (get-vmx .\DCNODE | Get-VMXNetwork -WarningAction SilentlyContinue).network
+    $MyVMnet = (get-vmx $DCNODE | Get-VMXNetwork -WarningAction SilentlyContinue).network
 	Write-Host -ForegroundColor White  $MyVMnet
 	Write-Output $holdomain, $Domainip, $VMnet, $DomainGateway
 } #end
