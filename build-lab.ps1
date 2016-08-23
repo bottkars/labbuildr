@@ -1142,17 +1142,16 @@ function test-dcrunning
 $Origin = $MyInvocation.MyCommand
 if (!$NoDomainCheck.IsPresent)
 	{
-	$DomainController = get-vmx $DCNODE
-	if ($DomainController.state -ne "running")
+	if ((get-vmx $DCNODE).state -ne "running")
 		{
 		Write-Host -ForegroundColor White  " ==>Domaincontroller not running, we need to start him first"
 		$Started = get-vmx $DCNODE | Start-vmx
+		if (!$started)
+			{
+			debug " ==>Domaincontroller not found, giving up"
+			break
+			}#end else	
 		}
-	else
-		{
-		debug " ==>Domaincontroller not found, giving up"
-		break
-		}#end else
 	} # end nodomaincheck
 } #end test-dcrunning
 <#
