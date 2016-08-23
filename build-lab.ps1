@@ -890,7 +890,7 @@ $Scenarioname = "default"
 $Scenario = 1
 $AddonFeatures = ("RSAT-ADDS", "RSAT-ADDS-TOOLS", "AS-HTTP-Activation", "NET-Framework-45-Features")
 $Gatewayhost = "11"
-$Default_Host_ScriptDir = Join-Path = $Builddir $Scripts
+$Default_Host_ScriptDir = Join-Path $Builddir $Scripts
 $IN_Guest_UNC_Scriptroot = "\\vmware-host\Shared Folders\$Scripts"
 $IN_Guest_UNC_Sourcepath = "\\vmware-host\Shared Folders\Sources"
 $IN_Guest_UNC_NodeScriptDir = "$IN_Guest_UNC_Scriptroot\Node"
