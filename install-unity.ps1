@@ -254,7 +254,7 @@ switch ($PsCmdlet.ParameterSetName)
 				$StopWatch.Stop()
 				Write-host -ForegroundColor White "Firstboot took $($StopWatch.Elapsed.ToString())"
 				Write-Host -ForegroundColor White " ==>Waiting for $($NodeClone.Clonename) to become ready, the network config may need to wait up to 5 Minutes"
-				$Network = $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/sudo -n /EMC/Platform/bin/svc_initial_config -4 '$ip 255.255.255.0 $Gateway'" -Guestuser $guestuser -Guestpassword $guestpassword -SleepSec 60 -Confirm:$False -WarningAction SilentlyContinue
+				$Network = $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/sudo -n /EMC/Platform/bin/svc_initial_config -4 '$ip 255.255.255.0 $DefaultGateway'" -Guestuser $guestuser -Guestpassword $guestpassword -SleepSec 60 -Confirm:$False -WarningAction SilentlyContinue
 				$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/uemcli -u admin -p $oldpasswd /sys/eula set -agree yes" -Guestuser $guestuser -Guestpassword $guestpassword -SleepSec 5 -Confirm:$False -WarningAction SilentlyContinue
 				$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/uemcli -u admin -p $oldpasswd /user/account -id user_admin set -passwd $Password -oldpasswd $oldpasswd" -Guestuser $guestuser -Guestpassword $guestpassword 
 				$uemcli = "/usr/bin/uemcli -u admin -p $Password"
@@ -273,7 +273,7 @@ switch ($PsCmdlet.ParameterSetName)
 					$FileCopy = $NodeClone | Copy-VMXFile2Guest -Sourcefile $Lic_file -targetfile $Target_lic -Guestuser $guestuser -Guestpassword $guestpassword
 					$cmdline = $Nodeclone | Invoke-VMXBash -Scriptblock "$uemcli -upload -f $Target_lic license" -Guestuser $guestuser -Guestpassword $guestpassword 
 					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/config/pool create -name vPool -descr 'labbuildr pool' -disk $Vdisks" -Guestuser $guestuser -Guestpassword $guestpassword 
-					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/if create -type iscsi -port spa_eth0 -addr $ip_if0 -netmask 255.255.255.0 -gateway $Gateway" -Guestuser $guestuser -Guestpassword $guestpassword 
+					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/if create -type iscsi -port spa_eth0 -addr $ip_if0 -netmask 255.255.255.0 -gateway $DefaultGateway" -Guestuser $guestuser -Guestpassword $guestpassword 
 					}
 				}
 			If (!$configure.IsPresent)
