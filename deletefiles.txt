@@ -16,3 +16,4 @@
 .\install-centos4scaleio.ps1
 .\start-scenario.ps1
 .\*-scenario.ps1
+.\Scripts
