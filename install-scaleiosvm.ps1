@@ -59,8 +59,8 @@ The extracte OVA will be dehydrated to a VMware Workstation Master #>
 [Parameter(ParameterSetName = "sdsonly",Mandatory=$false)]
 [Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateRange(1,3)][int32]$Disks = 3,
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
-[Parameter(ParameterSetName = "sdsonly",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
+[Parameter(ParameterSetName = "install",Mandatory=$true)]
+[Parameter(ParameterSetName = "sdsonly",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet,
 <# Name of the domain, .$Custom_DomainSuffix added#>
 [Parameter(ParameterSetName = "sdsonly",Mandatory=$false)]
 [Parameter(ParameterSetName = "install",Mandatory=$False)]
