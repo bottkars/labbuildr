@@ -110,7 +110,7 @@ $Content = $Content | where {$_ -notmatch "numvcpus"}
 $Content = $Content | where {$_ -notmatch "sharedFolder"}
 $Content = $Content | where {$_ -notmatch "svga.autodetecct"}
 $Content = $Content | where {$_ -notmatch "gui.applyHostDisplayScalingToGuest"}
-$Content += 'gui.applyHostDisplayScalingToGuest = "True"'
+$Content += 'gui.applyHostDisplayScalingToGuest = "False"'
 $Content += 'svga.autodetect = "TRUE" '
 #$Content += 'sharedFolder0.present = "TRUE"'
 #$Content += 'sharedFolder0.enabled = "TRUE"'
