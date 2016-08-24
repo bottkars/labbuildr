@@ -2575,7 +2575,7 @@ else
         else
             {
 			$Sleep = 1
-		    While ($FileOK = (&$vmrun -gu $Adminuser -gp $Adminpassword fileExistsInGuest $CloneVMX $IN_Guest_LogDir\2.pass) -ne "The file exists.")
+		    While (!($Nodeclone | Test-VMXFileInGuest -Guestuser $Adminuser -Guestpassword $Adminpassword -Filename c:\scripts\2.pass))
 				{
 				foreach ($i in (1..$sleep))
 					{
