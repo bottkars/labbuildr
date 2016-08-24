@@ -1150,7 +1150,7 @@ function test-user
 	do
 		{
 		$sleep = 1
-		[string]$cmdresult = $Nodeclone | Get-VMXProcessesInGuest -Guestuser $Adminuser -Guestpassword $Adminpassword | Out-Null
+		$cmdresult = $Nodeclone | Get-VMXProcessesInGuest -Guestuser $Adminuser -Guestpassword $Adminpassword
 		foreach ($i in (1..$sleep))
 			{
 			Write-Host -ForegroundColor Yellow "-`b" -NoNewline
@@ -2575,7 +2575,7 @@ else
         else
             {
 			$Sleep = 2
-		    While ($FileOK = (&$vmrun -gu Administrator -gp Password123! fileExistsInGuest $CloneVMX $IN_Guest_LogDir\2.pass) -ne "The file exists.")
+		    While ($FileOK = (&$vmrun -gu $Adminuserser -gp $Adminpassword fileExistsInGuest $CloneVMX $IN_Guest_LogDir\2.pass) -ne "The file exists.")
 				{
 				foreach ($i in (1..$sleep))
 					{
@@ -2595,7 +2595,7 @@ else
         if ($Toolsupdate.IsPresent)
             {
             Write-Host -ForegroundColor Gray " ==>preparing VMware Tools Upgrade by injecting tools CD ( update will start before next reboot of VM )"
-            Start-Process 'C:\Program Files (x86)\VMware\VMware Workstation\vmrun.exe' -ArgumentList  "installTools $CloneVMX" -NoNewWindow
+            Start-Process $Global:vmrun -ArgumentList  "installTools $CloneVMX" -NoNewWindow
             }
 		$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script finish-domain.ps1 -Parameter "-domain $BuildDomain -domainsuffix $custom_domainsuffix $CommonParameter" -interactive -nowait
 		Write-Host -ForegroundColor White  " ==>creating Domain $BuildDomain " -NoNewline
