@@ -1163,8 +1163,8 @@ function test-user
 			sleep 1
 			}
 	}
-	until (($cmdresult -match $whois) -and (($cmdresult -ne "") -and $VMrunErrorCondition -notcontains $cmdresult))
-	Write-Host	"[success]"
+until (($cmdresult -match $whois) -and ($VMrunErrorCondition -notcontains $cmdresult -or (!$cmdresult)))
+Write-Host	"[success]"
 }
 function test-source
 {
