@@ -2574,8 +2574,8 @@ else
             }
         else
             {
-			$Sleep = 2
-		    While ($FileOK = (&$vmrun -gu $Adminuserser -gp $Adminpassword fileExistsInGuest $CloneVMX $IN_Guest_LogDir\2.pass) -ne "The file exists.")
+			$Sleep = 1
+		    While ($FileOK = (&$vmrun -gu $Adminuser -gp $Adminpassword fileExistsInGuest $CloneVMX $IN_Guest_LogDir\2.pass) -ne "The file exists.")
 				{
 				foreach ($i in (1..$sleep))
 					{
