@@ -753,6 +753,11 @@ $myself = $Myself_ps1.TrimEnd(".ps1")
 #$AddressFamily = 'IPv4'
 $IPv4PrefixLength = '24'
 $Builddir = $PSScriptRoot
+if (Test-Path $env:SystemRoot\system32\ntdll.dll)
+	{
+	$runonos = "win_x86_64"
+	}
+
 If ($ConfirmPreference -match "none")
     {$Confirm = $false}
 <#else
@@ -786,24 +791,6 @@ if ([String]::IsNullOrEmpty($PSCmdlet.MyInvocation.BoundParameters['branch']))
     }
 Write-Verbose "Branch = $branch"
 Write-Verbose "Current Branch = $Current_labbuildr_branch"
-<#
-try
-    {
-    $verlabbuildr = New-Object System.Version (Get-Content  ($Builddir + "\labbuildr4.version") -ErrorAction Stop).Replace("-",".")
-    }
-catch
-    {
-    $verlabbuildr = "00.0000"
-    }
-try
-    {
-    $vervmxtoolkit = New-Object System.Version (Get-Content  ($Builddir + "\vmxtoolkit.version") -ErrorAction Stop).Replace("-",".")
-    }
-catch
-    {
-    $vervmxtoolkit = "00.0000"
-    }
-#>
 try
     {
     [datetime]$Latest_labbuildr_git = Get-Content  ($Builddir + "\labbuildr-$branch.gitver") -ErrorAction Stop
@@ -845,7 +832,6 @@ try
     [datetime]$Latest_SIOToolKit_git = "07/11/2015"
     }
 ################## Statics
-$LogFile = "$Builddir\$(Get-Content env:computername).log"
 $WAIKVER = "WAIK"
 $custom_domainsuffix = "local"
 $AAGDB = "AWORKS"
@@ -875,7 +861,6 @@ $SIOToolKit_Branch = "master"
 $NW85_requiredJava = "jre-7u61-windows-x64"
 $Adminuser = "Administrator"
 $Adminpassword = "Password123!"
-$Dots = [char]58
 $WAIKVER = "WAIK"
 $DCNODE = "DCNODE"
 $NWNODE = "NWSERVER"
@@ -910,25 +895,6 @@ $Host.UI.RawUI.WindowTitle = "$Buildname"
 ###################################################
 # main function go here
 ###################################################
-function copy-tovmx
-{
-	param ($Sourcedir)
-	$Origin = $MyInvocation.MyCommand
-	$count = (Get-ChildItem -Path $Sourcedir -file).count
-	$incr = 1
-	foreach ($file in Get-ChildItem -Path $Sourcedir -file)
-	{
-		Write-Progress -Activity "Copy Files to $Nodename " -Status $file -PercentComplete (100/$count * $incr)
-		do
-		{
-			($cmdresult = &$vmrun -gu $Adminuser -gp $Adminpassword copyfilefromhosttoguest $CloneVMX $Sourcedir$file $IN_Guest_UNC_Scriptroot$file) 2>&1 | Out-Null
-			write-log "$origin $File $cmdresult"
-		}
-		until ($VMrunErrorCondition -notcontains $cmdresult)
-		write-log "$origin $File $cmdresult"
-		$incr++
-	}
-}
 function convert-iptosubnet
 {
 	param ($Subnet)
@@ -943,10 +909,8 @@ function copy-vmxguesttohost
 	do
 	{
 		($cmdresult = &$vmrun -gu $Adminuser -gp $Adminpassword copyfilefromguesttohost "$Builddir\$Guest\$Guest.vmx" $Guestpath $Hostpath) 2>&1 | Out-Null
-		write-log "$origin $Guestpath $Hostpath $cmdresult "
 	}
 	until ($VMrunErrorCondition -notcontains $cmdresult)
-	write-log "$origin $File $cmdresult"
 } # end copy-vmxguesttohost
 function get-update
 {
@@ -1121,12 +1085,6 @@ function runtime
 	write-host "`r".padright(1, " ") -nonewline
 	Write-Host -ForegroundColor Yellow "$InstallProg Setup Running Since $StrgTime" -NoNewline
 }
-function write-log
-{
-	Param ([string]$line)
-	$Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
-	Add-Content $Logfile -Value "$Logtime  $line"
-}
 <#
 	.SYNOPSIS
 		we test if the Domaincontroller DCNODE is up and Running
@@ -1193,7 +1151,6 @@ function test-user
 		{
 		$sleep = 1
 		([string]$cmdresult = &$vmrun -gu $Adminuser -gp $Adminpassword listProcessesInGuest $CloneVMX)2>&1 | Out-Null
-		write-log "$origin $UserLoggedOn"
 		foreach ($i in (1..$sleep))
 			{
 			Write-Host -ForegroundColor Yellow "-`b" -NoNewline
@@ -1206,14 +1163,8 @@ function test-user
 			sleep 1
 			}
 	}
-	until (($cmdresult -match $whois) -and ($VMrunErrorCondition -notcontains $cmdresult))
+	until (($cmdresult -match $whois) -and (($cmdresult -ne "") -and $VMrunErrorCondition -notcontains $cmdresult))
 	Write-Host	"[success]"
-}
-function test-vmx
-{
-	param ($vmname)
-	$return = Get-ChildItem "$Builddir\\$vmname\\$vmname.vmx" -ErrorAction SilentlyContinue
-	return, $return
 }
 function test-source
 {
@@ -1332,7 +1283,6 @@ function invoke-postsection
         }
     }
 ####################################################
-$newLog = New-Item -ItemType File -Path $LogFile -Force
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     {
     $CommonParameter = ' -verbose'
@@ -1361,7 +1311,6 @@ switch ($PsCmdlet.ParameterSetName)
 				    {
 					Remove-Item -Path $Builddir\$deletefile -Recurse -ErrorAction SilentlyContinue
 					Write-Host -ForegroundColor White  " ==>deleted $deletefile"
-					write-log "deleted $deletefile"
 					}
 			    }
             }
@@ -1881,60 +1830,69 @@ if (!$Master)
 write-verbose "After Masterconfig !!!! "
 ########
 ########
-write-verbose "Evaluating Machine Type, Please wait ..."
-#### Eval CPU
-$Numcores = (gwmi win32_Processor).NumberOfCores
-$NumLogCPU = (gwmi win32_Processor).NumberOfLogicalProcessors
-$CPUType = (gwmi win32_Processor).Name
-$MachineMFCT = (gwmi win32_ComputerSystem).Manufacturer
-$MachineModel = (gwmi win32_ComputerSystem).Model
-##### Eval Memory #####
-$Totalmemory = 0
-$Memory = (get-wmiobject -class "win32_physicalmemory" -namespace "root\CIMV2").Capacity
-foreach ($Dimm in $Memory) { $Totalmemory = $Totalmemory + $Dimm }
-$Totalmemory = $Totalmemory / 1GB
-Switch ($Totalmemory)
-{
-	{ $_ -gt 0 -and $_ -le 8 }
+if ($runonos  -eq "win_x86_64")
 	{
-		$Computersize = 1
-        $SQLSize = "L"
-		$Exchangesize = "XL"
-	}
-	{ $_ -gt 8 -and $_ -le 16 }
+	write-verbose "Evaluating Machine Type, Please wait ..."
+	#### Eval CPU
+	$Numcores = (gwmi win32_Processor).NumberOfCores
+	$NumLogCPU = (gwmi win32_Processor).NumberOfLogicalProcessors
+	$CPUType = (gwmi win32_Processor).Name
+	$MachineMFCT = (gwmi win32_ComputerSystem).Manufacturer
+	$MachineModel = (gwmi win32_ComputerSystem).Model
+	##### Eval Memory #####
+	$Totalmemory = 0
+	$Memory = (get-wmiobject -class "win32_physicalmemory" -namespace "root\CIMV2").Capacity
+	foreach ($Dimm in $Memory) { $Totalmemory = $Totalmemory + $Dimm }
+	$Totalmemory = $Totalmemory / 1GB
+	Switch ($Totalmemory)
 	{
-		$Computersize = 2
-		$Exchangesize = "TXL"
-        $SQLSize = "XL"
+		{ $_ -gt 0 -and $_ -le 8 }
+		{
+			$Computersize = 1
+			$SQLSize = "L"
+			$Exchangesize = "XL"
+		}
+		{ $_ -gt 8 -and $_ -le 16 }
+		{
+			$Computersize = 2
+			$Exchangesize = "TXL"
+			$SQLSize = "XL"
+		}
+		{ $_ -gt 16 -and $_ -le 32 }
+		{
+			$Computersize = 3
+			$Exchangesize = "TXL"
+			$SQLSize = "TXL"
+		}
+		else
+		{
+			$Computersize = 3
+			$Exchangesize = "XXL"
+			$SQLSize = "TXL"
+		}
 	}
-	{ $_ -gt 16 -and $_ -le 32 }
+	If ($NumLogCPU -le 4 -and $Computersize -le 2)
 	{
-		$Computersize = 3
-		$Exchangesize = "TXL"
-        $SQLSize = "TXL"
+		Write-Host -ForegroundColor White "==>Running $my_repo on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logicalk CPUs and $Totalmemory GB Memory "
 	}
-	else
+	If ($NumLogCPU -gt 4 -and $Computersize -le 2)
 	{
-		$Computersize = 3
-		$Exchangesize = "XXL"
-        $SQLSize = "TXL"
+		Write-Host -ForegroundColor White "==>Running $my_repo on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logical CPU and $Totalmemory GB Memory"
+		Write-Host "Consider Adding Memory "
 	}
-}
-If ($NumLogCPU -le 4 -and $Computersize -le 2)
-{
-	Write-Host -ForegroundColor White "==>Running $my_repo on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logicalk CPUs and $Totalmemory GB Memory "
-}
-If ($NumLogCPU -gt 4 -and $Computersize -le 2)
-{
-	Write-Host -ForegroundColor White "==>Running $my_repo on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logical CPU and $Totalmemory GB Memory"
-	Write-Host "Consider Adding Memory "
-}
-If ($NumLogCPU -gt 4 -and $Computersize -gt 2)
-{
-	Write-Host -ForegroundColor White  "Excellent, Running $my_repo on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logical CPU and $Totalmemory GB Memory"
-}
-# get-vmwareversion
-####### Building required Software Versions Tabs
+	If ($NumLogCPU -gt 4 -and $Computersize -gt 2)
+	{
+		Write-Host -ForegroundColor White  "Excellent, Running $my_repo on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logical CPU and $Totalmemory GB Memory"
+	}
+	# get-vmwareversion
+
+	}
+else
+	{
+	$Computersize = 2
+	$Exchangesize = "TXL"
+	$SQLSize = "XL"
+	}####### Building required Software Versions Tabs
 $NW_Sourcedir = Join-Path $Sourcedir "Networker"
 $Sourcever = @()
 # $Sourcever = @("$nw_ver","$nmm_ver","E2013$e15_cu","$WAIKVER","$SQL2012R2")
@@ -3338,10 +3296,8 @@ switch ($PsCmdlet.ParameterSetName)
 		                    do
 		                        {
 			                    ($cmdresult = &$vmrun -gu Administrator -gp Password123! runPrograminGuest  $CloneVMX -activeWindow  $Execute $Parm) 2>&1 | Out-Null
-			                    write-log "$origin $cmdresult"
 		                        }
 		                    until ($VMrunErrorCondition -notcontains $cmdresult)
-		                    write-log "$origin $cmdresult"
                             $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role gateway -disks $Disks -ScaleIOVer $ScaleIOVer -mdmipa $mdmipa -mdmipb $mdmipb" -interactive
                             }
                         default

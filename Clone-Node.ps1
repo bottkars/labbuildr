@@ -36,7 +36,6 @@ $Scripts = "labbuildr-scripts"
 )
 # $SharedFolder = "Sources"
 $Origin = $MyInvocation.InvocationName
-$Sources = "$MountDrive\sources"
 $Adminuser = "Administrator"
 $Adminpassword = "Password123!"
 $BuildDate = Get-Date -Format "MM.dd.yyyy hh:mm:ss"
@@ -46,12 +45,6 @@ $BuildDate = Get-Date -Format "MM.dd.yyyy hh:mm:ss"
 ### 08.10.2013 Added vmrun errorcheck on initial base snap
 ###################################################
 $VMrunErrorCondition = @("Error: The virtual machine is not powered on","waiting for Command execution Available","Error","Unable to connect to host.","Error: The operation is not supported for the specified parameters","Unable to connect to host. Error: The operation is not supported for the specified parameters")
-function write-log {
-    Param ([string]$line)
-    $Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
-    Add-Content $Logfile -Value "$Logtime  $line"
-}
-
 function test-user {param ($whois)
 $sleep = 1
 $Origin = $MyInvocation.MyCommand
@@ -71,7 +64,6 @@ do {
 		}
 }
 until (($cmdresult -match $whois) -and ($VMrunErrorCondition -notcontains $cmdresult))
-write-log "$origin $UserLoggedOn"
 }
 if (!(Get-ChildItem $MasterVMX -ErrorAction SilentlyContinue)) { write-host "Panic, $MasterVMX not installed"!; Break}
 # Setting Base Snapshot upon First Run
@@ -121,41 +113,6 @@ $Content += 'svga.autodetect = "TRUE" '
 #$Content += 'sharedFolder0.expiration = "never"'
 #$Content += 'sharedFolder.maxNum = "1"'
 
-switch ($Size)
-{
-"XS"{
-$content += 'memsize = "512"'
-$Content += 'numvcpus = "1"'
-}
-"S"{
-$content += 'memsize = "768"'
-$Content += 'numvcpus = "1"'
-}
-"M"{
-$content += 'memsize = "1024"'
-$Content += 'numvcpus = "1"'
-}
-"L"{
-$content += 'memsize = "2048"'
-$Content += 'numvcpus = "2"'
-}
-"XL"{
-$content += 'memsize = "4096"'
-$Content += 'numvcpus = "2"'
-}
-"TXL"{
-$content += 'memsize = "8192"'
-$Content += 'numvcpus = "2"'
-}
-"XXL"{
-$content += 'memsize = "8192"'
-$Content += 'numvcpus = "4"'
-}
-"XXXL"{
-$content += 'memsize = "16384"'
-$Content += 'numvcpus = "4"'
-}
-}
 if ($HyperV){
 #$Content = $Clone | Get-VMXConfig
 $Content = $Content | where {$_ -notmatch "guestOS"}
@@ -217,10 +174,10 @@ if ($AddDisks.IsPresent)
             }
         }
     }
-
-Set-VMXActivationPreference -config $Clone.config -activationpreference $ActivationPreference | Out-Null
-Set-VMXscenario -config $Clone.config -Scenario $Scenario -Scenarioname $scenarioname |Out-Null
-Set-VMXscenario -config $Clone.config -Scenario 9 -Scenarioname labbuildr | Out-Null
+$Clone | Set-VMXSize -Size $Size | Out-Null
+$Clone | Set-VMXActivationPreference -activationpreference $ActivationPreference | Out-Null
+$Clone | Set-VMXscenario -Scenario $Scenario -Scenarioname $scenarioname |Out-Null
+$Clone | Set-VMXscenario -Scenario 9 -Scenarioname labbuildr | Out-Null
 if ($bridge.IsPresent)
     {
     write-verbose "configuring network for bridge"
