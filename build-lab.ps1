@@ -1150,7 +1150,7 @@ function test-user
 	do
 		{
 		$sleep = 1
-		([string]$cmdresult = &$vmrun -gu $Adminuser -gp $Adminpassword listProcessesInGuest $CloneVMX)2>&1 | Out-Null
+		[string]$cmdresult = $Nodeclone | Get-VMXProcessesInGuest -Guestuser $Adminuser -Guestpassword $Adminpassword | Out-Null
 		foreach ($i in (1..$sleep))
 			{
 			Write-Host -ForegroundColor Yellow "-`b" -NoNewline
@@ -1163,7 +1163,7 @@ function test-user
 			sleep 1
 			}
 	}
-until (($cmdresult -match $whois) -and ($VMrunErrorCondition -notcontains $cmdresult -or (!$cmdresult)))
+until ($cmdresult -match $whois) 
 Write-Host	"[success]"
 }
 function test-source
