@@ -110,16 +110,16 @@ $Content = $Content | where {$_ -notmatch "numvcpus"}
 $Content = $Content | where {$_ -notmatch "sharedFolder"}
 $Content = $Content | where {$_ -notmatch "svga.autodetecct"}
 $Content = $Content | where {$_ -notmatch "gui.applyHostDisplayScalingToGuest"}
-$Content += 'gui.applyHostDisplayScalingToGuest = "FALSE"'
+$Content += 'gui.applyHostDisplayScalingToGuest = "True"'
 $Content += 'svga.autodetect = "TRUE" '
-$Content += 'sharedFolder0.present = "TRUE"'
-$Content += 'sharedFolder0.enabled = "TRUE"'
-$Content += 'sharedFolder0.readAccess = "TRUE"'
-$Content += 'sharedFolder0.writeAccess = "TRUE"'
-$Content += 'sharedFolder0.hostPath = "'+"$Sourcedir"+'"'
-$Content += 'sharedFolder0.guestName = "Sources"'
-$Content += 'sharedFolder0.expiration = "never"'
-$Content += 'sharedFolder.maxNum = "1"'
+#$Content += 'sharedFolder0.present = "TRUE"'
+#$Content += 'sharedFolder0.enabled = "TRUE"'
+#$Content += 'sharedFolder0.readAccess = "TRUE"'
+#$Content += 'sharedFolder0.writeAccess = "TRUE"'
+#$Content += 'sharedFolder0.hostPath = "'+"$Sourcedir"+'"'
+#$Content += 'sharedFolder0.guestName = "Sources"'
+#$Content += 'sharedFolder0.expiration = "never"'
+#$Content += 'sharedFolder.maxNum = "1"'
 
 switch ($Size)
 {
@@ -248,6 +248,7 @@ if (!$Isilon.IsPresent)
 	$Scripts_Folder = join-path $Builddir $Scripts
     $Clone | Set-VMXSharedFolderState -enabled
     $Clone | Set-VMXSharedFolder -add -Sharename Scripts -Folder $Scripts_Folder
+    $Clone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir
     Write-verbose "waiting for Pass 1 (sysprep Finished)"
     Write-Host -ForegroundColor Gray " ==>waiting for Sysprep finished " -NoNewline
 	test-user -whois Administrator
