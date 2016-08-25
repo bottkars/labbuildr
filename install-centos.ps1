@@ -25,50 +25,65 @@
     SupportsShouldProcess=$true,
     ConfirmImpact="Medium")]
 Param(
+[Parameter(ParameterSetName = "docker",Mandatory=$False)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)]
 [switch]$Defaults,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "docker",Mandatory=$False)]
 [Parameter(ParameterSetName = "install",Mandatory=$False)]
 [ValidateRange(1,3)]
 [int32]$Disks = 1,
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
+[Parameter(ParameterSetName = "docker",Mandatory=$False)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [ValidateSet('7_1_1511','7')]
 [string]$centos_ver = "7_1_1511",
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
+[Parameter(ParameterSetName = "docker",Mandatory=$False)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [ValidateSet('cinnamon','none')]
 [string]$Desktop = "none",
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[Parameter(ParameterSetName = "install",Mandatory=$true)]
+[Parameter(ParameterSetName = "docker",Mandatory=$False)]
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]
-$Sourcedir = 'h:\sources',
+$Sourcedir,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "docker",Mandatory=$False)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateRange(1,9)]
 [int32]$Nodes=1,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
+[Parameter(ParameterSetName = "docker",Mandatory=$False)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [int32]$Startnode = 1,
+[Parameter(ParameterSetName = "docker",Mandatory=$False)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateScript({$_ -match [IPAddress]$_ })]
 [ipaddress]$subnet = "192.168.2.0",
 [Parameter(ParameterSetName = "install",Mandatory=$False)]
+[Parameter(ParameterSetName = "docker",Mandatory=$False)]
 [ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")]
 [string]$BuildDomain = "labbuildr",
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
+[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 [ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]
 $vmnet = "vmnet2",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [ValidateScript({ Test-Path -Path $_ })]
 $Defaultsfile=".\defaults.xml",
+[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$forcedownload,
 [int]$ip_startrange = 205,
+[Parameter(ParameterSetName = "docker", Mandatory = $true)]
 [Switch]$docker,
+[Parameter(ParameterSetName = "docker", Mandatory = $false)]
+[ValidateSet('shipyard','uifd')][string[]]$container,
 [ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL"
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
+$Logfile = "/tmp/labbuildr.log"
 If ($ConfirmPreference -match "none")
     {$Confirm = $false}
 else
@@ -334,7 +349,22 @@ foreach ($Node in $machinesBuilt)
             $Scriptblock="curl -fsSL https://get.docker.com | sh;systemctl enable docker; systemctl start docker;usermod -aG docker $Guestuser"
             Write-Verbose $Scriptblock
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
-            }
+			if ("shipyard" -in $container)
+				{
+				$Scriptblock = "curl -s https://shipyard-project.com/deploy | bash -s"
+				Write-Verbose $Scriptblock
+				$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+				$installmessage += " ==>you can use shipyard with http://$($ip):8080 with user admin/shipyard`n"
+
+				}
+			if ("uifd" -in $container)
+				{
+				$Scriptblock = "docker run -d -p 9000:9000 --privileged -v /var/run/docker.sock:/var/run/docker.sock uifd/ui-for-docker"
+				Write-Verbose $Scriptblock
+				$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+				$installmessage += " ==>you can use container uifd with http://$($ip):9000`n"
+				}
+			}
         if ($Desktop -ne "none")
             {
             Write-Host -ForegroundColor Gray " ==>Installing X-Windows environment"

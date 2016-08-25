@@ -38,7 +38,7 @@ $ViprZip = "ViPR_Controller_Download.zip"
 $Viprver = $viprmaster.Replace("vipr-","")
 Write-Verbose $Viprver
 $ViprMajor = $Viprver.Substring(0,5)
-Measure-Command {
+
 If ($Defaults.IsPresent)
     {
      $labdefaults = Get-labDefaults
@@ -90,7 +90,7 @@ foreach ($Disk in $Disks)
         {
         if (!(test-path "$Sourcedir\Vipr*\$viprmaster-controller-1+0.ova"))
             {
-            Write-Warning "Vipr OVA for $Viprver not Found, we try for Zip Package in Sources"
+            Write-Host -ForegroundColor Gray " ==>Vipr OVA for $Viprver not Found, we try for Zip Package in Sources"
             if (!(Test-Path "$Sourcedir\$ViprZip"))
                 {
                 Write-Warning "Vipr Controller Download Package not found
@@ -113,7 +113,8 @@ foreach ($Disk in $Disks)
                 $ViprZip = Split-Path -Leaf $ViprURL
                 try
                     {
-                    # $Request = Invoke-WebRequest $ViprURL -UseBasicParsing -Method Head
+					Get-LABHttpFile -SourceURL $ViprURL -TarGetFile (Join-Path $Sourcedir $ViprZip )
+                    #Invoke-WebRequest $ViprURL -OutFile 
                     Start-BitsTransfer -DisplayName ViPR -Description "ViPR Controller" -Destination $Sourcedir -Source  $ViprURL
                     }
                 catch [Exception] 
@@ -132,8 +133,9 @@ foreach ($Disk in $Disks)
 	        write-verbose "We are going to extract $LatestZip now"    	
             Expand-LABZip -zipfilename $LatestZip -destination $Sourcedir
             }
+			$StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
             $Viprova = Get-Item "$Sourcedir\Vipr*\$viprmaster-controller-1+0.ova" -filter "*.ova" -ErrorAction SilentlyContinue
-            $Viprova = $Viprova| Sort-Object -Property Name -Descending | Select-Object -Last 1
+            $Viprova = $Viprova | Sort-Object -Property Name -Descending | Select-Object -Last 1
 		    $LatestViprOVA = $Viprova.FullName
             $LatestVipr = $Viprova.Name.Replace("-controller-1+0.ova","")
             $LatestViprLic = Get-ChildItem -Path "$Sourcedir\ViPRC*$ViprMajor*\*" -Filter *.lic
@@ -151,7 +153,7 @@ foreach ($Disk in $Disks)
                     please get and copy 7za to & $global:vmwarepath\7za.exe"
                     exit
                     }
-            Write-warning "$Disk not found, deflating ViprDisk from OVA"
+            Write-Host -ForegroundColor Gray " ==>$Disk not found, deflating ViprDisk from OVA"
             & $global:vmwarepath\7za.exe x "-o$masterpath" -y $LatestViprOVA "*$Disk.vmdk" 
             if (!(Test-Path "$Sourcedir\$LatestVipr\$($LatestViprLic.Name)"))
                 {
@@ -162,7 +164,7 @@ foreach ($Disk in $Disks)
     }
 
 
-Write-Warning "importing the disks "
+Write-Host -ForegroundColor Gray " ==>importing the disks "
 
 if(!(Test-Path $PSScriptRoot\$targetname))
     {
@@ -170,16 +172,15 @@ if(!(Test-Path $PSScriptRoot\$targetname))
     }
 foreach ($Disk in $Disks)
     {
-    
     $SOURCEDISK = Get-ChildItem -Path "$masterpath\vipr-*$disk.vmdk"
     $TargetDisk = "$PSScriptRoot\$targetname\$Disk.vmdk"
     if (Test-Path $TargetDisk)
         { 
-        write-warning "Master $TargetDisk already present, no conversion needed"
+        write-Host -ForegroundColor Gray " ==>Master $TargetDisk already present, no conversion needed"
         }
     else
         {
-        write-warning "converting $TargetDisk"
+        Write-Host -ForegroundColor Gray " ==>converting $TargetDisk"
         & $VMwarepath\vmware-vdiskmanager.exe -r $SOURCEDISK.FullName -t 0 $TargetDisk  2>&1 | Out-Null
         If ($Disk -match "Disk5")
             {
@@ -188,18 +189,15 @@ foreach ($Disk in $Disks)
             }
         }
     }
-
-
-# & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck  --name=$targetname $masterpath\viprmaster.ovf $PSScriptRoot 
-Write-Verbose " Copy base vm config to new master"
-Copy-Item $PSScriptRoot\scripts\viprmaster\viprmaster.vmx $targetname\$targetname.vmx
+Write-host -ForegroundColor Gray " ==>copy base vm config to new master"
+Copy-Item $PSScriptRoot\labbuildr-scripts\viprmaster\viprmaster.template $targetname\$targetname.vmx
 $vmx = get-vmx $targetname
-$vmx | Set-VMXTemplate -unprotect
-$vmx | Set-VMXNetworkAdapter -Adapter 0 -AdapterType vmxnet3 -ConnectionType custom
-$vmx | Set-VMXVnet -Adapter 0 -vnet $vmnet
-$vmx | Set-VMXDisplayName -DisplayName $targetname
-Write-Verbose "Generating CDROM"
-Write-Verbose "Creating OVFenvironment"
+$vmx | Set-VMXTemplate -unprotect | Out-Null
+$vmx | Set-VMXNetworkAdapter -Adapter 0 -AdapterType vmxnet3 -ConnectionType custom -WarningAction SilentlyContinue | Out-Null
+$vmx | Set-VMXVnet -Adapter 0 -vnet $vmnet -WarningAction SilentlyContinue  | Out-Null
+$vmx | Set-VMXDisplayName -DisplayName $targetname | Out-Null
+Write-Host -ForegroundColor Gray " ==>generating CDROM"
+Write-Host -ForegroundColor Gray " ==>creating OVFenvironment"
 $ovfenv = '<?xml version="1.0" encoding="UTF-8"?>
 <Environment
      xmlns="http://schemas.dmtf.org/ovf/environment/1"
@@ -241,15 +239,12 @@ $ovffile = (Join-Path $ViprcdDir ovf-env.xml)
 $ovfenv  | Set-Content -Path $ovffile -Force
 convert-VMXdos2unix -Sourcefile $ovffile -Verbose
 & $Global:vmwarepath\mkisofs.exe -J -R -o "$PSScriptRoot\$Targetname\vipr.iso" $PSScriptRoot\scripts\viprmaster\cd 2>&1 | Out-Null
-$config = $vmx | get-vmxconfig
-    write-verbose "injecting CDROM"
-    $config = $config | where {$_ -NotMatch "ide0:0"}
-    $config += 'ide0:0.present = "TRUE"'
-    $config += 'ide0:0.fileName = "vipr.iso"'
-    $config += 'ide0:0.deviceType = "cdrom-image"'
-$Config | set-Content -Path $vmx.config
+$vmx | Set-VMXIDECDrom -IDEcontroller 0 -IDElun 0 -ISOfile "vipr.iso"  | Out-Null
 $Annotation = $VMX | Set-VMXAnnotation -Line1 "https://$subnet.9" -Line2 "user:root" -Line3 "password:ChangeMe" -Line4 "add license from $masterpath" -Line5 "labbuildr by @sddc_guy" -builddate
-$vmx | Start-VMX
+$vmx | Start-VMX | Out-Null
+$StopWatch.Stop()
+Write-host -ForegroundColor White "VIPRc Deployment took $($StopWatch.Elapsed.ToString())"
+
 Write-Host -ForegroundColor Magenta "
 Successfully Deployed $viprmaster
 wait a view minutes for storageos to be up and running
@@ -257,4 +252,4 @@ point your browser to https://$subnet.9
 Login with root:ChangeMe and follow the wizard steps
 The License File can be found in $masterpath
 "
-}
+
