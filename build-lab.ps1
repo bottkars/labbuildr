@@ -1164,7 +1164,6 @@ function test-user
 			}
 	}
 until ($cmdresult -match $whois) 
-sleep 5
 Write-Host	"[success]"
 }
 function test-source
