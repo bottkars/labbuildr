@@ -1889,7 +1889,9 @@ if ($runonos  -eq "win_x86_64")
 	}
 else
 	{
-	$Computersize = 2
+    Write-Host -ForegroundColor White  "Excellent, running on "(uname -a)
+    sw_ver
+    $Computersize = 2
 	$Exchangesize = "TXL"
 	$SQLSize = "XL"
 	}####### Building required Software Versions Tabs
