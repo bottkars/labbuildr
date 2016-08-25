@@ -1884,12 +1884,11 @@ if ($runonos  -eq "win_x86_64")
 	{
 		Write-Host -ForegroundColor White  "Excellent, Running $my_repo on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logical CPU and $Totalmemory GB Memory"
 	}
-	# get-vmwareversion
-
 	}
 else
 	{
-    Write-Host -ForegroundColor White  "Excellent, running on "(uname -a)
+    $MachineModel = uname -a
+    Write-Host -ForegroundColor White  "Excellent, running labbuildr on $MachineModel"
     sw_vers
     $Computersize = 2
 	$Exchangesize = "TXL"
