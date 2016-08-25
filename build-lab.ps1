@@ -1164,6 +1164,7 @@ function test-user
 			}
 	}
 until ($cmdresult -match $whois) 
+sleep 5
 Write-Host	"[success]"
 }
 function test-source
@@ -2592,7 +2593,6 @@ else
 			}
         Write-Host -ForegroundColor Green "[success]"
         test-user -whois Administrator
-        Start-Sleep 5
         if ($Toolsupdate.IsPresent)
             {
             Write-Host -ForegroundColor Gray " ==>preparing VMware Tools Upgrade by injecting tools CD ( update will start before next reboot of VM )"
