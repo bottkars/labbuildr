@@ -2591,9 +2591,8 @@ else
 				}
 			}
         Write-Host -ForegroundColor Green "[success]"
-		$Nodeclone | Set-VMXSharedFolderState -enabled
         test-user -whois Administrator
-        
+        Start-Sleep 5
         if ($Toolsupdate.IsPresent)
             {
             Write-Host -ForegroundColor Gray " ==>preparing VMware Tools Upgrade by injecting tools CD ( update will start before next reboot of VM )"
