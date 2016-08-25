@@ -1890,7 +1890,7 @@ if ($runonos  -eq "win_x86_64")
 else
 	{
     Write-Host -ForegroundColor White  "Excellent, running on "(uname -a)
-    sw_ver
+    sw_vers
     $Computersize = 2
 	$Exchangesize = "TXL"
 	$SQLSize = "XL"
