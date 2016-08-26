@@ -1830,7 +1830,7 @@ if (!$Master)
 write-verbose "After Masterconfig !!!! "
 ########
 ########
-if ($runonos  -eq "win_x86_64")
+if ($runonos  -match "win_x86_64")
 	{
 	write-verbose "Evaluating Machine Type, Please wait ..."
 	#### Eval CPU
@@ -1889,7 +1889,10 @@ else
 	{
     $MachineModel = uname -a
     Write-Host -ForegroundColor White  "Excellent, running labbuildr on $MachineModel"
-    sw_vers
+    if ($runonos -ex "OSX")
+		{
+		sw_vers
+		}
     $Computersize = 2
 	$Exchangesize = "TXL"
 	$SQLSize = "XL"
