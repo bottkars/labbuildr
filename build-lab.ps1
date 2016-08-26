@@ -1889,7 +1889,7 @@ else
 	{
     $MachineModel = uname -a
     Write-Host -ForegroundColor White  "Excellent, running labbuildr on $MachineModel"
-    if ($runonos -ex "OSX")
+    if ($runonos -eq "OSX")
 		{
 		sw_vers
 		}
