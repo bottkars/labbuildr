@@ -3945,8 +3945,7 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
         }
 	test-dcrunning
     If ($DefaultGateway -match $Nodeip){$SetGateway = "-Gateway"}
-	$Clonescript = Join-Path $Builddir "clone-node.ps1"
-	$CloneOK = Invoke-expression "$Clonescript -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 9 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -NW $SetGateway -size $Size -Sourcedir $Sourcedir $CommonParameter"
+	$CloneOK = Invoke-expression "$Builddir\Clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 9 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -NW $SetGateway -size $Size -Sourcedir $Sourcedir $CommonParameter"
 	###################################################
 	If ($CloneOK)
 	    {
