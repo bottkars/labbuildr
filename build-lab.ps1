@@ -862,7 +862,7 @@ $NW85_requiredJava = "jre-7u61-windows-x64"
 $Adminuser = "Administrator"
 $Adminpassword = "Password123!"
 $WAIKVER = "WAIK"
-$DCNODE = "DCNODE"
+$DCNODE = "dcnode"
 $NWNODE = "NWSERVER"
 $SPver = "SP2013SP1fndtn"
 $SPPrefix = "SP2013"
@@ -902,16 +902,6 @@ function convert-iptosubnet
 	$Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 	return, $Subnet
 } #enc convert iptosubnet
-function copy-vmxguesttohost
-{
-	param ($Guestpath, $Hostpath, $Guest)
-	$Origin = $MyInvocation.MyCommand
-	do
-	{
-		($cmdresult = &$vmrun -gu $Adminuser -gp $Adminpassword copyfilefromguesttohost "$Builddir\$Guest\$Guest.vmx" $Guestpath $Hostpath) 2>&1 | Out-Null
-	}
-	until ($VMrunErrorCondition -notcontains $cmdresult)
-} # end copy-vmxguesttohost
 function get-update
 {
 	param ([string]$UpdateSource, [string] $Updatedestination)
@@ -2493,7 +2483,7 @@ if ($Nodeclone = get-vmx $DCNODE -WarningAction SilentlyContinue)
         {
 	    test-user -whois Administrator
 	    write-verbose "Verifiying Domainsetup"
-        $EnableFolders = get-vmx .\DCNODE | Set-VMXSharedFolderState -enabled
+        $EnableFolders = get-vmx .$DCNODE | Set-VMXSharedFolderState -enabled
 	    $Checkdom = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$IN_Guest_UNC_Scriptroot\$DCNODE" -Script checkdom.ps1 # $CommonParameter
 	    $BuildDomain, $RunningIP, $VMnet, $MyGateway = test-domainsetup
 	    $IPv4Subnet = convert-iptosubnet $RunningIP
