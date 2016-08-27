@@ -1125,7 +1125,7 @@ function test-domainsetup
 	$IPv4subnet = convert-iptosubnet $DomainIP
 	Write-Host -ForegroundColor White  $ipv4Subnet
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing Default Gateway: "
-	$DomainGateway = Get-Content (Join-path $DC_Scriptdir "Gateway.txt")
+	$DomainGateway = Get-Content (Join-path $DC_Scriptdir "gateway.txt")
 	Write-Host -ForegroundColor White  $DomainGateway
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing VMnet .........: "
     $MyVMnet = (get-vmx $DCNODE | Get-VMXNetwork -WarningAction SilentlyContinue).network
