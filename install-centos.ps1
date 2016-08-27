@@ -165,7 +165,7 @@ $Nodeprefix = "Centos"
 $epel = "http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
 try
     {
-    $yumcachedir = join-path -Path $Sourcedir "$OS\cache\yum" -ErrorAction stop
+    $yumcachedir = join-path -Path $Sourcedir "$OS" (join-path "cache" "yum") -ErrorAction stop
     }
 catch [System.Management.Automation.DriveNotFoundException]
     {
