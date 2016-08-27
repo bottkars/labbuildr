@@ -3590,7 +3590,7 @@ switch ($PsCmdlet.ParameterSetName)
             $Nodeprefix = "WINHost"
             $NamePrefix = "Docker"
 		    $Nodename = "$NamePrefix$NodePrefix$Node"
-			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+			$CloneVMX = Join-Path  $Builddir (Join-path $Nodename "$Nodename.vmx")
 			$Host_ScriptDir = "$Default_Host_ScriptDir\$NamePrefix\"
 			$IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NamePrefix\"
             #$ClusterIP = "$IPv4Subnet.180"
