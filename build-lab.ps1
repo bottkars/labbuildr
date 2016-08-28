@@ -2026,13 +2026,14 @@ if ($Exchange2010.IsPresent)
      foreach ($URL in $attachments)
         {
         $FileName = Split-Path -Leaf -Path $Url
-        if (!(test-path  "$Destination\$FileName"))
+		$Destination_file = Join-Path $Destination $FileName
+        if (!(test-path  $Destination_file))
             {
             Write-Verbose "$FileName not found, trying Download"
-            if (!(Receive-LABBitsFile -DownLoadUrl $URL -destination $Sourcedir\$Prereqdir\$FileName))
+            if (!(Receive-LABBitsFile -DownLoadUrl $URL -destination $Destination_file))
                 { Write-Host -ForegroundColor Gray " ==>Error Downloading file $Url, Please check connectivity"
                   Write-Host -ForegroundColor Gray " ==>creating dummy File"
-                  New-Item -ItemType file -Path "$Sourcedir\$Prereqdir\$FileName" | out-null
+                  New-Item -ItemType file -Path $Destination_file | out-null
                 }
             }
         }
