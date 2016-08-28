@@ -2249,7 +2249,7 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
     $FileName = Split-Path -Leaf -Path $Url
 	$Aworks_Dir = Join-Path $Sourcedir "Aworks"
 	$Aworks_File = Join-Path $Aworks_Dir $Aworks_File
-	$Aworks_Backup = Join-Path $Aworks_Dir "\AdventureWorks2012.bak"
+	$Aworks_Backup = Join-Path $Aworks_Dir "AdventureWorks2012.bak"
 
     Write-Verbose "Testing $FileName in $Sourcedir"
 	If (Test-Path $Aworks_Dir)
@@ -2264,7 +2264,7 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
     if (!(test-path  $Aworks_Backup))
         {
         Write-Verbose "Trying Download"
-        if (!(Receive-LABBitsFile -DownLoadUrl  $URL -destination $Aworks_File))
+        if (!(Receive-LABBitsFile -DownLoadUrl $URL -destination $Aworks_Dir))
             {
             Write-Warning "Error Downloading file $Url, Please check connectivity"
             exit
