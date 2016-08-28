@@ -2477,7 +2477,7 @@ if (!$NoDomainCheck.IsPresent){
 ####################################################################
 # DC Validation
 $Nodename = $DCNODE
-$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
 if ($Nodeclone = get-vmx $DCNODE -WarningAction SilentlyContinue)
 {
 	Write-Host -ForegroundColor White  " ==>Domaincontroller already deployed, Comparing Workorder Parameters with Running Environment"
@@ -2513,7 +2513,7 @@ else
 	###################################################
 	#$Nodename = $DCNODE
 	$DCName = $BuildDomain + "DC"
-	#$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+	#$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
 	$IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$DCNODE"
 	###################################################
 	Write-Verbose "IPv4Subnet :$IPv4Subnet"
@@ -2650,7 +2650,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 			# Init
 			$Nodeip = "$IPv4Subnet.16$AAGNode"
 			$Nodename = "AAGNODE" + $AAGNODE
-			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+			$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
 			$AAGLIST += $CloneVMX
             #$In_Guest_UNC_SQLScriptDir = "$Default_Host_ScriptDir\sql\"
             $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features, Failover-Clustering, RSAT-Clustering, WVR"
@@ -2751,7 +2751,7 @@ switch ($PsCmdlet.ParameterSetName)
 			# Init
 			$Nodeip = "$IPv4Subnet.12$EXNODE"
 			$Nodename = "$EX_Version"+"N"+"$EXNODE"
-			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+			$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
 			$EXLIST += $CloneVMX
 			###################################################
             Write-Verbose $IPv4Subnet
@@ -2874,7 +2874,7 @@ switch ($PsCmdlet.ParameterSetName)
 		# Init
 		$Nodeip = "$IPv4Subnet.11$EXNODE"
 		$Nodename = "$EX_Version"+"N"+"$EXNODE"
-		$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+		$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
 		$EXLIST += $CloneVMX
 		# $Exprereqdir = "$Sourcedir\EXPREREQ\"
 		###################################################
@@ -2997,7 +2997,7 @@ switch ($PsCmdlet.ParameterSetName)
 			# Init
 			$Nodeip = "$IPv4Subnet.12$EXNODE"
 			$Nodename = "$EX_Version"+"N"+"$EXNODE"
-			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+			$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
 			$EXLIST += $CloneVMX
 		    # $Exprereqdir = "$Sourcedir\EXPREREQ\"
 			###################################################
@@ -3192,7 +3192,7 @@ switch ($PsCmdlet.ParameterSetName)
 			$Nodeip = "$IPv4Subnet.$IPNum"
             Write-Verbose "Nodeip = $Nodeip"
 			$Nodename = "$($Clusterprefix)NODE$($HVNode)"
-			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+			$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
 			$IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\HyperV\"
             $In_Guest_UNC_SQLScriptDir = "$IN_Guest_UNC_Scriptroot\sql\"
             $In_Guest_UNC_SCVMMScriptDir = "$IN_Guest_UNC_Scriptroot\scvmm\"
@@ -3373,7 +3373,7 @@ switch ($PsCmdlet.ParameterSetName)
 			# Init
 			$Nodeip = "$IPv4Subnet.21$Node"
 			$Nodename = "SOFSNode$Node"
-			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+			$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
 			$Host_ScriptDir = "$Default_Host_ScriptDir\SOFS\"
             $Size = "XL"
 			###################################################
@@ -3431,7 +3431,7 @@ switch ($PsCmdlet.ParameterSetName)
 			# Init
 			$Nodeip = "$IPv4Subnet.14$Node"
 			$Nodename = "$Prefix"+"Node$Node"
-			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+			$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
 			$IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$Prefix\"
 			###################################################
 			# we need a DC, so check it is running
@@ -3520,7 +3520,7 @@ switch ($PsCmdlet.ParameterSetName)
             $Nodeprefix = "Node"
             $NamePrefix = "GEN"
 		    $Nodename = "$NamePrefix$NodePrefix$Node"
-			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+			$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
             $ClusterIP = "$IPv4Subnet.180"
 			###################################################
 		    Write-Verbose $IPv4Subnet
@@ -3649,7 +3649,7 @@ switch ($PsCmdlet.ParameterSetName)
 			$Nodeip = "$IPv4Subnet.17$Node"
             $NodePrefix	= "Spaces"
             $Nodename = "$NodePrefix$Node"
-			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+			$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
 			$IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NodePrefix"
 			###################################################
 			# we need a DC, so check it is running
@@ -3691,7 +3691,7 @@ switch ($PsCmdlet.ParameterSetName)
         $size = 'XL'
 		$Nodeip = "$IPv4Subnet.13$Node"
 		$Nodename = "SQLNODE$Node"
-		$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+		$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
 		$IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\SQL\"
 		###################################################
 		# we need a DC, so check it is running
@@ -3734,7 +3734,7 @@ switch ($PsCmdlet.ParameterSetName)
     $Nodeip = "$IPv4Subnet.19"
 	$NodePrefix = "Panorama"
     $Nodename = $NodePrefix
-	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+	$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NodePrefix"
     [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features,Web-Mgmt-Console, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI"
 	###################################################
@@ -3768,7 +3768,7 @@ switch ($PsCmdlet.ParameterSetName)
 	$Nodeip = "$IPv4Subnet.17"
 	$NodePrefix = "ViPRSRM"
     $Nodename = $NodePrefix
-	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+	$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NodePrefix"
     [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS"
 	###################################################
@@ -3807,7 +3807,7 @@ switch ($PsCmdlet.ParameterSetName)
 	$Nodeip = "$IPv4Subnet.14"
 	$NodePrefix = "APPSYNC"
     $Nodename = $NodePrefix
-	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+	$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NodePrefix"
     [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, Desktop-Experience"
 	###################################################
@@ -3844,7 +3844,7 @@ switch ($PsCmdlet.ParameterSetName)
 	###################################################
 	$Nodeip = "$IPv4Subnet.18"
 	$Nodename = "SCOM"
-	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+	$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
     [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS"
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\SCOM"
     $In_Guest_UNC_SQLScriptDir = "$IN_Guest_UNC_Scriptroot\sql\"
@@ -3920,7 +3920,7 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
 	###################################################
 	$Nodeip = "$IPv4Subnet.$Gatewayhost"
 	$Nodename = $NWNODE
-	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+	$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
     [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features"
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NWNODE"
 	###################################################
