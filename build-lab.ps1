@@ -1090,7 +1090,7 @@ function test-dcrunning
 $Origin = $MyInvocation.MyCommand
 if (!$NoDomainCheck.IsPresent)
 	{
-	if ((get-vmx $DCNODE).state -ne "running")
+	if ((get-vmx -Path $DCNODE).state -ne "running")
 		{
 		Write-Host -ForegroundColor White  " ==>Domaincontroller not running, we need to start him first"
 		$Started = get-vmx $DCNODE | Start-vmx
