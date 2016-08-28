@@ -1093,7 +1093,7 @@ if (!$NoDomainCheck.IsPresent)
 	if ((get-vmx -Path $DCNODE).state -ne "running")
 		{
 		Write-Host -ForegroundColor White  " ==>Domaincontroller not running, we need to start him first"
-		$Started = get-vmx $DCNODE | Start-vmx
+		$Started = get-vmx -path $DCNODE | Start-vmx
 		if (!$started)
 			{
 			debug " ==>Domaincontroller not found, giving up"
@@ -1119,7 +1119,7 @@ function test-domainsetup
     $enable_Folders =  get-vmx $DCNODE | Set-VMXSharedFolderState -Enabled
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing Domain Name ...: "
 	$holdomain = Get-Content (Join-path $DC_Scriptdir "domain.txt")
-	Write-Host -ForegroundColor White  $holdomain
+	Write-Host -ForegroundColor White $holdomain
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing Subnet.........: "
 	$DomainIP = Get-Content (Join-path $DC_Scriptdir "ip.txt")
 	$IPv4subnet = convert-iptosubnet $DomainIP
@@ -2483,7 +2483,7 @@ if ($Nodeclone = get-vmx $DCNODE -WarningAction SilentlyContinue)
         {
 	    test-user -whois Administrator
 	    write-verbose "Verifiying Domainsetup"
-        $EnableFolders = get-vmx .$DCNODE | Set-VMXSharedFolderState -enabled
+        $EnableFolders = get-vmx -path $DCNODE | Set-VMXSharedFolderState -enabled
 	    $Checkdom = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$IN_Guest_UNC_Scriptroot\$DCNODE" -Script checkdom.ps1 # $CommonParameter
 	    $BuildDomain, $RunningIP, $VMnet, $MyGateway = test-domainsetup
 	    $IPv4Subnet = convert-iptosubnet $RunningIP
