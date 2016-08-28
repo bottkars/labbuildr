@@ -2248,7 +2248,7 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
     $URL = $AAGURL
     $FileName = Split-Path -Leaf -Path $Url
 	$Aworks_Dir = Join-Path $Sourcedir "Aworks"
-	$Aworks_File = Join-Path $Aworks_Dir $Aworks_File
+	$Aworks_File = Join-Path $Aworks_Dir $FileName
 	$Aworks_Backup = Join-Path $Aworks_Dir "AdventureWorks2012.bak"
 
     Write-Verbose "Testing $FileName in $Sourcedir"
