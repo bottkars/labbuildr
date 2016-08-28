@@ -1,4 +1,4 @@
-﻿$Userinterface = (Get-Host).UI.RawUI
+﻿<#$Userinterface = (Get-Host).UI.RawUI
 
 $Userinterface.BackgroundColor = "Black"
 
@@ -12,9 +12,11 @@ $size = $Userinterface.WindowSize
 $size.width=120
 $size.height=36
 $Userinterface.WindowSize = $size
+#>
 clear-host
-import-module .\vmxtoolkit -Force
-import-module .\labtools -Force
+$self  = Get-Location
+import-module (Join-Path $self "vmxtoolkit") -Force -ArgumentList $self
+import-module (Join-Path $self "labtools") -Force
 try
     {
     Get-ChildItem .\defaults.xml -ErrorAction Stop | Out-Null
@@ -26,8 +28,9 @@ catch
     Copy-Item .\defaults.xml.example .\defaults.xml
     }
 $Defaults = Get-labdefaults
+$buildlab = (join-path $self "build-lab.ps1")
+.$buildlab
 
-.\Build-lab.ps1
 write-host
 write-host -ForegroundColor Yellow "Running VMware $vmwareversion"
 if (!(Test-Connection community.emc.com -Quiet -Count 2 -ErrorAction SilentlyContinue))
