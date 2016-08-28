@@ -2247,17 +2247,30 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
     $AAGURL = "https://community.emc.com/servlet/JiveServlet/download/38-111250/AWORKS.zip"
     $URL = $AAGURL
     $FileName = Split-Path -Leaf -Path $Url
+	$Aworks_Dir = Join-Path $Sourcedir "Aworks"
+	$Aworks_File = Join-Path $Aworks_Dir $Aworks_File
+	$Aworks_Backup = Join-Path $Aworks_Dir "\AdventureWorks2012.bak"
+
     Write-Verbose "Testing $FileName in $Sourcedir"
-    if (!(test-path  "$Sourcedir\Aworks\AdventureWorks2012.bak"))
+	If (Test-Path $Aworks_Dir)
+		{
+		Write-Verbose "we got $Aworks_Dir"
+		}
+	else
+		{
+		New-Item -ItemType Directory $Aworks_Dir
+		}
+
+    if (!(test-path  $Aworks_Backup))
         {
         Write-Verbose "Trying Download"
-        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
+        if (!(Receive-LABBitsFile -DownLoadUrl  $URL -destination $Aworks_File))
             {
             Write-Warning "Error Downloading file $Url, Please check connectivity"
             exit
             }
         #New-Item -ItemType Directory -Path "$Sourcedir\Aworks" -Force
-        Extract-Zip -zipfilename $Sourcedir\$FileName -destination $Sourcedir
+        Expand-LABpackage -Archive $Aworks_File -destination $Sourcedir
         }
     if (!($SQL_OK = receive-labsql -SQLVER $SQLVER -Destination $Sourcedir -Product_Dir "SQL" -extract -WarningAction SilentlyContinue))
         {
