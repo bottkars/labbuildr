@@ -2244,7 +2244,7 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
         {
         $Java8_required = $true
         }
-    $AAGURL = "https://community.emc.com/servlet/JiveServlet/download/38-111250/AWORKS.zip"
+    $AAGURL = "https://labbuildrmaster.blob.core.windows.net/addons/AWORKS.zip"
     $URL = $AAGURL
     $FileName = Split-Path -Leaf -Path $Url
 	$Aworks_Dir = Join-Path $Sourcedir $AAGDB
@@ -2257,7 +2257,7 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
 		}
 	else
 		{
-		New-Item -ItemType Directory $Aworks_Dir
+		New-Item -ItemType Directory $Aworks_Dir -Force | Out-Null
 		}
     Write-Host "Testing $FileName in $Aworks_Dir"
 
