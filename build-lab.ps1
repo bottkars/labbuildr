@@ -2251,7 +2251,7 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
 	$Aworks_File = Join-Path $Aworks_Dir $FileName
 	$Aworks_Backup = Join-Path $Aworks_Dir "AdventureWorks2012.bak"
 
-    Write-Verbose "Testing $FileName in $Sourcedir"
+    Write-Verbose "Testing $FileName in $Aworks_Dir"
 	If (Test-Path $Aworks_Dir)
 		{
 		Write-Verbose "we got $Aworks_Dir"
@@ -2269,7 +2269,7 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
             Write-Warning "Error Downloading file $Url, Please check connectivity"
             exit
             }
-        #New-Item -ItemType Directory -Path "$Sourcedir\Aworks" -Force
+        New-Item -ItemType Directory -Path "$Aworks_Dir" -Force
         Expand-LABpackage -Archive $Aworks_File -destination $Sourcedir
         }
     if (!($SQL_OK = receive-labsql -SQLVER $SQLVER -Destination $Sourcedir -Product_Dir "SQL" -extract -WarningAction SilentlyContinue))
