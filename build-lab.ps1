@@ -2244,13 +2244,11 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
         {
         $Java8_required = $true
         }
-    $AAGURL = "https://labbuildrmaster.blob.core.windows.net/addons/AdventureWorks2012.7z"
+    $AAGURL = "https://labbuildrmaster.blob.core.windows.net/addons/AdventureWorks2012.bak"
     $URL = $AAGURL
     $FileName = Split-Path -Leaf -Path $Url
 	$Aworks_Dir = Join-Path $Sourcedir $AAGDB
 	$Aworks_File = Join-Path $Aworks_Dir $FileName
-	$Aworks_Backup = Join-Path $Aworks_Dir "AdventureWorks2012.bak"
-
 	If (Test-Path $Aworks_Dir)
 		{
 		Write-Verbose "we got $Aworks_Dir"
@@ -2261,7 +2259,7 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
 		}
     Write-Host "Testing $FileName in $Aworks_Dir"
 
-    if (!(test-path $Aworks_Backup))
+    if (!(test-path $Aworks_File))
         {
         Write-Verbose "Trying Download"
         if (!(Receive-LABBitsFile -DownLoadUrl $URL -destination $Aworks_File))
@@ -2269,8 +2267,8 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
             Write-Warning "Error Downloading file $Url, Please check connectivity"
             exit
             }
-        New-Item -ItemType Directory -Path "$Aworks_Dir" -Force
-        Expand-LABpackage -Archive $Aworks_File -destination $Aworks_Dir
+        #New-Item -ItemType Directory -Path "$Aworks_Dir" -Force
+        #Expand-LABpackage -Archive $Aworks_File -destination $Aworks_Dir
         }
     if (!($SQL_OK = receive-labsql -SQLVER $SQLVER -Destination $Sourcedir -Product_Dir "SQL" -extract -WarningAction SilentlyContinue))
         {
