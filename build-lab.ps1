@@ -299,7 +299,8 @@ Specify if Networker Scenario sould be installed
     [ValidateSet(#'SQL2014SP1slip','SQL2012','SQL2012SP1','SQL2012SP2','SQL2012SP1SLIP','SQL2014','SQL2016',
 	'SQL2012_ISO',
 	'SQL2014SP2_ISO',
-	'SQL2016_ISO')]$SQLVER,    ######################### common Parameters start here in Order
+	'SQL2016_ISO')]$SQLVER,    
+	######################### common Parameters start here in Order
     <# reads the Default Config from defaults.xml
     <config>
     <nmm_ver>nmm82</nmm_ver>
