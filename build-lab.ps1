@@ -2244,7 +2244,7 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
         {
         $Java8_required = $true
         }
-    $AAGURL = "https://labbuildrmaster.blob.core.windows.net/addons/AWORKS.7z"
+    $AAGURL = "https://labbuildrmaster.blob.core.windows.net/addons/AdventureWorks2012.7z"
     $URL = $AAGURL
     $FileName = Split-Path -Leaf -Path $Url
 	$Aworks_Dir = Join-Path $Sourcedir $AAGDB
