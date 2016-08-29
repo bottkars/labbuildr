@@ -2251,7 +2251,6 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
 	$Aworks_File = Join-Path $Aworks_Dir $FileName
 	$Aworks_Backup = Join-Path $Aworks_Dir "AdventureWorks2012.bak"
 
-    Write-Verbose "Testing $FileName in $Aworks_Dir"
 	If (Test-Path $Aworks_Dir)
 		{
 		Write-Verbose "we got $Aworks_Dir"
@@ -2260,11 +2259,12 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
 		{
 		New-Item -ItemType Directory $Aworks_Dir
 		}
+    Write-Host "Testing $FileName in $Aworks_Dir"
 
-    if (!(test-path  $Aworks_Backup))
+    if (!(test-path $Aworks_Backup))
         {
         Write-Verbose "Trying Download"
-        if (!(Receive-LABBitsFile -DownLoadUrl $URL -destination $Aworks_Dir))
+        if (!(Receive-LABBitsFile -DownLoadUrl $URL -destination $Aworks_File))
             {
             Write-Warning "Error Downloading file $Url, Please check connectivity"
             exit
