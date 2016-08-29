@@ -2244,7 +2244,7 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
         {
         $Java8_required = $true
         }
-    $AAGURL = "https://labbuildrmaster.blob.core.windows.net/addons/AWORKS.zip"
+    $AAGURL = "https://labbuildrmaster.blob.core.windows.net/addons/AWORKS.7z"
     $URL = $AAGURL
     $FileName = Split-Path -Leaf -Path $Url
 	$Aworks_Dir = Join-Path $Sourcedir $AAGDB
@@ -2270,7 +2270,7 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
             exit
             }
         New-Item -ItemType Directory -Path "$Aworks_Dir" -Force
-        Expand-LABpackage -Archive $Aworks_File -destination $Sourcedir
+        Expand-LABpackage -Archive $Aworks_File -destination $Aworks_Dir
         }
     if (!($SQL_OK = receive-labsql -SQLVER $SQLVER -Destination $Sourcedir -Product_Dir "SQL" -extract -WarningAction SilentlyContinue))
         {
