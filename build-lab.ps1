@@ -2247,7 +2247,7 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
     $AAGURL = "https://community.emc.com/servlet/JiveServlet/download/38-111250/AWORKS.zip"
     $URL = $AAGURL
     $FileName = Split-Path -Leaf -Path $Url
-	$Aworks_Dir = Join-Path $Sourcedir $AAGName
+	$Aworks_Dir = Join-Path $Sourcedir $AAGDB
 	$Aworks_File = Join-Path $Aworks_Dir $FileName
 	$Aworks_Backup = Join-Path $Aworks_Dir "AdventureWorks2012.bak"
 
