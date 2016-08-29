@@ -3704,7 +3704,7 @@ switch ($PsCmdlet.ParameterSetName)
         $size = 'XL'
 		$Nodeip = "$IPv4Subnet.13$Node"
 		$Nodename = "SQLNODE$Node"
-		 
+		$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
 		$IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\SQL\"
 		###################################################
 		# we need a DC, so check it is running
