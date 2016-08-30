@@ -23,6 +23,8 @@ catch
     {
     Write-Host -ForegroundColor Yellow "no defaults.xml found, using labbuildr default settings"
     Copy-Item .\defaults.xml.example .\defaults.xml
+	Set-LABMasterpath "$HOME/Master.develop"
+	Set-LABSources "$Home/Sources.develop"
     }
 $Defaults = Get-labdefaults
 $buildlab = (join-path $self "build-lab.ps1")
