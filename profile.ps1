@@ -26,7 +26,6 @@ catch
 	Set-LABMasterpath "$HOME/Master.develop"
 	Set-LABSources "$Home/Sources.develop"
     }
-$Defaults = Get-labdefaults
 $buildlab = (join-path $self "build-lab.ps1")
 .$buildlab
 <#write-host -ForegroundColor Yellow "Running VMware $vmwareversion"
@@ -41,4 +40,4 @@ else
     $blog = [xml](new-object System.Net.WebClient).DownloadString($Url)
     $blog.rss.channel.item |  where {$_.title -match "vmxtoolkit" -or $_.title -Match "labbuildr"} |select Link | ft
     }#>
-$Defaults
+Get-LABDefaults
