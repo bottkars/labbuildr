@@ -130,7 +130,7 @@ switch ($centos_ver)
     "7"
         {
         $netdev = "eno16777984"
-        $Required_Master = "$OS Master"
+        $Required_Master = "$OS$centos_ver Master"
 		$Guestuser = "stack"
         }
     default
