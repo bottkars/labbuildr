@@ -1,9 +1,6 @@
 ﻿<#$Userinterface = (Get-Host).UI.RawUI
-
 $Userinterface.BackgroundColor = "Black"
-
 $Userinterface.ForegroundColor = "Green"
-
 $size = $Userinterface.BufferSize
 $size.width=130
 $size.height=5000
@@ -30,14 +27,12 @@ catch
 $Defaults = Get-labdefaults
 $buildlab = (join-path $self "build-lab.ps1")
 .$buildlab
-
-write-host
-write-host -ForegroundColor Yellow "Running VMware $vmwareversion"
+<#write-host -ForegroundColor Yellow "Running VMware $vmwareversion"
 if (!(Test-Connection community.emc.com -Quiet -Count 2 -ErrorAction SilentlyContinue))
     {
     Write-Warning "no Internet Connection detected or on EMC Net, Download of Sources may not work"
     }
-<#else
+else
     {
     Write-host "latest updates on vmxtoolkit and labbuildr"
     $Url = "https://community.emc.com/blogs/bottk/feeds/posts"
