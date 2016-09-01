@@ -159,9 +159,9 @@ if ($scaleio.IsPresent)
 	$StoragePoolName = "SP_$BuildDomain"
 	$SystemName = "ScaleIO@$BuildDomain"
 	$FaultSetName = "Rack_"
-	$mdm_a_byte = $ip_startrange+$Startnode
-	$mdm_b_byte = $ip_startrange+$Startnode+1
-	$mdm_c_byte = $ip_startrange+$Startnode+2
+	$mdm_a_byte = $ip_startrange+1
+	$mdm_b_byte = $ip_startrange+2
+	$mdm_c_byte = $ip_startrange+3
 	$mdm_ipa  = "$subnet.$mdm_a_byte"
 	$mdm_ipb  = "$subnet.$mdm_b_byte"
 	$tb_ip = "$subnet.$mdm_c_byte"
@@ -178,6 +178,7 @@ if ($scaleio.IsPresent)
         {
         $mdm_ip="$mdm_ipa,$mdm_ipb"
         }
+	Write-Host -ForegroundColor Gray " ==>using MDM IP´s $mdm_ip"
 	Write-Host -ForegroundColor Gray " ==>defaulting to Ubuntu 14_4"
 	$ubuntu_ver = "14_4"
 	if ($Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Recurse -Directory)
@@ -550,7 +551,7 @@ if ($scaleio.IsPresent)
 					$NodeClone | Invoke-VMXBash -Scriptblock "export MDM_ROLE_IS_MANAGER=1;dpkg -i $ubuntu_guestdir/EMC-ScaleIO-mdm*.deb" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 					}
 
-				if ($Node -eq 3)
+				if ($Nodecounter -eq 3)
 					{
 					Write-Host -ForegroundColor Gray " ==>trying Gateway Install"
 					$NodeClone | Invoke-VMXBash -Scriptblock "dpkg -i $ubuntu_guestdir/jre-*-linux-x64.deb" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
