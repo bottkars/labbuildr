@@ -553,71 +553,69 @@ if ($scaleio.IsPresent)
 				$NodeClone | Invoke-VMXBash -Scriptblock "export MDM_IP=$mdm_ip;dpkg -i $ubuntu_guestdir/EMC-ScaleIO-sdc*.deb" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 				}
 		}
-	if ($configure.IsPresent)
+	Write-Host -ForegroundColor Magenta " ==> Now configuring ScaleIO"
+	$Logfile = "/tmp/configure_sio.log"
+	$mdmconnect = "scli --login --username admin --password $MDMPassword --mdm_ip $mdm_ip"
+	if ($Primary)
 		{
-		Write-Host -ForegroundColor Magenta " ==> Now configuring ScaleIO"
-		$Logfile = "/tmp/configure_sio.log"
-		$mdmconnect = "scli --login --username admin --password $MDMPassword --mdm_ip $mdm_ip"
-		if ($Primary)
-			{
-			Write-Host -ForegroundColor Magenta "We are now creating the ScaleIO Cluster"
-			Write-Host -ForegroundColor Gray " ==>adding Primary MDM $mdm_ipa"
-			$sclicmd =  "scli  --create_mdm_cluster --master_mdm_ip $mdm_ipa  --master_mdm_management_ip $mdm_ipa --master_mdm_name $mdm_name_a --approve_certificate --accept_license;sleep 3"
-			Write-Verbose $sclicmd
-			$Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-			Write-Host -ForegroundColor Gray " ==>Setting password"
-			$sclicmd =  "scli --login --username admin --password admin --mdm_ip $mdm_ipa;scli --set_password --old_password admin --new_password $MDMPassword  --mdm_ip $mdm_ipa"
-			Write-Verbose $sclicmd
-			$Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-			if (!$singlemdm.IsPresent)
-				{
-				Write-Host -ForegroundColor Gray " ==>adding standby MDM $mdm_ipb"
-				$sclicmd = "$mdmconnect;scli --add_standby_mdm --mdm_role manager --new_mdm_ip $mdm_ipb --new_mdm_management_ip $mdm_ipb --new_mdm_name $mdm_name_b --mdm_ip $mdm_ipa"
-				Write-Verbose $sclicmd
-				$Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-				Write-Host -ForegroundColor Gray " ==>adding tiebreaker $tb_ip"
-				$sclicmd = "$mdmconnect; scli --add_standby_mdm --mdm_role tb  --new_mdm_ip $tb_ip --tb_name $tb_name --mdm_ip $mdm_ipa"
-				Write-Verbose $sclicmd
-				$Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-
-				Write-Host -ForegroundColor Gray " ==>switching to cluster mode"
-				$sclicmd = "$mdmconnect;scli --switch_cluster_mode --cluster_mode 3_node --add_slave_mdm_ip $mdm_ipb --add_tb_ip $tb_ip  --mdm_ip $mdm_ipa"
-				Write-Verbose $sclicmd
-				$Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-				}
-			else
-				{
-				$mdm_ipb = $mdm_ipa
-				}
-			Write-Host -ForegroundColor Magenta "Storing SIO Confiuration locally"
-			Set-LABSIOConfig -mdm_ipa $mdm_ipa -mdm_ipb $mdm_ipb -gateway_ip $tb_ip -system_name $SystemName -pool_name $StoragePoolName -pd_name $ProtectionDomainName
-
-			Write-Host -ForegroundColor Gray " ==>adding protection domain $ProtectionDomainName"
-			$sclicmd = "scli --add_protection_domain --protection_domain_name $ProtectionDomainName --mdm_ip $mdm_ip"
-			$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-
-			Write-Host -ForegroundColor Gray " ==>adding storagepool $StoragePoolName"
-			$sclicmd = "scli --add_storage_pool --storage_pool_name $StoragePoolName --protection_domain_name $ProtectionDomainName --mdm_ip $mdm_ip"
-			Write-Verbose $sclicmd
-			$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-			Write-Host -ForegroundColor Gray " ==>adding renaming system to $SystemName"
-			$sclicmd = "scli --rename_system --new_name $SystemName --mdm_ip $mdm_ip"
-			Write-Verbose $sclicmd
-			$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-			}#end Primary
-		foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
-				{
-				Write-Host -ForegroundColor Gray " ==>adding sds $subnet.19$Node with /dev/sdb"
-				$sclicmd = "scli --add_sds --sds_ip $subnet.19$Node --device_path /dev/sdb --device_name /dev/sdb  --sds_name ScaleIONode$Node --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --no_test --mdm_ip $mdm_ip"
-				Write-Verbose $sclicmd
-				$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-				}
-		Write-Host -ForegroundColor Gray " ==>adjusting spare policy"
-		$sclicmd = "scli --modify_spare_policy --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --spare_percentage $Percentage --i_am_sure --mdm_ip $mdm_ip"
+		Write-Host -ForegroundColor Magenta "We are now creating the ScaleIO Cluster"
+		Write-Host -ForegroundColor Gray " ==>adding Primary MDM $mdm_ipa"
+		$sclicmd =  "scli  --create_mdm_cluster --master_mdm_ip $mdm_ipa  --master_mdm_management_ip $mdm_ipa --master_mdm_name $mdm_name_a --approve_certificate --accept_license;sleep 3"
 		Write-Verbose $sclicmd
-		$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
-		write-host "Connect with ScaleIO UI to $mdm_ipa admin/Password123!"
-		}			
+		$Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+		Write-Host -ForegroundColor Gray " ==>Setting password"
+		$sclicmd =  "scli --login --username admin --password admin --mdm_ip $mdm_ipa;scli --set_password --old_password admin --new_password $MDMPassword  --mdm_ip $mdm_ipa"
+		Write-Verbose $sclicmd
+		$Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+		if (!$singlemdm.IsPresent)
+			{
+			Write-Host -ForegroundColor Gray " ==>adding standby MDM $mdm_ipb"
+			$sclicmd = "$mdmconnect;scli --add_standby_mdm --mdm_role manager --new_mdm_ip $mdm_ipb --new_mdm_management_ip $mdm_ipb --new_mdm_name $mdm_name_b --mdm_ip $mdm_ipa"
+			Write-Verbose $sclicmd
+			$Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+			Write-Host -ForegroundColor Gray " ==>adding tiebreaker $tb_ip"
+			$sclicmd = "$mdmconnect; scli --add_standby_mdm --mdm_role tb  --new_mdm_ip $tb_ip --tb_name $tb_name --mdm_ip $mdm_ipa"
+			Write-Verbose $sclicmd
+			$Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+
+			Write-Host -ForegroundColor Gray " ==>switching to cluster mode"
+			$sclicmd = "$mdmconnect;scli --switch_cluster_mode --cluster_mode 3_node --add_slave_mdm_ip $mdm_ipb --add_tb_ip $tb_ip  --mdm_ip $mdm_ipa"
+			Write-Verbose $sclicmd
+			$Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+			}
+		else
+			{
+			$mdm_ipb = $mdm_ipa
+			}
+		Write-Host -ForegroundColor Magenta "Storing SIO Confiuration locally"
+		Set-LABSIOConfig -mdm_ipa $mdm_ipa -mdm_ipb $mdm_ipb -gateway_ip $tb_ip -system_name $SystemName -pool_name $StoragePoolName -pd_name $ProtectionDomainName
+
+		Write-Host -ForegroundColor Gray " ==>adding protection domain $ProtectionDomainName"
+		$sclicmd = "scli --add_protection_domain --protection_domain_name $ProtectionDomainName --mdm_ip $mdm_ip"
+		$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+
+		Write-Host -ForegroundColor Gray " ==>adding storagepool $StoragePoolName"
+		$sclicmd = "scli --add_storage_pool --storage_pool_name $StoragePoolName --protection_domain_name $ProtectionDomainName --mdm_ip $mdm_ip"
+		Write-Verbose $sclicmd
+		$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+		Write-Host -ForegroundColor Gray " ==>adding renaming system to $SystemName"
+		$sclicmd = "scli --rename_system --new_name $SystemName --mdm_ip $mdm_ip"
+		Write-Verbose $sclicmd
+		$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+		}#end Primary
+	foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
+			{
+			Write-Host -ForegroundColor Gray " ==>adding sds $subnet.19$Node with /dev/sdb"
+			$sclicmd = "scli --add_sds --sds_ip $subnet.19$Node --device_path /dev/sdb --device_name /dev/sdb  --sds_name ScaleIONode$Node --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --no_test --mdm_ip $mdm_ip"
+			Write-Verbose $sclicmd
+			$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+			}
+	Write-Host -ForegroundColor Gray " ==>adjusting spare policy"
+	$sclicmd = "scli --modify_spare_policy --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --spare_percentage $Percentage --i_am_sure --mdm_ip $mdm_ip"
+	Write-Verbose $sclicmd
+	$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+	write-host "Connect with ScaleIO UI to $mdm_ipa admin/Password123!"
+					
 			
 	}
 		## scaleio end
