@@ -164,6 +164,7 @@ if ($scaleio.IsPresent)
 	[int]$mdm_c_byte = $ip_startrange+2
 	$mdm_ipa  = "$subnet.$mdm_a_byte"
 	$mdm_ipb  = "$subnet.$mdm_b_byte"
+	$MDMPassword = "Password123!"
 	$tb_ip = "$subnet.$mdm_c_byte"
 	$mdm_name_a = "Manager_A"
 	$mdm_name_b = "Manager_B"
@@ -554,6 +555,7 @@ if ($scaleio.IsPresent)
 				if ($Nodecounter -eq 3)
 					{
 					Write-Host -ForegroundColor Gray " ==>trying Gateway Install"
+					$Scriptblock = "add-apt-repository ppa:webupd8team/java -y;apt-get update -y;echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections;apt-get install oracle-java8-installer -y"
 					$NodeClone | Invoke-VMXBash -Scriptblock "dpkg -i $ubuntu_guestdir/jre-*-linux-x64.deb" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 					$NodeClone | Invoke-VMXBash -Scriptblock "export SIO_GW_KEYTOOL=/usr/java/default/bin/;export GATEWAY_ADMIN_PASSWORD='Password123!';dpkg -i --nodeps  $ubuntu_guestdir/EMC-ScaleIO-gateway*.deb" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 					if (!$singlemdm)
@@ -585,9 +587,9 @@ if ($scaleio.IsPresent)
 				Write-Host -ForegroundColor Gray " ==>trying SDC Install"
 				$NodeClone | Invoke-VMXBash -Scriptblock "export MDM_IP=$mdm_ip;dpkg -i $ubuntu_guestdir/EMC-ScaleIO-sdc*.deb" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 				}
-		}
+		$Nodecounter++
+		}##end nodes
 	Write-Host -ForegroundColor Magenta " ==> Now configuring ScaleIO"
-	$Logfile = "/tmp/configure_sio.log"
 	$mdmconnect = "scli --login --username admin --password $MDMPassword --mdm_ip $mdm_ip"
 	if ($Primary)
 		{
@@ -646,7 +648,7 @@ if ($scaleio.IsPresent)
 	Write-Host -ForegroundColor Gray " ==>adjusting spare policy"
 	$sclicmd = "scli --modify_spare_policy --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --spare_percentage $Percentage --i_am_sure --mdm_ip $mdm_ip"
 	Write-Verbose $sclicmd
-	$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+	$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 	write-host "Connect with ScaleIO UI to $mdm_ipa admin/Password123!"
 					
 			
