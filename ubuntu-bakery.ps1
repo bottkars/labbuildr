@@ -153,10 +153,42 @@ if ($scaleio.IsPresent -and $Nodes -lt 3)
 	}
 if ($scaleio.IsPresent)
 	{
+	$Devicename = "$Location"+"_Disk_$Driveletter"
+	$VolumeName = "Volume_$Location"
+	$ProtectionDomainName = "PD_$BuildDomain"
+	$StoragePoolName = "SP_$BuildDomain"
+	$SystemName = "ScaleIO@$BuildDomain"
+	$FaultSetName = "Rack_"
+	$mdm_a_byte = $ip_startrange+$Startnode
+	$mdm_b_byte = $ip_startrange+$Startnode+1
+	$mdm_c_byte = $ip_startrange+$Startnode+2
+	$mdm_ipa  = "$subnet.$mdm_a_byte"
+	$mdm_ipb  = "$subnet.$mdm_b_byte"
+	$tb_ip = "$subnet.$mdm_c_byte"
+	$mdm_name_a = "Manager_A"
+	$mdm_name_b = "Manager_B"
+	$tb_name = "TB"
 	$scaleio_dir = Join-Path $Sourcedir "ScaleIO"
+	If ($singlemdm.IsPresent)
+        {
+        Write-Warning "Single MDM installations with MemoryTweaking  are only for Test Deployments and Memory Contraints/Manager Laptops :-)"
+        $mdm_ip="$mdm_ipa"
+        }
+    else
+        {
+        $mdm_ip="$mdm_ipa,$mdm_ipb"
+        }
 	Write-Host -ForegroundColor Gray " ==>defaulting to Ubuntu 14_4"
 	$ubuntu_ver = "14_4"
-	Receive-LABScaleIO -Destination $Sourcedir -arch linux -unzip
+	if ($Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Recurse -Directory)
+		{
+		Write-Host "got Ubuntu iles"
+		}
+	else
+		{
+		Receive-LABScaleIO -Destination $Sourcedir -arch linux -unzip
+		$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Recurse -Directory
+		}
 	Write-Host -ForegroundColor Gray " ==>evaluating ubuntu files"
 	$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Recurse -Directory
 	$Ubuntudir = $Ubuntu | Sort-Object -Descending | Select-Object -First 1
