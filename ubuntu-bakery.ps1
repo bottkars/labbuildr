@@ -153,11 +153,12 @@ if ($scaleio.IsPresent -and $Nodes -lt 3)
 	}
 if ($scaleio.IsPresent)
 	{
+	$scaleio_dir = Join-Path $Sourcedir "ScaleIO"
 	Write-Host -ForegroundColor Gray " ==>defaulting to Ubuntu 14_4"
 	$ubuntu_ver = "14_4"
 	Receive-LABScaleIO -Destination $Sourcedir -arch linux -unzip
 	Write-Host -ForegroundColor Gray " ==>evaluating ubuntu files"
-	$Ubuntu = Get-ChildItem -Path $Extract_Path -Include *UBUNTU* -Recurse -Directory
+	$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Recurse -Directory
 	$Ubuntudir = $Ubuntu | Sort-Object -Descending | Select-Object -First 1
 	Write-Host -ForegroundColor Gray " ==>Using Ubuntu Dir $Ubuntudir"
 	if ($debfiles = Get-ChildItem -Path $Ubuntudir -Filter "*.deb" -Recurse -Include *Ubuntu*)
