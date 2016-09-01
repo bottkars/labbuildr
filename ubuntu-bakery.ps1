@@ -175,6 +175,30 @@ if ($scaleio.IsPresent)
 			pause
 			}
 		}
+	Write-Host -ForegroundColor Gray " ==> evaluationg base path for Gateway"
+    $SIOGatewayrpm = Get-ChildItem -Path $scaleio_dir -Recurse -Filter "EMC-ScaleIO-gateway*.deb"  -Exclude ".*" -ErrorAction SilentlyContinue
+
+    try
+        {
+        $SIOGatewayrpm = $SIOGatewayrpm[-1].FullName 
+        }
+    Catch
+        {
+        Write-Warning "ScaleIO Gateway RPM not found in $scaleio_dir
+        if using 2.x, the Zip files are Packed recursively
+        manual action required: expand ScaleIO Gateway ZipFile"
+        return
+        }
+    $Sourcedir_replace = $Sourcedir.Replace("\","\\")
+    $SIOGatewayrpm = $SIOGatewayrpm -replace  $Sourcedir_replace,"/mnt/hgfs/Sources"
+    $SIOGatewayrpm = $SIOGatewayrpm.Replace("\","/")
+	$Ubuntudir_replace = $Ubuntudir.Replace("\","\\")
+	$Ubuntu_guestdir = $Ubuntudir_replace -replace  $Sourcedir_replace,"/mnt/hgfs/Sources"
+	$Ubuntu_guestdir = $Ubuntu_guestdir.Replace("\","/")
+    Write-Host $Ubuntu_guestdir
+    Write-Host $SIOGatewayrpm
+	
+		
 	}
 
 switch ($ubuntu_ver)
@@ -282,11 +306,11 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         }
     }
 Write-Host -ForegroundColor White "Starting Node Configuration"
-
+$ip_startrange_count = $ip_startrange
 $installmessage = @()    
 foreach ($Node in $machinesBuilt)
     {
-        $ip="$subnet.$ip_startrange"
+        $ip="$subnet.$ip_startrange_count"
         $NodeClone = get-vmx $Node
 
         do {
@@ -425,11 +449,7 @@ foreach ($Node in $machinesBuilt)
         $Scriptblock = "DEFAULT_ROUTE=`$(ip route show default | awk '/default/ {print `$3}');ping -c 1 `$DEFAULT_ROUTE"
         Write-Verbose $Scriptblock
         $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword     
- ## scaleio       
-		if ($scaleio)
-            {}
-		## scaleio end
-		###
+
         switch ($Desktop)
             {
                 default
@@ -465,8 +485,139 @@ foreach ($Node in $machinesBuilt)
 			Write-Verbose $Scriptblock
 			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -nowait| Out-Null
 			}
-        $ip_startrange++
+        $ip_startrange_count++
     }
+
+ ## scaleio       
+if ($scaleio.IsPresent)
+    {
+	foreach ($Node in $machinesBuilt)
+			{
+			$ip="$subnet.$ip_startrange_count"
+			$NodeClone = get-vmx $Node
+			Write-Host -ForegroundColor Gray " ==>waiting for Node $Nodeprefix$node"
+			do {
+				$ToolState = Get-VMXToolsState -config $NodeClone.config
+				Write-Verbose "VMware tools are in $($ToolState.State) state"
+				sleep 5
+				}
+			until ($ToolState.state -match "running")
+			If (!$DefaultGateway) {$DefaultGateway = $Ip}
+			$NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device eth0 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.$Custom_DomainSuffix" -Hostname "$Nodeprefix$Node" -suse -rootuser $rootuser -rootpassword $rootpassword | Out-Null
+			$NodeClone | Invoke-VMXBash -Scriptblock "rpm --import /root/install/RPM-GPG-KEY-ScaleIO" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+			$NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-openssl*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+			if (!($PsCmdlet.ParameterSetName -eq "sdsonly"))
+				{
+				if (($Node -in 1..2 -and (!$singlemdm)) -or ($Node -eq 1))
+					{
+					Write-Host -ForegroundColor Gray " ==>trying MDM Install as manager"
+					$NodeClone | Invoke-VMXBash -Scriptblock "export MDM_ROLE_IS_MANAGER=1;rpm -Uhv /root/install/EMC-ScaleIO-mdm*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+					}
+
+				if ($Node -eq 3)
+					{
+					Write-Host -ForegroundColor Gray " ==>trying Gateway Install"
+					$NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/jre-*-linux-x64.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+					$NodeClone | Invoke-VMXBash -Scriptblock "export SIO_GW_KEYTOOL=/usr/java/default/bin/;export GATEWAY_ADMIN_PASSWORD='Password123!';rpm -Uhv --nodeps  /root/install/EMC-ScaleIO-gateway*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+					if (!$singlemdm)
+						{
+						Write-Host -ForegroundColor Gray " ==>trying MDM Install as tiebreaker"
+						$NodeClone | Invoke-VMXBash -Scriptblock "export MDM_ROLE_IS_MANAGER=0;rpm -Uhv /root/install/EMC-ScaleIO-mdm*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+						Write-Host -ForegroundColor Gray " ==>adding MDM to Gateway Server Config File"
+						$sed = "sed -i 's\mdm.ip.addresses=.*\mdm.ip.addresses=$mdm_ipa;$mdm_ipb\' /opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classes/gatewayUser.properties"
+						}
+					else
+						{
+						Write-Host -ForegroundColor Gray " ==>adding MDM's to Gateway Server Config File"
+						$sed = "sed -i 's\mdm.ip.addresses=.*\mdm.ip.addresses=$mdm_ipa;$mdm_ipa\' /opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classes/gatewayUser.properties"
+						}
+					Write-Verbose $sed
+					$NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+					$NodeClone | Invoke-VMXBash -Scriptblock "/etc/init.d/scaleio-gateway restart" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+					}
+				Write-Host -ForegroundColor Gray " ==>trying LIA Install"
+				$NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-lia*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+				}
+			if ($sds.IsPresent)
+				{
+				Write-Host -ForegroundColor Gray " ==>trying SDS Install"
+				$NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-sds-*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+				}
+			if ($sdc.IsPresent)
+				{
+				Write-Host -ForegroundColor Gray " ==>trying SDC Install"
+				$NodeClone | Invoke-VMXBash -Scriptblock "export MDM_IP=$mdm_ip;rpm -Uhv /root/install/EMC-ScaleIO-sdc*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+				}
+		}
+	if ($configure.IsPresent)
+		{
+		Write-Host -ForegroundColor Magenta " ==> Now configuring ScaleIO"
+		$Logfile = "/tmp/configure_sio.log"
+		$mdmconnect = "scli --login --username admin --password $MDMPassword --mdm_ip $mdm_ip"
+		if ($Primary)
+			{
+			Write-Host -ForegroundColor Magenta "We are now creating the ScaleIO Cluster"
+			Write-Host -ForegroundColor Gray " ==>adding Primary MDM $mdm_ipa"
+			$sclicmd =  "scli  --create_mdm_cluster --master_mdm_ip $mdm_ipa  --master_mdm_management_ip $mdm_ipa --master_mdm_name $mdm_name_a --approve_certificate --accept_license;sleep 3"
+			Write-Verbose $sclicmd
+			$Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+			Write-Host -ForegroundColor Gray " ==>Setting password"
+			$sclicmd =  "scli --login --username admin --password admin --mdm_ip $mdm_ipa;scli --set_password --old_password admin --new_password $MDMPassword  --mdm_ip $mdm_ipa"
+			Write-Verbose $sclicmd
+			$Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+			if (!$singlemdm.IsPresent)
+				{
+				Write-Host -ForegroundColor Gray " ==>adding standby MDM $mdm_ipb"
+				$sclicmd = "$mdmconnect;scli --add_standby_mdm --mdm_role manager --new_mdm_ip $mdm_ipb --new_mdm_management_ip $mdm_ipb --new_mdm_name $mdm_name_b --mdm_ip $mdm_ipa"
+				Write-Verbose $sclicmd
+				$Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+				Write-Host -ForegroundColor Gray " ==>adding tiebreaker $tb_ip"
+				$sclicmd = "$mdmconnect; scli --add_standby_mdm --mdm_role tb  --new_mdm_ip $tb_ip --tb_name $tb_name --mdm_ip $mdm_ipa"
+				Write-Verbose $sclicmd
+				$Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+
+				Write-Host -ForegroundColor Gray " ==>switching to cluster mode"
+				$sclicmd = "$mdmconnect;scli --switch_cluster_mode --cluster_mode 3_node --add_slave_mdm_ip $mdm_ipb --add_tb_ip $tb_ip  --mdm_ip $mdm_ipa"
+				Write-Verbose $sclicmd
+				$Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+				}
+			else
+				{
+				$mdm_ipb = $mdm_ipa
+				}
+			Write-Host -ForegroundColor Magenta "Storing SIO Confiuration locally"
+			Set-LABSIOConfig -mdm_ipa $mdm_ipa -mdm_ipb $mdm_ipb -gateway_ip $tb_ip -system_name $SystemName -pool_name $StoragePoolName -pd_name $ProtectionDomainName
+
+			Write-Host -ForegroundColor Gray " ==>adding protection domain $ProtectionDomainName"
+			$sclicmd = "scli --add_protection_domain --protection_domain_name $ProtectionDomainName --mdm_ip $mdm_ip"
+			$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+
+			Write-Host -ForegroundColor Gray " ==>adding storagepool $StoragePoolName"
+			$sclicmd = "scli --add_storage_pool --storage_pool_name $StoragePoolName --protection_domain_name $ProtectionDomainName --mdm_ip $mdm_ip"
+			Write-Verbose $sclicmd
+			$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+			Write-Host -ForegroundColor Gray " ==>adding renaming system to $SystemName"
+			$sclicmd = "scli --rename_system --new_name $SystemName --mdm_ip $mdm_ip"
+			Write-Verbose $sclicmd
+			$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+			}#end Primary
+		foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
+				{
+				Write-Host -ForegroundColor Gray " ==>adding sds $subnet.19$Node with /dev/sdb"
+				$sclicmd = "scli --add_sds --sds_ip $subnet.19$Node --device_path /dev/sdb --device_name /dev/sdb  --sds_name ScaleIONode$Node --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --no_test --mdm_ip $mdm_ip"
+				Write-Verbose $sclicmd
+				$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+				}
+		Write-Host -ForegroundColor Gray " ==>adjusting spare policy"
+		$sclicmd = "scli --modify_spare_policy --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --spare_percentage $Percentage --i_am_sure --mdm_ip $mdm_ip"
+		Write-Verbose $sclicmd
+		$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+		write-host "Connect with ScaleIO UI to $mdm_ipa admin/Password123!"
+		}			
+			
+	}
+		## scaleio end
+		###
 $StopWatch.Stop()
 Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
 Write-Host -ForegroundColor White $installmessage
