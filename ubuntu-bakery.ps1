@@ -63,7 +63,7 @@ $Sourcedir,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateScript({$_ -match [IPAddress]$_ })]
 [ipaddress]$subnet = "192.168.2.0",
-[Parameter(ParameterSetName = "install",Mandatory=$true]
+[Parameter(ParameterSetName = "install",Mandatory=$true)]
 [ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")]
 [string]$BuildDomain,
 [Parameter(ParameterSetName = "true",Mandatory = $false)]
