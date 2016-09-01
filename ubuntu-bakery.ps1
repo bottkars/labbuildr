@@ -96,7 +96,26 @@ if ($scaleio.IsPresent)
 	{
 	Write-Host -ForegroundColor Gray " ==>defaulting to Ubuntu 14_4"
 	$ubuntu_ver = "14_4"
+	Receive-LABScaleIO -Destination $Sourcedir -arch linux -unzip
+	Write-Host -ForegroundColor Gray " ==>evaluating ubuntu files"
+	$Ubuntu = Get-ChildItem -Path $Extract_Path -Include *UBUNTU* -Recurse -Directory
+	$Ubuntudir = $Ubuntu | Sort-Object -Descending | Select-Object -First 1
+	Write-Host -ForegroundColor Gray " ==>Using Ubuntu Dir $Ubuntudir"
+	if ($debfiles = Get-ChildItem -Path $Ubuntudir -Filter "*.deb" -Recurse -Include *Ubuntu*)
+		{
+		Write-Host -ForegroundColor Gray " ==>found deb files, no siob_extraxt required"
+		}
+	else
+		{
+		Write-Host -ForegroundColor Gray " ==>need to get siob files"
+		if ($siobfiles = Get-ChildItem -Path $Ubuntudir -Filter "*.siob" -Recurse -Include *Ubuntu* -Exclude "*.sig")
+			{
+			Write-Host -ForegroundColor Gray " ==>found siob files  in $Ubuntudir"
+			pause
+			}
+		}
 	}
+
 If ($ConfirmPreference -match "none")
     {$Confirm = $false}
 else
@@ -210,10 +229,6 @@ if (!$MasterVMX.Template)
         }
 $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
 ####Build Machines#
-if ($scaleio.IsPresent)
-	{
-	Receive-LABScaleIO -Destination $Sourcedir -arch linux -unzip
-	}
 
 $machinesBuilt = @()
 foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
