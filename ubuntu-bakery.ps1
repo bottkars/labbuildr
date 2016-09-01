@@ -47,9 +47,9 @@ Param(
 [ValidateSet('cinnamon','cinnamon-desktop-environment','xfce4','lxde','none')]
 [string]$Desktop = "none",
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[Parameter(ParameterSetName = "install",Mandatory=$true)]
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]
-$Sourcedir = 'h:\sources',
+$Sourcedir,
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
@@ -63,12 +63,12 @@ $Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateScript({$_ -match [IPAddress]$_ })]
 [ipaddress]$subnet = "192.168.2.0",
-[Parameter(ParameterSetName = "install",Mandatory=$False)]
+[Parameter(ParameterSetName = "install",Mandatory=$true]
 [ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")]
-[string]$BuildDomain = "labbuildr",
-[Parameter(ParameterSetName = "install",Mandatory = $false)]
-[ValidateSet('vmnet1', 'vmnet2','vmnet3')]
-$vmnet = "vmnet2",
+[string]$BuildDomain,
+[Parameter(ParameterSetName = "true",Mandatory = $false)]
+[ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]
+$vmnet,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [ValidateScript({ Test-Path -Path $_ })]
 $Defaultsfile=".\defaults.xml",
@@ -542,7 +542,8 @@ if ($scaleio.IsPresent)
 					{
 					Write-Host -ForegroundColor Gray " ==>trying Gateway Install"
 					$Scriptblock = "add-apt-repository ppa:webupd8team/java -y;apt-get update -y;echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections;apt-get install oracle-java8-installer -y;apt-get install oracle-java8-set-default -y"
-					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+					#$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+					$NodeClone | Invoke-VMXBash -Scriptblock "export SIO_GW_KEYTOOL=/usr/bin/;export GATEWAY_ADMIN_PASSWORD='Password123!';dpkg -i $SIOGatewayrpm" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 					#$NodeClone | Invoke-VMXBash -Scriptblock "export SIO_GW_KEYTOOL=/usr/bin/;export GATEWAY_ADMIN_PASSWORD='Password123!';dpkg -i $SIOGatewayrpm;dpkg -l emc-scaleio-gateway" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 					$NodeClone | Invoke-VMXBash -Scriptblock "export GATEWAY_ADMIN_PASSWORD='Password123!';dpkg -i $SIOGatewayrpm" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 					if (!$singlemdm)
