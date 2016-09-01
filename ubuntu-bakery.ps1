@@ -494,7 +494,7 @@ if ($scaleio.IsPresent)
 	foreach ($Node in $machinesBuilt)
 			{
 			$NodeClone = get-vmx $Node
-			$scriptblock = "dpkg -i libaio1"
+			$scriptblock = "apt-get install -y libaio1"
 			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 			if ($Nodecounter -eq 1 -and !$debfiles)
 				{
