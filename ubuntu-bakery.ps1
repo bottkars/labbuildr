@@ -172,7 +172,6 @@ if ($scaleio.IsPresent)
 			{
 			Write-Host -ForegroundColor Gray " ==>found siob files  in $Ubuntudir"
 			$siobfiles.count
-			pause
 			}
 		}
 	Write-Host -ForegroundColor Gray " ==> evaluationg base path for Gateway"
@@ -495,14 +494,15 @@ if ($scaleio.IsPresent)
 	foreach ($Node in $machinesBuilt)
 			{
 			$NodeClone = get-vmx $Node
+			$scriptblock = "dpkg -i libaio1"
+			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 			if ($Nodecounter -eq 1 -and !$debfiles)
 				{
 				Write-Host -ForegroundColor Gray " ==>generating debs from siob"
 				foreach ($siobfile in $siobfiles)
 					{
-					$commandblock = "$Ubuntu_guestdir/siob_extract $Ubuntudir/$($siobfile.name)"
-					$NodeClone | Invoke-VMXBash -Scriptblock $commandblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-
+					$Scriptblock = "$Ubuntu_guestdir/siob_extract $Ubuntu_guestdir/$($siobfile.name)"
+					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 					}
 				}
 			$ip="$subnet.$ip_startrange_count"
