@@ -192,8 +192,8 @@ if ($scaleio.IsPresent)
     $Sourcedir_replace = $Sourcedir.Replace("\","\\")
     $SIOGatewayrpm = $SIOGatewayrpm -replace  $Sourcedir_replace,"/mnt/hgfs/Sources"
     $SIOGatewayrpm = $SIOGatewayrpm.Replace("\","/")
-	$Ubuntudir_replace = $Ubuntudir.fullname.Replace("\","\\")
-	$Ubuntu_guestdir = $Ubuntudir_replace -replace  $Sourcedir_replace,"/mnt/hgfs/Sources"
+	# = $Ubuntudir.fullname.Replace("\","\\")
+	$Ubuntu_guestdir = $Ubuntudir  -replace  $Sourcedir_replace,"/mnt/hgfs/Sources"
 	$Ubuntu_guestdir = $Ubuntu_guestdir.Replace("\","/")
     Write-Host $Ubuntu_guestdir
     Write-Host $SIOGatewayrpm
@@ -495,34 +495,25 @@ if ($scaleio.IsPresent)
 			{
 			$ip="$subnet.$ip_startrange_count"
 			$NodeClone = get-vmx $Node
-			Write-Host -ForegroundColor Gray " ==>waiting for Node $Nodeprefix$node"
-			do {
-				$ToolState = Get-VMXToolsState -config $NodeClone.config
-				Write-Verbose "VMware tools are in $($ToolState.State) state"
-				sleep 5
-				}
-			until ($ToolState.state -match "running")
-			If (!$DefaultGateway) {$DefaultGateway = $Ip}
-			$NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device eth0 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.$Custom_DomainSuffix" -Hostname "$Nodeprefix$Node" -suse -rootuser $rootuser -rootpassword $rootpassword | Out-Null
-			$NodeClone | Invoke-VMXBash -Scriptblock "rpm --import /root/install/RPM-GPG-KEY-ScaleIO" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
-			$NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-openssl*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+					$NodeClone | Invoke-VMXBash -Scriptblock "rpm --import $ubuntu_guestdir/RPM-GPG-KEY-ScaleIO" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+			$NodeClone | Invoke-VMXBash -Scriptblock "dpkg -i $ubuntu_guestdir/EMC-ScaleIO-openssl*.deb" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
 			if (!($PsCmdlet.ParameterSetName -eq "sdsonly"))
 				{
 				if (($Node -in 1..2 -and (!$singlemdm)) -or ($Node -eq 1))
 					{
 					Write-Host -ForegroundColor Gray " ==>trying MDM Install as manager"
-					$NodeClone | Invoke-VMXBash -Scriptblock "export MDM_ROLE_IS_MANAGER=1;rpm -Uhv /root/install/EMC-ScaleIO-mdm*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+					$NodeClone | Invoke-VMXBash -Scriptblock "export MDM_ROLE_IS_MANAGER=1;dpkg -i $ubuntu_guestdir/EMC-ScaleIO-mdm*.deb" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
 					}
 
 				if ($Node -eq 3)
 					{
 					Write-Host -ForegroundColor Gray " ==>trying Gateway Install"
-					$NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/jre-*-linux-x64.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
-					$NodeClone | Invoke-VMXBash -Scriptblock "export SIO_GW_KEYTOOL=/usr/java/default/bin/;export GATEWAY_ADMIN_PASSWORD='Password123!';rpm -Uhv --nodeps  /root/install/EMC-ScaleIO-gateway*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+					$NodeClone | Invoke-VMXBash -Scriptblock "dpkg -i $ubuntu_guestdir/jre-*-linux-x64.deb" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+					$NodeClone | Invoke-VMXBash -Scriptblock "export SIO_GW_KEYTOOL=/usr/java/default/bin/;export GATEWAY_ADMIN_PASSWORD='Password123!';dpkg -i --nodeps  $ubuntu_guestdir/EMC-ScaleIO-gateway*.deb" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
 					if (!$singlemdm)
 						{
 						Write-Host -ForegroundColor Gray " ==>trying MDM Install as tiebreaker"
-						$NodeClone | Invoke-VMXBash -Scriptblock "export MDM_ROLE_IS_MANAGER=0;rpm -Uhv /root/install/EMC-ScaleIO-mdm*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+						$NodeClone | Invoke-VMXBash -Scriptblock "export MDM_ROLE_IS_MANAGER=0;dpkg -i $ubuntu_guestdir/EMC-ScaleIO-mdm*.deb" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
 						Write-Host -ForegroundColor Gray " ==>adding MDM to Gateway Server Config File"
 						$sed = "sed -i 's\mdm.ip.addresses=.*\mdm.ip.addresses=$mdm_ipa;$mdm_ipb\' /opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classes/gatewayUser.properties"
 						}
@@ -536,17 +527,17 @@ if ($scaleio.IsPresent)
 					$NodeClone | Invoke-VMXBash -Scriptblock "/etc/init.d/scaleio-gateway restart" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
 					}
 				Write-Host -ForegroundColor Gray " ==>trying LIA Install"
-				$NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-lia*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+				$NodeClone | Invoke-VMXBash -Scriptblock "dpkg -i $ubuntu_guestdir/EMC-ScaleIO-lia*.deb" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
 				}
 			if ($sds.IsPresent)
 				{
 				Write-Host -ForegroundColor Gray " ==>trying SDS Install"
-				$NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-sds-*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+				$NodeClone | Invoke-VMXBash -Scriptblock "dpkg -i $ubuntu_guestdir/EMC-ScaleIO-sds-*.deb" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
 				}
 			if ($sdc.IsPresent)
 				{
 				Write-Host -ForegroundColor Gray " ==>trying SDC Install"
-				$NodeClone | Invoke-VMXBash -Scriptblock "export MDM_IP=$mdm_ip;rpm -Uhv /root/install/EMC-ScaleIO-sdc*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+				$NodeClone | Invoke-VMXBash -Scriptblock "export MDM_IP=$mdm_ip;dpkg -i $ubuntu_guestdir/EMC-ScaleIO-sdc*.deb" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
 				}
 		}
 	if ($configure.IsPresent)
