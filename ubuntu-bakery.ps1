@@ -500,12 +500,14 @@ if ($scaleio.IsPresent)
 				Write-Host -ForegroundColor Gray " ==>generating debs from siob"
 				foreach ($siobfile in $siobfiles)
 					{
-					$commandblock = "$Ubuntu_guestdir/ $Ubuntudir/$siobfile.name"
+					$commandblock = "$Ubuntu_guestdir/siob_extract $Ubuntudir/$siobfile.name"
+					$NodeClone | Invoke-VMXBash -Scriptblock $commandblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+
 					}
 				}
 			$ip="$subnet.$ip_startrange_count"
 			#$NodeClone | Invoke-VMXBash -Scriptblock "rpm --import $ubuntu_guestdir/RPM-GPG-KEY-ScaleIO" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-			$NodeClone | Invoke-VMXBash -Scriptblock "dpkg -i $ubuntu_guestdir/EMC-ScaleIO-openssl*.deb" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+			#$NodeClone | Invoke-VMXBash -Scriptblock "dpkg -i $ubuntu_guestdir/EMC-ScaleIO-openssl*.deb" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 			if (!($PsCmdlet.ParameterSetName -eq "sdsonly"))
 				{
 				if (($Nodecounter -in 1..2 -and (!$singlemdm)) -or ($Nodecounter -eq 1))
