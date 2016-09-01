@@ -159,9 +159,9 @@ if ($scaleio.IsPresent)
 	$StoragePoolName = "SP_$BuildDomain"
 	$SystemName = "ScaleIO@$BuildDomain"
 	$FaultSetName = "Rack_"
-	$mdm_a_byte = $ip_startrange+1
-	$mdm_b_byte = $ip_startrange+2
-	$mdm_c_byte = $ip_startrange+3
+	[int]$mdm_a_byte = $ip_startrange
+	[int]$mdm_b_byte = $ip_startrange+1
+	[int]$mdm_c_byte = $ip_startrange+2
 	$mdm_ipa  = "$subnet.$mdm_a_byte"
 	$mdm_ipb  = "$subnet.$mdm_b_byte"
 	$tb_ip = "$subnet.$mdm_c_byte"
