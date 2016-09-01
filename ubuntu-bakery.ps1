@@ -192,7 +192,7 @@ if ($scaleio.IsPresent)
     $Sourcedir_replace = $Sourcedir.Replace("\","\\")
     $SIOGatewayrpm = $SIOGatewayrpm -replace  $Sourcedir_replace,"/mnt/hgfs/Sources"
     $SIOGatewayrpm = $SIOGatewayrpm.Replace("\","/")
-	$Ubuntudir_replace = $Ubuntudir.Replace("\","\\")
+	$Ubuntudir_replace = $Ubuntudir.fullname.Replace("\","\\")
 	$Ubuntu_guestdir = $Ubuntudir_replace -replace  $Sourcedir_replace,"/mnt/hgfs/Sources"
 	$Ubuntu_guestdir = $Ubuntu_guestdir.Replace("\","/")
     Write-Host $Ubuntu_guestdir
