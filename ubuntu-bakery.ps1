@@ -184,7 +184,7 @@ if ($scaleio.IsPresent)
 	$ubuntu_ver = "14_4"
 	if ($Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Recurse -Directory)
 		{
-		Write-Host "got Ubuntu iles"
+		Write-Host "got Ubuntu files"
 		}
 	else
 		{
@@ -361,18 +361,6 @@ foreach ($Node in $machinesBuilt)
             $Scriptblock = "systemctl disable iptables.service"
             Write-Verbose $Scriptblock
             $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-    
-            ##### selectiung fastest apt mirror
-            ## sudo netselect -v -s10 -t20 `wget -q -O- https://launchpad.net/ubuntu/+archivemirrors | grep 
-        
-            <#
-            $Scriptblock = "systemctl stop iptables.service"
-            Write-Verbose $Scriptblock
-            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
-            ssh-keygen -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa
-            ssh-keygen -f /etc/ssh/ssh_host_dsa_key -N '' -t dsa
-            #>
-
             }
 
         $Scriptblock = "sed -i '/PermitRootLogin without-password/ c\PermitRootLogin yes' /etc/ssh/sshd_config"
@@ -542,8 +530,6 @@ if ($scaleio.IsPresent)
 					}
 				}
 			$ip="$subnet.$ip_startrange_count"
-			#$NodeClone | Invoke-VMXBash -Scriptblock "rpm --import $ubuntu_guestdir/RPM-GPG-KEY-ScaleIO" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-			#$NodeClone | Invoke-VMXBash -Scriptblock "dpkg -i $ubuntu_guestdir/EMC-ScaleIO-openssl*.deb" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 			if (!($PsCmdlet.ParameterSetName -eq "sdsonly"))
 				{
 				if (($Nodecounter -in 1..2 -and (!$singlemdm)) -or ($Nodecounter -eq 1))
@@ -556,8 +542,8 @@ if ($scaleio.IsPresent)
 					{
 					Write-Host -ForegroundColor Gray " ==>trying Gateway Install"
 					$Scriptblock = "add-apt-repository ppa:webupd8team/java -y;apt-get update -y;echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections;apt-get install oracle-java8-installer -y"
-					$NodeClone | Invoke-VMXBash -Scriptblock "dpkg -i $ubuntu_guestdir/jre-*-linux-x64.deb" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-					$NodeClone | Invoke-VMXBash -Scriptblock "export SIO_GW_KEYTOOL=/usr/java/default/bin/;export GATEWAY_ADMIN_PASSWORD='Password123!';dpkg -i --nodeps  $ubuntu_guestdir/EMC-ScaleIO-gateway*.deb" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+					$NodeClone | Invoke-VMXBash -Scriptblock "export SIO_GW_KEYTOOL=/usr/java/default/bin/;export GATEWAY_ADMIN_PASSWORD='Password123!';dpkg -i $SIOGatewayrpm" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 					if (!$singlemdm)
 						{
 						Write-Host -ForegroundColor Gray " ==>trying MDM Install as tiebreaker"
