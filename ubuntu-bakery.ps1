@@ -500,7 +500,7 @@ if ($scaleio.IsPresent)
 				Write-Host -ForegroundColor Gray " ==>generating debs from siob"
 				foreach ($siobfile in $siobfiles)
 					{
-					$commandblock = "$Ubuntu_guestdir/siob_extract $Ubuntudir/$siobfile.name"
+					$commandblock = "$Ubuntu_guestdir/siob_extract $Ubuntudir/$($siobfile.name)"
 					$NodeClone | Invoke-VMXBash -Scriptblock $commandblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 
 					}
