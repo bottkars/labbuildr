@@ -331,7 +331,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
 
         $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
         start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
-        $machinesBuilt += $($NodeClone.cloneName).tolower()
+        $machinesBuilt += $($NodeClone.cloneName)
         }
     else
         {
