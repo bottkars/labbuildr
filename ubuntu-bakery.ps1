@@ -171,7 +171,7 @@ if ($scaleio.IsPresent)
 		if ($siobfiles = Get-ChildItem -Path $Ubuntudir -Filter "*.siob" -Recurse -Include *Ubuntu* -Exclude "*.sig")
 			{
 			Write-Host -ForegroundColor Gray " ==>found siob files  in $Ubuntudir"
-			$siobfiles
+			$siobfiles.count
 			pause
 			}
 		}
