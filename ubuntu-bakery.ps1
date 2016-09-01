@@ -94,7 +94,7 @@ if ($scaleio.IsPresent -and $Nodes -lt 3)
 	}
 if ($scaleio.IsPresent)
 	{
-	Write-Host -ForegroundColor Gray " ==>defaulting to Ubuntu 14_04"
+	Write-Host -ForegroundColor Gray " ==>defaulting to Ubuntu 14_4"
 	$ubuntu_ver = "14_4"
 	}
 If ($ConfirmPreference -match "none")
