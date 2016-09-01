@@ -545,7 +545,7 @@ if ($scaleio.IsPresent)
 					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 					#$NodeClone | Invoke-VMXBash -Scriptblock "export SIO_GW_KEYTOOL=/usr/bin/;export GATEWAY_ADMIN_PASSWORD='Password123!';dpkg -i $SIOGatewayrpm" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 					#$NodeClone | Invoke-VMXBash -Scriptblock "export SIO_GW_KEYTOOL=/usr/bin/;export GATEWAY_ADMIN_PASSWORD='Password123!';dpkg -i $SIOGatewayrpm;dpkg -l emc-scaleio-gateway" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-					$NodeClone | Invoke-VMXBash -Scriptblock "export GATEWAY_ADMIN_PASSWORD='Password123!';dpkg -i $SIOGatewayrpm" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+					$NodeClone | Invoke-VMXBash -Scriptblock "export GATEWAY_ADMIN_PASSWORD=$Guestpassword;dpkg -i $SIOGatewayrpm" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 					if (!$singlemdm)
 						{
 						Write-Host -ForegroundColor Gray " ==>trying MDM Install as tiebreaker"
