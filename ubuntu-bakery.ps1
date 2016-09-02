@@ -151,6 +151,8 @@ if ($scaleio.IsPresent -and $Nodes -lt 3)
 	Write-Host -ForegroundColor Gray " ==>Setting Nodes to 3"
 	$Nodes = 3
 	}
+[System.Version]$subnet = $Subnet.ToString()
+$Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 if ($scaleio.IsPresent)
 	{
 	$Devicename = "$Location"+"_Disk_$Driveletter"
@@ -251,8 +253,7 @@ switch ($ubuntu_ver)
         $netdev= "eth0"
         }
     }
-[System.Version]$subnet = $Subnet.ToString()
-$Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
+
 $rootuser = "root"
 $Guestpassword = "Password123!"
 [uint64]$Disksize = 100GB
