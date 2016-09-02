@@ -538,7 +538,7 @@ if ($scaleio.IsPresent)
 				if (($Nodecounter -in 1..2 -and (!$singlemdm)) -or ($Nodecounter -eq 1))
 					{
 					Write-Host -ForegroundColor Gray " ==>trying MDM Install as manager"
-					$NodeClone | Invoke-VMXBash -Scriptblock "export MDM_ROLE_IS_MANAGER=1;dpkg -i $ubuntu_guestdir/EMC-ScaleIO-mdm*.deb" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+					$NodeClone | Invoke-VMXBash -Scriptblock "MDM_ROLE_IS_MANAGER=1 dpkg -i $ubuntu_guestdir/EMC-ScaleIO-mdm*.deb" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 					}
 
 				if ($Nodecounter -eq 3)
@@ -555,7 +555,7 @@ if ($scaleio.IsPresent)
 					if (!$singlemdm)
 						{
 						Write-Host -ForegroundColor Gray " ==>trying MDM Install as tiebreaker"
-						$NodeClone | Invoke-VMXBash -Scriptblock "export MDM_ROLE_IS_MANAGER=0 dpkg -i $ubuntu_guestdir/EMC-ScaleIO-mdm*.deb" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+						$NodeClone | Invoke-VMXBash -Scriptblock "MDM_ROLE_IS_MANAGER=0 dpkg -i $ubuntu_guestdir/EMC-ScaleIO-mdm*.deb" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 						Write-Host -ForegroundColor Gray " ==>adding MDM to Gateway Server Config File"
 						$sed = "sed -i 's\mdm.ip.addresses=.*\mdm.ip.addresses=$mdm_ipa;$mdm_ipb\' /opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classes/gatewayUser.properties"
 						}
