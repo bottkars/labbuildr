@@ -547,7 +547,7 @@ if ($scaleio.IsPresent)
 					$Scriptblock = "add-apt-repository ppa:webupd8team/java -y;apt-get update -y;echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections;apt-get install oracle-java8-installer -y;apt-get install oracle-java8-set-default -y"
 					Write-Host $Scriptblock
 					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-					$Scriptblock = "/root/.bashrc;export JAVA_HOME = /usr/lib/jvm/java-8-oracle;export GATEWAY_ADMIN_PASSWORD='Password123!';dpkg -i $SIOGatewayrpm"
+					$Scriptblock = "GATEWAY_ADMIN_PASSWORD='Password123!' /usr/bin/dpkg -i $SIOGatewayrpm"
 					#$NodeClone | Invoke-VMXBash -Scriptblock "export SIO_GW_KEYTOOL=/usr/bin/;export GATEWAY_ADMIN_PASSWORD='Password123!';dpkg -i $SIOGatewayrpm;dpkg -l emc-scaleio-gateway" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 					Write-Host $Scriptblock
 					pause
@@ -555,7 +555,7 @@ if ($scaleio.IsPresent)
 					if (!$singlemdm)
 						{
 						Write-Host -ForegroundColor Gray " ==>trying MDM Install as tiebreaker"
-						$NodeClone | Invoke-VMXBash -Scriptblock "export MDM_ROLE_IS_MANAGER=0;dpkg -i $ubuntu_guestdir/EMC-ScaleIO-mdm*.deb" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+						$NodeClone | Invoke-VMXBash -Scriptblock "export MDM_ROLE_IS_MANAGER=0 dpkg -i $ubuntu_guestdir/EMC-ScaleIO-mdm*.deb" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 						Write-Host -ForegroundColor Gray " ==>adding MDM to Gateway Server Config File"
 						$sed = "sed -i 's\mdm.ip.addresses=.*\mdm.ip.addresses=$mdm_ipa;$mdm_ipb\' /opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classes/gatewayUser.properties"
 						}
@@ -634,7 +634,9 @@ if ($scaleio.IsPresent)
 		}#end Primary
 	foreach ($Node in $Nodes)
 			{
-			$sds_ip = $ip_startrange+$Node
+			$node
+			$ip_startrange
+			[int]$sds_ip = $ip_startrange+$Node
 			Write-Host -ForegroundColor Gray " ==>adding sds $subnet.$sds_ip with /dev/sdb"
 			$sclicmd = "scli --add_sds --sds_ip $subnet.$sds_ip --device_path /dev/sdb --device_name /dev/sdb  --sds_name ScaleIONode$Node --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --no_test --mdm_ip $mdm_ip"
 			Write-Verbose $sclicmd
