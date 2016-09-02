@@ -550,10 +550,18 @@ if ($scaleio.IsPresent)
 					$Scriptblock = "add-apt-repository ppa:webupd8team/java -y;apt-get update -y;echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections;apt-get install oracle-java8-installer -y;apt-get install oracle-java8-set-default -y"
 					Write-Host $Scriptblock
 					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-					$Scriptblock = "/usr/bin/dpkg -i $SIOGatewayrpm"
+					
+					$Scriptblock = "GATEWAY_ADMIN_PASSWORD='Password123!' /usr/bin/dpkg -i $SIOGatewayrpm"
 					#$NodeClone | Invoke-VMXBash -Scriptblock "export SIO_GW_KEYTOOL=/usr/bin/;export GATEWAY_ADMIN_PASSWORD='Password123!';dpkg -i $SIOGatewayrpm;dpkg -l emc-scaleio-gateway" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 					Write-Host $Scriptblock
-					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword  | Out-Null #-logfile $Logfile
+					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword   -nowait| Out-Null #-logfile $Logfile
+
+					$Scriptblock = "killall strings"
+					Write-Host $Scriptblock
+					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword   -nowait| Out-Null #-logfile $Logfile
+
+					Start-Sleep 10
+
 					if (!$singlemdm)
 						{
 						Write-Host -ForegroundColor Gray " ==>trying MDM Install as tiebreaker"
@@ -591,7 +599,7 @@ if ($scaleio.IsPresent)
 		{
 		Write-Host -ForegroundColor Magenta "We are now creating the ScaleIO Cluster"
 		Write-Host -ForegroundColor Gray " ==>adding Primary MDM $mdm_ipa"
-		$sclicmd =  "scli  --create_mdm_cluster --master_mdm_ip $mdm_ipa  --master_mdm_management_ip $mdm_ipa --master_mdm_name $mdm_name_a --approve_certificate --accept_license;sleep 3"
+		$sclicmd =  "scli --create_mdm_cluster --master_mdm_ip $mdm_ipa  --master_mdm_management_ip $mdm_ipa --master_mdm_name $mdm_name_a --approve_certificate --accept_license;sleep 3"
 		Write-Verbose $sclicmd
 		$Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 		Write-Host -ForegroundColor Gray " ==>Setting password"
