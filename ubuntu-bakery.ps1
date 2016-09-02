@@ -331,7 +331,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
             }#>
         $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname Ubuntu -Scenario 7
         $mysize = $NodeClone |Set-VMXSize -config $NodeClone.Config -Size $Size
-
+		$NodeClone | Set-VMXVTBit | Out-Null
         $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
         start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
         $machinesBuilt += $($NodeClone.cloneName)
@@ -645,8 +645,6 @@ if ($scaleio.IsPresent)
 	Write-Verbose $sclicmd
 	$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 	write-host "Connect with ScaleIO UI to $mdm_ipa admin/Password123!"
-					
-			
 	}
 		## scaleio end
 		###
