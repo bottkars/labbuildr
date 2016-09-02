@@ -565,7 +565,6 @@ if ($scaleio.IsPresent)
 					until ($Processlist -match 'strings')
 
 					$Scriptblock = "killall strings"
-					Write-Host $Scriptblock
 					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword   -nowait| Out-Null #-logfile $Logfile
 					Write-Host -ForegroundColor White " ==>waiting for scaleio gateway"
 					do {
