@@ -188,7 +188,7 @@ if ($scaleio.IsPresent)
 	$ubuntu_ver = "14_4"
 	if ($Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Recurse -Directory)
 		{
-		Write-Host "got Ubuntu files"
+		Write-Host " ==>got Ubuntu files"
 		}
 	else
 		{
@@ -199,20 +199,21 @@ if ($scaleio.IsPresent)
 	$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Recurse -Directory
 	$Ubuntudir = $Ubuntu | Sort-Object -Descending | Select-Object -First 1
 	Write-Host -ForegroundColor Gray " ==>Using Ubuntu Dir $Ubuntudir"
-	if ($debfiles = Get-ChildItem -Path $Ubuntudir -Filter "*.deb" -Recurse -Include *Ubuntu*)
+	if ((Get-ChildItem -Path $Ubuntudir -Filter "*.deb" -Recurse -Include *Ubuntu*).count -ge 9)
 		{
 		Write-Host -ForegroundColor Gray " ==>found deb files, no siob_extraxt required"
+		$debfiles = $true
 		}
 	else
 		{
-		Write-Host -ForegroundColor Gray " ==>need to get siob files"
+		Write-Host -ForegroundColor Gray " ==>need to get deb´s from SIOB files"
 		if ($siobfiles = Get-ChildItem -Path $Ubuntudir -Filter "*.siob" -Recurse -Include *Ubuntu* -Exclude "*.sig")
 			{
 			Write-Host -ForegroundColor Gray " ==>found siob files  in $Ubuntudir"
-			$siobfiles.count
+			#$siobfiles.count
 			}
 		}
-	Write-Host -ForegroundColor Gray " ==> evaluationg base path for Gateway"
+	Write-Host -ForegroundColor Gray " ==>evaluationg base path for Gateway"
     $SIOGatewayrpm = Get-ChildItem -Path $scaleio_dir -Recurse -Filter "emc-scaleio-gateway*.deb"  -Exclude ".*" -ErrorAction SilentlyContinue
 
     try
