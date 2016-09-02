@@ -556,9 +556,16 @@ if ($scaleio.IsPresent)
 					Write-Host $Scriptblock
 					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword   -nowait| Out-Null #-logfile $Logfile
 
+					Write-Host -ForegroundColor Red "waiting for strings process"
+					do{
+					sleep 5
+					}
+					until ($Nodeclone | Get-VMXProcessesInGuest -Guestuser root -Guestpassword Password123!).process -match "strings"
+
 					$Scriptblock = "killall strings"
 					Write-Host $Scriptblock
 					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword   -nowait| Out-Null #-logfile $Logfile
+
 
 					Start-Sleep 10
 
