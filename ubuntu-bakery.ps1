@@ -632,10 +632,10 @@ if ($scaleio.IsPresent)
 		Write-Verbose $sclicmd
 		$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 		}#end Primary
-	foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
+	foreach ($Node in $Nodes)
 			{
-			Write-Host -ForegroundColor Gray " ==>adding sds $subnet.19$Node with /dev/sdb"
 			$sds_ip = $ip_startrange+$Node
+			Write-Host -ForegroundColor Gray " ==>adding sds $subnet.$sds_ip with /dev/sdb"
 			$sclicmd = "scli --add_sds --sds_ip $subnet.$sds_ip --device_path /dev/sdb --device_name /dev/sdb  --sds_name ScaleIONode$Node --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --no_test --mdm_ip $mdm_ip"
 			Write-Verbose $sclicmd
 			$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
