@@ -556,18 +556,24 @@ if ($scaleio.IsPresent)
 					Write-Host $Scriptblock
 					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword   -nowait| Out-Null #-logfile $Logfile
 
-					Write-Host -ForegroundColor Red "waiting for strings process"
-					do{
-					sleep 5
-					}
-					until ($Nodeclone | Get-VMXProcessesInGuest -Guestuser root -Guestpassword Password123!).process -match "strings"
+					Write-Host -ForegroundColor Red " ==>waiting for strings process"
+					do {
+						$Processlist = $NodeClone | Get-VMXProcessesInGuest -Guestuser $rootuser -Guestpassword $Guestpassword
+						sleep 2
+						write-verbose "Still Waiting ! "
+						}
+					until ($Processlist -match 'strings')
 
 					$Scriptblock = "killall strings"
 					Write-Host $Scriptblock
 					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword   -nowait| Out-Null #-logfile $Logfile
-
-
-					Start-Sleep 10
+					Write-Host -ForegroundColor White " ==>waiting for scaleio gateway"
+					do {
+						$Processlist = $NodeClone | Get-VMXProcessesInGuest -Guestuser $rootuser -Guestpassword $Guestpassword
+						sleep 2
+						write-verbose "Still Waiting ! "
+						}
+					until ($Processlist -match 'java-8-oracle')
 
 					if (!$singlemdm)
 						{
