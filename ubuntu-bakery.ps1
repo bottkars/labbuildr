@@ -547,7 +547,7 @@ if ($scaleio.IsPresent)
 					$Scriptblock = "add-apt-repository ppa:webupd8team/java -y;apt-get update -y;echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections;apt-get install oracle-java8-installer -y;apt-get install oracle-java8-set-default -y"
 					Write-Host $Scriptblock
 					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-					$Scriptblock = "export JAVA_HOME = /usr/lib/jvm/java-8-oracle;export SIO_GW_KEYTOOL=/usr/bin;export GATEWAY_ADMIN_PASSWORD='Password123!';dpkg -i $SIOGatewayrpm"
+					$Scriptblock = "/root/.bashrc;export JAVA_HOME = /usr/lib/jvm/java-8-oracle;export GATEWAY_ADMIN_PASSWORD='Password123!';dpkg -i $SIOGatewayrpm"
 					#$NodeClone | Invoke-VMXBash -Scriptblock "export SIO_GW_KEYTOOL=/usr/bin/;export GATEWAY_ADMIN_PASSWORD='Password123!';dpkg -i $SIOGatewayrpm;dpkg -l emc-scaleio-gateway" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 					Write-Host $Scriptblock
 					pause
@@ -635,7 +635,8 @@ if ($scaleio.IsPresent)
 	foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
 			{
 			Write-Host -ForegroundColor Gray " ==>adding sds $subnet.19$Node with /dev/sdb"
-			$sclicmd = "scli --add_sds --sds_ip $subnet.19$Node --device_path /dev/sdb --device_name /dev/sdb  --sds_name ScaleIONode$Node --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --no_test --mdm_ip $mdm_ip"
+			$sds_ip = $ip_startrange+$Node
+			$sclicmd = "scli --add_sds --sds_ip $subnet.$sds_ip --device_path /dev/sdb --device_name /dev/sdb  --sds_name ScaleIONode$Node --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --no_test --mdm_ip $mdm_ip"
 			Write-Verbose $sclicmd
 			$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 			}
