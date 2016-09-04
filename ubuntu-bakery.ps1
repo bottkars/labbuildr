@@ -683,14 +683,14 @@ curl --silent --show-error --insecure --user :`$TOKEN -X GET 'https://localhost/
 curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: multipart/form-data' -F 'file=@/tmp/mdm_a.cer' 'https://localhost/api/trustHostCertificate/Mdm' \n`
 curl --silent --show-error --insecure --user :`$TOKEN -X GET 'https://localhost/api/getHostCertificate/Mdm?host=$($mdm_ipb)' > '/tmp/mdm_b.cer' \n`
 curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: multipart/form-data' -F 'file=@/tmp/mdm_b.cer' 'https://localhost/api/trustHostCertificate/Mdm' "
-$GatewayNode | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword | Out-Null
-Write-Host -ForegroundColor Gray " ==>STarting OpenStack Controller Setup on $($GatewayNode.VMXName)"
-$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/Controller; sh ./install_base.sh"
-$GatewayNode | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
+	$GatewayNode | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword | Out-Null
+	Write-Host -ForegroundColor Gray " ==>STarting OpenStack Controller Setup on $($GatewayNode.VMXName)"
+	$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/Controller; sh ./install_base.sh"
+	$GatewayNode | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
 	foreach ($Node in $machinesBuilt)
 			{
 			$NodeClone = Get-VMX $Node
-			if ($NodeClone.vmxname -ne $GatewayNode.vmxname)
+			if ($NodeClone -ne $GatewayNode)
 				{
 				Write-Host -ForegroundColor Gray " ==>starting nova-compute setup on $($NodeClone.vmxname)"
 				$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/Compute; sh ./install_base.sh -cip $tb_ip -cname $($GatewayNode.vmxname.tolower())"
