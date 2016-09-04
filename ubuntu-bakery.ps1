@@ -93,7 +93,7 @@ If ($ConfirmPreference -match "none")
 else
     {$Confirm = $true}
 $Builddir = $PSScriptRoot
-$Scriptdir = Join-Path $Builddir "Scripts"
+$Scriptdir = Join-Path $Builddir "labbuildr-scripts"
 If ($Defaults.IsPresent)
     {
     $labdefaults = Get-labDefaults
@@ -364,6 +364,8 @@ foreach ($Node in $machinesBuilt)
 		$installmessage += " ==>Node $node is reachable vi ssh $ip with root or $Default_Guestuser`n"
         $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
+        $NodeClone | Set-VMXSharedFolder -add -Sharename Scripts -Folder $Scriptdir  | Out-Null
+
         If ($ubuntu_ver -match "15")
             {
             $Scriptblock = "systemctl disable iptables.service"
