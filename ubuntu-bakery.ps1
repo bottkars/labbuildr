@@ -694,11 +694,10 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 				{
 				Write-Host -ForegroundColor Gray " ==>starting nova-compute setup on $($NodeClone.vmxname)"
 				$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/Compute; sh ./install_base.sh -cip $tb_ip -cname $($GatewayNode.vmxname.tolower())"
-				Write-Verbose $sclicmd
-				$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+				Write-Verbose $Scriptblock
+				$NodeClone| Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 				}
 			}
-
 	}
 
 		## scaleio end
