@@ -80,6 +80,10 @@ $Defaultsfile=".\defaults.xml",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "scaleio", Mandatory = $true)]
 [Switch]$scaleio,
+[Parameter(ParameterSetName = "install", Mandatory = $false)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
+[Switch]$Openstack_Controller,
 [ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL",
 [int]$ip_startrange = 200
 #[Parameter(ParameterSetName = "install",Mandatory = $false)]
@@ -680,8 +684,10 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 curl --silent --show-error --insecure --user :`$TOKEN -X GET 'https://localhost/api/getHostCertificate/Mdm?host=$($mdm_ipb)' > '/tmp/mdm_b.cer' \n`
 curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: multipart/form-data' -F 'file=@/tmp/mdm_b.cer' 'https://localhost/api/trustHostCertificate/Mdm' "
 $GatewayNode | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword | Out-Null
+Write-Host -ForegroundColor Gray " ==>STarting OpenStack Controller Setup on $($GatewayNode.VMXName)"
+$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/Controller; sh ./install_base.sh"
+$GatewayNode | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
 
-	
 	}
 
 		## scaleio end
