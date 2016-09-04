@@ -186,15 +186,16 @@ if ($scaleio.IsPresent)
 	Write-Host -ForegroundColor Gray " ==>using MDM IP´s $mdm_ip"
 	Write-Host -ForegroundColor Gray " ==>defaulting to Ubuntu 14_4"
 	$ubuntu_ver = "14_4"
-	if ($Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Recurse -Directory)
+	try 
 		{
-		Write-Host " ==>got Ubuntu files"
+		$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Recurse -Directory -ErrorAction Stop
 		}
-	else
+	catch
 		{
 		Receive-LABScaleIO -Destination $Sourcedir -arch linux -unzip
 		$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Recurse -Directory
 		}
+	Write-Host " ==>got Ubuntu files"
 	Write-Host -ForegroundColor Gray " ==>evaluating ubuntu files"
 	$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Recurse -Directory
 	$Ubuntudir = $Ubuntu | Sort-Object -Descending | Select-Object -First 1
