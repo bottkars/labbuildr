@@ -547,6 +547,7 @@ if ($scaleio.IsPresent)
 
 				if ($Nodecounter -eq 3)
 					{
+					$GatewayNode = $NodeClone
 					Write-Host -ForegroundColor Gray " ==>trying Gateway Install"
 					$Scriptblock = "add-apt-repository ppa:webupd8team/java -y;apt-get update -y;echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections;apt-get install oracle-java8-installer -y;apt-get install oracle-java8-set-default -y"
 					Write-Host $Scriptblock
@@ -668,7 +669,18 @@ if ($scaleio.IsPresent)
 	Write-Verbose $sclicmd
 	$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 	write-host "Connect with ScaleIO UI to $mdm_ipa admin/Password123!"
+	## gw tasks start
+	Write-Host -ForegroundColor Gray " ==> approving mdm Certificates for gateway"
+$scriptblock = "export TOKEN=`$(curl --silent --insecure --user 'admin:$($Guestpassword)' 'https://localhost/api/gatewayLogin' | sed 's:^.\(.*\).`$:\1:') \n`
+curl --silent --show-error --insecure --user :`$TOKEN -X GET 'https://localhost/api/getHostCertificate/Mdm?host=$($mdm_ipa)' > '/tmp/mdm_a.cer' \n`
+curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: multipart/form-data' -F 'file=@/tmp/mdm_a.cer' 'https://localhost/api/trustHostCertificate/Mdm' \n`
+curl --silent --show-error --insecure --user :`$TOKEN -X GET 'https://localhost/api/getHostCertificate/Mdm?host=$($mdm_ipb)' > '/tmp/mdm_b.cer' \n`
+curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: multipart/form-data' -F 'file=@/tmp/mdm_b.cer' 'https://localhost/api/trustHostCertificate/Mdm' "
+$GatewayNode | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword | Out-Null
+
+	
 	}
+
 		## scaleio end
 		###
 $StopWatch.Stop()
