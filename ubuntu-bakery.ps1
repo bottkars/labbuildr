@@ -687,6 +687,17 @@ $GatewayNode | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Gu
 Write-Host -ForegroundColor Gray " ==>STarting OpenStack Controller Setup on $($GatewayNode.VMXName)"
 $Scriptblock = "cd /mnt/hgfs/Scripts/openstack/Controller; sh ./install_base.sh"
 $GatewayNode | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
+	foreach ($Node in $machinesBuilt)
+			{
+			$NodeClone = Get-VMX $Node
+			if ($NodeClone.vmxname -ne $GatewayNode.vmxname)
+				{
+				Write-Host -ForegroundColor Gray " ==>starting nova-compute setup on $($NodeClone.vmxname)"
+				$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/Compute; sh ./install_base.sh -cip $tb_ip -cname $($GatewayNode.vmxname.tolower())"
+				Write-Verbose $sclicmd
+				$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+				}
+			}
 
 	}
 
