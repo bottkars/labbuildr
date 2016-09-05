@@ -367,7 +367,7 @@ if ($configure.IsPresent)
         Write-Verbose $sclicmd
         $Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
         Write-Host -ForegroundColor Gray " ==>Setting password"
-        $sclicmd =  "scli --login --username admin --password admin --mdm_ip $mdm_ipa;scli --set_password --old_password admin --new_password $MDMPassword  --mdm_ip $mdm_ipa"
+        $sclicmd =  "scli --login --username admin --password admin --mdm_ip $mdm_ipa;scli --set_password --old_password admin --new_password $MDMPassword --mdm_ip $mdm_ipa"
         Write-Verbose $sclicmd
         $Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
         if (!$singlemdm.IsPresent)

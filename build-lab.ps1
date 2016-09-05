@@ -296,10 +296,11 @@ Specify if Networker Scenario sould be installed
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
 	[Parameter(ParameterSetName = "SCVMM", Mandatory = $false)]
-	[ValidateSet(
-    'SQL2014SP1slip','SQL2012','SQL2012SP1','SQL2012SP2','SQL2012SP1SLIP','SQL2014','SQL2016','SQL2016_ISO'
-    )]$SQLVER,
-    ######################### common Parameters start here in Order
+    [ValidateSet(#'SQL2014SP1slip','SQL2012','SQL2012SP1','SQL2012SP2','SQL2012SP1SLIP','SQL2014','SQL2016',
+	'SQL2012_ISO',
+	'SQL2014SP2_ISO',
+	'SQL2016_ISO')]$SQLVER,    
+	######################### common Parameters start here in Order
     <# reads the Default Config from defaults.xml
     <config>
     <nmm_ver>nmm82</nmm_ver>
@@ -753,6 +754,11 @@ $myself = $Myself_ps1.TrimEnd(".ps1")
 #$AddressFamily = 'IPv4'
 $IPv4PrefixLength = '24'
 $Builddir = $PSScriptRoot
+if (Test-Path $env:SystemRoot\system32\ntdll.dll)
+	{
+	$runonos = "win_x86_64"
+	}
+
 If ($ConfirmPreference -match "none")
     {$Confirm = $false}
 <#else
@@ -786,24 +792,6 @@ if ([String]::IsNullOrEmpty($PSCmdlet.MyInvocation.BoundParameters['branch']))
     }
 Write-Verbose "Branch = $branch"
 Write-Verbose "Current Branch = $Current_labbuildr_branch"
-<#
-try
-    {
-    $verlabbuildr = New-Object System.Version (Get-Content  ($Builddir + "\labbuildr4.version") -ErrorAction Stop).Replace("-",".")
-    }
-catch
-    {
-    $verlabbuildr = "00.0000"
-    }
-try
-    {
-    $vervmxtoolkit = New-Object System.Version (Get-Content  ($Builddir + "\vmxtoolkit.version") -ErrorAction Stop).Replace("-",".")
-    }
-catch
-    {
-    $vervmxtoolkit = "00.0000"
-    }
-#>
 try
     {
     [datetime]$Latest_labbuildr_git = Get-Content  ($Builddir + "\labbuildr-$branch.gitver") -ErrorAction Stop
@@ -845,7 +833,6 @@ try
     [datetime]$Latest_SIOToolKit_git = "07/11/2015"
     }
 ################## Statics
-$LogFile = "$Builddir\$(Get-Content env:computername).log"
 $WAIKVER = "WAIK"
 $custom_domainsuffix = "local"
 $AAGDB = "AWORKS"
@@ -875,7 +862,6 @@ $SIOToolKit_Branch = "master"
 $NW85_requiredJava = "jre-7u61-windows-x64"
 $Adminuser = "Administrator"
 $Adminpassword = "Password123!"
-$Dots = [char]58
 $WAIKVER = "WAIK"
 $DCNODE = "DCNODE"
 $NWNODE = "NWSERVER"
@@ -891,7 +877,7 @@ $Scenario = 1
 $AddonFeatures = ("RSAT-ADDS", "RSAT-ADDS-TOOLS", "AS-HTTP-Activation", "NET-Framework-45-Features")
 $Gatewayhost = "11"
 $Default_Host_ScriptDir = Join-Path $Builddir $Scripts
-$DC_Scriptdir = Join-Path $Default_Host_ScriptDir $DCNODE
+$DC_Scriptdir = Join-Path $Default_Host_ScriptDir "dcnode"
 $DCNode_VMX = Join-Path $Builddir (Join-Path $DCNODE "$DCNODE.vmx")
 $IN_Guest_UNC_Scriptroot = "\\vmware-host\Shared Folders\Scripts"
 $IN_Guest_UNC_Sourcepath = "\\vmware-host\Shared Folders\Sources"
@@ -910,25 +896,6 @@ $Host.UI.RawUI.WindowTitle = "$Buildname"
 ###################################################
 # main function go here
 ###################################################
-function copy-tovmx
-{
-	param ($Sourcedir)
-	$Origin = $MyInvocation.MyCommand
-	$count = (Get-ChildItem -Path $Sourcedir -file).count
-	$incr = 1
-	foreach ($file in Get-ChildItem -Path $Sourcedir -file)
-	{
-		Write-Progress -Activity "Copy Files to $Nodename " -Status $file -PercentComplete (100/$count * $incr)
-		do
-		{
-			($cmdresult = &$vmrun -gu $Adminuser -gp $Adminpassword copyfilefromhosttoguest $CloneVMX $Sourcedir$file $IN_Guest_UNC_Scriptroot$file) 2>&1 | Out-Null
-			write-log "$origin $File $cmdresult"
-		}
-		until ($VMrunErrorCondition -notcontains $cmdresult)
-		write-log "$origin $File $cmdresult"
-		$incr++
-	}
-}
 function convert-iptosubnet
 {
 	param ($Subnet)
@@ -936,18 +903,6 @@ function convert-iptosubnet
 	$Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 	return, $Subnet
 } #enc convert iptosubnet
-function copy-vmxguesttohost
-{
-	param ($Guestpath, $Hostpath, $Guest)
-	$Origin = $MyInvocation.MyCommand
-	do
-	{
-		($cmdresult = &$vmrun -gu $Adminuser -gp $Adminpassword copyfilefromguesttohost "$Builddir\$Guest\$Guest.vmx" $Guestpath $Hostpath) 2>&1 | Out-Null
-		write-log "$origin $Guestpath $Hostpath $cmdresult "
-	}
-	until ($VMrunErrorCondition -notcontains $cmdresult)
-	write-log "$origin $File $cmdresult"
-} # end copy-vmxguesttohost
 function get-update
 {
 	param ([string]$UpdateSource, [string] $Updatedestination)
@@ -1121,12 +1076,6 @@ function runtime
 	write-host "`r".padright(1, " ") -nonewline
 	Write-Host -ForegroundColor Yellow "$InstallProg Setup Running Since $StrgTime" -NoNewline
 }
-function write-log
-{
-	Param ([string]$line)
-	$Logtime = Get-Date -Format "MM-dd-yyyy_hh-mm-ss"
-	Add-Content $Logfile -Value "$Logtime  $line"
-}
 <#
 	.SYNOPSIS
 		we test if the Domaincontroller DCNODE is up and Running
@@ -1142,10 +1091,10 @@ function test-dcrunning
 $Origin = $MyInvocation.MyCommand
 if (!$NoDomainCheck.IsPresent)
 	{
-	if ((get-vmx $DCNODE).state -ne "running")
+	if ((get-vmx -Path $DCNODE).state -ne "running")
 		{
 		Write-Host -ForegroundColor White  " ==>Domaincontroller not running, we need to start him first"
-		$Started = get-vmx $DCNODE | Start-vmx
+		$Started = get-vmx -path $DCNODE | Start-vmx
 		if (!$started)
 			{
 			debug " ==>Domaincontroller not found, giving up"
@@ -1171,13 +1120,13 @@ function test-domainsetup
     $enable_Folders =  get-vmx $DCNODE | Set-VMXSharedFolderState -Enabled
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing Domain Name ...: "
 	$holdomain = Get-Content (Join-path $DC_Scriptdir "domain.txt")
-	Write-Host -ForegroundColor White  $holdomain
+	Write-Host -ForegroundColor White $holdomain
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing Subnet.........: "
 	$DomainIP = Get-Content (Join-path $DC_Scriptdir "ip.txt")
 	$IPv4subnet = convert-iptosubnet $DomainIP
 	Write-Host -ForegroundColor White  $ipv4Subnet
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing Default Gateway: "
-	$DomainGateway = Get-Content (Join-path $DC_Scriptdir "Gateway.txt")
+	$DomainGateway = Get-Content (Join-path $DC_Scriptdir "gateway.txt")
 	Write-Host -ForegroundColor White  $DomainGateway
 	Write-Host -NoNewline -ForegroundColor DarkCyan "Testing VMnet .........: "
     $MyVMnet = (get-vmx $DCNODE | Get-VMXNetwork -WarningAction SilentlyContinue).network
@@ -1192,8 +1141,7 @@ function test-user
 	do
 		{
 		$sleep = 1
-		([string]$cmdresult = &$vmrun -gu $Adminuser -gp $Adminpassword listProcessesInGuest $CloneVMX)2>&1 | Out-Null
-		write-log "$origin $UserLoggedOn"
+		$cmdresult = $Nodeclone | Get-VMXProcessesInGuest -Guestuser $Adminuser -Guestpassword $Adminpassword
 		foreach ($i in (1..$sleep))
 			{
 			Write-Host -ForegroundColor Yellow "-`b" -NoNewline
@@ -1206,14 +1154,8 @@ function test-user
 			sleep 1
 			}
 	}
-	until (($cmdresult -match $whois) -and ($VMrunErrorCondition -notcontains $cmdresult))
-	Write-Host	"[success]"
-}
-function test-vmx
-{
-	param ($vmname)
-	$return = Get-ChildItem "$Builddir\\$vmname\\$vmname.vmx" -ErrorAction SilentlyContinue
-	return, $return
+until ($cmdresult -match $whois) 
+Write-Host	"[success]"
 }
 function test-source
 {
@@ -1332,7 +1274,6 @@ function invoke-postsection
         }
     }
 ####################################################
-$newLog = New-Item -ItemType File -Path $LogFile -Force
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     {
     $CommonParameter = ' -verbose'
@@ -1361,7 +1302,6 @@ switch ($PsCmdlet.ParameterSetName)
 				    {
 					Remove-Item -Path $Builddir\$deletefile -Recurse -ErrorAction SilentlyContinue
 					Write-Host -ForegroundColor White  " ==>deleted $deletefile"
-					write-log "deleted $deletefile"
 					}
 			    }
             }
@@ -1839,7 +1779,7 @@ $config =@()
         $config += ("<NoDomainCheck>$($NoDomainCheck)</NoDomainCheck>")
         $config += ("<Puppet>$($Puppet)</Puppet>")
         $config += ("<PuppetMaster>$($PuppetMaster)</PuppetMaster>")
-        $config += ("<Hostkey>$($HostKey)</Hostkey>")
+        $config += ("<Hostkey>$($LabDefaults.HostKey)</Hostkey>")
         $config += ("</config>")
 $config | Set-Content $defaultsfile
 }
@@ -1881,60 +1821,73 @@ if (!$Master)
 write-verbose "After Masterconfig !!!! "
 ########
 ########
-write-verbose "Evaluating Machine Type, Please wait ..."
-#### Eval CPU
-$Numcores = (gwmi win32_Processor).NumberOfCores
-$NumLogCPU = (gwmi win32_Processor).NumberOfLogicalProcessors
-$CPUType = (gwmi win32_Processor).Name
-$MachineMFCT = (gwmi win32_ComputerSystem).Manufacturer
-$MachineModel = (gwmi win32_ComputerSystem).Model
-##### Eval Memory #####
-$Totalmemory = 0
-$Memory = (get-wmiobject -class "win32_physicalmemory" -namespace "root\CIMV2").Capacity
-foreach ($Dimm in $Memory) { $Totalmemory = $Totalmemory + $Dimm }
-$Totalmemory = $Totalmemory / 1GB
-Switch ($Totalmemory)
-{
-	{ $_ -gt 0 -and $_ -le 8 }
+if ($runonos  -match "win_x86_64")
 	{
-		$Computersize = 1
-        $SQLSize = "L"
-		$Exchangesize = "XL"
-	}
-	{ $_ -gt 8 -and $_ -le 16 }
+	write-verbose "Evaluating Machine Type, Please wait ..."
+	#### Eval CPU
+	$Numcores = (gwmi win32_Processor).NumberOfCores
+	$NumLogCPU = (gwmi win32_Processor).NumberOfLogicalProcessors
+	$CPUType = (gwmi win32_Processor).Name
+	$MachineMFCT = (gwmi win32_ComputerSystem).Manufacturer
+	$MachineModel = (gwmi win32_ComputerSystem).Model
+	##### Eval Memory #####
+	$Totalmemory = 0
+	$Memory = (get-wmiobject -class "win32_physicalmemory" -namespace "root\CIMV2").Capacity
+	foreach ($Dimm in $Memory) { $Totalmemory = $Totalmemory + $Dimm }
+	$Totalmemory = $Totalmemory / 1GB
+	Switch ($Totalmemory)
 	{
-		$Computersize = 2
-		$Exchangesize = "TXL"
-        $SQLSize = "XL"
+		{ $_ -gt 0 -and $_ -le 8 }
+		{
+			$Computersize = 1
+			$SQLSize = "L"
+			$Exchangesize = "XL"
+		}
+		{ $_ -gt 8 -and $_ -le 16 }
+		{
+			$Computersize = 2
+			$Exchangesize = "TXL"
+			$SQLSize = "XL"
+		}
+		{ $_ -gt 16 -and $_ -le 32 }
+		{
+			$Computersize = 3
+			$Exchangesize = "TXL"
+			$SQLSize = "TXL"
+		}
+		else
+		{
+			$Computersize = 3
+			$Exchangesize = "XXL"
+			$SQLSize = "TXL"
+		}
 	}
-	{ $_ -gt 16 -and $_ -le 32 }
+	If ($NumLogCPU -le 4 -and $Computersize -le 2)
 	{
-		$Computersize = 3
-		$Exchangesize = "TXL"
-        $SQLSize = "TXL"
+		Write-Host -ForegroundColor White "==>Running $my_repo on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logicalk CPUs and $Totalmemory GB Memory "
 	}
-	else
+	If ($NumLogCPU -gt 4 -and $Computersize -le 2)
 	{
-		$Computersize = 3
-		$Exchangesize = "XXL"
-        $SQLSize = "TXL"
+		Write-Host -ForegroundColor White "==>Running $my_repo on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logical CPU and $Totalmemory GB Memory"
+		Write-Host "Consider Adding Memory "
 	}
-}
-If ($NumLogCPU -le 4 -and $Computersize -le 2)
-{
-	Write-Host -ForegroundColor White "==>Running $my_repo on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logicalk CPUs and $Totalmemory GB Memory "
-}
-If ($NumLogCPU -gt 4 -and $Computersize -le 2)
-{
-	Write-Host -ForegroundColor White "==>Running $my_repo on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logical CPU and $Totalmemory GB Memory"
-	Write-Host "Consider Adding Memory "
-}
-If ($NumLogCPU -gt 4 -and $Computersize -gt 2)
-{
-	Write-Host -ForegroundColor White  "Excellent, Running $my_repo on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logical CPU and $Totalmemory GB Memory"
-}
-# get-vmwareversion
-####### Building required Software Versions Tabs
+	If ($NumLogCPU -gt 4 -and $Computersize -gt 2)
+	{
+		Write-Host -ForegroundColor White  "Excellent, Running $my_repo on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logical CPU and $Totalmemory GB Memory"
+	}
+	}
+else
+	{
+    $MachineModel = uname -a
+    Write-Host -ForegroundColor White  "Excellent, running labbuildr on $MachineModel"
+    if ($runonos -eq "OSX")
+		{
+		sw_vers
+		}
+    $Computersize = 2
+	$Exchangesize = "TXL"
+	$SQLSize = "XL"
+	}####### Building required Software Versions Tabs
 $NW_Sourcedir = Join-Path $Sourcedir "Networker"
 $Sourcever = @()
 # $Sourcever = @("$nw_ver","$nmm_ver","E2013$e15_cu","$WAIKVER","$SQL2012R2")
@@ -2074,13 +2027,14 @@ if ($Exchange2010.IsPresent)
      foreach ($URL in $attachments)
         {
         $FileName = Split-Path -Leaf -Path $Url
-        if (!(test-path  "$Destination\$FileName"))
+		$Destination_file = Join-Path $Destination $FileName
+        if (!(test-path  $Destination_file))
             {
             Write-Verbose "$FileName not found, trying Download"
-            if (!(Receive-LABBitsFile -DownLoadUrl $URL -destination $Sourcedir\$Prereqdir\$FileName))
+            if (!(Receive-LABBitsFile -DownLoadUrl $URL -destination $Destination_file))
                 { Write-Host -ForegroundColor Gray " ==>Error Downloading file $Url, Please check connectivity"
                   Write-Host -ForegroundColor Gray " ==>creating dummy File"
-                  New-Item -ItemType file -Path "$Sourcedir\$Prereqdir\$FileName" | out-null
+                  New-Item -ItemType file -Path $Destination_file | out-null
                 }
             }
         }
@@ -2118,13 +2072,14 @@ if ($Exchange2013.IsPresent)
      foreach ($URL in $attachments)
         {
         $FileName = Split-Path -Leaf -Path $Url
-        if (!(test-path  "$Destination\$FileName"))
+		$Destination_file = Join-Path $Destination $FileName
+        if (!(test-path  $Destination_file))
             {
             Write-Verbose "$FileName not found, trying Download"
-            if (!(Receive-LABBitsFile -DownLoadUrl $URL -destination $Sourcedir\$Prereqdir\$FileName))
+            if (!(Receive-LABBitsFile -DownLoadUrl $URL -destination $Destination_file))
                 { Write-Host -ForegroundColor Gray " ==>Error Downloading file $Url, Please check connectivity"
                   Write-Host -ForegroundColor Gray " ==>creating dummy File"
-                  New-Item -ItemType file -Path "$Sourcedir\$Prereqdir\$FileName" | out-null
+                  New-Item -ItemType file -Path $Destination_file | out-null
                 }
             }
         }
@@ -2160,13 +2115,14 @@ if ($Exchange2016.IsPresent)
      foreach ($URL in $attachments)
         {
         $FileName = Split-Path -Leaf -Path $Url
-        if (!(test-path  "$Destination\$FileName"))
+		$Destination_file = Join-Path $Destination $FileName
+        if (!(test-path  $Destination_file))
             {
             Write-Verbose "$FileName not found, trying Download"
-            if (!(Receive-LABBitsFile -DownLoadUrl $URL -destination $Sourcedir\$Prereqdir\$FileName))
+            if (!(Receive-LABBitsFile -DownLoadUrl $URL -destination $Destination_file))
                 { Write-Host -ForegroundColor Gray " ==>Error Downloading file $Url, Please check connectivity"
                   Write-Host -ForegroundColor Gray " ==>creating dummy File"
-                  New-Item -ItemType file -Path "$Sourcedir\$Prereqdir\$FileName" | out-null
+                  New-Item -ItemType file -Path $Destination_file | out-null
                 }
             }
         }
@@ -2256,7 +2212,7 @@ if ($SCVMM.IsPresent)
     $Prereqdir = "prereq"
     if ($SC_Version -match "2012")
         {
-        $SQLVER = "SQL2012SP2"
+        $SQLVER = "SQL2012_ISO"
         }
     If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCVMM -Destination $Sourcedir -unzip -WarningAction SilentlyContinue))
         {
@@ -2289,20 +2245,32 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
         {
         $Java8_required = $true
         }
-    $AAGURL = "https://community.emc.com/servlet/JiveServlet/download/38-111250/AWORKS.zip"
+    $AAGURL = "https://labbuildrmaster.blob.core.windows.net/addons/AdventureWorks2012.7z"
     $URL = $AAGURL
     $FileName = Split-Path -Leaf -Path $Url
-    Write-Verbose "Testing $FileName in $Sourcedir"
-    if (!(test-path  "$Sourcedir\Aworks\AdventureWorks2012.bak"))
+	$Aworks_Dir = Join-Path $Sourcedir $AAGDB
+	$Aworks_File = Join-Path $Aworks_Dir $FileName
+	$Aworks_BAK = Join-Path $Aworks_Dir "AdventureWorks2012.bak"
+	If (Test-Path $Aworks_Dir)
+		{
+		Write-Verbose "we got $Aworks_Dir"
+		}
+	else
+		{
+		New-Item -ItemType Directory $Aworks_Dir -Force | Out-Null
+		}
+    Write-Host "Testing $FileName in $Aworks_Dir"
+
+    if (!(test-path $Aworks_BAK))
         {
         Write-Verbose "Trying Download"
-        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
+        if (!(Receive-LABBitsFile -DownLoadUrl $URL -destination $Aworks_File))
             {
             Write-Warning "Error Downloading file $Url, Please check connectivity"
             exit
             }
-        #New-Item -ItemType Directory -Path "$Sourcedir\Aworks" -Force
-        Extract-Zip -zipfilename $Sourcedir\$FileName -destination $Sourcedir
+        #New-Item -ItemType Directory -Path "$Aworks_Dir" -Force
+        Expand-LABpackage -Archive $Aworks_File -destination $Aworks_Dir
         }
     if (!($SQL_OK = receive-labsql -SQLVER $SQLVER -Destination $Sourcedir -Product_Dir "SQL" -extract -WarningAction SilentlyContinue))
         {
@@ -2385,7 +2353,7 @@ if ($ScaleIO.IsPresent)
             Write-Host -ForegroundColor Magenta "Checking for OpenSSL"
 			try
 				{
-				$OpenSSL = Receive-LABOpenSSL -Destination $Sourcedir -ErrorAction Stop
+				$OpenSSL = Receive-LABOpenSSL -Destination $Sourcedir -OpenSSL_Ver 1_0_1 -ErrorAction Stop
 				}
 			catch
 				{
@@ -2522,7 +2490,7 @@ if (!$NoDomainCheck.IsPresent){
 ####################################################################
 # DC Validation
 $Nodename = $DCNODE
-$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
 if ($Nodeclone = get-vmx $DCNODE -WarningAction SilentlyContinue)
 {
 	Write-Host -ForegroundColor White  " ==>Domaincontroller already deployed, Comparing Workorder Parameters with Running Environment"
@@ -2531,7 +2499,7 @@ if ($Nodeclone = get-vmx $DCNODE -WarningAction SilentlyContinue)
         {
 	    test-user -whois Administrator
 	    write-verbose "Verifiying Domainsetup"
-        $EnableFolders = get-vmx .\DCNODE | Set-VMXSharedFolderState -enabled
+        $EnableFolders = get-vmx -path $DCNODE | Set-VMXSharedFolderState -enabled
 	    $Checkdom = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$IN_Guest_UNC_Scriptroot\$DCNODE" -Script checkdom.ps1 # $CommonParameter
 	    $BuildDomain, $RunningIP, $VMnet, $MyGateway = test-domainsetup
 	    $IPv4Subnet = convert-iptosubnet $RunningIP
@@ -2558,7 +2526,7 @@ else
 	###################################################
 	#$Nodename = $DCNODE
 	$DCName = $BuildDomain + "DC"
-	#$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+	#$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
 	$IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$DCNODE"
 	###################################################
 	Write-Verbose "IPv4Subnet :$IPv4Subnet"
@@ -2583,7 +2551,7 @@ else
         Pause
         }
     Set-LABDNS1 -DNS1 "$IPv4Subnet.10"
-	$CloneOK = Invoke-Expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 0 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Size 'L' -Sourcedir $Sourcedir"
+	$CloneOK = Invoke-Expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 0 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Size 'L' -Sourcedir $Sourcedir"
 	###################################################
 	#
 	# DC Setup
@@ -2616,8 +2584,8 @@ else
             }
         else
             {
-			$Sleep = 2
-		    While ($FileOK = (&$vmrun -gu Administrator -gp Password123! fileExistsInGuest $CloneVMX $IN_Guest_LogDir\2.pass) -ne "The file exists.")
+			$Sleep = 1
+		    While (!($Nodeclone | Test-VMXFileInGuest -Guestuser $Adminuser -Guestpassword $Adminpassword -Filename c:\scripts\2.pass))
 				{
 				foreach ($i in (1..$sleep))
 					{
@@ -2632,17 +2600,17 @@ else
 					}
 				}
 			}
-        Write-Host "[success]"
-		test-user -whois Administrator
+        Write-Host -ForegroundColor Green "[success]"
+        test-user -whois Administrator
         if ($Toolsupdate.IsPresent)
             {
             Write-Host -ForegroundColor Gray " ==>preparing VMware Tools Upgrade by injecting tools CD ( update will start before next reboot of VM )"
-            Start-Process 'C:\Program Files (x86)\VMware\VMware Workstation\vmrun.exe' -ArgumentList  "installTools $CloneVMX" -NoNewWindow
+            Start-Process $Global:vmrun -ArgumentList  "installTools $CloneVMX" -NoNewWindow
             }
-		$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script finish-domain.ps1 -Parameter "-domain $BuildDomain -domainsuffix $custom_domainsuffix $CommonParameter" -interactive -nowait
+		$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script finish-domain.ps1 -Parameter "-domain $BuildDomain -domainsuffix $custom_domainsuffix $CommonParameter" -nowait -interactive 
 		Write-Host -ForegroundColor White  " ==>creating Domain $BuildDomain " -NoNewline
-		While ($FileOK = (&$vmrun -gu Administrator -gp Password123! fileExistsInGuest $CloneVMX $IN_Guest_LogDir\3.pass) -ne "The file exists.")
-			{
+		While (!($Nodeclone | Test-VMXFileInGuest -Guestuser $Adminuser -Guestpassword $Adminpassword -Filename c:\scripts\3.pass))
+                {
 				foreach ($i in (1..$sleep))
 					{
 					Write-Host -ForegroundColor Yellow "-`b" -NoNewline
@@ -2695,7 +2663,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 			# Init
 			$Nodeip = "$IPv4Subnet.16$AAGNode"
 			$Nodename = "AAGNODE" + $AAGNODE
-			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+			$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
 			$AAGLIST += $CloneVMX
             #$In_Guest_UNC_SQLScriptDir = "$Default_Host_ScriptDir\sql\"
             $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features, Failover-Clustering, RSAT-Clustering, WVR"
@@ -2710,7 +2678,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
             pause
             }
 			# Clone Base Machine
-			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $AAGNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $SQLSize -Sourcedir $Sourcedir -sql"
+			$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $AAGNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $SQLSize -Sourcedir $Sourcedir -sql"
 			###################################################
 			If ($CloneOK)
 			{
@@ -2796,7 +2764,7 @@ switch ($PsCmdlet.ParameterSetName)
 			# Init
 			$Nodeip = "$IPv4Subnet.12$EXNODE"
 			$Nodename = "$EX_Version"+"N"+"$EXNODE"
-			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+			$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
 			$EXLIST += $CloneVMX
 			###################################################
             Write-Verbose $IPv4Subnet
@@ -2814,7 +2782,7 @@ switch ($PsCmdlet.ParameterSetName)
                 }
             $Exchangesize = "XXL"
 		    test-dcrunning
-		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -AddDisks -Disks 3 -Disksize 500GB -Size $Exchangesize -Sourcedir $Sourcedir "
+		    $CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -AddDisks -Disks 3 -Disksize 500GB -Size $Exchangesize -Sourcedir $Sourcedir "
 		    ###################################################
 		    If ($CloneOK)
                 {
@@ -2919,7 +2887,7 @@ switch ($PsCmdlet.ParameterSetName)
 		# Init
 		$Nodeip = "$IPv4Subnet.11$EXNODE"
 		$Nodename = "$EX_Version"+"N"+"$EXNODE"
-		$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+		$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
 		$EXLIST += $CloneVMX
 		# $Exprereqdir = "$Sourcedir\EXPREREQ\"
 		###################################################
@@ -2937,7 +2905,7 @@ switch ($PsCmdlet.ParameterSetName)
             pause
             }
 		test-dcrunning
-		$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -AddDisks -Disks 3 -Disksize 500GB -Size $Exchangesize -Sourcedir $Sourcedir "
+		$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -AddDisks -Disks 3 -Disksize 500GB -Size $Exchangesize -Sourcedir $Sourcedir "
 		###################################################
 		If ($CloneOK)
         {
@@ -3042,7 +3010,7 @@ switch ($PsCmdlet.ParameterSetName)
 			# Init
 			$Nodeip = "$IPv4Subnet.12$EXNODE"
 			$Nodename = "$EX_Version"+"N"+"$EXNODE"
-			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+			$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
 			$EXLIST += $CloneVMX
 		    # $Exprereqdir = "$Sourcedir\EXPREREQ\"
 			###################################################
@@ -3061,7 +3029,7 @@ switch ($PsCmdlet.ParameterSetName)
                 }
             $Exchangesize = "XXL"
 		    test-dcrunning
-		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -AddDisks -Disks 3 -Disksize 500GB -Size $Exchangesize -Sourcedir $Sourcedir "
+		    $CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -AddDisks -Disks 3 -Disksize 500GB -Size $Exchangesize -Sourcedir $Sourcedir "
 		    ###################################################
 		    If ($CloneOK)
                 {
@@ -3237,7 +3205,7 @@ switch ($PsCmdlet.ParameterSetName)
 			$Nodeip = "$IPv4Subnet.$IPNum"
             Write-Verbose "Nodeip = $Nodeip"
 			$Nodename = "$($Clusterprefix)NODE$($HVNode)"
-			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+			$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
 			$IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\HyperV\"
             $In_Guest_UNC_SQLScriptDir = "$IN_Guest_UNC_Scriptroot\sql\"
             $In_Guest_UNC_SCVMMScriptDir = "$IN_Guest_UNC_Scriptroot\scvmm\"
@@ -3253,7 +3221,7 @@ switch ($PsCmdlet.ParameterSetName)
 			# Clone BAse Machine
 			# Write-Host -ForegroundColor White  "Hyper-V Development is still not finished and untested, be careful"
 			test-dcrunning
-			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $HVNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir $cloneparm"
+			$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $HVNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir $cloneparm"
 			###################################################
             If ($CloneOK)
 			    {
@@ -3338,10 +3306,8 @@ switch ($PsCmdlet.ParameterSetName)
 		                    do
 		                        {
 			                    ($cmdresult = &$vmrun -gu Administrator -gp Password123! runPrograminGuest  $CloneVMX -activeWindow  $Execute $Parm) 2>&1 | Out-Null
-			                    write-log "$origin $cmdresult"
 		                        }
 		                    until ($VMrunErrorCondition -notcontains $cmdresult)
-		                    write-log "$origin $cmdresult"
                             $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role gateway -disks $Disks -ScaleIOVer $ScaleIOVer -mdmipa $mdmipa -mdmipb $mdmipb" -interactive
                             }
                         default
@@ -3420,7 +3386,7 @@ switch ($PsCmdlet.ParameterSetName)
 			# Init
 			$Nodeip = "$IPv4Subnet.21$Node"
 			$Nodename = "SOFSNode$Node"
-			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+			$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
 			$Host_ScriptDir = "$Default_Host_ScriptDir\SOFS\"
             $Size = "XL"
 			###################################################
@@ -3436,7 +3402,7 @@ switch ($PsCmdlet.ParameterSetName)
                 }
 			test-dcrunning
 			# Clone Base Machine
-			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir "
+			$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir "
 			###################################################
 			If ($CloneOK)
 				{
@@ -3478,7 +3444,7 @@ switch ($PsCmdlet.ParameterSetName)
 			# Init
 			$Nodeip = "$IPv4Subnet.14$Node"
 			$Nodename = "$Prefix"+"Node$Node"
-			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+			$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
 			$IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$Prefix\"
 			###################################################
 			# we need a DC, so check it is running
@@ -3493,7 +3459,7 @@ switch ($PsCmdlet.ParameterSetName)
                 }
 			test-dcrunning
 			# Clone Base Machine
-		    $CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $SPSize -Sourcedir $Sourcedir $cloneparm"
+		    $CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $SPSize -Sourcedir $Sourcedir $cloneparm"
 			###################################################
 			If ($CloneOK)
 				{
@@ -3567,7 +3533,7 @@ switch ($PsCmdlet.ParameterSetName)
             $Nodeprefix = "Node"
             $NamePrefix = "GEN"
 		    $Nodename = "$NamePrefix$NodePrefix$Node"
-			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+			$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
             $ClusterIP = "$IPv4Subnet.180"
 			###################################################
 		    Write-Verbose $IPv4Subnet
@@ -3586,11 +3552,11 @@ switch ($PsCmdlet.ParameterSetName)
 			# Clone Base Machine
 			if ($VTbit)
 			{
-				$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir -SharedDisk $cloneparm"
+				$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir -SharedDisk $cloneparm"
 			}
 			else
 			{
-				$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir $cloneparm"
+				$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir $cloneparm"
 			}
 			###################################################
 			If ($CloneOK)
@@ -3640,8 +3606,8 @@ switch ($PsCmdlet.ParameterSetName)
             $Nodeprefix = "WINHost"
             $NamePrefix = "Docker"
 		    $Nodename = "$NamePrefix$NodePrefix$Node"
-			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
-			$Host_ScriptDir = "$Default_Host_ScriptDir\$NamePrefix\"
+			$CloneVMX = Join-Path  $Builddir (Join-path $Nodename "$Nodename.vmx")
+			$Host_ScriptDir = Join-Path $Default_Host_ScriptDir $NamePrefix
 			$IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NamePrefix\"
             #$ClusterIP = "$IPv4Subnet.180"
 			###################################################
@@ -3656,7 +3622,7 @@ switch ($PsCmdlet.ParameterSetName)
                 pause
                 }
 			# Clone Base Machine
-			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir -SharedDisk $cloneparm"
+			$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir -SharedDisk $cloneparm"
 			###################################################
 			If ($CloneOK)
 				{
@@ -3696,7 +3662,7 @@ switch ($PsCmdlet.ParameterSetName)
 			$Nodeip = "$IPv4Subnet.17$Node"
             $NodePrefix	= "Spaces"
             $Nodename = "$NodePrefix$Node"
-			$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+			$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
 			$IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NodePrefix"
 			###################################################
 			# we need a DC, so check it is running
@@ -3712,7 +3678,7 @@ switch ($PsCmdlet.ParameterSetName)
                 }
 			test-dcrunning
 			if ($SpaceNodes -gt 1) {$AddonFeatures = "Failover-Clustering, RSAT-Clustering"}
-			$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -AddOnfeatures $AddonFeature"
+			$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -AddOnfeatures $AddonFeature"
 			###################################################
 			If ($CloneOK)
 				{
@@ -3738,7 +3704,7 @@ switch ($PsCmdlet.ParameterSetName)
         $size = 'XL'
 		$Nodeip = "$IPv4Subnet.13$Node"
 		$Nodename = "SQLNODE$Node"
-		$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+		$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
 		$IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\SQL\"
 		###################################################
 		# we need a DC, so check it is running
@@ -3753,7 +3719,7 @@ switch ($PsCmdlet.ParameterSetName)
              }
         if ($Cluster.IsPresent) {$AddonFeatures = ("$AddonFeatures", "Failover-Clustering")}
 		test-dcrunning
-		$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -sql"
+		$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -sql"
 		###################################################
 		If ($CloneOK)
 			{
@@ -3781,7 +3747,7 @@ switch ($PsCmdlet.ParameterSetName)
     $Nodeip = "$IPv4Subnet.19"
 	$NodePrefix = "Panorama"
     $Nodename = $NodePrefix
-	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+	$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NodePrefix"
     [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features,Web-Mgmt-Console, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI"
 	###################################################
@@ -3794,7 +3760,7 @@ switch ($PsCmdlet.ParameterSetName)
         pause
         }
 	test-dcrunning
-	$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -bridge -Gateway -size $Size -Sourcedir $Sourcedir $CommonParameter"
+	$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -bridge -Gateway -size $Size -Sourcedir $Sourcedir $CommonParameter"
 	###################################################
 	If ($CloneOK)
 		{
@@ -3815,7 +3781,7 @@ switch ($PsCmdlet.ParameterSetName)
 	$Nodeip = "$IPv4Subnet.17"
 	$NodePrefix = "ViPRSRM"
     $Nodename = $NodePrefix
-	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+	$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NodePrefix"
     [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS"
 	###################################################
@@ -3828,7 +3794,7 @@ switch ($PsCmdlet.ParameterSetName)
         pause
         }
 	test-dcrunning
-	$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Gateway -size XXL -Sourcedir $Sourcedir $CommonParameter"
+	$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Gateway -size XXL -Sourcedir $Sourcedir $CommonParameter"
 	###################################################
 	If ($CloneOK)
 		{
@@ -3854,7 +3820,7 @@ switch ($PsCmdlet.ParameterSetName)
 	$Nodeip = "$IPv4Subnet.14"
 	$NodePrefix = "APPSYNC"
     $Nodename = $NodePrefix
-	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+	$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NodePrefix"
     [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, Desktop-Experience"
 	###################################################
@@ -3867,7 +3833,7 @@ switch ($PsCmdlet.ParameterSetName)
         pause
         }
 	test-dcrunning
-	$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Gateway -size XXL -Sourcedir $Sourcedir $CommonParameter"
+	$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Gateway -size XXL -Sourcedir $Sourcedir $CommonParameter"
 	###################################################
 	If ($CloneOK)
 	{
@@ -3891,7 +3857,7 @@ switch ($PsCmdlet.ParameterSetName)
 	###################################################
 	$Nodeip = "$IPv4Subnet.18"
 	$Nodename = "SCOM"
-	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+	$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
     [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS"
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\SCOM"
     $In_Guest_UNC_SQLScriptDir = "$IN_Guest_UNC_Scriptroot\sql\"
@@ -3905,7 +3871,7 @@ switch ($PsCmdlet.ParameterSetName)
         pause
         }
 	test-dcrunning
-	$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Gateway -size XXL -Sourcedir $Sourcedir $CommonParameter"
+	$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Gateway -size XXL -Sourcedir $Sourcedir $CommonParameter"
 	###################################################
 	If ($CloneOK)
 	{
@@ -3967,7 +3933,7 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
 	###################################################
 	$Nodeip = "$IPv4Subnet.$Gatewayhost"
 	$Nodename = $NWNODE
-	$CloneVMX = "$Builddir\$Nodename\$Nodename.vmx"
+	$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
     [string]$AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features"
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NWNODE"
 	###################################################
@@ -3985,7 +3951,8 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
         }
 	test-dcrunning
     If ($DefaultGateway -match $Nodeip){$SetGateway = "-Gateway"}
-	$CloneOK = Invoke-expression "$Builddir\clone-node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 9 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -NW $SetGateway -size $Size -Sourcedir $Sourcedir $CommonParameter"
+
+	$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 9 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -NW $SetGateway -size $Size -Sourcedir $Sourcedir $CommonParameter"
 	###################################################
 	If ($CloneOK)
 	    {
