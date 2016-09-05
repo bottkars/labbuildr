@@ -190,32 +190,20 @@ if ($scaleio.IsPresent)
 	Write-Host -ForegroundColor Gray " ==>using MDM IP´s $mdm_ip"
 	Write-Host -ForegroundColor Gray " ==>defaulting to Ubuntu 14_4"
 	$ubuntu_ver = "14_4"
-	try 
-		{
-		$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU*  -Exclude "*.zip" -Recurse -Directory -ErrorAction Stop
-		}
-	catch
-		{
-		try 
-			{
-			Receive-LABScaleIO -Destination $Sourcedir -arch linux -unzip
-			$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Exclude "*.zip" -Recurse -Directory -ErrorAction Stop
-			}
-		catch
-			{
-			Write-Host "could not evaluate ScaleIO Ubuntu Install tree, trying force download"
-			Receive-LABScaleIO -Destination $Sourcedir -arch linux -unzip -force
-			$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Recurse -Directory
-			if ($Ubuntu)
-				{
-				Write-Warning "could not download / find any valid scaleio ubuntu source"
-				exit
-				}
-			}
-		}
+	$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Recurse -Directory -ErrorAction SilentlyContinue
+if (!$ubuntu)
+	{
+	Receive-LABScaleIO -Destination $Sourcedir -arch linux -unzip
+	$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Recurse -Directory -ErrorAction SilentlyContinue
+	}
+if (!$Ubuntu)
+	{
+	Write-Warning "could not download / find any valid scaleio ubuntu source"
+	exit
+	}
 	Write-Host " ==>got Ubuntu files"
 	Write-Host -ForegroundColor Gray " ==>evaluating ubuntu files"
-	$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Recurse -Directory
+	$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Exclude "*.zip" -Recurse -Directory
 	$Ubuntudir = $Ubuntu | Sort-Object -Descending | Select-Object -First 1
 	Write-Host -ForegroundColor Gray " ==>Using Ubuntu Dir $Ubuntudir"
 	if ((Get-ChildItem -Path $Ubuntudir -Filter "*.deb" -Recurse -Include *Ubuntu*).count -ge 9)
