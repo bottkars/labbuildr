@@ -193,7 +193,7 @@ if ($scaleio.IsPresent)
 	$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Recurse -Directory -ErrorAction SilentlyContinue
 if (!$ubuntu)
 	{
-	Receive-LABScaleIO -Destination $Sourcedir -arch linux -unzip
+	Receive-LABScaleIO -Destination $Sourcedir -arch linux -unzip -force
 	$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Recurse -Directory -ErrorAction SilentlyContinue
 	}
 if (!$Ubuntu)
