@@ -17,3 +17,4 @@
 .\Scripts
 .\install-dockerhost.ps1
 .\deletefiles.txt
+.\SIOToolkit

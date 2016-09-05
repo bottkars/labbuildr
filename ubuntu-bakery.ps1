@@ -196,8 +196,22 @@ if ($scaleio.IsPresent)
 		}
 	catch
 		{
-		Receive-LABScaleIO -Destination $Sourcedir -arch linux -unzip
-		$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Recurse -Directory
+		try 
+			{
+			Receive-LABScaleIO -Destination $Sourcedir -arch linux -unzip
+			$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Recurse -Directory -ErrorAction Stop
+			}
+		catch
+			{
+			Write-Host "could not evaluate ScaleIO Ubuntu Install tree, trying force download"
+			Receive-LABScaleIO -Destination $Sourcedir -arch linux -unzip -force
+			$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Recurse -Directory
+			if ($Ubuntu)
+				{
+				Write-Warning "could not download / find any valid scaleio ubuntu source"
+				exit
+				}
+			}
 		}
 	Write-Host " ==>got Ubuntu files"
 	Write-Host -ForegroundColor Gray " ==>evaluating ubuntu files"

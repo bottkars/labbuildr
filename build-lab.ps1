@@ -824,14 +824,7 @@ catch
     {
     [datetime]$Latest_vmxtoolkit_git = "07/11/2015"
     }
-try
-    {
-    [datetime]$Latest_SIOToolKit_git = Get-Content  ($Builddir + "\SIOToolKit-$branch.gitver") -ErrorAction Stop
-    }
-    catch
-    {
-    [datetime]$Latest_SIOToolKit_git = "07/11/2015"
-    }
+
 ################## Statics
 $WAIKVER = "WAIK"
 $custom_domainsuffix = "local"
@@ -858,7 +851,6 @@ $latest_sqlver  = 'SQL2016'
 $latest_master = '2012R2FallUpdate'
 $Latest_2016 = '2016TP5'
 $latest_sql_2012 = 'SQL2012SP2'
-$SIOToolKit_Branch = "master"
 $NW85_requiredJava = "jre-7u61-windows-x64"
 $Adminuser = "Administrator"
 $Adminpassword = "Password123!"
@@ -1298,10 +1290,13 @@ switch ($PsCmdlet.ParameterSetName)
 			$deletefiles = get-content "$Builddir\deletefiles.txt"
 			foreach ($deletefile in $deletefiles)
 			    {
-				if (Get-Item $Builddir\$deletefile -ErrorAction SilentlyContinue)
+				try
+					{
+					Remove-Item -Path (join-path $Builddir $deletefile) -Recurse -ErrorAction Stop
+					}
+				catch
 				    {
-					Remove-Item -Path $Builddir\$deletefile -Recurse -ErrorAction SilentlyContinue
-					Write-Host -ForegroundColor White  " ==>deleted $deletefile"
+					
 					}
 			    }
             }
@@ -1332,11 +1327,6 @@ switch ($PsCmdlet.ParameterSetName)
             }
         }
         ####
-        $Repo = "SIOToolKit"
-        $RepoLocation = "emccode"
-        $Latest_local_git = $Latest_SIOToolkit_git
-        $Destination = "$Builddir\SIOToolKit"
-        $Hasupdate = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination
         $Branch | Set-Content -Path "$Builddir\labbuildr.branch" -Force # -Verbose
         if ($ReloadProfile)
             {
