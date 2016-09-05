@@ -192,14 +192,14 @@ if ($scaleio.IsPresent)
 	$ubuntu_ver = "14_4"
 	try 
 		{
-		$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Recurse -Directory -ErrorAction Stop
+		$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU*  -Exclude "*.zip" -Recurse -Directory -ErrorAction Stop
 		}
 	catch
 		{
 		try 
 			{
 			Receive-LABScaleIO -Destination $Sourcedir -arch linux -unzip
-			$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Recurse -Directory -ErrorAction Stop
+			$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Exclude "*.zip" -Recurse -Directory -ErrorAction Stop
 			}
 		catch
 			{
