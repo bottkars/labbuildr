@@ -24,6 +24,7 @@ catch
     Write-Warning -InformationAction Stop "labbuildr-scripts not found, need to move scripts folder"
 	try
         {
+		Write-Host -ForegroundColor Gray " ==> moving Scripts to labbuildr-scripts"
         Move-Item -Path Scripts -Destination labbuildr-scripts -ErrorAction Stop
         }
     catch
@@ -59,4 +60,4 @@ else
     $blog = [xml](new-object System.Net.WebClient).DownloadString($Url)
     $blog.rss.channel.item |  where {$_.title -match "vmxtoolkit" -or $_.title -Match "labbuildr"} |select Link | ft
     }#>
-Get-LABDefaults
+Get-VMX
