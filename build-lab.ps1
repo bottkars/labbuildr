@@ -2212,7 +2212,7 @@ if ($SCVMM.IsPresent)
     $Prereqdir = "prereq"
     if ($SC_Version -match "2012")
         {
-        $SQLVER = "SQL2012SP2"
+        $SQLVER = "SQL2012_ISO"
         }
     If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCVMM -Destination $Sourcedir -unzip -WarningAction SilentlyContinue))
         {

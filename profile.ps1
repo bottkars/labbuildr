@@ -46,6 +46,10 @@ catch
 	Set-LABMasterpath "$HOME/Master.develop"
 	Set-LABSources "$Home/Sources.develop"
     }
+if ((Get-LABDefaults).SQLVER -notmatch 'ISO')
+	{
+	Set-LABSQLver -SQLVER SQL2014SP2_ISO
+	}
 $buildlab = (join-path $self "build-lab.ps1")
 .$buildlab
 <#write-host -ForegroundColor Yellow "Running VMware $vmwareversion"
