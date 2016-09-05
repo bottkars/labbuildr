@@ -21,8 +21,16 @@ try
 catch
     [System.Management.Automation.ItemNotFoundException]
     {
-    Write-Host -ForegroundColor Yellow "labbuildr-scripts not found, need to run build-lab.ps1 -update twice !"
-	break
+    Write-Warning -InformationAction Stop "labbuildr-scripts not found, need to move scripts folder"
+	try
+        {
+        Move-Item -Path Scripts -Destination labbuildr-scripts -ErrorAction Stop
+        }
+    catch
+        {
+        Write-Warning "could not move old scripts folder, incomlete installation ?"
+        exit
+        }
     }
 
 try
