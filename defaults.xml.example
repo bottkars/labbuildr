@@ -21,9 +21,9 @@
 <DefaultGateway>192.168.2.4</DefaultGateway>
 <DNS1>192.168.2.4</DNS1>
 <DNS2>192.168.2.4</DNS2>
-<Sourcedir>$HOME/Sources.develop</Sourcedir>
+<Sourcedir></Sourcedir>
 <ScaleIOVer>2.0-6035.0</ScaleIOVer>
-<Masterpath>$HOME/SharedMaster.develop</Masterpath>
+<Masterpath></Masterpath>
 <NoDomainCheck></NoDomainCheck>
 <Puppet></Puppet>
 <PuppetMaster></PuppetMaster>
