@@ -16,6 +16,17 @@ import-module (Join-Path $self "vmxtoolkit") -Force -ArgumentList $self
 import-module (Join-Path $self "labtools") -Force
 try
     {
+    Get-ChildItem labbuildr-scripts -ErrorAction Stop | Out-Null
+    }
+catch
+    [System.Management.Automation.ItemNotFoundException]
+    {
+    Write-Host -ForegroundColor Yellow "labbuildr-scripts not found, need to run build-lab.ps1 -update twice !"
+	break
+    }
+
+try
+    {
     Get-ChildItem .\defaults.xml -ErrorAction Stop | Out-Null
     }
 catch
