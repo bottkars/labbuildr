@@ -1779,7 +1779,7 @@ $config =@()
         $config += ("<NoDomainCheck>$($NoDomainCheck)</NoDomainCheck>")
         $config += ("<Puppet>$($Puppet)</Puppet>")
         $config += ("<PuppetMaster>$($PuppetMaster)</PuppetMaster>")
-        $config += ("<Hostkey>$($HostKey)</Hostkey>")
+        $config += ("<Hostkey>$($LabDefaults.HostKey)</Hostkey>")
         $config += ("</config>")
 $config | Set-Content $defaultsfile
 }
