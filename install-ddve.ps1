@@ -296,9 +296,7 @@ switch ($PsCmdlet.ParameterSetName)
             foreach ($LUN in (2..($NumDisks+1)))
                     {
                     $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-                    Write-Host -ForegroundColor Magenta " ==>Building new Disk $Diskname"
                     $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-                    Write-Host -ForegroundColor Magenta " ==>Adding Disk $Diskname to $($NodeClone.VMXname)"
                     $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
                     }
 
@@ -309,29 +307,20 @@ switch ($PsCmdlet.ParameterSetName)
                     foreach ($LUN in (0..($NumDisks-1)))
                         {
                         $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-                        Write-Host -ForegroundColor Magenta " ==>Building new Disk $Diskname"
                         $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-                        Write-Host -ForegroundColor Magenta " ==>Adding Disk $Diskname to $($NodeClone.VMXname)"
                         $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
                         }
                     }
                 }
         
-            Write-Host -ForegroundColor Magenta " ==>Configuring NIC0"
             $Netadater0 = $NodeClone | Set-VMXVnet -Adapter 0 -vnet $VMnet
-            Write-Host -ForegroundColor Magenta " ==>Configuring NIC1"
-            # $Netadater1 = $NodeClone | Set-VMXVnet -Adapter 1 -vnet vmnet8
             $Netadater1 = $NodeClone | Set-VMXNetworkAdapter -Adapter 1 -ConnectionType nat -AdapterType vmxnet3
-            # $Netadater1connected = $NodeClone | Connect-VMXNetworkAdapter -Adapter 1
             $Netadater1connected = $NodeClone | Disconnect-VMXNetworkAdapter -Adapter 1
             
             $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
             $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
-            Write-Host -ForegroundColor Magenta " ==>Configuring Memory to $memsize"
             $Memory = $NodeClone | Set-VMXmemory -MemoryMB $memsize
-            Write-Host -ForegroundColor Magenta " ==>Configuring $Numcpu CPUs"
             $Processor = $nodeclone | Set-VMXprocessor -Processorcount $Numcpu
-            Write-Host -ForegroundColor Magenta " ==>Starting VM $($NodeClone.Clonename)"
             $NodeClone | start-vmx | Out-Null
             if ($configure.IsPresent)
                 {

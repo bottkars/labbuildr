@@ -1,9 +1,9 @@
 ﻿<#
 .Synopsis
-   .\install-scaleiosvm.ps1 
+   .\install-scaleiosvm.ps1
 .DESCRIPTION
   install-scaleiosvm is  the a vmxtoolkit solutionpack for configuring and deploying scaleio 2.0 svm´s
-      
+
       Copyright 2014 Karsten Bott
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://github.com/bottkars/labbuildr/wiki/install-scaleiosvm.ps1 
+   https://github.com/bottkars/labbuildr/wiki/install-scaleiosvm.ps1
 .EXAMPLE
 .\install-scaleiosvm.ps1 -Sourcedir d:\sources
 .EXAMPLE
@@ -31,7 +31,7 @@ This will install a Single Node SDS
 [CmdletBinding(DefaultParametersetName = "import")]
 Param(
 ### import parameters
-<# for the Import, we specify the Path to the Sources. 
+<# for the Import, we specify the Path to the Sources.
 Sources are the Root of the Extracted ScaleIO_VMware_SW_Download.zip
 If not available, it will be downloaded from http://www.emc.com/scaleio
 The extracte OVA will be dehydrated to a VMware Workstation Master #>
@@ -59,8 +59,8 @@ The extracte OVA will be dehydrated to a VMware Workstation Master #>
 [Parameter(ParameterSetName = "sdsonly",Mandatory=$false)]
 [Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateRange(1,3)][int32]$Disks = 3,
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
-[Parameter(ParameterSetName = "sdsonly",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
+[Parameter(ParameterSetName = "install",Mandatory=$true)]
+[Parameter(ParameterSetName = "sdsonly",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet,
 <# Name of the domain, .$Custom_DomainSuffix added#>
 [Parameter(ParameterSetName = "sdsonly",Mandatory=$false)]
 [Parameter(ParameterSetName = "install",Mandatory=$False)]
@@ -151,13 +151,13 @@ switch ($PsCmdlet.ParameterSetName)
 			{
 			$Masterpath = $Builddir
 			}
-        Try 
+        Try
             {
             test-Path $Sourcedir
-            } 
-        Catch 
-            { 
-            Write-Verbose $_ 
+            }
+        Catch
+            {
+            Write-Verbose $_
             Write-Warning "We need a Valid Sourcedir, trying Defaults"
             if (!($Sourcedir = $LabDefaults.Sourcedir))
                 {
@@ -174,12 +174,12 @@ switch ($PsCmdlet.ParameterSetName)
 		$mastername = $($ovaPath.Basename)
 		$Template = Import-VMXOVATemplate -OVA $ovaPath.FullName -destination $Masterpath -acceptAllEulas -Quiet -AllowExtraConfig
         $MasterVMX = get-vmx -path "$Masterpath\$mastername"
-        if (!$MasterVMX.Template) 
+        if (!$MasterVMX.Template)
             {
             write-verbose "Templating Master VMX"
             $Temolate = $MasterVMX | Set-VMXTemplate
             }
-      Write-Host -ForegroundColor Gray "[Preparation of Template done, please run $($MyInvocation.MyCommand) -ScaleIOMaster $MasterPath\$mastername]"		
+      Write-Host -ForegroundColor Gray "[Preparation of Template done, please run $($MyInvocation.MyCommand) -ScaleIOMaster $MasterPath\$mastername]"
         }
      default
         {
@@ -203,7 +203,7 @@ switch ($PsCmdlet.ParameterSetName)
             "
             exit
             }
-        $MasterVMX = $Mastervmxlist[0]   
+        $MasterVMX = $Mastervmxlist[0]
         $Nodeprefix = "ScaleIONode"
         If ($configure.IsPresent -and $Nodes -lt 3)
             {
@@ -218,15 +218,15 @@ switch ($PsCmdlet.ParameterSetName)
         else
             {
             $mdm_ip="$mdm_ipa,$mdm_ipb"
-            }      
-        if (!$MasterVMX.Template) 
+            }
+        if (!$MasterVMX.Template)
             {
             write-verbose "Templating Master VMX"
             $template = $MasterVMX | Set-VMXTemplate
             }
         $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
-        
-        if (!$Basesnap) 
+
+        if (!$Basesnap)
         {
          Write-verbose "Base snap does not exist, creating now"
         $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
@@ -238,8 +238,8 @@ switch ($PsCmdlet.ParameterSetName)
         {
         Write-Host -ForegroundColor Gray " ==>Checking presence of $Nodeprefix$node"
         if (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue ))
-            {   
-            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node 
+            {
+            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node
             If ($Node -eq 1){$Primary = $NodeClone}
             $Config = Get-VMXConfig -config $NodeClone.config
             Write-Verbose "Tweaking Config"
@@ -248,7 +248,7 @@ switch ($PsCmdlet.ParameterSetName)
             foreach ($LUN in (1..$Disks))
                 {
                 $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-                $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
+                $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -VMXName $NodeClone.VMXname -Path $NodeClone.Path
                 $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI | Out-Null
                 }
             $NodeClone | Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 | out-null
@@ -267,7 +267,7 @@ switch ($PsCmdlet.ParameterSetName)
             if ($singlemdm.IsPresent -and $Node -ne 1)
                 {
                 $memorytweak = $NodeClone | Set-VMXmemory -MemoryMB 1536
-                } 
+                }
             # Set-VMXVnet -Adapter 0 -vnet vmnet2
             start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | out-null
             # $NodeClone | Set-VMXSharedFolderState -enabled
@@ -277,10 +277,10 @@ switch ($PsCmdlet.ParameterSetName)
             Write-Warning "Node $Nodeprefix$node already exists"
                 if ($configure.IsPresent)
                     {
-                    Write-Warning "Please Delete VM´s First, use 
+                    Write-Warning "Please Delete VM´s First, use
                     'get-vmx $Nodeprefix$Node | remove-vmx'
 to remove the Machine or
-                    'get-vmx $Nodeprefix | remove-vmx' 
+                    'get-vmx $Nodeprefix | remove-vmx'
 to remove all Nodes"
                     exit
                     }
@@ -307,7 +307,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         If (!$DefaultGateway) {$DefaultGateway = $Ip}
         $Scriptblock = "echo -e '$rootpassword\n$rootpassword' | (passwd --stdin root)"
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $old_rootpassword -logfile $Logfile | Out-Null
-        
+
         $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device eth0 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.$Custom_DomainSuffix" -Hostname "$Nodeprefix$Node" -suse -rootuser $rootuser -rootpassword $rootpassword | Out-Null
         $NodeClone | Invoke-VMXBash -Scriptblock "rpm --import /root/install/RPM-GPG-KEY-ScaleIO" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
         $NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-openssl*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
@@ -318,7 +318,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
                 Write-Host -ForegroundColor Gray " ==>trying MDM Install as manager"
                 $NodeClone | Invoke-VMXBash -Scriptblock "export MDM_ROLE_IS_MANAGER=1;rpm -Uhv /root/install/EMC-ScaleIO-mdm*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
                 }
-            
+
             if ($Node -eq 3)
                 {
                 Write-Host -ForegroundColor Gray " ==>trying Gateway Install"
@@ -329,12 +329,12 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
                     Write-Host -ForegroundColor Gray " ==>trying MDM Install as tiebreaker"
                     $NodeClone | Invoke-VMXBash -Scriptblock "export MDM_ROLE_IS_MANAGER=0;rpm -Uhv /root/install/EMC-ScaleIO-mdm*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
                     Write-Host -ForegroundColor Gray " ==>adding MDM to Gateway Server Config File"
-                    $sed = "sed -i 's\mdm.ip.addresses=.*\mdm.ip.addresses=$mdm_ipa;$mdm_ipb\' /opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classes/gatewayUser.properties" 
+                    $sed = "sed -i 's\mdm.ip.addresses=.*\mdm.ip.addresses=$mdm_ipa;$mdm_ipb\' /opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classes/gatewayUser.properties"
                     }
                 else
                     {
                     Write-Host -ForegroundColor Gray " ==>adding MDM's to Gateway Server Config File"
-                    $sed = "sed -i 's\mdm.ip.addresses=.*\mdm.ip.addresses=$mdm_ipa;$mdm_ipa\' /opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classes/gatewayUser.properties" 
+                    $sed = "sed -i 's\mdm.ip.addresses=.*\mdm.ip.addresses=$mdm_ipa;$mdm_ipa\' /opt/emc/scaleio/gateway/webapps/ROOT/WEB-INF/classes/gatewayUser.properties"
                     }
                 Write-Verbose $sed
                 $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
@@ -367,7 +367,7 @@ if ($configure.IsPresent)
         Write-Verbose $sclicmd
         $Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
         Write-Host -ForegroundColor Gray " ==>Setting password"
-        $sclicmd =  "scli --login --username admin --password admin --mdm_ip $mdm_ipa;scli --set_password --old_password admin --new_password $MDMPassword  --mdm_ip $mdm_ipa"
+        $sclicmd =  "scli --login --username admin --password admin --mdm_ip $mdm_ipa;scli --set_password --old_password admin --new_password $MDMPassword --mdm_ip $mdm_ipa"
         Write-Verbose $sclicmd
         $Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
         if (!$singlemdm.IsPresent)
@@ -375,12 +375,12 @@ if ($configure.IsPresent)
             Write-Host -ForegroundColor Gray " ==>adding standby MDM $mdm_ipb"
             $sclicmd = "$mdmconnect;scli --add_standby_mdm --mdm_role manager --new_mdm_ip $mdm_ipb --new_mdm_management_ip $mdm_ipb --new_mdm_name $mdm_name_b --mdm_ip $mdm_ipa"
             Write-Verbose $sclicmd
-            $Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null 
+            $Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
             Write-Host -ForegroundColor Gray " ==>adding tiebreaker $tb_ip"
             $sclicmd = "$mdmconnect; scli --add_standby_mdm --mdm_role tb  --new_mdm_ip $tb_ip --tb_name $tb_name --mdm_ip $mdm_ipa"
             Write-Verbose $sclicmd
             $Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
-            
+
             Write-Host -ForegroundColor Gray " ==>switching to cluster mode"
             $sclicmd = "$mdmconnect;scli --switch_cluster_mode --cluster_mode 3_node --add_slave_mdm_ip $mdm_ipb --add_tb_ip $tb_ip  --mdm_ip $mdm_ipa"
             Write-Verbose $sclicmd
@@ -391,12 +391,12 @@ if ($configure.IsPresent)
             $mdm_ipb = $mdm_ipa
             }
         Write-Host -ForegroundColor Magenta "Storing SIO Confiuration locally"
-        Set-LABSIOConfig -mdm_ipa $mdm_ipa -mdm_ipb $mdm_ipb -gateway_ip $tb_ip -system_name $SystemName -pool_name $StoragePoolName -pd_name $ProtectionDomainName 
-        
+        Set-LABSIOConfig -mdm_ipa $mdm_ipa -mdm_ipb $mdm_ipb -gateway_ip $tb_ip -system_name $SystemName -pool_name $StoragePoolName -pd_name $ProtectionDomainName
+
         Write-Host -ForegroundColor Gray " ==>adding protection domain $ProtectionDomainName"
         $sclicmd = "scli --add_protection_domain --protection_domain_name $ProtectionDomainName --mdm_ip $mdm_ip"
         $Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
-        
+
         Write-Host -ForegroundColor Gray " ==>adding storagepool $StoragePoolName"
         $sclicmd = "scli --add_storage_pool --storage_pool_name $StoragePoolName --protection_domain_name $ProtectionDomainName --mdm_ip $mdm_ip"
         Write-Verbose $sclicmd

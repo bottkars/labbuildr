@@ -62,7 +62,8 @@ If ($ConfirmPreference -match "none")
 else
     {$Confirm = $true}
 $Builddir = $PSScriptRoot
-$Scriptdir = Join-Path $Builddir "Scripts"
+$Scripts = "labbuildr-scripts"
+$Scriptdir = Join-Path $Builddir $Scripts
 If ($Defaults.IsPresent)
     {
     $labdefaults = Get-labDefaults

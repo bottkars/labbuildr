@@ -114,7 +114,6 @@ if ($Use_default_disks.IsPresent)
         
         & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --name=$($ovaPath.Basename) $ovaPath.FullName $PSScriptRoot  #
         $MasterVMX = get-vmx -path ".\$($ovaPath.Basename)"
-        Write-Host -ForegroundColor Magenta " ==>Customizing Master VM"
     if (!$Use_default_disks.IsPresent)
         {
         foreach ($lun in 2..6)
@@ -199,25 +198,20 @@ if (!$Basesnap)
 
 foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     {
-    Write-Host -ForegroundColor Magenta "Checking VM $Nodeprefix$node already Exists"
     If (!(get-vmx $Nodeprefix$node  -WarningAction SilentlyContinue))
     {
-    Write-Host -ForegroundColor Magenta " ==>Creating clone $Nodeprefix$node"
     $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$node 
     If (!(get-vmx $Nodeprefix$node  -WarningAction SilentlyContinue))
         {
         Write-Warning "node $Nodeprefix$node could not be created. please reach out to @sddc_guy"
         return
         }
-        
-    Write-Host -ForegroundColor Magenta " ==>Creating Disks"
     if (!$Use_default_disks.IsPresent)
         {
         $SCSI = 0
         foreach ($LUN in (1..$Disks))
                 {
                 $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-                Write-Host -ForegroundColor Gray " ==> Building Disk $Diskname"
                 try
                     {
                     $Newdisk = $NodeClone | New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -ErrorAction Stop #-Debug
@@ -228,7 +222,6 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
 try to delete $Nodeprefix$Node Directory and try again"
                     exit
                     }
-                Write-Host -ForegroundColor Gray " ==> Adding Disk $Diskname to $($NodeClone.Clonename)"
                 $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
                 }
             }
