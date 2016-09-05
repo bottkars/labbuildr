@@ -43,8 +43,8 @@ catch
     {
     Write-Host -ForegroundColor Yellow "no defaults.xml found, using labbuildr default settings"
     Copy-Item .\defaults.xml.example .\defaults.xml
-	Set-LABMasterpath "$HOME/Master.develop"
-	Set-LABSources "$Home/Sources.develop"
+	Set-LABMasterpath "$HOME/Master.labbuildr"
+	Set-LABSources "$Home/Sources.labbuildr"
     }
 if ((Get-LABDefaults).SQLVER -notmatch 'ISO')
 	{
