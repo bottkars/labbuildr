@@ -56,7 +56,6 @@ Param(
 #requires -module vmxtoolkit
 $labdefaults = Get-labDefaults
 $Builddir = $PSScriptRoot
-
 switch ($PsCmdlet.ParameterSetName)
 {
     "import"
@@ -156,7 +155,6 @@ default
             }
         } #end basesnap
 ####Build Machines#
-
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         {
         If (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue))
