@@ -1,9 +1,9 @@
 ﻿<#
 .Synopsis
-   .\install-scaleio.ps1 
+   .\install-scaleio.ps1
 .DESCRIPTION
   install-scaleio is  the a vmxtoolkit solutionpack for configuring and deploying scaleio svm´s
-      
+
       Copyright 2014 Karsten Bott
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,10 +20,10 @@
 .LINK
    https://community.emc.com/blogs/bottk/2015/02/05/labbuildrgoes-emc-cloudarray
 .EXAMPLE
-.\install-cloudarray.ps1 -ovf D:\Sources\CloudArray-ESXi5-5.1.0.6695\CloudArray-ESXi5-5.1.0.6695.ovf 
-This will convert Cloudarray ESX Template 
+.\install-cloudarray.ps1 -ovf D:\Sources\CloudArray-ESXi5-5.1.0.6695\CloudArray-ESXi5-5.1.0.6695.ovf
+This will convert Cloudarray ESX Template
 .EXAMPLE
-.\install-cloudarray.ps1 -MasterPath .\CloudArray-ESXi5-5.1.0.6695 -Defaults  
+.\install-cloudarray.ps1 -MasterPath .\CloudArray-ESXi5-5.1.0.6695 -Defaults
 This will Install default Cloud Array
 #>
 [CmdletBinding()]
@@ -41,11 +41,8 @@ Param(
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath = ".\CloudArraymaster",
 
-
-
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
-
 
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][int32]$Nodes=1,
@@ -56,50 +53,119 @@ Param(
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$dedupe,
 
-
 [Parameter(ParameterSetName = "install", Mandatory = $true)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = "vmnet2"
-
 
 )
 #requires -version 3.0
-#requires -module vmxtoolkit 
+#requires -module vmxtoolkit
+$Builddir = $PSScriptRoot
 switch ($PsCmdlet.ParameterSetName)
 {
     "import"
         {
-        if (!(($Mymaster = Get-Item $ovf).Extension -match "ovf" -or "ova"))
+		$labdefaults = Get-LABDefaults
+		try
+			{
+			$Sourcedir = $labdefaults.Sourcedir
+			}
+		catch [System.Management.Automation.ValidationMetadataException]
+			{
+			Write-Warning "Could not test Sourcedir Found from Defaults, USB stick connected ?"
+			Break
+			}
+		catch [System.Management.Automation.ParameterBindingException]
+			{
+			Write-Warning "No valid Sourcedir Found from Defaults, USB stick connected ?"
+			Break
+			}
+		try
+			{
+			$Masterpath = $LabDefaults.Masterpath
+			}
+		catch
+			{
+			Write-Host -ForegroundColor Gray " ==> No Masterpath specified, trying default"
+			$Masterpath = $Builddir
+			}
+        Write-Host -ForegroundColor Gray " ==>Validating OVF"
+        try
             {
-            write-warning "no OVF Template found"
+            $Importfile = Get-ChildItem $ovf -ErrorAction SilentlyContinue
+            }
+        catch
+            {
+            Write-Warning "$ovf is no valid ovf / ova location"
             exit
             }
-        
-        # if (!($mastername)) {$mastername = (Split-Path -Leaf $ovf).Replace(".ovf","")}
-        # $Mymaster = Get-Item $ovf
-        $Mastername = $Mymaster.Basename
-        & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck  --name=$mastername $ovf $PSScriptRoot #
-        switch ($LASTEXITCODE)
+
+        if ($Importfile.extension -eq ".ova")
             {
-                1
-                    {
-                    Write-Warning "There was an error creating the Template"
-                    exit
-                    }
-                default
-                    {
-                    Write-Host "Templyte creation succeded with $LASTEXITCODE"
-                    }
+            $OVA_Destination = join-path $Importfile.DirectoryName $Importfile.BaseName
+			### if already exist !?!?!?
+            Write-Host -ForegroundColor Gray " ==>Extraxting from OVA Package $Importfile"
+            $Expand = Expand-LABpackage -Archive $Importfile.FullName -destination $OVA_Destination -Force
+            $Importfile = Get-ChildItem -Path $OVA_Destination -Filter "*.ovf"
+            }
+        try
+            {
+            Write-Host -ForegroundColor Gray " ==>Validating OVF from OVA Package"
+            $Importfile = Get-ChildItem -Filter "*.ovf" -Path $Importfile.DirectoryName -ErrorAction SilentlyContinue
+            }
+        catch
+            {
+            Write-Warning "we could not find a ovf file at $($Importfile.Directoryname)"
+            exit
+            }
+        if (!($mastername))
+            {
+            $mastername = $Importfile.BaseName
+            }
+        ## tweak ovf
+        Write-Host -ForegroundColor Gray " ==>Adjusting OVF file for VMwARE Workstation"
+        $content = Get-Content -Path $Importfile.FullName
+        $Out_Line = $true
+        $OutContent = @()
+        ForEach ($Line In $content)
+            {
+            If ($Line -match '<ProductSection')
+                {
+                $Out_Line = $false
                 }
-        $Content = Get-Content $PSScriptRoot\$mastername\$mastername.vmx
-        $Content = $Content-notmatch 'snapshot.maxSnapshots'
-        $Content | Set-Content $PSScriptRoot\$mastername\$mastername.vmx
-        write-host -ForegroundColor Magenta "Now run .\install-cloudarray.ps1 -MasterPath .\$mastername -Defaults " 
+            If ($Out_Line -eq $True)
+                {
+                $OutContent += $Line
+                }
+            If ($Line -match '</ProductSection')
+                {
+                $Out_Line = $True
+                }
+            }
+        $OutContent | Set-Content -Path $Importfile.FullName
+        Write-Host -ForegroundColor Gray " ==>Checkin for VM $mastername"
+
+        if (Get-VMX -path $MasterPath\$mastername -WarningAction SilentlyContinue)
+            {
+            Write-Warning "Base VM $mastername already exists, please delete first"
+            exit
+            }
+        else
+            {
+            Write-Host -ForegroundColor Gray " ==>Importing Base VM"
+            if ((import-VMXOVATemplate -OVA $Importfile.FullName -Name $mastername -destination $MasterPath  -acceptAllEulas).success -eq $true)
+                {
+                Write-Host -ForegroundColor Gray " ==>preparation of template done, please run " -NoNewline
+				write-host -ForegroundColor White ".\$($MyInvocation.MyCommand) -MasterPath $MasterPath\$mastername -Defaults"
+                }
+            else
+                {
+                Write-Host "Error importing Base VM. Already Exists ?"
+                exit
+                }
+            }
         }
+
 default
     {
-
-
-            
-            
     If ($Defaults.IsPresent)
             {
             $labdefaults = Get-labDefaults
@@ -112,70 +178,56 @@ default
             $DNS1 = $labdefaults.DNS1
             $configure = $true
             }
-
-
-
     $Nodeprefix = "Cloudarray"
-    If (!($MasterVMX = get-vmx -path $MasterPath))
+    If (!($MasterVMX = get-vmx -path $MasterPath -WarningAction SilentlyContinue))
       {
        Write-Error "No Valid Master Found"
       break
      }
-    
 
-    $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
-    if (!$Basesnap) 
+    $Basesnap = $MasterVMX | Get-VMXSnapshot -WarningAction SilentlyContinue| where Snapshot -Match "Base"
+    if (!$Basesnap)
         {
-
-        Write-Host -ForegroundColor Magenta " ==>Tweaking VMX File"
+        Write-Host -ForegroundColor Gray " ==>Tweaking VMX File"
         $Config = Get-VMXConfig -config $MasterVMX.Config
         $Config = $Config -notmatch 'snapshot.maxSnapshots'
         $Config | set-Content -Path $MasterVMX.Config
 
-
-        Write-Host -ForegroundColor Magenta " ==>Base snap does not exist, creating now"
+        Write-Host -ForegroundColor Gray " ==>Base snap does not exist, creating now"
         $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
-        if (!$MasterVMX.Template) 
+        if (!$MasterVMX.Template)
             {
-            Write-Host -ForegroundColor Magenta " ==>Templating Master VMX"
+            Write-Host -ForegroundColor Gray " ==>Templating Master VMX"
             $template = $MasterVMX | Set-VMXTemplate
             }
-
         } #end basesnap
 ####Build Machines#
 
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         {
-        Write-Host -ForegroundColor Magenta " ==>Checking VM $Nodeprefix$node already Exists"
-        If (!(get-vmx $Nodeprefix$node))
+        Write-Host -ForegroundColor Gray " ==>Checking VM $Nodeprefix$node already Exists"
+        If (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue))
             {
-            Write-Host -ForegroundColor Magenta " ==>Creating clone $Nodeprefix$node"
-            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$node 
-            Write-Host -ForegroundColor Magenta " ==>Creating Disks"
+            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$node -Clonepath $Builddir
+            Write-Host -ForegroundColor Gray " ==>Creating Disks"
             $SCSI = 0
             foreach ($LUN in (2..(1+$Cachevols)))
                 {
                 $Diskname =  "SCSI$SCSI"+"_LUN$LUN"+"_$Cachevolsize.vmdk"
-                Write-Host -ForegroundColor Magenta " ==>Building new Disk $Diskname"
-                $Newdisk = New-VMXScsiDisk -NewDiskSize $Cachevolsize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-                Write-Host -ForegroundColor Magenta " ==>Adding Disk $Diskname to $($NodeClone.VMXname)"
+                $Newdisk = New-VMXScsiDisk -NewDiskSize $Cachevolsize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path
                 $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
                 }
-            Write-Host -ForegroundColor Magenta " ==>Setting ext-0"
-            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config  | Out-Null
-            Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config  | Out-Null
+            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config -WarningAction SilentlyContinue | Out-Null
+            Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config -WarningAction SilentlyContinue | Out-Null
             $Scenario = Set-VMXscenario -config $NodeClone.Config -Scenarioname $Nodeprefix -Scenario 6  | Out-Null
             $ActivationPrefrence = Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node  | Out-Null
-            # Set-VMXVnet -Adapter 0 -vnet vmnet2
-            Write-Host -ForegroundColor Magenta " ==>Setting Display Name $($NodeClone.CloneName)@$Builddomain"
             Set-VMXDisplayName -config $NodeClone.Config -Displayname "$($NodeClone.CloneName)@$Builddomain"  | Out-Null
             if ($dedupe)
                 {
-                Write-Host -ForegroundColor Magenta " ==>Aligning Memory and cache for DeDupe"
+                Write-Host -ForegroundColor Gray " ==>Aligning Memory and cache for DeDupe"
                 $NodeClone | Set-VMXmemory -MemoryMB 9216 | Out-Null
                 $NodeClone | Set-VMXprocessor -Processorcount 4 | Out-Null
-                } 
-            Write-Host -ForegroundColor Magenta " ==>Starting $Nodeprefix$node"
+                }
             start-vmx -Path $NodeClone.config -VMXName $NodeClone.CloneName  | Out-Null
             } # end check vm
         else
@@ -183,12 +235,6 @@ default
             Write-Warning "VM $Nodeprefix$node already exists"
             }
         }#end foreach
-    write-Warning "Login to Cloudarray with admin / password"
+    Write-Host -ForegroundColor White " ==>Login to Cloudarray with admin / password"
     } # end default
-
-
 }# end switch
-
-
-
-
