@@ -1,9 +1,9 @@
 ﻿<#
 .Synopsis
-   .\install-scaleio.ps1 
+   .\install-scaleio.ps1
 .DESCRIPTION
   install-scaleio is  the a vmxtoolkit solutionpack for configuring and deploying scaleio svm´s
-      
+
       Copyright 2014 Karsten Bott
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,10 +20,10 @@
 .LINK
    https://community.emc.com/blogs/bottk/2015/02/05/labbuildrgoes-emc-cloudboost
 .EXAMPLE
-.\install-cloudboost.ps1 -ovf D:\Sources\cloudboost-ESXi5-5.1.0.6695\cloudboost-ESXi5-5.1.0.6695.ovf 
-This will convert cloudboost ESX Template 
+.\install-cloudboost.ps1 -ovf D:\Sources\cloudboost-ESXi5-5.1.0.6695\cloudboost-ESXi5-5.1.0.6695.ovf
+This will convert cloudboost ESX Template
 .EXAMPLE
-.\install-cloudboost.ps1 -MasterPath .\cloudboost-ESXi5-5.1.0.6695 -Defaults  
+.\install-cloudboost.ps1 -MasterPath .\cloudboost-ESXi5-5.1.0.6695 -Defaults
 This will Install default Cloud boost
 #>
 [CmdletBinding()]
@@ -40,11 +40,8 @@ Param(
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)]
 [Parameter(ParameterSetName = "install",Mandatory=$true)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Master,
 
-
-
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
-
 
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][int32]$Nodes=1,
@@ -54,10 +51,9 @@ Param(
 
 [Parameter(ParameterSetName = "install", Mandatory = $true)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = "vmnet2"
 
-
 )
 #requires -version 3.0
-#requires -module vmxtoolkit 
+#requires -module vmxtoolkit
 $labdefaults = Get-labDefaults
 $Builddir = $PSScriptRoot
 
@@ -91,7 +87,7 @@ switch ($PsCmdlet.ParameterSetName)
         $Content | Set-Content $masterpath\$mastername\$mastername.vmx
         $Mastervmx = get-vmx -path $masterpath\$mastername\$mastername.vmx
         $Mastervmx | Set-VMXHWversion -HWversion 7
-        Write-Host -ForegroundColor Yellow " ==>Now run .\install-cloudboost.ps1 -Master $masterpath\$mastername -Defaults " 
+        Write-Host -ForegroundColor Yellow " ==>Now run .\install-cloudboost.ps1 -Master $masterpath\$mastername -Defaults "
         }
 default
     {
@@ -146,19 +142,18 @@ default
       break
      }
     $Basesnap = $MasterVMX | Get-VMXSnapshot -WarningAction SilentlyContinue| where Snapshot -Match "Base"
-    if (!$Basesnap) 
+    if (!$Basesnap)
         {
         Write-Host -ForegroundColor Gray " ==> Tweaking Base VMX File"
         $Config = Get-VMXConfig -config $MasterVMX.Config
         $Config = $Config -notmatch 'snapshot.maxSnapshots'
         $Config | set-Content -Path $MasterVMX.Config
         $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
-        if (!$MasterVMX.Template) 
+        if (!$MasterVMX.Template)
             {
             Write-Host -ForegroundColor Gray " ==> Templating Master VMX"
             $template = $MasterVMX | Set-VMXTemplate
             }
-
         } #end basesnap
 ####Build Machines#
 
@@ -166,14 +161,14 @@ default
         {
         If (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue))
             {
-            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$node 
+            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$node -Clonepath $Builddir
             Write-Host -ForegroundColor Gray " ==> tweaking $Nodeprefix to run on Workstation"
             $NodeClone | Set-VMXmemory -MemoryMB 8192 | Out-Null
             Write-Host -ForegroundColor Gray " ==> Setting eth0 to e1000/slot32"
             Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType e1000 -PCISlot 32 -config $NodeClone.Config -WarningAction SilentlyContinue | Out-Null
             Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config -WarningAction SilentlyContinue | Out-Null
             $Scenario = Set-VMXscenario -config $NodeClone.Config -Scenarioname $Nodeprefix -Scenario 6
-            $ActivationPrefrence = Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node 
+            $ActivationPrefrence = Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
             # Set-VMXVnet -Adapter 0 -vnet vmnet2
             Write-Host -ForegroundColor Gray " ==> Setting Display Name $($NodeClone.CloneName)@$Builddomain"
             Set-VMXDisplayName -config $NodeClone.Config -Displayname "$($NodeClone.CloneName)@$Builddomain" | Out-Null
@@ -186,15 +181,12 @@ default
             }
         }#end foreach
     Write-Host -ForegroundColor White "change the default password on admin console
-    for CloudBoost 2.1 run 
-    
-net config eth0 $subnet.7$Node netmask 255.255.255.0 
+    for CloudBoost 2.1 run
+
+net config eth0 $subnet.7$Node netmask 255.255.255.0
 route add 0.0.0.0 netmask 0.0.0.0 gw $DefaultGateway
 dns set primary $DNS1
 fqdn $Nodeprefix$Node.$BuildDomain.$Custom_DomainSuffix
 "
-
     } # end default
-
-
 }# end switch
