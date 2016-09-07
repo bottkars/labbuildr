@@ -145,7 +145,6 @@ default
        Write-Warning "No Valid Master Found, please import Cloudboost OVA template first with .\install-cloudboost.ps1 -ovf [path to ova template]"
       break
      }
-    Write-Host -ForegroundColor Magenta " ==>Checking for Basesnap"    
     $Basesnap = $MasterVMX | Get-VMXSnapshot -WarningAction SilentlyContinue| where Snapshot -Match "Base"
     if (!$Basesnap) 
         {
@@ -153,7 +152,6 @@ default
         $Config = Get-VMXConfig -config $MasterVMX.Config
         $Config = $Config -notmatch 'snapshot.maxSnapshots'
         $Config | set-Content -Path $MasterVMX.Config
-        Write-Host -ForegroundColor Magenta " ==>Base snap does not exist, creating now"
         $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
         if (!$MasterVMX.Template) 
             {
@@ -166,10 +164,8 @@ default
 
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         {
-        Write-Host -ForegroundColor Magenta " ==>Checking VM $Nodeprefix$node already Exists"
         If (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue))
             {
-            Write-Host -ForegroundColor Magenta " ==>Creating clone $Nodeprefix$node"
             $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$node 
             Write-Host -ForegroundColor Gray " ==> tweaking $Nodeprefix to run on Workstation"
             $NodeClone | Set-VMXmemory -MemoryMB 8192 | Out-Null
