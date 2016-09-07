@@ -169,10 +169,7 @@ default
             Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config -WarningAction SilentlyContinue | Out-Null
             $Scenario = Set-VMXscenario -config $NodeClone.Config -Scenarioname $Nodeprefix -Scenario 6
             $ActivationPrefrence = Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
-            # Set-VMXVnet -Adapter 0 -vnet vmnet2
-            Write-Host -ForegroundColor Gray " ==> Setting Display Name $($NodeClone.CloneName)@$Builddomain"
             Set-VMXDisplayName -config $NodeClone.Config -Displayname "$($NodeClone.CloneName)@$Builddomain" | Out-Null
-            Write-Host -ForegroundColor Magenta " ==>Starting $Nodeprefix$node"
             start-vmx -Path $NodeClone.config -VMXName $NodeClone.CloneName
             } # end check vm
         else
