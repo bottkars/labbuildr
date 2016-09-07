@@ -89,38 +89,11 @@ The extracte OVA will be dehydrated to a VMware Workstation Master #>
 #requires -module vmxtoolkit
 #requires -module labtools
 $ScaleIO_tag = "ScaleIOVM_2*"
-If ($singlemdm.IsPresent)
-    {
-    [switch]$configure = $true
-    }
-if ($configure.IsPresent)
-    {
-    [switch]$sds = $true
-    [switch]$sdc = $true
-    }
-If ($Defaults.IsPresent)
-    {
-     $labdefaults = Get-labDefaults
-     $vmnet = $labdefaults.vmnet
-     $subnet = $labdefaults.MySubnet
-     $BuildDomain = $labdefaults.BuildDomain
-     $Sourcedir = $labdefaults.Sourcedir
-     $DefaultGateway = $labdefaults.DefaultGateway
-     $Sourcedir = $labdefaults.Sourcedir
-     }
-if ($LabDefaults.custom_domainsuffix)
-	{
-	$custom_domainsuffix = $LabDefaults.custom_domainsuffix
-	}
-else
-	{
-	$custom_domainsuffix = "local"
-	}
-$Labdefaults = Get-LABDefaults
 switch ($PsCmdlet.ParameterSetName)
 {
     "import"
         {
+		$Labdefaults = Get-LABDefaults
    		try
 			{
 			$Masterpath = $LabDefaults.Masterpath
@@ -164,6 +137,34 @@ switch ($PsCmdlet.ParameterSetName)
         }
      default
         {
+		If ($singlemdm.IsPresent)
+			{
+			[switch]$configure = $true
+			}
+		if ($configure.IsPresent)
+			{
+			[switch]$sds = $true
+			[switch]$sdc = $true
+			}
+		If ($Defaults.IsPresent)
+			{
+			 $labdefaults = Get-labDefaults
+			 $vmnet = $labdefaults.vmnet
+			 $subnet = $labdefaults.MySubnet
+			 $BuildDomain = $labdefaults.BuildDomain
+			 $Sourcedir = $labdefaults.Sourcedir
+			 $DefaultGateway = $labdefaults.DefaultGateway
+			 $Sourcedir = $labdefaults.Sourcedir
+			 }
+		if ($LabDefaults.custom_domainsuffix)
+			{
+			$custom_domainsuffix = $LabDefaults.custom_domainsuffix
+			}
+		else
+			{
+			$custom_domainsuffix = "local"
+			}
+
 		[System.Version]$subnet = $Subnet.ToString()
 		$Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 		$rootuser = "root"
