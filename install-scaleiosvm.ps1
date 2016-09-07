@@ -116,7 +116,7 @@ else
 	{
 	$custom_domainsuffix = "local"
 	}
-
+$Labdefaults = Get-LABDefaults
 switch ($PsCmdlet.ParameterSetName)
 {
     "import"
@@ -186,7 +186,6 @@ switch ($PsCmdlet.ParameterSetName)
 		$mdm_name_a = "Manager_A"
 		$mdm_name_b = "Manager_B"
 		$tb_name = "TB"
-		$Labdefaults = Get-LABDefaults
         if (!(Test-Path $SCALEIOMaster))
             {
             Write-Warning "!!!!! No ScaleIO Master found
