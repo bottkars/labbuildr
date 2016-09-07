@@ -116,29 +116,7 @@ else
 	{
 	$custom_domainsuffix = "local"
 	}
-[System.Version]$subnet = $Subnet.ToString()
-$Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
-$rootuser = "root"
-$old_rootpassword = "admin"
-$MDMPassword = "Password123!"
-$rootpassword = $MDMPassword
-[uint64]$Disksize = 100GB
-$scsi = 0
-$ScaleIO_OS = "VMware"
-$ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
-$Devicename = "$Location"+"_Disk_$Driveletter"
-$VolumeName = "Volume_$Location"
-$ProtectionDomainName = "PD_$BuildDomain"
-$StoragePoolName = "SP_$BuildDomain"
-$SystemName = "ScaleIO@$BuildDomain"
-$FaultSetName = "Rack_"
-$mdm_ipa  = "$subnet.191"
-$mdm_ipb  = "$subnet.192"
-$tb_ip = "$subnet.193"
-$mdm_name_a = "Manager_A"
-$mdm_name_b = "Manager_B"
-$tb_name = "TB"
-$Labdefaults = Get-LABDefaults
+
 switch ($PsCmdlet.ParameterSetName)
 {
     "import"
@@ -158,16 +136,19 @@ switch ($PsCmdlet.ParameterSetName)
         Catch
             {
             Write-Verbose $_
-            Write-Warning "We need a Valid Sourcedir, trying Defaults"
             if (!($Sourcedir = $LabDefaults.Sourcedir))
                 {
                 exit
                 }
+			else
+				{
+				Write-Host -ForegroundColor Gray " ==>we will use $($labdefaults.Sourcedir)"
+				}
             }
         if (!($OVAPath = Get-ChildItem -Path "$Sourcedir\ScaleIO\$ScaleIO_Path" -recurse -Include "$ScaleIO_tag.ova" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
             {
-            write-warning "No ScaleIO OVA found, Checking for Downloaded Package"
-            Receive-LABScaleIO -Destination $Sourcedir -arch VMware -unzip
+            Write-Host  -ForegroundColor Gray " ==>No ScaleIO OVA found, Checking for Downloaded Package"
+            $Downloadok = Receive-LABScaleIO -Destination $Sourcedir -arch VMware -unzip
 			}
         $OVAPath = Get-ChildItem -Path "$Sourcedir\ScaleIO\$ScaleIO_Path" -Recurse -include "$ScaleIO_tag.ova"  -Exclude ".*" | Sort-Object -Descending
         $OVAPath = $OVApath[0]
@@ -183,6 +164,29 @@ switch ($PsCmdlet.ParameterSetName)
         }
      default
         {
+		[System.Version]$subnet = $Subnet.ToString()
+		$Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
+		$rootuser = "root"
+		$old_rootpassword = "admin"
+		$MDMPassword = "Password123!"
+		$rootpassword = $MDMPassword
+		[uint64]$Disksize = 100GB
+		$scsi = 0
+		$ScaleIO_OS = "VMware"
+		$ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
+		$Devicename = "$Location"+"_Disk_$Driveletter"
+		$VolumeName = "Volume_$Location"
+		$ProtectionDomainName = "PD_$BuildDomain"
+		$StoragePoolName = "SP_$BuildDomain"
+		$SystemName = "ScaleIO@$BuildDomain"
+		$FaultSetName = "Rack_"
+		$mdm_ipa  = "$subnet.191"
+		$mdm_ipb  = "$subnet.192"
+		$tb_ip = "$subnet.193"
+		$mdm_name_a = "Manager_A"
+		$mdm_name_b = "Manager_B"
+		$tb_name = "TB"
+		$Labdefaults = Get-LABDefaults
         if (!(Test-Path $SCALEIOMaster))
             {
             Write-Warning "!!!!! No ScaleIO Master found
@@ -224,7 +228,7 @@ switch ($PsCmdlet.ParameterSetName)
             write-verbose "Templating Master VMX"
             $template = $MasterVMX | Set-VMXTemplate
             }
-        $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
+        $Basesnap = $MasterVMX | Get-VMXSnapshot  -WarningAction SilentlyContinue | where Snapshot -Match "Base"
 
         if (!$Basesnap)
         {
@@ -338,7 +342,14 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
                     }
                 Write-Verbose $sed
                 $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
-                $NodeClone | Invoke-VMXBash -Scriptblock "/etc/init.d/scaleio-gateway restart" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
+				Write-Host -ForegroundColor Gray " ==> approving mdm Certificates for gateway"
+				$scriptblock = "export TOKEN=`$(curl --silent --insecure --user 'admin:$($Guestpassword)' 'https://localhost/api/gatewayLogin' | sed 's:^.\(.*\).`$:\1:') \n`
+curl --silent --show-error --insecure --user :`$TOKEN -X GET 'https://localhost/api/getHostCertificate/Mdm?host=$($mdm_ipa)' > '/tmp/mdm_a.cer' \n`
+curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: multipart/form-data' -F 'file=@/tmp/mdm_a.cer' 'https://localhost/api/trustHostCertificate/Mdm' \n`
+curl --silent --show-error --insecure --user :`$TOKEN -X GET 'https://localhost/api/getHostCertificate/Mdm?host=$($mdm_ipb)' > '/tmp/mdm_b.cer' \n`
+curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: multipart/form-data' -F 'file=@/tmp/mdm_b.cer' 'https://localhost/api/trustHostCertificate/Mdm' "
+				$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword | Out-Null
+				$NodeClone | Invoke-VMXBash -Scriptblock "/etc/init.d/scaleio-gateway restart" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
                 }
             Write-Host -ForegroundColor Gray " ==>trying LIA Install"
             $NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-lia*.rpm" -Guestuser $rootuser -Guestpassword $rootpassword -logfile $Logfile | Out-Null
