@@ -97,16 +97,57 @@ _____ __|_________|_____|_________
 
 switch ($PsCmdlet.ParameterSetName)
 {
-
     "import"
         {
+		$labdefaults = Get-LABDefaults
+		try
+			{
+			$Sourcedir = $labdefaults.Sourcedir
+			}
+		catch [System.Management.Automation.ValidationMetadataException]
+			{
+			Write-Warning "Could not test Sourcedir Found from Defaults, USB stick connected ?"
+			Break
+			}
+		catch [System.Management.Automation.ParameterBindingException]
+			{
+			Write-Warning "No valid Sourcedir Found from Defaults, USB stick connected ?"
+			Break
+			}
+		try
+			{
+			$Masterpath = $LabDefaults.Masterpath
+			}
+		catch
+			{
+			Write-Host -ForegroundColor Gray " ==> No Masterpath specified, trying $Builddir"
+			$Masterpath = $Builddir
+			}
+        Write-Host -ForegroundColor Gray " ==>Validating OVF"
+        try
+            {
+            $Importfile = Get-ChildItem $ovf -ErrorAction SilentlyContinue
+            }
+        catch
+            {
+            Write-Warning "$ovf is no valid ovf / ova location"
+            exit
+            }
         if (!($mastername)) 
             {
             $OVFfile = Get-Item $ovf
             $mastername = $OVFfile.BaseName
             }
-        & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $ovf $PSScriptRoot #
-        Write-Host -ForegroundColor Magenta  "Use .\install-ddve.ps1 -Masterpath .\$Mastername -Defaults"
+        if ((import-VMXOVATemplate -OVA $Importfile.FullName -Name $mastername -destination $MasterPath  -acceptAllEulas -AllowExtraConfig).success -eq $true)
+            {
+            Write-Host -ForegroundColor Gray " ==>preparation of template done, please run " -NoNewline
+			write-host -ForegroundColor White ".\$($MyInvocation.MyCommand) -MasterPath $MasterPath\$mastername -Defaults"
+            }
+        else
+            {
+            Write-Host "Error importing Base VM. Already Exists ?"
+            exit
+            }
         }
 
      default
@@ -231,15 +272,11 @@ switch ($PsCmdlet.ParameterSetName)
             $config += 'scsi0:0.mode = "persistent"'
             $config = $config -notmatch 'scsi0:1.mode = "independent_persistent"'
             $config += 'scsi0:1.mode = "persistent"'
+            Set-Content -Path $MasterVMX.config -Value $config
             foreach ($scsi in 0..3)
                 {
-                Write-Host -ForegroundColor Magenta " ==>Adding Adapter SCSI$scsi"
-                $config = $config -notmatch "scsi$scsi.virtualDev"
-                $config += 'scsi'+$scsi+'.virtualDev = "pvscsi"'
-                $config = $config -notmatch "scsi$scsi.present"
-                $config += 'scsi'+$scsi+'.present = "true"'
+				$Mastervmx | Set-VMXScsiController -SCSIController $scsi -Type pvscsi
                 }
-            Set-Content -Path $MasterVMX.config -Value $config
             Write-verbose "Base snap does not exist, creating now"
             $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName Base
             }
@@ -249,8 +286,7 @@ switch ($PsCmdlet.ParameterSetName)
             Write-Verbose "Checking VM $Nodeprefix$node already Exists"
             If (!(get-vmx -path $Nodeprefix$node -WarningAction SilentlyContinue))
                 {
-                write-Host -ForegroundColor Magenta "Creating clone $Nodeprefix$node"
-                $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXlinkedClone -CloneName $Nodeprefix$node -Clonepath "$Builddir" 
+                $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXlinkedClone -CloneName $Nodeprefix$node -Clonepath $Builddir
                 switch ($DDvESize)
                     {
                 "0.5TB"

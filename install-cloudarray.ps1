@@ -84,7 +84,7 @@ switch ($PsCmdlet.ParameterSetName)
 			}
 		catch
 			{
-			Write-Host -ForegroundColor Gray " ==> No Masterpath specified, trying default"
+			Write-Host -ForegroundColor Gray " ==> No Masterpath specified, trying $Builddir"
 			$Masterpath = $Builddir
 			}
         Write-Host -ForegroundColor Gray " ==>Validating OVF"
