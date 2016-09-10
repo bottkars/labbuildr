@@ -18,12 +18,13 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://community.emc.com/blogs/bottk/2015/02/05/labbuildrgoes-emc-cloudarray
+   https://github.com/bottkars/labbuildr/wiki/install-cloudarray.ps1
 .EXAMPLE
-.\install-cloudarray.ps1 -ovf D:\Sources\CloudArray-ESXi5-5.1.0.6695\CloudArray-ESXi5-5.1.0.6695.ovf
+.\install-cloudarray.ps1 -ovf C:\Users\bottk\Downloads\CloudArray_ESXi5_7.0.6.0.8713\CloudArray_ESXi5_7.0.
+6.0.8713.ovf
 This will convert Cloudarray ESX Template
 .EXAMPLE
-.\install-cloudarray.ps1 -MasterPath .\CloudArray-ESXi5-5.1.0.6695 -Defaults
+.\install-cloudarray.ps1 -Defaults -MasterPath [you masterpath]\CloudArray_ESXi5_7.0.6.0.8713\ -Cachevols 3 -Cachevolsize 146GB
 This will Install default Cloud Array
 #>
 [CmdletBinding()]
