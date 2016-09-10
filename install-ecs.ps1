@@ -466,7 +466,7 @@ foreach ($Node in $machinesBuilt)
     $Scriptblock = "curl https://get.docker.com/ | sh -;systemctl enable docker"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
-    $Packages = "git tar wget python-setuptools"
+    $Packages = "git tar wget python-setuptools ntp"
     Write-Verbose "Checking for $Packages"
     $Scriptblock = "yum install $Packages -y"
     Write-Verbose $Scriptblock
