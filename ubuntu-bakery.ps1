@@ -365,7 +365,7 @@ foreach ($Node in $machinesBuilt)
             sleep 5
             }
         until ($ToolState.state -match "running")
-		$installmessage += "Node $node is reachable vi ssh $ip with root:$($guestpassword)  or $Default_Guestuser`n"
+		$installmessage += "Node $node is reachable vi ssh $ip with root:$($guestpassword)  or $($Default_Guestuser):$($Guestpassword)`n"
         $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
         $NodeClone | Set-VMXSharedFolder -add -Sharename Scripts -Folder $Scriptdir  | Out-Null
