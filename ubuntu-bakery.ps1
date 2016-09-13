@@ -707,7 +707,7 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 		Write-Host -ForegroundColor Gray " ==>starting OpenStack controller setup on $($GatewayNode.VMXName)"
 		$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/Controller; sh ./install_base.sh -spd $ProtectionDomainName -ssp $StoragePoolName -sgw $tb_ip"
 		$GatewayNode | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
-		$installmessage += "OpenStack Horizon can be reached vi http://$($tb_ip):88 with admin:$($Guestpassword)`n"
+		$installmessage += "OpenStack Horizon can be reached vi http://$($tb_ip):88/horizon with admin:$($Guestpassword)`n"
 		foreach ($Node in $machinesBuilt)
 			{
 			$NodeClone = Get-VMX $Node
