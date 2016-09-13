@@ -365,7 +365,7 @@ foreach ($Node in $machinesBuilt)
             sleep 5
             }
         until ($ToolState.state -match "running")
-		$installmessage += "Node $node is reachable vi ssh $ip with root:$($guestpassword)  or $($Default_Guestuser):$($Guestpassword)`n"
+		$installmessage += "Node $node is reachable via ssh $ip with root:$($guestpassword)  or $($Default_Guestuser):$($Guestpassword)`n"
         $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
         $NodeClone | Set-VMXSharedFolder -add -Sharename Scripts -Folder $Scriptdir  | Out-Null
@@ -583,7 +583,7 @@ if ($scaleio.IsPresent)
 						write-verbose "Still Waiting ! "
 						}
 					until ($Processlist -match 'java-8-oracle')
-					$installmessage += "Scaleio Gateway can be reached vi https://$($tb_ip):443 with admin:$($Guestpassword)`n"
+					$installmessage += "Scaleio Gateway can be reached via https://$($tb_ip):443 with admin:$($Guestpassword)`n"
 					if (!$singlemdm)
 						{
 						Write-Host -ForegroundColor Gray " ==>trying MDM Install as tiebreaker"
@@ -707,7 +707,7 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 		Write-Host -ForegroundColor Gray " ==>starting OpenStack controller setup on $($GatewayNode.VMXName)"
 		$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/Controller; sh ./install_base.sh -spd $ProtectionDomainName -ssp $StoragePoolName -sgw $tb_ip"
 		$GatewayNode | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
-		$installmessage += "OpenStack Horizon can be reached vi http://$($tb_ip):88/horizon with admin:$($Guestpassword)`n"
+		$installmessage += "OpenStack Horizon can be reached via http://$($tb_ip):88/horizon with admin:$($Guestpassword)`n"
 		foreach ($Node in $machinesBuilt)
 			{
 			$NodeClone = Get-VMX $Node
