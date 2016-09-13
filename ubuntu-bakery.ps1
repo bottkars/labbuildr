@@ -235,10 +235,10 @@ if (!$Ubuntu)
         }
     $Sourcedir_replace = $Sourcedir.Replace("\","/")
 	$SIOGatewayrpm = $SIOGatewayrpm.Replace("\","/")
-    $SIOGatewayrpm = $SIOGatewayrpm -replace  $Sourcedir_replace,"/mnt/hgfs/Sources"
+    $SIOGatewayrpm = $SIOGatewayrpm -replace  $Sourcedir_replace,"/mnt/hgfs/Sources/"
 	$Ubuntu_guestdir = $Ubuntudir.Fullname.Replace("\","/")
 	# = $Ubuntudir.fullname.Replace("\","\\")
-	$Ubuntu_guestdir = $Ubuntu_guestdir -replace  $Sourcedir_replace,"/mnt/hgfs/Sources"
+	$Ubuntu_guestdir = $Ubuntu_guestdir -replace  $Sourcedir_replace,"/mnt/hgfs/Sources/"
     Write-Host $Ubuntu_guestdir
     Write-Host $SIOGatewayrpm
 	$Percentage = [math]::Round(100/$nodes)+1
