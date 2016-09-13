@@ -613,6 +613,22 @@ if ($scaleio.IsPresent)
 				{
 				Write-Host -ForegroundColor Gray " ==>trying SDC Install"
 				$NodeClone | Invoke-VMXBash -Scriptblock "export MDM_IP=$mdm_ip;dpkg -i $ubuntu_guestdir/EMC-ScaleIO-sdc*.deb" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+				$Scriptlets = ("cat > //bin/emc/scaleio/scini_sync/driver_sync.conf <<EOF
+repo_address        = ftp://ftp.emc.com`
+repo_user           = QNzgdxXix`
+repo_password       = Aw3wFAwAq3`
+local_dir           = /bin/emc/scaleio/scini_sync/driver_cache/`
+module_sigcheck     = 0`
+emc_public_gpg_key  = /bin/emc/scaleio/scini_sync/RPM-GPG-KEY-ScaleIO`
+repo_public_rsa_key = /bin/emc/scaleio/scini_sync/scini_repo_key.pub`
+",
+"/etc/init.d/scini  restart")
+				foreach ($Scriptblock in $Scriptlets)
+						{
+						Write-Verbose $Scriptblock
+						$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+						}
+	
 				}
 		$Nodecounter++
 		}##end nodes

@@ -471,6 +471,11 @@ foreach ($Node in $machinesBuilt)
     $Scriptblock = "yum install $Packages -y"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+	
+	$Scriptblock = "systemctl enable ntpd"
+    Write-Verbose $Scriptblock
+    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+
     Write-Verbose "Checking for offline container on $Sourcedir"
     Write-Verbose "Clonig $Scenario"
     $Scriptblock = "systemctl start docker.service"
