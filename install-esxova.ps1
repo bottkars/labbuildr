@@ -234,14 +234,13 @@ default
             $NodeClone | start-vmx | Out-Null
 			Write-host
 			Write-host -ForegroundColor White "==>Nested ESXi $($NodeClone.Clonename) Deployed successful,login with root/$Password at console or ssh:$($ip):22"
+			Write-host -ForegroundColor White "==>The ESX UI can be reached at https://$($ip)/ui"
             }
         else
             {
             Write-Warning "Node $Nodeprefix$node already exists"
             }
-    }
-
-
-    }# end default
+		}
+	}# end default
 }
 
