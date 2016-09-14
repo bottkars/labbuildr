@@ -84,6 +84,10 @@ $Defaultsfile=".\defaults.xml",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [Switch]$Openstack_Controller,
+[Parameter(ParameterSetName = "install", Mandatory = $false)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
+[alias(conf)][Switch]$Openstack_Baseconfig = $true,
 [ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL",
 [int]$ip_startrange = 200
 #[Parameter(ParameterSetName = "install",Mandatory = $false)]
@@ -705,7 +709,7 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 	if ($Openstack_Controller.IsPresent)
 		{
 		Write-Host -ForegroundColor Gray " ==>starting OpenStack controller setup on $($GatewayNode.VMXName)"
-		$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/Controller; sh ./install_base.sh -spd $ProtectionDomainName -ssp $StoragePoolName -sgw $tb_ip"
+		$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/Controller; sh ./install_base.sh -spd $ProtectionDomainName -ssp $StoragePoolName -sgw $tb_ip -d $BuildDomain -c $($Openstack_Baseconfig.ispresent.ToString())"
 		$GatewayNode | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
 		$installmessage += "OpenStack Horizon can be reached via http://$($tb_ip):88/horizon with admin:$($Guestpassword)`n"
 		foreach ($Node in $machinesBuilt)
