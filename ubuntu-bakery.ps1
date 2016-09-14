@@ -688,7 +688,7 @@ repo_public_rsa_key = /bin/emc/scaleio/scini_sync/scini_repo_key.pub`
 			{
 			[int]$sds_ip = $ip_startrange+$Node-1
 			Write-Host -ForegroundColor Gray " ==>adding sds $subnet.$sds_ip with /dev/sdb"
-			$sclicmd = "scli --add_sds --sds_ip $subnet.$sds_ip --device_path /dev/sdb --device_name /dev/sdb  --sds_name ScaleIONode$Node --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --no_test --mdm_ip $mdm_ip"
+			$sclicmd = "scli --add_sds --sds_ip $subnet.$sds_ip --device_path /dev/sdb --device_name /dev/sdb  --sds_name $Nodeprefix$Node --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --no_test --mdm_ip $mdm_ip"
 			Write-Verbose $sclicmd
 			$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 			}
