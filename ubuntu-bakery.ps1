@@ -87,7 +87,7 @@ $Defaultsfile=".\defaults.xml",
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
-[alias(conf)][Switch]$Openstack_Baseconfig = $true,
+[Switch]$Openstack_Baseconfig = $true,
 [ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL",
 [int]$ip_startrange = 200
 #[Parameter(ParameterSetName = "install",Mandatory = $false)]
