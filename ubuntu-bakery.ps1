@@ -89,6 +89,8 @@ $Defaultsfile=".\defaults.xml",
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [Switch]$Openstack_Baseconfig = $true,
 [ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL",
+[ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Compute_Size = "XL",
+
 [int]$ip_startrange = 200
 #[Parameter(ParameterSetName = "install",Mandatory = $false)]
 #[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$SIOGateway
@@ -344,7 +346,15 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
             $NodeClone | Set-VMXmemory -MemoryMB 3072 | Out-Null
             }#>
         $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname Ubuntu -Scenario 7
-        $mysize = $NodeClone |Set-VMXSize -config $NodeClone.Config -Size $Size
+        if ($nodenum -eq 3)
+			{
+			$mysize = $NodeClone |Set-VMXSize -config $NodeClone.Config -Size $Size
+			}
+		else
+			{
+			$mysize = $NodeClone |Set-VMXSize -config $NodeClone.Config -Size $Compute_Size
+			}
+
 		$NodeClone | Set-VMXVTBit -VTBit | Out-Null
         $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
         start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
