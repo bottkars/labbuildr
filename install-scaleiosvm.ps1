@@ -268,7 +268,7 @@ switch ($PsCmdlet.ParameterSetName)
 			$Annotation = $NodeClone | Set-VMXAnnotation -Line1 "rootuser:$rootuser" -Line2 "rootpasswd:$Guestpassword" -Line3 "mdmuser:admin" -Line4 "mdmpassword:$MDMPassword" -Line5 "labbuildr by @sddc_guy" -builddate
 			$Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname Scaleio -Scenario 6
 			$ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
-            if ($singlemdm.IsPresent -and $Node -notin (1,3)
+            if ($singlemdm.IsPresent -and $Node -notin (1,3))
                 {
                 $memorytweak = $NodeClone | Set-VMXmemory -MemoryMB 1536
                 }
