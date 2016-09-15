@@ -708,7 +708,7 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 	if ($Openstack_Controller.IsPresent)
 		{
 		Write-Host -ForegroundColor Gray " ==>starting OpenStack controller setup on $($GatewayNode.VMXName)"
-		$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/Controller; bash ./install_base.sh -spd $ProtectionDomainName -ssp $StoragePoolName -sgw $tb_ip -d $BuildDomain -c "#$($Openstack_Baseconfig.ispresent.ToString().tolower())"
+		$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/Controller; bash ./install_base.sh -spd $ProtectionDomainName -ssp $StoragePoolName -sgw $tb_ip -d $BuildDomain -c $($Openstack_Baseconfig.ispresent.ToString().tolower())"
 		$GatewayNode | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
 		$installmessage += "OpenStack Horizon can be reached via http://$($tb_ip):88/horizon with admin:$($Guestpassword)`n"
 		foreach ($Node in $machinesBuilt)
