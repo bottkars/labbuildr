@@ -133,7 +133,9 @@ switch ($PsCmdlet.ParameterSetName)
             write-verbose "Templating Master VMX"
             $Temolate = $MasterVMX | Set-VMXTemplate
             }
-      Write-Host -ForegroundColor Gray "[Preparation of Template done, please run $($MyInvocation.MyCommand) -ScaleIOMaster $MasterPath\$mastername]"
+      Write-Host -ForegroundColor Gray "[Preparation of Template done"
+	  write-host -ForegroundColor White ".\$($MyInvocation.MyCommand) -MasterPath $MasterPath\$mastername -Defaults -configure"
+
         }
      default
         {
