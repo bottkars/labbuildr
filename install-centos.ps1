@@ -213,7 +213,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         Write-Host -ForegroundColor Gray "==>Creating $Nodeprefix$node"
         try
             {
-            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node # -clonepath $Builddir
+            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node -Clonepath $Builddir
             }
         catch
             {
