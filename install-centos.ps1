@@ -79,6 +79,16 @@ $Defaultsfile=".\defaults.xml",
 [Switch]$docker,
 [Parameter(ParameterSetName = "docker", Mandatory = $false)]
 [ValidateSet('shipyard','uifd')][string[]]$container,
+    <#
+    Size
+    'XS'  = 1vCPU, 512MB
+    'S'   = 1vCPU, 768MB
+    'M'   = 1vCPU, 1024MB
+    'L'   = 2vCPU, 2048MB
+    'XL'  = 2vCPU, 4096MB 
+    'TXL' = 4vCPU, 6144MB
+    'XXL' = 4vCPU, 8192MB
+    #>
 [ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL",
 $Nodeprefix = "Centos"
 

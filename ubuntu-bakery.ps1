@@ -88,7 +88,27 @@ $Defaultsfile=".\defaults.xml",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [Switch]$Openstack_Baseconfig = $true,
+    <#
+    Size for general nodes
+    'XS'  = 1vCPU, 512MB
+    'S'   = 1vCPU, 768MB
+    'M'   = 1vCPU, 1024MB
+    'L'   = 2vCPU, 2048MB
+    'XL'  = 2vCPU, 4096MB 
+    'TXL' = 4vCPU, 6144MB
+    'XXL' = 4vCPU, 8192MB
+    #>
 [ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL",
+    <#
+    Size for openstack compute nodes
+    'XS'  = 1vCPU, 512MB
+    'S'   = 1vCPU, 768MB
+    'M'   = 1vCPU, 1024MB
+    'L'   = 2vCPU, 2048MB
+    'XL'  = 2vCPU, 4096MB 
+    'TXL' = 4vCPU, 6144MB
+    'XXL' = 4vCPU, 8192MB
+    #>
 [ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Compute_Size = "XL",
 
 [int]$ip_startrange = 200
