@@ -79,7 +79,9 @@ $Defaultsfile=".\defaults.xml",
 [Switch]$docker,
 [Parameter(ParameterSetName = "docker", Mandatory = $false)]
 [ValidateSet('shipyard','uifd')][string[]]$container,
-[ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL"
+[ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL",
+$Nodeprefix = "Centos"
+
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
@@ -161,7 +163,6 @@ $rootuser = "root"
 $Guestpassword = "Password123!"
 [uint64]$Disksize = 100GB
 $scsi = 0
-$Nodeprefix = "Centos"
 $epel = "http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
 try
     {
