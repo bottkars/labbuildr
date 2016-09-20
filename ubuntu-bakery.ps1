@@ -187,11 +187,7 @@ if (!$Masterpath) {$Masterpath = $Builddir}
 
 $ip_startrange = $ip_startrange+$Startnode
 $logfile = "/tmp/labbuildr.log"
-if ($scaleio.IsPresent -and $Nodes -lt 3)
-	{
-	Write-Host -ForegroundColor Gray " ==>Setting Nodes to 3"
-	$Nodes = 3
-	}
+
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 switch ($PsCmdlet.ParameterSetName)
@@ -203,7 +199,11 @@ switch ($PsCmdlet.ParameterSetName)
 			}
 
 		}	
-
+if ($scaleio.IsPresent -and $Nodes -lt 3)
+	{
+	Write-Host -ForegroundColor Gray " ==>Setting Nodes to 3"
+	$Nodes = 3
+	}
 if ($scaleio.IsPresent)
 	{
 	$Devicename = "$Location"+"_Disk_$Driveletter"
