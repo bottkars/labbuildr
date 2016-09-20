@@ -28,15 +28,23 @@ This will install 3 Ubuntu Nodes Ubuntu1 -Ubuntu3 from the Default Ubuntu Master
     SupportsShouldProcess=$true,
     ConfirmImpact="Medium")]
 Param(
+[Parameter(ParameterSetName = "openstack",Mandatory=$true)]
+[switch]$openstack,
+[Parameter(ParameterSetName = "defaults",Mandatory=$false)]
+[Parameter(ParameterSetName = "openstack",Mandatory=$true)]
+[ValidateSet('liberty','mitaka')]
+[string]$openstack_release,
+[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)]
 [switch]$Defaults,
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$False)]
+[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [ValidateRange(1,3)]
 [int32]$Disks = 1,
-[Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
+#[Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [ValidateSet('16_4','15_10','14_4')]
@@ -48,25 +56,31 @@ Param(
 [string]$Desktop = "none",
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$true)]
+[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]
 $Sourcedir,
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
+[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [ValidateRange(1,9)]
 [int32]$Nodes=1,
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [int32]$Startnode = 1,
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
+[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [ValidateScript({$_ -match [IPAddress]$_ })]
 [ipaddress]$subnet = "192.168.2.0",
 [Parameter(ParameterSetName = "install",Mandatory=$true)]
+[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")]
 [string]$BuildDomain,
-[Parameter(ParameterSetName = "true",Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory = $false)]
+[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]
 $vmnet,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
@@ -75,6 +89,7 @@ $Defaultsfile=".\defaults.xml",
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [switch]$forcedownload,
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
@@ -82,11 +97,8 @@ $Defaultsfile=".\defaults.xml",
 [Switch]$scaleio,
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [Switch]$Openstack_Controller,
-[Parameter(ParameterSetName = "install", Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
+[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [Switch]$Openstack_Baseconfig = $true,
     <#
     Size for general nodes
@@ -182,6 +194,16 @@ if ($scaleio.IsPresent -and $Nodes -lt 3)
 	}
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
+switch ($PsCmdlet.ParameterSetName)
+		{
+			"openstack"
+			{ 
+			[switch]$Scaleio = $true
+			[switch]$Openstack_Controller = $true
+			}
+
+		}	
+
 if ($scaleio.IsPresent)
 	{
 	$Devicename = "$Location"+"_Disk_$Driveletter"
@@ -328,7 +350,11 @@ if (!$MasterVMX.Template)
         }
 $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
 ####Build Machines#
-
+if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+    {
+    write-output $PSCmdlet.MyInvocation.BoundParameters
+	pause
+    }
 $machinesBuilt = @()
 foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     {
@@ -742,7 +768,7 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 	if ($Openstack_Controller.IsPresent)
 		{
 		Write-Host -ForegroundColor Gray " ==>starting OpenStack controller setup on $($GatewayNode.VMXName)"
-		$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/Controller; bash ./install_base.sh -spd $ProtectionDomainName -ssp $StoragePoolName -sgw $tb_ip -d $BuildDomain -c $($Openstack_Baseconfig.ispresent.ToString().tolower())"
+		$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Controller; bash ./install_base.sh -spd $ProtectionDomainName -ssp $StoragePoolName -sgw $tb_ip -d $BuildDomain -c $($Openstack_Baseconfig.ispresent.ToString().tolower())"
 		$GatewayNode | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
 		$installmessage += "OpenStack Horizon can be reached via http://$($tb_ip):88/horizon with admin:$($Guestpassword)`n"
 		foreach ($Node in $machinesBuilt)
@@ -751,7 +777,7 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 			if ($NodeClone.vmxname -ne $GatewayNode.vmxname)
 				{
 				Write-Host -ForegroundColor Gray " ==>starting nova-compute setup on $($NodeClone.vmxname)"
-				$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/Compute; bash ./install_base.sh -cip $tb_ip -cname $($GatewayNode.vmxname.tolower())"
+				$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Compute; bash ./install_base.sh -cip $tb_ip -cname $($GatewayNode.vmxname.tolower())"
 				Write-Verbose $Scriptblock
 				$NodeClone| Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 				$installmessage += "OpenStack Nova-Compute is running on $($NodeClone.vmxname)`n"
