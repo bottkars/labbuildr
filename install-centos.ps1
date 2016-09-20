@@ -257,9 +257,11 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         }
     }
 Write-Host -ForegroundColor White "Starting Node Configuration"
+$ip_startrange_count = $ip_startrange
 foreach ($Node in $machinesBuilt)
     {
-        $ip="$subnet.$ip_startrange"
+		$ip_byte = $ip_startrange_count
+		$ip="$subnet.$ip_byte"
         $NodeClone = get-vmx $Node
         $Hostname = $Node.ToLower()
         Write-Host -ForegroundColor Gray " ==>Waiting for $node to boot"
@@ -403,7 +405,8 @@ foreach ($Node in $machinesBuilt)
                 {
                 }
         }
-    }#end machines
+		$ip_startrange_count ++
+		}#end machines
 $StopWatch.Stop()
 Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
 write-Host -ForegroundColor White "Login to the VM´s with root/Password123!"
