@@ -31,9 +31,9 @@ Param(
 [Parameter(ParameterSetName = "openstack",Mandatory=$true)]
 [switch]$openstack,
 [Parameter(ParameterSetName = "defaults",Mandatory=$false)]
-[Parameter(ParameterSetName = "openstack",Mandatory=$true)]
+[Parameter(ParameterSetName = "openstack",Mandatory=$false)]
 [ValidateSet('liberty','mitaka')]
-[string]$openstack_release,
+[string]$openstack_release = 'liberty',
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)]
