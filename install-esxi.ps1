@@ -83,7 +83,7 @@ If ($ConfirmPreference -match "none")
 else
     {$Confirm = $true}
 $Builddir = $PSScriptRoot
-$Scriptdir = Join-Path $Builddir "Scripts"
+$Scriptdir = Join-Path $Builddir "labbuildr-scripts"
 If ($Defaults.IsPresent)
     {
     $labdefaults = Get-labDefaults
@@ -191,7 +191,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     If (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue))
     {
     Write-Verbose "Clearing out old content"
-    if (Test-Path .\iso\ks) { Remove-Item -Path .\iso\ks -Recurse }
+    if (Test-Path .\iso\KS) { Remove-Item -Path .\iso\KS -Recurse }
     $KSDirectory = New-Item -ItemType Directory .\iso\KS
     $Content = Get-Content .\Scripts\ESX\KS.CFG
     ####modify $content
