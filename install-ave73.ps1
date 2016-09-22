@@ -129,9 +129,9 @@ switch ($PsCmdlet.ParameterSetName)
         if ($Importfile.extension -eq ".ova")
             {
             $OVA_Destination = join-path $Importfile.DirectoryName $Importfile.BaseName
-			### if already exuíst !?!?!?
+			### if already exíst !?!?!?
             Write-Host -ForegroundColor Gray " ==>Extraxting from OVA Package $Importfile"
-            $Expand = Expand-LAB7Zip -Archive $Importfile.FullName -destination $OVA_Destination -Force
+            $Expand = Expand-LABPackage -Archive $Importfile.FullName -destination $OVA_Destination -Force
             $Importfile = Get-ChildItem -Path $OVA_Destination -Filter "*.ovf" 
             }
         try
