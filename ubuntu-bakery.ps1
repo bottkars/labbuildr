@@ -317,11 +317,11 @@ $Guestpassword = "Password123!"
 [uint64]$Disksize = 100GB
 $scsi = 0
 $Nodeprefix = "Ubuntu"
-$Required_Master = "Ubuntu$ubuntu_ver"
+$Nodeprefix = $Nodeprefix.ToLower()
+$OS = "Ubuntu"
+$Required_Master = "$OS$ubuntu_ver"
 $Default_Guestuser = "labbuildr"
-#$mastervmx = test-labmaster -Master $Required_Master -MasterPath $MasterPath -Confirm:$Confirm
 
-###### checking master Present
 try
     {
     $MasterVMX = test-labmaster -Masterpath $MasterPath -Master $Required_Master -Confirm:$Confirm -erroraction stop
