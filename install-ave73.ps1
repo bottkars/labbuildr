@@ -252,7 +252,7 @@ switch ($PsCmdlet.ParameterSetName)
           $template = $MasterVMX | Set-VMXTemplate
           }
 
-        $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" -WarningAction SilentlyContinue
+        $Basesnap = $MasterVMX | Get-VMXSnapshot -WarningAction SilentlyContinue | where Snapshot -Match "Base"
         if (!$Basesnap) 
             {
             Write-Host -ForegroundColor Gray " ==>Tweaking baseconfig"
