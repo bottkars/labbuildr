@@ -772,7 +772,8 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 	if ($Openstack_Controller.IsPresent)
 		{
 		Write-Host -ForegroundColor Gray " ==>starting OpenStack controller setup on $($GatewayNode.VMXName)"
-		$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Controller; bash ./install_base.sh -spd $ProtectionDomainName -ssp $StoragePoolName -sgw $tb_ip --domain $BuildDomain --suffix $custom_domainsuffix -c $($Openstack_Baseconfig.ispresent.ToString().tolower())"
+#		$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Controller; bash ./install_base.sh -spd $ProtectionDomainName -ssp $StoragePoolName -sgw $tb_ip --domain $BuildDomain --suffix $custom_domainsuffix -c $($Openstack_Baseconfig.ispresent.ToString().tolower())"
+		$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Controller; bash ./install_base.sh -spd $ProtectionDomainName -ssp $StoragePoolName -sgw $tb_ip --domain $BuildDomain -c $($Openstack_Baseconfig.ispresent.ToString().tolower())"
 		$GatewayNode | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
 		$installmessage += "OpenStack Horizon can be reached via http://$($tb_ip):88/horizon with admin:$($Guestpassword)`n"
 		foreach ($Node in $machinesBuilt)
@@ -781,7 +782,8 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 			if ($NodeClone.vmxname -ne $GatewayNode.vmxname)
 				{
 				Write-Host -ForegroundColor Gray " ==>starting nova-compute setup on $($NodeClone.vmxname)"
-				$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Compute; bash ./install_base.sh -cip $tb_ip --docker $($docker.IsPresent.ToString().tolower()) -cname $($GatewayNode.vmxname.tolower())"
+				$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Compute; bash ./install_base.sh -cip $tb_ip -cname $($GatewayNode.vmxname.tolower())"
+#				$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Compute; bash ./install_base.sh -cip $tb_ip --docker $($docker.IsPresent.ToString().tolower()) -cname $($GatewayNode.vmxname.tolower())"
 				Write-Verbose $Scriptblock
 				$NodeClone| Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 				$installmessage += "OpenStack Nova-Compute is running on $($NodeClone.vmxname)`n"
