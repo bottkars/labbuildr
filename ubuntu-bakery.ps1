@@ -522,7 +522,7 @@ foreach ($Node in $machinesBuilt)
         
         $Scriptblock = "echo '127.0.0.1       localhost' > /etc/hosts; echo '$ip $Node $Node.$BuildDomain.$Custom_DomainSuffix' >> /etc/hosts; hostname $Node"
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-        $Scriptblock = "hostnamectl set-hostname $Node"
+        $Scriptblock = "hostnamectl set-hostname $Node.$BuildDomain.$Custom_DomainSuffix"
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
         switch ($ubuntu_ver)
