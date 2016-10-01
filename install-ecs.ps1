@@ -186,8 +186,8 @@ switch ($Branch)
         }
     "develop"
         {
-        $Docker_image = "ecs-software-2.2.1"
-        $Docker_imagename = "emccorp/ecs-software-2.2.1"
+        $Docker_image = "ecs-software-3.0.0"
+        $Docker_imagename = "emccorp/ecs-software-3.0.0"
         $Docker_imagetag = "latest"
         $Git_Branch = $Branch
         }
@@ -211,7 +211,7 @@ switch ($Branch)
         $Docker_image = "ecs-software-3.0.0"
         $Docker_imagename = "emccorp/ecs-software-3.0.0"
         $Docker_imagetag = "latest"
-        $Git_Branch = "master"
+        $Git_Branch = "develop"
         }
     default
         {
