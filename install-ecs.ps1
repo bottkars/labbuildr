@@ -37,7 +37,7 @@ $Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('8192','12288','16384','20480','30720','51200','65536')]$Memory = "12288",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateSet("release-2.1","Develop",'master','latest','2.2.0.1','2.2.0.2','2.2.0.3','2.2.1.0','2.2.1.0-a','2.2.1.1')]$Branch = 'master',
+[ValidateSet("release-2.1","Develop",'master','latest','2.2.0.1','2.2.0.2','2.2.0.3','2.2.1.0','2.2.1.0-a','2.2.1.1','3.0.0.0')]$Branch = 'master',
 <#Adjusts some Timeouts#>
 [switch]$AdjustTimeouts,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
@@ -206,9 +206,16 @@ switch ($Branch)
         $Docker_imagetag = $Branch
         $Git_Branch = "master"
         }
+    "3.0.0"
+        {
+        $Docker_image = "ecs-software-3.0.0"
+        $Docker_imagename = "emccorp/ecs-software-3.0.0"
+        $Docker_imagetag = latest
+        $Git_Branch = "master"
+        }
     default
         {
-        $Docker_image = "ecs-software-2.2.1"
+        $Docker_image = "ecs-software-3.2.1"
         $Docker_imagename = "emccorp/ecs-software-2.2.1"
         $Docker_imagetag = $latest_ecs
         $Git_Branch = "master"
