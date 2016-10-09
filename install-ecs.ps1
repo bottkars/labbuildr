@@ -478,8 +478,12 @@ foreach ($Node in $machinesBuilt)
     $Scriptblock = "yum install $Packages -y"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+
+    $Scriptblock = "yum install $Packages -y"
+    Write-Verbose $Scriptblock
+    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 	
-	$Scriptblock = "systemctl enable ntpd"
+	$Scriptblock = "systemctl enable ntpd;systemctl start ntpd"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
