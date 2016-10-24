@@ -80,7 +80,7 @@ Param(
 [ValidateScript({ Test-Path -Path $_ })]$Lic_file,
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateSet('block','file')][string[]]$Protocols = 'block'
+[ValidateSet('iscsi','cifs','nfs')][string[]]$Protocols
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
