@@ -77,7 +77,10 @@ Param(
 [switch]$configure,
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateScript({ Test-Path -Path $_ })]$Lic_file
+[ValidateScript({ Test-Path -Path $_ })]$Lic_file,
+[Parameter(ParameterSetName = "install", Mandatory = $false)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[ValidateSet('block','file')][string[]]$Protocols = 'block'
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
@@ -272,6 +275,8 @@ switch ($PsCmdlet.ParameterSetName)
 				$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/uemcli -u admin -p $oldpasswd /sys/eula set -agree yes" -Guestuser $guestuser -Guestpassword $guestpassword -SleepSec 5 -Confirm:$False -WarningAction SilentlyContinue
 				$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/uemcli -u admin -p $oldpasswd /user/account -id user_admin set -passwd $Password -oldpasswd $oldpasswd" -Guestuser $guestuser -Guestpassword $guestpassword 
 				$uemcli = "/usr/bin/uemcli -u admin -p $Password"
+				$uemcli_service = "/usr/bin/uemcli -u service -p service"
+
 				$Vdisks =  @()
 					foreach ($Disk in 1..$Disks)
 						{
@@ -287,14 +292,18 @@ switch ($PsCmdlet.ParameterSetName)
 					$Target_lic = "/home/service/$Target_lic"
 					$FileCopy = $NodeClone | Copy-VMXFile2Guest -Sourcefile $Lic_file -targetfile $Target_lic -Guestuser $guestuser -Guestpassword $guestpassword
 					$cmdline = $Nodeclone | Invoke-VMXBash -Scriptblock "$uemcli -upload -f $Target_lic license" -Guestuser $guestuser -Guestpassword $guestpassword 
-					
-					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/config/pool create -name vPool -descr 'labbuildr pool' -disk $Vdisks" -Guestuser $guestuser -Guestpassword $guestpassword 
-					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/if create -type iscsi -port spa_eth0 -addr $ip_if0 -netmask 255.255.255.0 -gateway $DefaultGateway" -Guestuser $guestuser -Guestpassword $guestpassword 
-					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/dns/config set -nameServer '$DNS1,$DNS2'" -Guestuser $guestuser -Guestpassword $guestpassword					#if ($CIFS.IsPresent)					#	{					Write-Host -ForegroundColor Gray " ==>Setting NTP, unity will reboot automatically"					$cmdline = $Nodeclone | Invoke-VMXBash -Scriptblock "$uemcli /net/ntp/server create -server 192.168.2.10 -force allowDU" -Guestuser $guestuser -Guestpassword $guestpassword 
-					#	}										$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/server create -name $NAS_SERVER -sp spa -pool pool_1" -Guestuser $guestuser -Guestpassword $guestpassword 
-					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/if create -server nas_1 -port spa_eth0 -addr $ip_if1 -netmask 255.255.255.0" -Guestuser $guestuser -Guestpassword $guestpassword 
-					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/dns -server nas_1 set -name $($BuildDomain).$($custom_domainsuffix) -nameServer 192.168.2.10” -Guestuser $guestuser -Guestpassword $guestpassword					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/cifs create -server nas_1 -name CIFSserver1 -description 'Default CIFS Server for $BuildDomain' -domain $($BuildDomain).$($custom_domainsuffix) -username Administrator -passwd $Password"  -Guestuser $guestuser -Guestpassword $guestpassword					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/nfs create -server nas_1 -v4 yes" -Guestuser $guestuser -Guestpassword $guestpassword
-					}
+					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli_service /service/ssh set -enabled yes" -Guestuser $guestuser -Guestpassword $guestpassword					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/config/pool create -name vPool -descr 'labbuildr pool' -disk $Vdisks" -Guestuser $guestuser -Guestpassword $guestpassword 
+					If ($Protocols -contains 'iscsi')
+						{
+						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/if create -type iscsi -port spa_eth0 -addr $ip_if0 -netmask 255.255.255.0 -gateway $DefaultGateway" -Guestuser $guestuser -Guestpassword $guestpassword 
+						}					
+					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/dns/config set -nameServer $DNS1" -Guestuser $guestuser -Guestpassword $guestpassword					If ($Protocols -contains 'nfs' -or $Protocols -contains 'cifs')						{						Write-Host -ForegroundColor Gray " ==>Setting NTP, unity will reboot automatically"						$cmdline = $Nodeclone | Invoke-VMXBash -Scriptblock "$uemcli /net/ntp/server create -server 192.168.2.10 -force allowDU" -Guestuser $guestuser -Guestpassword $guestpassword 
+						$cmdline = $Nodeclone | Invoke-VMXBash -Scriptblock "$uemcli /net/ntp/server show -detail" -Guestuser $guestuser -Guestpassword $guestpassword 
+
+						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/server create -name $NAS_SERVER -sp spa -pool pool_1" -Guestuser $guestuser -Guestpassword $guestpassword 
+						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/if create -server nas_1 -port spa_eth0 -addr $ip_if1 -netmask 255.255.255.0" -Guestuser $guestuser -Guestpassword $guestpassword 
+						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/dns -server nas_1 set -name $($BuildDomain).$($custom_domainsuffix) -nameServer 192.168.2.10” -Guestuser $guestuser -Guestpassword $guestpassword						}					if ($Protocols -contains 'cifs')					#if ($CIFS.IsPresent)						{						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/cifs create -server nas_1 -name CIFSserver1 -description 'Default CIFS Server for $BuildDomain' -domain $($BuildDomain).$($custom_domainsuffix) -username Administrator -passwd $Password"  -Guestuser $guestuser -Guestpassword $guestpassword						}					if ($Protocols -contains 'nfs')					#if ($CIFS.IsPresent)						{						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/nfs create -server nas_1 -v4 yes" -Guestuser $guestuser -Guestpassword $guestpassword
+						}								}
 				}
 			If (!$configure.IsPresent)
 				{
