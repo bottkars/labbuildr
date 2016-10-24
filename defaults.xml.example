@@ -2,13 +2,13 @@
 <LanguageTag>en_US</LanguageTag>
 <nmm_ver>nmm9011</nmm_ver>
 <nmm>False</nmm>
-<nw_ver>nw9011</nw_ver>
+<nw_ver>nw9013</nw_ver>
 <master>2012R2FallUpdate</master>
 <sqlver>SQL2014SP2_ISO</sqlver>
 <e14_ur>ur13</e14_ur>
 <e14_sp>sp3</e14_sp>
-<e15_cu>cu13</e15_cu>
-<e16_cu>cu2</e16_cu>
+<e15_cu>cu14</e15_cu>
+<e16_cu>cu3</e16_cu>
 <vmnet>vmnet2</vmnet>
 <vlanID></vlanID>
 <Custom_DomainSuffix>local</Custom_DomainSuffix>

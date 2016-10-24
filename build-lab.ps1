@@ -518,7 +518,7 @@ Version Of Networker Modules
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
     [ValidateSet(
-    'nmm9010','nmm9011','nmm9100',#
+    'nmm9010','nmm9011','nmm9012','nmm9013','nmm9100',#
     'nmm90.DA','nmm9001','nmm9002','nmm9003','nmm9004','nmm9005','nmm9006','nmm9007','nmm9008',
     'nmm8231','nmm8232',
     'nmm8221','nmm8222','nmm8223','nmm8224','nmm8225',
@@ -545,7 +545,7 @@ Version Of Networker Modules
 	[switch]$NW,
     <#
 Version Of Networker Server / Client to be installed
-    'nw9010','nw9011','nw9100',#
+    'nw9010','nw9011','nw9012','nw9013','nw9100',#
     'nw90.DA','nw9001','nw9002','nw9003','nw9004','nw9005','nw9006','nw9007','nw9008',
     'nw8232','nw8231',
     'nw8226','nw8225','nw8224','nw8223','nw8222','nw8221','nw822',
@@ -581,7 +581,7 @@ Version Of Networker Server / Client to be installed
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
     [ValidateSet(
-    'nw9010','nw9011','nw9100',#
+    'nw9010','nw9011','nw9012','nw9013','nw9100',#
     'nw90.DA','nw9001','nw9002','nw9003','nw9004','nw9005','nw9006','nw9007','nw9008',
     'nw8232','nw8231',
     'nw8226','nw8225','nw8224','nw8223','nw8222','nw8221','nw822',
@@ -838,15 +838,15 @@ $Default_AddressFamily = "IPv4"
 $latest_ScaleIOVer = '2.0-7120.0'
 $ScaleIO_OS = "Windows"
 $ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
-$latest_nmm = 'nmm9011'
-$latest_nw = 'nw9011'
+$latest_nmm = 'nmm9013'
+$latest_nw = 'nw9013'
 $latest_e16_cu = 'cu3'
 $latest_e15_cu = 'cu14'
 $latest_e14_sp = 'sp3'
 $latest_e14_ur = 'ur13'
 $latest_sqlver  = 'SQL2016'
 $latest_master = '2012R2FallUpdate'
-$Latest_2016 = '2016TP5'
+$Latest_2016 = '2016'
 $latest_sql_2012 = 'SQL2012SP2'
 $NW85_requiredJava = "jre-7u61-windows-x64"
 $Adminuser = "Administrator"
