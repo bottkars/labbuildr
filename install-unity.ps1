@@ -211,7 +211,7 @@ switch ($PsCmdlet.ParameterSetName)
             [uint64]$Disksize = 100GB
             if ($Disks -ne 0)
                 {
-                foreach ($LUN in (1..($Disks+2)))
+                foreach ($LUN in (0..($Disks-1)))
                     {
 					if ($LUN -ge 7)
 						{
