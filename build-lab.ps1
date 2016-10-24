@@ -140,9 +140,9 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $true)][switch][alias('asc')]$AppSync,
     [Parameter(ParameterSetName = "APPSYNC")]
     [ValidateSet(
-    '3.0.0','3.0.1'#
+    '3.0.0','3.0.1','3.0.2'#
     )]
-    $APPSYNC_VER='3.0.1',
+    $APPSYNC_VER='3.0.2',
     <#
     Selects the Microsoft System Center Binary Install
     IP-Addresses: .18
