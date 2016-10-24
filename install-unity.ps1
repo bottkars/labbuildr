@@ -140,6 +140,14 @@ switch ($PsCmdlet.ParameterSetName)
         $DNS1 = $labdefaults.DNS1
         $DNS2 = $labdefaults.DNS2
         $masterpath = $labdefaults.Masterpath
+		if ($LabDefaults.custom_domainsuffix)
+			{
+			$custom_domainsuffix = $LabDefaults.custom_domainsuffix
+			}
+		else
+			{
+			$custom_domainsuffix = "local"
+			}
     }
 
     $Startnode = 1
@@ -147,7 +155,6 @@ switch ($PsCmdlet.ParameterSetName)
 
     [System.Version]$subnet = $Subnet.ToString()
     $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
-
     $Builddir = $PSScriptRoot
     $Nodeprefix = "UnityNode"
 	$MasterVMX = @()
@@ -224,7 +231,9 @@ switch ($PsCmdlet.ParameterSetName)
                 }
             [string]$ip="$($subnet.ToString()).$($ipoffset.ToString())"
 			[string]$ip_if0="$($subnet.ToString()).200"
-
+			[string]$ip_if1="$($subnet.ToString()).201"
+			[string]$ip_if2="$($subnet.ToString()).202"
+			[string]$ip_if3="$($subnet.ToString()).203"
             $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
             $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
 			if ($configure.IsPresent) 
@@ -272,13 +281,19 @@ switch ($PsCmdlet.ParameterSetName)
 				$Vdisks = $Vdisks -join ","
 				if ($Lic_file)
 					{
+					$NAS_SERVER = 'NasServer_1'
 					Write-Host -ForegroundColor Gray " ==>Trying to license with provided licfile"
 					$Target_lic = Split-Path -Leaf $Lic_file
 					$Target_lic = "/home/service/$Target_lic"
 					$FileCopy = $NodeClone | Copy-VMXFile2Guest -Sourcefile $Lic_file -targetfile $Target_lic -Guestuser $guestuser -Guestpassword $guestpassword
 					$cmdline = $Nodeclone | Invoke-VMXBash -Scriptblock "$uemcli -upload -f $Target_lic license" -Guestuser $guestuser -Guestpassword $guestpassword 
+					
 					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/config/pool create -name vPool -descr 'labbuildr pool' -disk $Vdisks" -Guestuser $guestuser -Guestpassword $guestpassword 
 					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/if create -type iscsi -port spa_eth0 -addr $ip_if0 -netmask 255.255.255.0 -gateway $DefaultGateway" -Guestuser $guestuser -Guestpassword $guestpassword 
+					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/dns/config set -nameServer '$DNS1,$DNS2'" -Guestuser $guestuser -Guestpassword $guestpassword					#if ($CIFS.IsPresent)					#	{					Write-Host -ForegroundColor Gray " ==>Setting NTP, unity will reboot automatically"					$cmdline = $Nodeclone | Invoke-VMXBash -Scriptblock "$uemcli /net/ntp/server create -server 192.168.2.10 -force allowDU" -Guestuser $guestuser -Guestpassword $guestpassword 
+					#	}										$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/server create -name $NAS_SERVER -sp spa -pool pool_1" -Guestuser $guestuser -Guestpassword $guestpassword 
+					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/if create -server nas_1 -port spa_eth0 -addr $ip_if1 -netmask 255.255.255.0" -Guestuser $guestuser -Guestpassword $guestpassword 
+					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/dns -server nas_1 set -name $($BuildDomain).$($custom_domainsuffix) -nameServer 192.168.2.10” -Guestuser $guestuser -Guestpassword $guestpassword					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/cifs create -server nas_1 -name CIFSserver1 -description 'Default CIFS Server for $BuildDomain' -domain $($BuildDomain).$($custom_domainsuffix) -username Administrator -passwd $Password"  -Guestuser $guestuser -Guestpassword $guestpassword					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/nfs create -server nas_1 -v4 yes" -Guestuser $guestuser -Guestpassword $guestpassword
 					}
 				}
 			If (!$configure.IsPresent)
