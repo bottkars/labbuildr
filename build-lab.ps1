@@ -153,7 +153,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "SCVMM", Mandatory = $false)]
     [ValidateSet(
     'SC2012_R2',
-    'SCTP3','SCTP4','SCTP5')]
+    'SC2016')]
     $SC_Version = "SC2012_R2",
     <#
     Selects the Blank Nodes Scenario
@@ -191,9 +191,7 @@ Specify if Networker Scenario sould be installed
     CU Location is [Driveletter]:\sources\e2016[cuver], e.g. c:\sources\e2016Preview1
     #>
 	[Parameter(ParameterSetName = "E16", Mandatory = $false)]
-    [ValidateSet(
-	'cu2','cu1','final'
-	)]
+    [ValidateSet('cu3','cu2','cu1','final')]
     $e16_cu,
 <#
     Determines Exchange CU Version to be Installed
@@ -203,7 +201,7 @@ Specify if Networker Scenario sould be installed
     CU Location is [Driveletter]:\sources\e2013[cuver], e.g. c:\sources\e2013cu7
     #>
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
-    [ValidateSet('cu1','cu2','cu3','sp1','cu5','cu6','cu7','cu8','cu9','cu10','cu11','cu12','cu13')]
+    [ValidateSet('cu1','cu2','cu3','sp1','cu5','cu6','cu7','cu8','cu9','cu10','cu11','cu12','cu13','cu14')]
     [alias('ex_cu')]$e15_cu,
 <#
     Determines Exchange UR Version to be Installed
@@ -826,7 +824,6 @@ catch
     }
 
 ################## Statics
-$WAIKVER = "WAIK"
 $custom_domainsuffix = "local"
 $AAGDB = "AWORKS"
 $major = "2016"
@@ -843,8 +840,8 @@ $ScaleIO_OS = "Windows"
 $ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
 $latest_nmm = 'nmm9011'
 $latest_nw = 'nw9011'
-$latest_e16_cu = 'cu2'
-$latest_e15_cu = 'cu13'
+$latest_e16_cu = 'cu3'
+$latest_e15_cu = 'cu14'
 $latest_e14_sp = 'sp3'
 $latest_e14_ur = 'ur13'
 $latest_sqlver  = 'SQL2016'
@@ -854,7 +851,7 @@ $latest_sql_2012 = 'SQL2012SP2'
 $NW85_requiredJava = "jre-7u61-windows-x64"
 $Adminuser = "Administrator"
 $Adminpassword = "Password123!"
-$WAIKVER = "WAIK"
+$WAIKVER = "WAIK_10_1607"
 $DCNODE = "DCNODE"
 $NWNODE = "NWSERVER"
 $SPver = "SP2013SP1fndtn"
@@ -1880,7 +1877,6 @@ else
 	}####### Building required Software Versions Tabs
 $NW_Sourcedir = Join-Path $Sourcedir "Networker"
 $Sourcever = @()
-# $Sourcever = @("$nw_ver","$nmm_ver","E2013$e15_cu","$WAIKVER","$SQL2012R2")
 if (!($DConly.IsPresent))
 {
 	if ($Exchange2010.IsPresent)
