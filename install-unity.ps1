@@ -70,6 +70,7 @@ Param(
 [ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = "vmnet2",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
+[ValidateRange(3,14)]
 [int]$Disks = 3,
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
@@ -212,6 +213,10 @@ switch ($PsCmdlet.ParameterSetName)
                 {
                 foreach ($LUN in (1..($Disks+2)))
                     {
+					if ($LUN -ge 7)
+						{
+						$LUN = $LUN+1
+						}
                     $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
                     $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
                     $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
