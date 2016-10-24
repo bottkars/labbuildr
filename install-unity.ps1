@@ -286,7 +286,7 @@ switch ($PsCmdlet.ParameterSetName)
 				$Vdisks = $Vdisks -join ","
 				if ($Lic_file)
 					{
-					$NAS_SERVER = 'NasServer_1'
+					$NAS_SERVER = "$($BuildDomain)_NAS_1"
 					Write-Host -ForegroundColor Gray " ==>Trying to license with provided licfile"
 					$Target_lic = Split-Path -Leaf $Lic_file
 					$Target_lic = "/home/service/$Target_lic"
@@ -298,13 +298,12 @@ switch ($PsCmdlet.ParameterSetName)
 						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/if create -type iscsi -port spa_eth0 -addr $ip_if0 -netmask 255.255.255.0 -gateway $DefaultGateway" -Guestuser $guestuser -Guestpassword $guestpassword 
 						}					
 					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/dns/config set -nameServer $DNS1" -Guestuser $guestuser -Guestpassword $guestpassword					If ($Protocols -contains 'nfs' -or $Protocols -contains 'cifs')						{						Write-Host -ForegroundColor Gray " ==>Setting NTP, unity will reboot automatically"						$cmdline = $Nodeclone | Invoke-VMXBash -Scriptblock "$uemcli /net/ntp/server create -server 192.168.2.10 -force allowDU" -Guestuser $guestuser -Guestpassword $guestpassword 
-						sleep 60
+						sleep 120
 						$cmdline = $Nodeclone | Invoke-VMXBash -Scriptblock "$uemcli /net/ntp/server show -detail" -Guestuser $guestuser -Guestpassword $guestpassword -SleepSec 5 -Confirm:$False -WarningAction SilentlyContinue
-
 						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/server create -name $NAS_SERVER -sp spa -pool pool_1" -Guestuser $guestuser -Guestpassword $guestpassword 
 						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/if create -server nas_1 -port spa_eth0 -addr $ip_if1 -netmask 255.255.255.0" -Guestuser $guestuser -Guestpassword $guestpassword 
-						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/dns -server nas_1 set -name $($BuildDomain).$($custom_domainsuffix) -nameServer 192.168.2.10” -Guestuser $guestuser -Guestpassword $guestpassword						}					if ($Protocols -contains 'cifs')					#if ($CIFS.IsPresent)						{						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/cifs create -server nas_1 -name CIFSserver1 -description 'Default CIFS Server for $BuildDomain' -domain $($BuildDomain).$($custom_domainsuffix) -username Administrator -passwd $Password"  -Guestuser $guestuser -Guestpassword $guestpassword						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/prov/fs create -name FileSystem01 -descr "CIFS shares" -server nas_1 -pool pool_1 -size 3G -type cifs -accessPolicy native" -Guestuser $guestuser -Guestpassword $guestpassword						#-name FileSystem01 -descr "CIFS shares" -server nas_1 -pool pool_1 -size 3G -type cifs -accessPolicy native						}					if ($Protocols -contains 'nfs')					#if ($CIFS.IsPresent)						{						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/nfs create -server nas_1 -v4 yes" -Guestuser $guestuser -Guestpassword $guestpassword
-						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/prov/fs create -name FileSystem02 -descr "NFS shares" -server nas_1 -pool pool_1 -size 3G -type nfs -accessPolicy native" -Guestuser $guestuser -Guestpassword $guestpassword												}								}
+						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/dns -server nas_1 set -name $($BuildDomain).$($custom_domainsuffix) -nameServer 192.168.2.10” -Guestuser $guestuser -Guestpassword $guestpassword						}					if ($Protocols -contains 'cifs')						{						$CIFS_FS1 = "FileSystem01"						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/cifs create -server nas_1 -name CIFSserver1 -description 'Default CIFS Server for $BuildDomain' -domain $($BuildDomain).$($custom_domainsuffix) -username Administrator -passwd $Password"  -Guestuser $guestuser -Guestpassword $guestpassword						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/prov/fs create -name $CIFS_FS1 -descr 'CIFS shares' -server nas_1 -pool pool_1 -size 100G -type cifs" -Guestuser $guestuser -Guestpassword $guestpassword						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/prov/fs/cifs create -name CIFSshare1 -descr '1st CIFS Share' -fs res_1 -path '/' -enableContinuousAvailability yes"  -Guestuser $guestuser -Guestpassword $guestpassword						}					if ($Protocols -contains 'nfs')							{						$NFS_FS1 = "FileSystem02"						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/nfs -id nfs_1 set -v4 yes" -Guestuser $guestuser -Guestpassword $guestpassword
+						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/prov/fs create -name $NFS_FS -descr 'NFS shares' -server nas_1 -pool pool_1 -size 100G -type nfs" -Guestuser $guestuser -Guestpassword $guestpassword						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/prov/fs/nfs create -name NFSshare1 -descr '1st NFS Share' -fs res_2 -path '/'"  -Guestuser $guestuser -Guestpassword $guestpassword						}					}
 				}
 			If (!$configure.IsPresent)
 				{
