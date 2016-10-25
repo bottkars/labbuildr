@@ -80,7 +80,16 @@ Param(
 [ValidateScript({ Test-Path -Path $_ })]$Lic_file,
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateSet('iscsi','cifs','nfs')][string[]]$Protocols
+[ValidateSet('iscsi','cifs','nfs')][string[]]$Protocols,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install", Mandatory = $false)]
+[ValidateRange(1,2)]
+[int]$Nodes = 1,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install", Mandatory = $false)]
+[ValidateRange(1,2)]
+[int]$Startnode = 1,
+$ipoffset = 170
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
@@ -153,8 +162,8 @@ switch ($PsCmdlet.ParameterSetName)
 			}
     }
 
-    $Startnode = 1
-    $Nodes = 1
+    #$Startnode = 1
+    #$Nodes = 1
 
     [System.Version]$subnet = $Subnet.ToString()
     $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
@@ -209,7 +218,7 @@ switch ($PsCmdlet.ParameterSetName)
             # $Basesnap
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     {
-    $ipoffset = 84+$Node
+    $ipoffset = $ipoffset+$Node
     If (!(get-vmx -path $Nodeprefix$node -WarningAction SilentlyContinue))
         {
         $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXlinkedClone -CloneName $Nodeprefix$node -Clonepath "$Builddir" 
@@ -233,10 +242,10 @@ switch ($PsCmdlet.ParameterSetName)
                 }
             }
         [string]$ip="$($subnet.ToString()).$($ipoffset.ToString())"
-		[string]$ip_if0="$($subnet.ToString()).200"
-		[string]$ip_if1="$($subnet.ToString()).201"
-		[string]$ip_if2="$($subnet.ToString()).202"
-		[string]$ip_if3="$($subnet.ToString()).203"
+		[string]$ip_if0="$($subnet.ToString())."+($ipoffset+1+$Node)
+		[string]$ip_if1="$($subnet.ToString())."+($ipoffset+3+$Node)
+		[string]$ip_if2="$($subnet.ToString())."+($ipoffset+5+$Node)
+		[string]$ip_if3="$($subnet.ToString())."+($ipoffset+7+$Node)
         $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
         $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
 		if ($configure.IsPresent) 
