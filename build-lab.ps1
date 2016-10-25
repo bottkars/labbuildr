@@ -371,7 +371,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
    	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 	[ValidateSet(
-    '2016TP5','2016TP5_GER',
+    '2016TP5','2016TP5_GER','2016',#
     '2012R2_Ger','2012_R2',
     '2012R2FallUpdate','2012R2Fall_Ger',
     '2012_Ger','2012'
@@ -2445,7 +2445,7 @@ If ($Java8_required)
     }
 if ($Dockerhost.IsPresent)
 	{
-	if ($Master -lt "2016TP5")
+	if ($Master -lt "2016")
 		{
 		Write-Host " ==>setting Docker Master to $Latest_2016"
 		$master = $Latest_2016
