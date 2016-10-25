@@ -295,14 +295,14 @@ switch ($PsCmdlet.ParameterSetName)
 			$Vdisks = $Vdisks -join ","
 			if ($Lic_file)
 				{
-				$NAS_SERVER = "$($BuildDomain)_NAS_1"
+				$NAS_SERVER = "$($BuildDomain)_NAS_"+($ipoffset+3+$Node)
 				Write-Host -ForegroundColor Gray " ==>Trying to license with provided licfile"
 				$Target_lic = Split-Path -Leaf $Lic_file
 				$Target_lic = "/home/service/$Target_lic"
 				$FileCopy = $NodeClone | Copy-VMXFile2Guest -Sourcefile $Lic_file -targetfile $Target_lic -Guestuser $guestuser -Guestpassword $guestpassword
 				$cmdline = $Nodeclone | Invoke-VMXBash -Scriptblock "$uemcli -upload -f $Target_lic license" -Guestuser $guestuser -Guestpassword $guestpassword 
 				$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli_service /service/ssh set -enabled yes" -Guestuser $guestuser -Guestpassword $guestpassword
-				$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/config/pool create -name vPool -descr 'labbuildr pool' -disk $Vdisks" -Guestuser $guestuser -Guestpassword $guestpassword 
+				$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/config/pool create -name vPool -descr '$BuildDomain pool' -disk $Vdisks" -Guestuser $guestuser -Guestpassword $guestpassword 
 				If ($Protocols -contains 'iscsi')
 					{
 					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/if create -type iscsi -port spa_eth0 -addr $ip_if0 -netmask 255.255.255.0 -gateway $DefaultGateway" -Guestuser $guestuser -Guestpassword $guestpassword 
@@ -321,7 +321,8 @@ switch ($PsCmdlet.ParameterSetName)
 				if ($Protocols -contains 'cifs')
 					{
 					$CIFS_FS1 = "FileSystem01"
-					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/cifs create -server nas_1 -name CIFSserver1 -description 'Default CIFS Server for $BuildDomain' -domain $($BuildDomain).$($custom_domainsuffix) -username Administrator -passwd $Password"  -Guestuser $guestuser -Guestpassword $guestpassword
+					$CIFS_SERVER_NAME = "CIFSserver"+($ipoffset+3+$Node)
+					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/cifs create -server nas_1 -name $CIFS_SERVER_NAME -description 'Default CIFS Server for $BuildDomain' -domain $($BuildDomain).$($custom_domainsuffix) -username Administrator -passwd $Password"  -Guestuser $guestuser -Guestpassword $guestpassword
 					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/prov/fs create -name $CIFS_FS1 -descr 'CIFS shares' -server nas_1 -pool pool_1 -size 100G -type cifs" -Guestuser $guestuser -Guestpassword $guestpassword
 					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/prov/fs/cifs create -name CIFSroot -descr 'CIFS root' -fs res_1 -path '/' -enableContinuousAvailability yes"  -Guestuser $guestuser -Guestpassword $guestpassword
 					}
