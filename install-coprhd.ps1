@@ -54,6 +54,7 @@ $Node = 1,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [ValidateSet(
+'http://ftp.halifax.rwth-aachen.de/opensuse/',
 'http://mirror.euserv.net/linux/opensuse',
 'http://suse.mobile-central.org/',
 'http://suse.mirrors.tds.net/pub/opensuse/',
