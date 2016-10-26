@@ -53,7 +53,10 @@ $MasterPath,
 $Node = 1,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateSet('http://mirror.euserv.net/linux/opensuse')]
+[ValidateSet(
+'http://mirror.euserv.net/linux/opensuse',
+'http://suse.mobile-central.org/'
+)]
 $Static_mirror
 )
 #requires -version 3.0
