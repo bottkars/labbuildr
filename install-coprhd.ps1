@@ -36,7 +36,13 @@ $MasterPath,
 <#Specify desired branch#>
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateSet('release-2.4-coprhd','master','INTEGRATION-YODA-FOUNDATION','INTEGRATION-2.4.1-FOUNDATION','integration-2.4.1')]$branch = "master",
+[ValidateSet(
+'master',
+'release-2.4.1','release-2.4',
+'release-3.0','release-3.0.0.1-sc',
+'release-3.5',
+'VIPR-3.5.GA','VIPR-3.1.GA','VIPR-3.0-GA','VIPR-3.0.0.2-GA'
+)]$branch = "master",
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ipaddress]$subnet = "192.168.2.0",
@@ -155,7 +161,7 @@ else
         }
     }
 
-if ($branch -eq 'release-2.4-coprhd')
+if ($branch -ne 'master')
     {
     $IP = "$subnet.14"
     $Nodename = "CoprHD_Release"
@@ -278,7 +284,7 @@ if (!(Test-path $Scriptdir ))
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
            
-        $Scriptblock = "git clone https://review.coprhd.org/scm/ch/coprhd-controller.git"
+        $Scriptblock = "git clone -b $branch https://review.coprhd.org/scm/ch/coprhd-controller.git"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
 		

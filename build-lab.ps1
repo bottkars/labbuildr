@@ -132,11 +132,11 @@ Specify if Networker Scenario sould be installed
 	[Parameter(ParameterSetName = "SRM", Mandatory = $true)][switch][alias('srm')]$ViPRSRM,
     [Parameter(ParameterSetName = "SRM")]
     [ValidateSet(
-    '4.0.0.0',
+    '4.0.0.0','4.0.1.0',#
     '3.7.1.0','3.7.0.0',
     '3.6.0.3'
     )]
-    $SRM_VER='4.0.0.0',
+    $SRM_VER='4.0.1.0',
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $true)][switch][alias('asc')]$AppSync,
     [Parameter(ParameterSetName = "APPSYNC")]
     [ValidateSet(
