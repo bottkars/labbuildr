@@ -283,6 +283,12 @@ if (!(Test-path $Scriptdir ))
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
 		if ($Static_mirror)
 			{
+
+			$Scriptblock = "sed 's\http://download.opensuse.org/\$($Static_mirror)\g' /etc/zypp/repos.d/*.repo -i"
+			Write-Verbose $Scriptblock
+			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
+
+<#
 			$Scriptblock = "sed '\|baseurl=http://download.opensuse.org/distribution/13.2/repo/oss/|ibaseurl = $Static_mirror/distribution/13.2/repo/oss/\n' /etc/zypp/repos.d/openSUSE-13.2-0.repo -i"
 			Write-Verbose $Scriptblock
 			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
@@ -298,7 +304,7 @@ if (!(Test-path $Scriptdir ))
 			$Scriptblock = "sed '\|baseurl=http://download.opensuse.org/update/13.2-non-oss/|ibaseurl = $Static_mirror/update/13.2-non-oss/\n' /etc/zypp/repos.d/repo-update-non-oss.repo -i"
 			Write-Verbose $Scriptblock
 			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
-
+#>
 			}
         $Scriptblock = "sudo zypper modifyrepo -k --all"
         Write-Verbose $Scriptblock
