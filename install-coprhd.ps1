@@ -50,7 +50,11 @@ $MasterPath,
 [ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain = "labbuildr",
 [Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = "vmnet2",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
-$Node = 1
+$Node = 1,
+[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[ValidateSet('http://mirror.euserv.net/linux/opensuse')]
+$Static_mirror
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
@@ -271,7 +275,17 @@ if (!(Test-path $Scriptdir ))
         $Scriptblock = "sed '\|# cachedir = /var/cache/zypp|icachedir = /mnt/hgfs/Sources/$OS/zypp/\n' /etc/zypp/zypp.conf -i"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
+		if ($Static_mirror)
+			{
+			$Scriptblock = "sed '\|baseurl=http://download.opensuse.org/update/13.2/|ibaseurl = $Static_mirror/update/13.2/\n' /etc/zypp/repos.d/repo-update.repo -i"
+			Write-Verbose $Scriptblock
+			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
+			
+			$Scriptblock = "sed '\|baseurl=http://download.opensuse.org/update/13.2-non-oss/|ibaseurl = $Static_mirror/update/13.2-non-oss/\n' /etc/zypp/repos.d/repo-update-non-oss.repo -i"
+			Write-Verbose $Scriptblock
+			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
 
+			}
         $Scriptblock = "sudo zypper modifyrepo -k --all"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
