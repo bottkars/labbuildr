@@ -283,11 +283,11 @@ if (!(Test-path $Scriptdir ))
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
 		if ($Static_mirror)
 			{
-			$Scriptblock = "sed '\|baseurl=http://download.opensuse.org/distribution/13.2/repo/oss/|ibaseurl = $Static_mirror/opensuse/distribution/13.2/repo/oss/\n' /etc/zypp/repos.d/openSUSE-13.2-0.repo -i"
+			$Scriptblock = "sed '\|baseurl=http://download.opensuse.org/distribution/13.2/repo/oss/|ibaseurl = $Static_mirror/distribution/13.2/repo/oss/\n' /etc/zypp/repos.d/openSUSE-13.2-0.repo -i"
 			Write-Verbose $Scriptblock
 			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
 
-			$Scriptblock = "sed '\|baseurl=http://download.opensuse.org/distribution/13.2/repo/non-oss/|ibaseurl = $Static_mirror/opensuse/distribution/13.2/repo/non-oss/\n' /etc/zypp/repos.d/repo-non-oss.repo -i"
+			$Scriptblock = "sed '\|baseurl=http://download.opensuse.org/distribution/13.2/repo/non-oss/|ibaseurl = $Static_mirror/distribution/13.2/repo/non-oss/\n' /etc/zypp/repos.d/repo-non-oss.repo -i"
 			Write-Verbose $Scriptblock
 			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
 
@@ -316,6 +316,13 @@ if (!(Test-path $Scriptdir ))
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
 		
+		if ($Static_mirror -match "halifax")
+			{
+			$Scriptblock = "sed 's\http://download.opensuse.org/\http://ftp.halifax.rwth-aachen.de/opensuse/\g' /coprhd-controller/packaging/appliance-images/openSUSE/13.2/CoprHD/configure.sh -i"
+			Write-Verbose $Scriptblock
+			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
+
+			}
 
         Write-Host -ForegroundColor Gray " ==>Running Installation Tasks"
         $Components = ('installRepositories','installPackages','installJava 8','installStorageOS')
