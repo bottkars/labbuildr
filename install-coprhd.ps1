@@ -55,7 +55,10 @@ $Node = 1,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [ValidateSet(
 'http://mirror.euserv.net/linux/opensuse',
-'http://suse.mobile-central.org/'
+'http://suse.mobile-central.org/',
+'http://suse.mirrors.tds.net/pub/opensuse/',
+'http://mirror.aarnet.edu.au/pub/opensuse/opensuse/',
+'http://mirror.rackspace.co.uk/openSUSE/'
 )]
 $Static_mirror
 )
