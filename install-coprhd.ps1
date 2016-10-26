@@ -243,9 +243,8 @@ if (!(Test-path $Scriptdir ))
         $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | out-null 
         $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir |Out-Null
         $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -suse -device eno16777984 -Peerdns -DNS1 "$DNS1" -DNSDOMAIN "$BuildDomain.$custom_domainsuffix" -Hostname "$Nodename"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
-        $NodeClone | Invoke-VMXBash -Scriptblock "/sbin/rcnetwork restart" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-        
-		Write-Host -ForegroundColor Magenta " ==>Starting customization, all commands will be logged in $logfile on host, use tail -f $logfile on console/ssh"
+        # $NodeClone | Invoke-VMXBash -Scriptblock "/sbin/rcnetwork restart" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+        Write-Host -ForegroundColor Magenta " ==>Starting customization, all commands will be logged in $logfile on host, use tail -f $logfile on console/ssh"
 		###  ssh section
 		$Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa"
 		Write-Verbose $Scriptblock
@@ -277,6 +276,14 @@ if (!(Test-path $Scriptdir ))
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
 		if ($Static_mirror)
 			{
+			$Scriptblock = "sed '\|baseurl=http://download.opensuse.org/distribution/13.2/repo/oss/|ibaseurl = $Static_mirror/opensuse/distribution/13.2/repo/oss/\n' /etc/zypp/repos.d/openSUSE-13.2-0.repo -i"
+			Write-Verbose $Scriptblock
+			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
+
+			$Scriptblock = "sed '\|baseurl=http://download.opensuse.org/distribution/13.2/repo/non-oss/|ibaseurl = $Static_mirror/opensuse/distribution/13.2/repo/non-oss/\n' /etc/zypp/repos.d/repo-non-oss.repo -i"
+			Write-Verbose $Scriptblock
+			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
+
 			$Scriptblock = "sed '\|baseurl=http://download.opensuse.org/update/13.2/|ibaseurl = $Static_mirror/update/13.2/\n' /etc/zypp/repos.d/repo-update.repo -i"
 			Write-Verbose $Scriptblock
 			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
