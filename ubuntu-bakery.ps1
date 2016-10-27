@@ -348,6 +348,7 @@ if ($use_aptcache.IsPresent)
 			Write-Warning "A apt ip address must be specified if uning do_not_use_labaptcache"
 			}
 		}
+	Write-Host -ForegroundColor White " ==>Using cacher at $apt_ip"
 	}
 try
     {
