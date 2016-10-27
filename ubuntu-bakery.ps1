@@ -104,6 +104,7 @@ $Defaultsfile=".\defaults.xml",
 [Switch]$Openstack_Controller,
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [Switch]$Openstack_Baseconfig = $true,
+
     <#
     Size for general nodes
     'XS'  = 1vCPU, 512MB
@@ -127,12 +128,16 @@ $Defaultsfile=".\defaults.xml",
     #>
 [ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Compute_Size = "XL",
 
-[int]$ip_startrange = 200
+[int]$ip_startrange = 200,
 #[Parameter(ParameterSetName = "install",Mandatory = $false)]
 #[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$SIOGateway
+[switch]$use_aptcache = $true,
+[ipaddress]$non_lab_apt_ip,
+[switch]$do_not_use_lab_aptcache
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
+[int]$lab_apt_cache_ip = $ip_startrange
 If ($ConfirmPreference -match "none")
     {$Confirm = $false}
 else
@@ -325,7 +330,25 @@ $Nodeprefix = $Nodeprefix.ToLower()
 $OS = "Ubuntu"
 $Required_Master = "$OS$ubuntu_ver"
 $Default_Guestuser = "labbuildr"
-
+if ($use_aptcache.IsPresent)
+	{
+	if (!$do_not_use_lab_aptcache.IsPresent)
+		{
+		if (!($aptvmx = get-vmx aptcache -WarningAction SilentlyContinue))
+			{
+			Write-Host -ForegroundColor Magenta " ==>installing apt cache"
+			.\install-aptcache.ps1 -Defaults -ip_startrange $lab_apt_cache_ip -Size M
+			$apt_ip = "$subnet.$lab_apt_cache_ip"
+			}
+		else
+			{
+			if (!$apt_ip)
+				{
+				Write-Warning "A apt ip address must be specified if uning do_not_use_labaptcache"
+				}
+			}
+		}
+	}
 try
     {
     $MasterVMX = test-labmaster -Masterpath $MasterPath -Master $Required_Master -Confirm:$Confirm -erroraction stop
@@ -548,7 +571,11 @@ foreach ($Node in $machinesBuilt)
         $Scriptblock = "DEFAULT_ROUTE=`$(ip route show default | awk '/default/ {print `$3}');ping -c 1 `$DEFAULT_ROUTE"
         Write-Verbose $Scriptblock
         $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword     
+		$NodeClone | Set-LabAPTCacheClient -cache_ip $apt_ip
 
+		$Scriptblock = "apt-get update;DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=`"--force-confdef`" -o Dpkg::Options::=`"--force-confold`" dist-upgrade"
+        Write-Verbose $Scriptblock
+        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword     
         switch ($Desktop)
             {
                 default
@@ -575,7 +602,6 @@ foreach ($Node in $machinesBuilt)
                 {
                 }
             }
-
         ####
 		if ($Desktop -ne 'none')
 			{

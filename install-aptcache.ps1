@@ -65,7 +65,7 @@ $Defaultsfile=".\defaults.xml",
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL",
 [int]$ip_startrange = 200,
-[switch]$upgrade
+[switch]$upgrade=$true
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
@@ -124,7 +124,6 @@ if (!$DNS2)
     $DNS2 = $DNS1
     }
 if (!$Masterpath) {$Masterpath = $Builddir}
-$ip_startrange = $ip_startrange+$Startnode
 $logfile = "/tmp/labbuildr.log"
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
@@ -139,7 +138,7 @@ $Required_Master = "$OS$ubuntu_ver"
 $Default_Guestuser = "labbuildr"
 $fqdn = "$Nodeprefix.$BuildDomain.$Custom_DomainSuffix"
 $DNS_DOMAIN = "$BuildDomain.$Custom_DomainSuffix"
-if (!($aptcacher = Get-VMX -VMXName $Nodeprefix))
+if (!($aptcacher = Get-VMX -VMXName $Nodeprefix -WarningAction SilentlyContinue))
 	{
 	$StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
 	if (!(Test-Path "$Sourcedir\apt-cacher-ng"))
@@ -149,14 +148,18 @@ if (!($aptcacher = Get-VMX -VMXName $Nodeprefix))
 	$Nodeclone = New-LabVMX -Masterpath $Masterpath -Ubuntu -Ubuntu_ver $ubuntu_ver -VMXname $Nodeprefix -SCSI_DISK_COUNT $Disks -SCSI_Controller 0 -SCSI_Controller_Type lsisas1068 -SCSI_DISK_SIZE 100GB -vmnet $vmnet -Size $Size -ConnectionType custom -AdapterType vmxnet3 -Scenario 8 -Scenarioname "ubuntu" -activationpreference 1 -Displayname $Nodeprefix 
 	$ip="$subnet.$ip_startrange"
 	$Nodeclone | Set-LabUbuntuVMX -Ubuntu_ver $ubuntu_ver -Scriptdir $Scriptdir -Sourcedir $Sourcedir -DefaultGateway $DefaultGateway  -guestpassword $Guestpassword -Default_Guestuser $Default_Guestuser -Rootuser $rootuser -Hostkey $Hostkey -ip $ip -DNS1 $DNS1 -DNS2 $DNS2 -subnet $subnet -Host_Name $Nodeprefix -DNS_DOMAIN_NAME "$BuildDomain.$custom_domainsuffix"
-	$packages = "apt-cacher-ng curl"
+	$packages = "apt-cacher-ng"
 	$Scriptblocks = (
 	"apt-get install $packages -y",
-	"echo 'CacheDir: /mnt/hgfs/Sources/apt-cacher-ng' >> /etc/apt-cacher-ng/zzz_override.conf",
-	"echo 'StupidFs: 1' >> /etc/apt-cacher-ng/zzz_override.conf",
 	"cat > /etc/apt/apt.conf.d/01proxy <<EOF
 Acquire::http { Proxy \`"http://$($ip):3142\`"; };`
 Acquire::https { Proxy \`"https://$($ip):3142\`"; };`
+",
+"cat > etc/apt-cacher-ng/zzz_override.conf <<EOF
+CacheDir: /mnt/hgfs/Sources/apt-cacher-ng`
+StupidFs: 1`
+RequestAppendix: Cookie: oraclelicense=a`
+PfilePattern = .*(\.d?deb|\.rpm|\.drpm|\.dsc|\.tar(\.gz|\.bz2|\.lzma|\.xz)(\.gpg|\?AuthParam=.*)?|\.diff(\.gz|\.bz2|\.lzma|\.xz)|\.jigdo|\.template|changelog|copyright|\.udeb|\.debdelta|\.diff/.*\.gz|(Devel)?ReleaseAnnouncement(\?.*)?|[a-f0-9]+-(susedata|updateinfo|primary|deltainfo).xml.gz|fonts/(final/)?[a-z]+32.exe(\?download.*)?|/dists/.*/installer-[^/]+/[0-9][^/]+/images/.*)$`
 ",
 "systemctl restart apt-cacher-ng"
 	)
@@ -166,7 +169,8 @@ foreach ($Scriptblock in $Scriptblocks)
 	}
 if ($upgrade.ispresent)
 	{
-	$Scriptblock = "apt-get dist-upgrade -y"
+	$Scriptblock = "apt-get update;DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=`"--force-confdef`" -o Dpkg::Options::=`"--force-confold`" dist-upgrade"
+	$nodeclone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword | Out-Null
 	}
 $StopWatch.Stop()
 Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
