@@ -141,9 +141,10 @@ $DNS_DOMAIN = "$BuildDomain.$Custom_DomainSuffix"
 if (!($aptcacher = Get-VMX -VMXName $Nodeprefix -WarningAction SilentlyContinue))
 	{
 	$StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
-	if (!(Test-Path "$Sourcedir\apt-cacher-ng"))
+	$apt_cachedir = Join-Path $Sourcedir "apt-cacher-ng"
+	if (!(Test-Path $apt_cachedir))
 		{
-		New-Item -ItemType Directory -Path "$Sourcedir\apt-cacher-ng" | Out-Null
+		New-Item -ItemType Directory -Path $apt_cachedir | Out-Null
 		}
 	$Nodeclone = New-LabVMX -Masterpath $Masterpath -Ubuntu -Ubuntu_ver $ubuntu_ver -VMXname $Nodeprefix -SCSI_DISK_COUNT $Disks -SCSI_Controller 0 -SCSI_Controller_Type lsisas1068 -SCSI_DISK_SIZE 100GB -vmnet $vmnet -Size $Size -ConnectionType custom -AdapterType vmxnet3 -Scenario 8 -Scenarioname "ubuntu" -activationpreference 1 -Displayname $Nodeprefix 
 	$ip="$subnet.$ip_startrange"
