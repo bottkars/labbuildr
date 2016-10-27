@@ -334,18 +334,18 @@ if ($use_aptcache.IsPresent)
 	{
 	if (!$do_not_use_lab_aptcache.IsPresent)
 		{
+		$apt_ip = "$subnet.$lab_apt_cache_ip"
 		if (!($aptvmx = get-vmx aptcache -WarningAction SilentlyContinue))
 			{
 			Write-Host -ForegroundColor Magenta " ==>installing apt cache"
 			.\install-aptcache.ps1 -Defaults -ip_startrange $lab_apt_cache_ip -Size M
-			$apt_ip = "$subnet.$lab_apt_cache_ip"
 			}
-		else
+		}
+	else
+		{
+		if (!$apt_ip)
 			{
-			if (!$apt_ip)
-				{
-				Write-Warning "A apt ip address must be specified if uning do_not_use_labaptcache"
-				}
+			Write-Warning "A apt ip address must be specified if uning do_not_use_labaptcache"
 			}
 		}
 	}
