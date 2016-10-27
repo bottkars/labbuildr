@@ -51,7 +51,7 @@ $vmnet,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [ValidateScript({ Test-Path -Path $_ })]
 $Defaultsfile=".\defaults.xml",
-    <#
+<#
     Size for general nodes
     'XS'  = 1vCPU, 512MB
     'S'   = 1vCPU, 768MB
@@ -65,7 +65,7 @@ $Defaultsfile=".\defaults.xml",
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL",
 [int]$ip_startrange = 200,
-[switch]$upgrade=$true
+[switch]$upgrade
 )
 #requires -version 3.0
 #requires -module vmxtoolkit

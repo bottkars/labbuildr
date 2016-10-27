@@ -133,7 +133,8 @@ $Defaultsfile=".\defaults.xml",
 #[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$SIOGateway
 [switch]$use_aptcache = $true,
 [ipaddress]$non_lab_apt_ip,
-[switch]$do_not_use_lab_aptcache
+[switch]$do_not_use_lab_aptcache,
+[switch]$upgrade
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
@@ -338,7 +339,7 @@ if ($use_aptcache.IsPresent)
 		if (!($aptvmx = get-vmx aptcache -WarningAction SilentlyContinue))
 			{
 			Write-Host -ForegroundColor Magenta " ==>installing apt cache"
-			.\install-aptcache.ps1 -Defaults -ip_startrange $lab_apt_cache_ip -Size M
+			.\install-aptcache.ps1 -Defaults -ip_startrange $lab_apt_cache_ip -Size M -upgrade:$($upgrade.IsPresent)
 			}
 		}
 	else
@@ -573,10 +574,11 @@ foreach ($Node in $machinesBuilt)
         Write-Verbose $Scriptblock
         $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword     
 		$NodeClone | Set-LabAPTCacheClient -cache_ip $apt_ip
-
-		$Scriptblock = "apt-get update;DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=`"--force-confdef`" -o Dpkg::Options::=`"--force-confold`" dist-upgrade"
-        Write-Verbose $Scriptblock
-        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword     
+		if ($upgrade.ispresent)
+			{
+			$Scriptblock = "apt-get update;DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=`"--force-confdef`" -o Dpkg::Options::=`"--force-confold`" dist-upgrade"
+			$nodeclone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword | Out-Null
+			}
         switch ($Desktop)
             {
                 default
