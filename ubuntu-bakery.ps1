@@ -35,6 +35,9 @@ Param(
 [ValidateSet('liberty','mitaka','newton')]
 [string]$openstack_release = 'liberty',
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)]
+[ValidateSet('unity','scaleio')]
+[string[]]$cinder = "scaleio",
+[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)]
 [switch]$Defaults,
@@ -104,6 +107,10 @@ $Defaultsfile=".\defaults.xml",
 [Switch]$Openstack_Controller,
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [Switch]$Openstack_Baseconfig = $true,
+[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
+$Custom_unity_ip,
+[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
+$custom_unity_vpool_name,
 
     <#
     Size for general nodes
@@ -200,22 +207,7 @@ $logfile = "/tmp/labbuildr.log"
 
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
-switch ($PsCmdlet.ParameterSetName)
-		{
-			"openstack"
-			{ 
-			[switch]$Scaleio = $true
-			[switch]$Openstack_Controller = $true
-			}
-
-		}	
-if ($scaleio.IsPresent -and $Nodes -lt 3)
-	{
-	Write-Host -ForegroundColor Gray " ==>Setting Nodes to 3"
-	$Nodes = 3
-	}
-if ($scaleio.IsPresent)
-	{
+###
 	$Devicename = "$Location"+"_Disk_$Driveletter"
 	$VolumeName = "Volume_$Location"
 	$ProtectionDomainName = "PD_$BuildDomain"
@@ -233,6 +225,46 @@ if ($scaleio.IsPresent)
 	$mdm_name_b = "Manager_B"
 	$tb_name = "TB"
 	$scaleio_dir = Join-Path $Sourcedir "ScaleIO"
+	$Unity_IP = "$subnet.171"
+	$Unity_vPool_name = 'vPool'
+	if ($Custom_unity_ip)
+		{
+		$Unity_IP = $Custom_unity_ip
+		}
+	if ($custom_unity_vpool_name)
+		{
+		$Unity_vPool_name= $custom_unity_vpool_name
+		}
+##
+
+switch ($PsCmdlet.ParameterSetName)
+		{
+			"openstack"
+			{
+			if ($cinder)
+				{
+				$cinder_parm = " -cb "+($cinder -join ",")
+				if ($cinder -contains "scaleio")
+					{
+					[switch]$Scaleio = $true
+					$cinder_parm = "$cinder_parm -spd $ProtectionDomainName -ssp $StoragePoolName -sgw $tb_ip"
+					}
+				if ($cinder -contains "unity")
+					{
+					$cinder_parm = "$cinder_parm -up $Unity_vPool_name -uip $Unity_IP"
+					}
+				}
+			[switch]$Openstack_Controller = $true
+			}
+
+		}	
+if ($scaleio.IsPresent -and $Nodes -lt 3)
+	{
+	Write-Host -ForegroundColor Gray " ==>Setting Nodes to 3"
+	$Nodes = 3
+	}
+if ($scaleio.IsPresent)
+	{
 	[switch]$sds=$true
 	[switch]$sdc=$true
 	If ($singlemdm.IsPresent)
@@ -801,7 +833,7 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 	if ($Openstack_Controller.IsPresent)
 		{
 		Write-Host -ForegroundColor Gray " ==>starting OpenStack controller setup on $($GatewayNode.VMXName)"
-		$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Controller; bash ./install_base.sh -spd $ProtectionDomainName -ssp $StoragePoolName -sgw $tb_ip --domain $BuildDomain --suffix $custom_domainsuffix -c $($Openstack_Baseconfig.ispresent.ToString().tolower())"
+		$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Controller; bash ./install_base.sh $cinder_parm --domain $BuildDomain --suffix $custom_domainsuffix -c $($Openstack_Baseconfig.ispresent.ToString().tolower())"
 #		$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Controller; bash ./install_base.sh -spd $ProtectionDomainName -ssp $StoragePoolName -sgw $tb_ip --domain $BuildDomain -c $($Openstack_Baseconfig.ispresent.ToString().tolower())"
 		$GatewayNode | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
 		$installmessage += "OpenStack Horizon can be reached via http://$($tb_ip):88/horizon with admin:$($Guestpassword)`n"
