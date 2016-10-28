@@ -334,7 +334,7 @@ switch ($PsCmdlet.ParameterSetName)
 						$ISCSI_IQN = "iqn.1991-05.com.microsoft:$($iscsi_host).$BuildDomain.$custom_domainsuffix"
 						$Scriptblocks = (
 							"$uemcli /remote/host create -name $iscsi_host -descr 'Windows DC $iscsi_host' -type host -addr $subnet.10 -osType win2012srv",
-							"$uemcli /remote/initiator create -host Host_10 -uid '$ISCSI_IQN' -type iscsi"
+							"$uemcli /remote/initiator create -host Host_$hostcount -uid '$ISCSI_IQN' -type iscsi"
 							)
 						foreach ($Scriptblock in $Scriptblocks)
 							{
