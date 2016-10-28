@@ -620,6 +620,23 @@ foreach ($Node in $machinesBuilt)
 			$Scriptblock = "apt-get update;DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=`"--force-confdef`" -o Dpkg::Options::=`"--force-confold`" dist-upgrade"
 			$nodeclone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword | Out-Null
 			}
+		if ($cinder -contains "unity")
+			{
+			Write-Host -ForegroundColor Gray " ==>configuring iscsi $($NodeClone.VMXName)"
+			# $ISCSI_IQN = "iqn.2016-10.org.linux:$($NodeClone.VMXname).$BuildDomain.$custom_domainsuffix.c0"
+			$Scriptblocks = (
+			"apt-get install -y open-iscsi",
+			#"echo 'InitiatorName=$ISCSI_IQN' > /etc/iscsi/initiatorname.iscsi",
+			"/etc/init.d/open-iscsi restart",
+			"iscsiadm -m discovery -t sendtargets -p $Unity_Target_IP",
+			"iscsiadm -m node --login")
+			foreach ($Scriptblock in $Scriptblocks)
+				{
+				Write-Verbose $Scriptblock
+				$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword | Out-Null
+				}
+			}
+
         switch ($Desktop)
             {
                 default
@@ -864,21 +881,6 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 				$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Compute; bash ./install_base.sh -cip $controller_ip --docker $($docker.IsPresent.ToString().tolower()) -cname $($controller_node.vmxname.tolower())"
 				Write-Verbose $Scriptblock
 				$NodeClone| Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-				if ($cinder -contains "unity")
-					{
-					Write-Host -ForegroundColor Gray " ==>configuring iscsi $($NodeClone.VMXName)"
-					$ISCSI_IQN = "iqn.2016-10.org.linux:$($node).$BuildDomain.$custom_domainsuffix.c0"
-					$Scriptblocks = (
-					"echo 'InitiatorName=$ISCSI_IQN' > /etc/iscsi/initiatorname.iscsi",
-					"/etc/init.d/open-iscsi restart",
-					"iscsiadm -m discovery -t sendtargets -p $Unity_Target_IP",
-					"iscsiadm -m node --login")
-					foreach ($Scriptblock in $Scriptblocks)
-						{
-						Write-Verbose $Scriptblock
-						$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword | Out-Null
-						}
-					}
 				$installmessage += "OpenStack Nova-Compute is running on $($NodeClone.vmxname)`n"
 				$ip_startrange_count++
 				}

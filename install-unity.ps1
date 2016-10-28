@@ -315,7 +315,7 @@ switch ($PsCmdlet.ParameterSetName)
 						{
 						$hostcount = 1
 						#create ubuntu hosts
-						foreach ($ip in (201..209))
+					<#	foreach ($ip in (201..209))
 							{
 							$iscsi_host = "Ubuntu$hostcount"
 							$ISCSI_IQN = "iqn.2016-10.org.linux:$($iscsi_host).$BuildDomain.$custom_domainsuffix.c0"
@@ -328,7 +328,7 @@ switch ($PsCmdlet.ParameterSetName)
 								$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
 								}
 							$hostcount++
-							}
+							}#>
 						#create dcnode
 						$iscsi_host = "$($BuildDomain)DC"
 						$ISCSI_IQN = "iqn.1991-05.com.microsoft:$($iscsi_host).$BuildDomain.$custom_domainsuffix"
