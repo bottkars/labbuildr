@@ -320,7 +320,7 @@ switch ($PsCmdlet.ParameterSetName)
 							$iscsi_host = "Ubuntu$hostcount"
 							$ISCSI_IQN = "iqn.2016-10.org.linux:$($iscsi_host).$BuildDomain.$custom_domainsuffix.c0"
 							$Scriptblocks = (
-							"$uemcli /remote/host create -name Host_$hostcount -descr 'Openstack Compute $iscsi_host' -type host -addr $subnet.$ip -osType Linux",
+							"$uemcli /remote/host create -name $iscsi_host -descr 'Openstack Compute $iscsi_host' -type host -addr $subnet.$ip -osType Linux",
 							"$uemcli /remote/initiator create -host Host_$hostcount -uid '$ISCSI_IQN' -type iscsi"
 							)
 							foreach ($Scriptblock in $Scriptblocks)
