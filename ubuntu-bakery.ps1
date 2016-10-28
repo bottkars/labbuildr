@@ -623,10 +623,10 @@ foreach ($Node in $machinesBuilt)
 		if ($cinder -contains "unity")
 			{
 			Write-Host -ForegroundColor Gray " ==>configuring iscsi $($NodeClone.VMXName)"
-			# $ISCSI_IQN = "iqn.2016-10.org.linux:$($NodeClone.VMXname).$BuildDomain.$custom_domainsuffix.c0"
+			$ISCSI_IQN = "iqn.2016-10.org.linux:$($NodeClone.VMXname).$BuildDomain.$custom_domainsuffix.c0"
 			$Scriptblocks = (
 			"apt-get install -y open-iscsi",
-			#"echo 'InitiatorName=$ISCSI_IQN' > /etc/iscsi/initiatorname.iscsi",
+			"echo 'InitiatorName=$ISCSI_IQN' > /etc/iscsi/initiatorname.iscsi",
 			"/etc/init.d/open-iscsi restart",
 			"iscsiadm -m discovery -t sendtargets -p $Unity_Target_IP",
 			"iscsiadm -m node --login")
