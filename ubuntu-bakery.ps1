@@ -1,9 +1,9 @@
 ﻿<#
 .Synopsis
-   .\install-ubuntu.ps1 
+   .\install-ubuntu.ps1
 .DESCRIPTION
   install-scaleio is  the a vmxtoolkit solutionpack for configuring and deploying scaleio svm´s
-      
+
       Copyright 2014 Karsten Bott
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -111,14 +111,15 @@ $Defaultsfile=".\defaults.xml",
 $Custom_unity_ip,
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 $custom_unity_vpool_name,
-
+[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
+$Custom_Unity_Target_ip,
     <#
     Size for general nodes
     'XS'  = 1vCPU, 512MB
     'S'   = 1vCPU, 768MB
     'M'   = 1vCPU, 1024MB
     'L'   = 2vCPU, 2048MB
-    'XL'  = 2vCPU, 4096MB 
+    'XL'  = 2vCPU, 4096MB
     'TXL' = 4vCPU, 6144MB
     'XXL' = 4vCPU, 8192MB
     #>
@@ -129,7 +130,7 @@ $custom_unity_vpool_name,
     'S'   = 1vCPU, 768MB
     'M'   = 1vCPU, 1024MB
     'L'   = 2vCPU, 2048MB
-    'XL'  = 2vCPU, 4096MB 
+    'XL'  = 2vCPU, 4096MB
     'TXL' = 4vCPU, 6144MB
     'XXL' = 4vCPU, 8192MB
     #>
@@ -226,10 +227,15 @@ $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 	$tb_name = "TB"
 	$scaleio_dir = Join-Path $Sourcedir "ScaleIO"
 	$Unity_IP = "$subnet.171"
+	$Unity_Target_IP ="$subnet.173"
 	$Unity_vPool_name = 'vPool'
 	if ($Custom_unity_ip)
 		{
 		$Unity_IP = $Custom_unity_ip
+		}
+	if ($Custom_Unity_Target_ip)
+		{
+		$Unity_Target_IP = $Custom_Unity_Target_ip
 		}
 	if ($custom_unity_vpool_name)
 		{
@@ -256,8 +262,7 @@ switch ($PsCmdlet.ParameterSetName)
 				}
 			[switch]$Openstack_Controller = $true
 			}
-
-		}	
+		}
 if ($scaleio.IsPresent -and $Nodes -lt 3)
 	{
 	Write-Host -ForegroundColor Gray " ==>Setting Nodes to 3"
@@ -314,7 +319,7 @@ if (!$Ubuntu)
 
     try
         {
-        $SIOGatewayrpm = $SIOGatewayrpm[-1].FullName 
+        $SIOGatewayrpm = $SIOGatewayrpm[-1].FullName
         }
     Catch
         {
@@ -335,7 +340,7 @@ if (!$Ubuntu)
 	if ($Percentage -lt 10)
 		{
 		$Percentage = 10
-		}	
+		}
 	}
 
 switch ($ubuntu_ver)
@@ -391,20 +396,20 @@ catch
     {
     Write-Warning "Required Master $Required_Master not found
     please download and extraxt $Required_Master to .\$Required_Master
-    see: 
+    see:
     ------------------------------------------------
     get-help $($MyInvocation.MyCommand.Name) -online
     ------------------------------------------------"
     exit
     }
 ####
-if (!$MasterVMX.Template) 
+if (!$MasterVMX.Template)
             {
             write-verbose "Templating Master VMX"
             $template = $MasterVMX | Set-VMXTemplate
             }
         $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
-        if (!$Basesnap) 
+        if (!$Basesnap)
         {
          Write-verbose "Base snap does not exist, creating now"
         $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
@@ -435,7 +440,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         foreach ($LUN in (1..$Disks))
             {
             $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-            $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
+            $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path
             $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
             }
         $Netadapter = Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config
@@ -474,7 +479,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     }
 Write-Host -ForegroundColor White "Starting Node Configuration"
 $ip_startrange_count = $ip_startrange
-$installmessage = @()    
+$installmessage = @()
 foreach ($Node in $machinesBuilt)
     {
         $ip="$subnet.$ip_startrange_count"
@@ -501,11 +506,11 @@ foreach ($Node in $machinesBuilt)
         $Scriptblock = "sed -i '/PermitRootLogin without-password/ c\PermitRootLogin yes' /etc/ssh/sshd_config"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
-        
+
         $Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa -force"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
-    
+
         $Scriptblock = "/usr/bin/ssh-keygen -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
@@ -531,11 +536,11 @@ foreach ($Node in $machinesBuilt)
 		Write-Verbose "setting sudoers"
 		$Scriptblock = "echo '$Default_Guestuser ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers"
 		Write-Verbose $Scriptblock
-		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword #  -logfile $Logfile  
+		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword #  -logfile $Logfile
 
  		$Scriptblock = "sed -i 's/^.*\bDefaults    requiretty\b.*$/Defaults    !requiretty/' /etc/sudoers"
 		Write-Verbose $Scriptblock
-		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  
+		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
         $Scriptblock = "echo 'auto lo' > /etc/network/interfaces"
         Write-Verbose $Scriptblock
@@ -572,7 +577,7 @@ foreach ($Node in $machinesBuilt)
         $Scriptblock = "echo 'broadcast $subnet.255' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-        
+
         $Scriptblock = "echo 'dns-nameservers $DNS1 $DNS2' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
@@ -580,7 +585,7 @@ foreach ($Node in $machinesBuilt)
         $Scriptblock = "echo 'dns-search $BuildDomain.$Custom_DomainSuffix' >> /etc/network/interfaces"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-        
+
         $Scriptblock = "echo '127.0.0.1       localhost' > /etc/hosts; echo '$ip $Node $Node.$BuildDomain.$Custom_DomainSuffix' >> /etc/hosts; hostname $Node"
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         $Scriptblock = "hostnamectl set-hostname $Node.$BuildDomain.$Custom_DomainSuffix"
@@ -596,7 +601,7 @@ foreach ($Node in $machinesBuilt)
                 {
                 $Scriptblock = "/etc/init.d/networking restart"
                 }
-            }         
+            }
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
@@ -604,7 +609,7 @@ foreach ($Node in $machinesBuilt)
         if failures occur, you might want to open a 2nd labbuildr windows and run start-vmx OpenWRT "
         $Scriptblock = "DEFAULT_ROUTE=`$(ip route show default | awk '/default/ {print `$3}');ping -c 1 `$DEFAULT_ROUTE"
         Write-Verbose $Scriptblock
-        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword     
+        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
 		$NodeClone | Set-LabAPTCacheClient -cache_ip $apt_ip
 		if ($upgrade.ispresent)
 			{
@@ -648,11 +653,11 @@ foreach ($Node in $machinesBuilt)
         $ip_startrange_count++
     }
 
- ## scaleio   
- $Nodecounter = 1    
+ ## scaleio
+ $Nodecounter = 1
 if ($scaleio.IsPresent)
     {
-	[switch]$configure = $truee
+	[switch]$configure = $true
 	foreach ($Node in $machinesBuilt)
 			{
 			$NodeClone = get-vmx $Node
@@ -685,7 +690,7 @@ if ($scaleio.IsPresent)
 					$Scriptblock = "add-apt-repository ppa:webupd8team/java -y;apt-get update -y;echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections;apt-get install oracle-java8-installer -y;apt-get install oracle-java8-set-default -y"
 					Write-Host $Scriptblock
 					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-					
+
 					$Scriptblock = "GATEWAY_ADMIN_PASSWORD='Password123!' /usr/bin/dpkg -i $SIOGatewayrpm"
 					#$NodeClone | Invoke-VMXBash -Scriptblock "export SIO_GW_KEYTOOL=/usr/bin/;export GATEWAY_ADMIN_PASSWORD='Password123!';dpkg -i $SIOGatewayrpm;dpkg -l emc-scaleio-gateway" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 					Write-Host $Scriptblock
@@ -724,7 +729,7 @@ if ($scaleio.IsPresent)
 					Write-Verbose $sed
 					$NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 					$MY_CIPHERS="'ciphers='\`"'TLS_DHE_DSS_WITH_AES_128_CBC_SHA256,TLS_DHE_DSS_WITH_AES_128_GCM_SHA256,TLS_DHE_RSA_WITH_AES_128_CBC_SHA,TLS_DHE_RSA_WITH_AES_128_CBC_SHA256,TLS_DHE_RSA_WITH_AES_128_GCM_SHA256,TLS_DHE_RSA_WITH_AES_256_CBC_SHA,TLS_DHE_RSA_WITH_AES_256_CBC_SHA256,TLS_DHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256,TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_CBC_SHA,TLS_RSA_WITH_AES_128_CBC_SHA256,TLS_RSA_WITH_AES_128_GCM_SHA256,TLS_RSA_WITH_AES_256_CBC_SHA,TLS_RSA_WITH_AES_256_CBC_SHA256,TLS_RSA_WITH_AES_256_GCM_SHA384'\`"''"
-					$Scriptblock = "MYCIPHERS=$MY_CIPHERS;sed -i '/ciphers=/s/.*/'`$MYCIPHERS'/' /opt/emc/scaleio/gateway/conf/server.xml"	
+					$Scriptblock = "MYCIPHERS=$MY_CIPHERS;sed -i '/ciphers=/s/.*/'`$MYCIPHERS'/' /opt/emc/scaleio/gateway/conf/server.xml"
 					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 					$NodeClone | Invoke-VMXBash -Scriptblock "/etc/init.d/scaleio-gateway restart" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 					}
@@ -736,7 +741,7 @@ if ($scaleio.IsPresent)
 				Write-Host -ForegroundColor Gray " ==>trying SDS Install"
 				$NodeClone | Invoke-VMXBash -Scriptblock "dpkg -i $ubuntu_guestdir/EMC-ScaleIO-sds-*.deb" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 				}
-			if ($sdc.IsPresent) 
+			if ($sdc.IsPresent)
 				{
 				Write-Host -ForegroundColor Gray " ==>trying SDC Install"
 				$NodeClone | Invoke-VMXBash -Scriptblock "export MDM_IP=$mdm_ip;dpkg -i $ubuntu_guestdir/EMC-ScaleIO-sdc*.deb" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
@@ -755,7 +760,6 @@ repo_public_rsa_key = /bin/emc/scaleio/scini_sync/scini_repo_key.pub`
 						Write-Verbose $Scriptblock
 						$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 						}
-	
 				}
 		$Nodecounter++
 		}##end nodes
@@ -808,7 +812,7 @@ repo_public_rsa_key = /bin/emc/scaleio/scini_sync/scini_repo_key.pub`
 		Write-Verbose $sclicmd
 		$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 	}#end Primary
-	foreach ($Node in 1..$Nodes)			
+	foreach ($Node in 1..$Nodes)
 				{
 				[int]$sds_ip = $ip_startrange+$Node-1
 				Write-Host -ForegroundColor Gray " ==>adding sds $subnet.$sds_ip with /dev/sdb"
@@ -829,40 +833,50 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 curl --silent --show-error --insecure --user :`$TOKEN -X GET 'https://localhost/api/getHostCertificate/Mdm?host=$($mdm_ipb)' > '/tmp/mdm_b.cer' \n`
 curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: multipart/form-data' -F 'file=@/tmp/mdm_b.cer' 'https://localhost/api/trustHostCertificate/Mdm' "
 	$GatewayNode | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword | Out-Null
-	
+	}
+
 	if ($Openstack_Controller.IsPresent)
 		{
-		Write-Host -ForegroundColor Gray " ==>starting OpenStack controller setup on $($GatewayNode.VMXName)"
+		$NodeClone = get-vmx $machinesBuilt[-1]
+		$ip_startrange_count = $ip_startrange
+		Write-Host -ForegroundColor Gray " ==>starting OpenStack controller setup on $($machinesBuilt[-1])"
 		$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Controller; bash ./install_base.sh $cinder_parm --domain $BuildDomain --suffix $custom_domainsuffix -c $($Openstack_Baseconfig.ispresent.ToString().tolower())"
 #		$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Controller; bash ./install_base.sh -spd $ProtectionDomainName -ssp $StoragePoolName -sgw $tb_ip --domain $BuildDomain -c $($Openstack_Baseconfig.ispresent.ToString().tolower())"
-		$GatewayNode | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
-		$installmessage += "OpenStack Horizon can be reached via http://$($tb_ip):88/horizon with admin:$($Guestpassword)`n"
+		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
+		$installmessage += "OpenStack Horizon can be reached via http://$($machinesBuilt[-1]):88/horizon with admin:$($Guestpassword)`n"
 		foreach ($Node in $machinesBuilt)
 			{
 			$NodeClone = Get-VMX $Node
-			if ($NodeClone.vmxname -ne $GatewayNode.vmxname)
+			if ($NodeClone.vmxname -ne $machinesBuilt[-1])
 				{
 				Write-Host -ForegroundColor Gray " ==>starting nova-compute setup on $($NodeClone.vmxname)"
 #				$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Compute; bash ./install_base.sh -cip $tb_ip -cname $($GatewayNode.vmxname.tolower())"
 				$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Compute; bash ./install_base.sh -cip $tb_ip --docker $($docker.IsPresent.ToString().tolower()) -cname $($GatewayNode.vmxname.tolower())"
 				Write-Verbose $Scriptblock
 				$NodeClone| Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+				if ($cinder -contains "unity")
+					{
+					Write-Host -ForegroundColor Gray " ==>configuring iscsi $($NodeClone.VMXName)"
+					$ISCSI_IQN = "iqn.2016-10.org.linux:$($node).$BuildDomain.$custom_domainsuffix.c0"
+					$Scriptblocks = (
+					"echo 'InitiatorName=$ISCSI_IQN' > /etc/iscsi/initiatorname.iscsi",
+					"/etc/init.d/open-iscsi restart",
+					"iscsiadm -m discovery -t sendtargets -p $Unity_Target_IP",
+					"iscsiadm -m node --login")
+					foreach ($Scriptblock in $Scriptblocks)
+						{
+						Write-Verbose $Scriptblock
+						$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword | Out-Null
+						}
+					}
 				$installmessage += "OpenStack Nova-Compute is running on $($NodeClone.vmxname)`n"
+				$ip_startrange_count++
 				}
 			}
-		
 		}
-	}
 
 		## scaleio end
 		###
 $StopWatch.Stop()
 Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
 Write-Host -ForegroundColor White $installmessage
-    
-
-
-
-
-
-
