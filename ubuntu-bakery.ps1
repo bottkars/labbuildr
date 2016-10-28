@@ -861,7 +861,7 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 				{
 				$NodeClone = Get-VMX $Node
 				Write-Host -ForegroundColor Gray " ==>starting nova-compute setup on $($NodeClone.vmxname)"
-				$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Compute; bash ./install_base.sh -cip $controller_ip --docker $($docker.IsPresent.ToString().tolower()) -cname $($machinesBuilt[-1].tolower())"
+				$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Compute; bash ./install_base.sh -cip $controller_ip --docker $($docker.IsPresent.ToString().tolower()) -cname $($controller_node.vmxname.tolower())"
 				Write-Verbose $Scriptblock
 				$NodeClone| Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 				if ($cinder -contains "unity")
