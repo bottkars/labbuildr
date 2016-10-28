@@ -483,6 +483,10 @@ $installmessage = @()
 foreach ($Node in $machinesBuilt)
     {
         $ip="$subnet.$ip_startrange_count"
+		if ($node -eq $machinesBuilt[-1])
+			{
+			$controller_ip = $ip
+			}
         $NodeClone = get-vmx $Node
 
         do {
@@ -837,21 +841,27 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 
 	if ($Openstack_Controller.IsPresent)
 		{
-		$NodeClone = get-vmx $machinesBuilt[-1]
+		if ($scaleio.IsPresent)
+			{
+			$controller_node = $GatewayNode
+			$controller_ip = $tb_ip
+			}
+		else
+			{
+			$Controller_node = get-vmx $machinesBuilt[-1]
+			}
 		$ip_startrange_count = $ip_startrange
 		Write-Host -ForegroundColor Gray " ==>starting OpenStack controller setup on $($machinesBuilt[-1])"
 		$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Controller; bash ./install_base.sh $cinder_parm --domain $BuildDomain --suffix $custom_domainsuffix -c $($Openstack_Baseconfig.ispresent.ToString().tolower())"
-#		$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Controller; bash ./install_base.sh -spd $ProtectionDomainName -ssp $StoragePoolName -sgw $tb_ip --domain $BuildDomain -c $($Openstack_Baseconfig.ispresent.ToString().tolower())"
-		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
-		$installmessage += "OpenStack Horizon can be reached via http://$($machinesBuilt[-1]):88/horizon with admin:$($Guestpassword)`n"
+		$controller_node | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
+		$installmessage += "OpenStack Horizon can be reached via http://$($controller_node.vmxname):88/horizon with admin:$($Guestpassword)`n"
 		foreach ($Node in $machinesBuilt)
 			{
-			$NodeClone = Get-VMX $Node
-			if ($NodeClone.vmxname -ne $machinesBuilt[-1])
+			if ($Node -ne $controller_node.vmxname)
 				{
+				$NodeClone = Get-VMX $Node
 				Write-Host -ForegroundColor Gray " ==>starting nova-compute setup on $($NodeClone.vmxname)"
-#				$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Compute; bash ./install_base.sh -cip $tb_ip -cname $($GatewayNode.vmxname.tolower())"
-				$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Compute; bash ./install_base.sh -cip $tb_ip --docker $($docker.IsPresent.ToString().tolower()) -cname $($machinesBuilt[-1].tolower())"
+				$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Compute; bash ./install_base.sh -cip $controller_ip --docker $($docker.IsPresent.ToString().tolower()) -cname $($machinesBuilt[-1].tolower())"
 				Write-Verbose $Scriptblock
 				$NodeClone| Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 				if ($cinder -contains "unity")
