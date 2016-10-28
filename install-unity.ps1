@@ -325,7 +325,7 @@ switch ($PsCmdlet.ParameterSetName)
 							)
 							foreach ($Scriptblock in $Scriptblocks)
 								{
-								$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword
+								$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
 								}
 							$hostcount++
 							}
@@ -338,7 +338,7 @@ switch ($PsCmdlet.ParameterSetName)
 							)
 						foreach ($Scriptblock in $Scriptblocks)
 							{
-							$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword
+							$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword |Out-Null
 							}
 						
 						}
