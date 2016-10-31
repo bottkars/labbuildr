@@ -54,6 +54,7 @@ Param(
 #[Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "openstack", Mandatory = $false)]
 [ValidateSet('16_4','14_4')]
 [string]$ubuntu_ver = "16_4",
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
