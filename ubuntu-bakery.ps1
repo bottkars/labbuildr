@@ -283,7 +283,6 @@ if ($scaleio.IsPresent)
         $mdm_ip="$mdm_ipa,$mdm_ipb"
         }
 	Write-Host -ForegroundColor Gray " ==>using MDM IP´s $mdm_ip"
-	Write-Host -ForegroundColor Gray " ==>defaulting to Ubuntu 14_4"
 	$ubuntu_sio_ver = $ubuntu_ver -replace "_",".0"
 	$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include "*UBUNTU_$ubuntu_sio_ver*" -Recurse -Directory -ErrorAction SilentlyContinue
 if (!$ubuntu)
@@ -301,6 +300,11 @@ if (!$Ubuntu)
 	$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Exclude "*.zip" -Recurse -Directory
 	$Ubuntudir = $Ubuntu | Sort-Object -Descending | Select-Object -First 1
 	Write-Host -ForegroundColor Gray " ==>Using Ubuntu Dir $Ubuntudir"
+	If ($Ubuntudir -match 2.0.1.0)
+		{
+		Write-Host -ForegroundColor Magenta " ==>looks like we detected ScaleIO 2.0.1"
+		$SIOMajor = "2.0.1"
+		}
 	if ((Get-ChildItem -Path $Ubuntudir -Filter "*.deb" -Recurse -Include *Ubuntu*).count -ge 9)
 		{
 		Write-Host -ForegroundColor Gray " ==>found deb files, no siob_extraxt required"
@@ -684,7 +688,7 @@ if ($scaleio.IsPresent)
 			{
 			$NodeClone = get-vmx $Node
 			$Primary = get-vmx $machinesBuilt[0]
-			$scriptblock = "apt-get install -y libaio1 libnuma1 openssl dos2unix git"
+			$scriptblock = "apt-get install -y libaio1 libnuma1 openssl dos2unix git software-properties-common"
 			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 			if ($Nodecounter -eq 1 -and !$debfiles)
 				{
@@ -717,24 +721,26 @@ if ($scaleio.IsPresent)
 					#$NodeClone | Invoke-VMXBash -Scriptblock "export SIO_GW_KEYTOOL=/usr/bin/;export GATEWAY_ADMIN_PASSWORD='Password123!';dpkg -i $SIOGatewayrpm;dpkg -l emc-scaleio-gateway" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 					Write-Host $Scriptblock
 					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword   -nowait| Out-Null #-logfile $Logfile
-
-					Write-Host -ForegroundColor Red " ==>waiting for strings process"
-					do {
-						$Processlist = $NodeClone | Get-VMXProcessesInGuest -Guestuser $rootuser -Guestpassword $Guestpassword
-						sleep 2
-						write-verbose "Still Waiting ! "
+					if ($SIOMajor -ne "2.0.1")
+						{
+						Write-Host -ForegroundColor Red " ==>waiting for strings process"
+						do {
+							$Processlist = $NodeClone | Get-VMXProcessesInGuest -Guestuser $rootuser -Guestpassword $Guestpassword
+							sleep 2
+							write-verbose "Still Waiting ! "
+							}
+						until ($Processlist -match 'strings')
+						$Scriptblock = "killall strings"
+						$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword   -nowait| Out-Null #-logfile $Logfile
 						}
-					until ($Processlist -match 'strings')
-
-					$Scriptblock = "killall strings"
-					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword   -nowait| Out-Null #-logfile $Logfile
 					Write-Host -ForegroundColor White " ==>waiting for scaleio gateway"
 					do {
 						$Processlist = $NodeClone | Get-VMXProcessesInGuest -Guestuser $rootuser -Guestpassword $Guestpassword
 						sleep 2
 						write-verbose "Still Waiting ! "
 						}
-					until ($Processlist -match 'java-8-oracle')
+					until ($Processlist -match '/usr/bin/java')
+					#}
 					$installmessage += "Scaleio Gateway can be reached via https://$($tb_ip):443 with admin:$($Guestpassword)`n"
 					if (!$singlemdm)
 						{
@@ -805,7 +811,14 @@ repo_public_rsa_key = /bin/emc/scaleio/scini_sync/scini_repo_key.pub`
 			Write-Verbose $sclicmd
 			$Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 			Write-Host -ForegroundColor Gray " ==>adding tiebreaker $tb_ip"
-			$sclicmd = "$mdmconnect; scli --add_standby_mdm --mdm_role tb  --new_mdm_ip $tb_ip --tb_name $tb_name --mdm_ip $mdm_ipa"
+			if ($SIOMajor -eq "2.0.1")
+				{
+				$sclicmd = "$mdmconnect; scli --add_standby_mdm --mdm_role tb  --new_mdm_ip $tb_ip --mdm_ip $mdm_ipa"
+				}
+			else
+				{
+				$sclicmd = "$mdmconnect; scli --add_standby_mdm --mdm_role tb  --new_mdm_ip $tb_ip --tb_name $tb_name --mdm_ip $mdm_ipa"
+				}
 			Write-Verbose $sclicmd
 			$Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 
