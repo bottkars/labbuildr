@@ -240,6 +240,7 @@ Specify if Networker Scenario sould be installed
 	<# ScaleIO on hyper-v #>
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch][alias('sc')]$ScaleIO,
 	<# ScaleIOVersion
+	'2.0-10000.2072',
 	'2.0-7120.0','2.0-6035.0','2.0-5014.0',
 	'1.32-277.0','1.32-402.1','1.32-403.2','1.32-2451.4','1.32-3455.5','1.32-4503.5',
 	'1.31-258.2','1.31-1277.3','1.31-2333.2',
@@ -247,6 +248,7 @@ Specify if Networker Scenario sould be installed
 	#>
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][string]
     [ValidateSet(
+	'2.0-10000.2072',
 	'2.0-7120.0','2.0-6035.0','2.0-5014.0',
 	'1.32-277.0','1.32-402.1','1.32-403.2','1.32-2451.4','1.32-3455.5','1.32-4503.5',
 	'1.31-258.2','1.31-1277.3','1.31-2333.2',
@@ -725,21 +727,22 @@ Sources should be populated from a bases sources.zip
     [switch]$force,
     <# Turn on Logging to Console#>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
-	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
-	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
-	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+	#[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+	#[Parameter(ParameterSetName = "E14", Mandatory = $false)]
+	#[Parameter(ParameterSetName = "E15", Mandatory = $false)]
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
-	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
-	[Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
-    [Parameter(ParameterSetName = "DConly", Mandatory = $false)]
-	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
-    [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
-    [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
-    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
-    [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
-    [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
-	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-	[switch]$ConsoleLog
+	#[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
+	#[Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "DConly", Mandatory = $false)]
+	#[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
+	#[Parameter(ParameterSetName = "docker", Mandatory = $false)]
+	[switch]$iSCSI,
+	$iSCSI_TARGET = "173"
 ) # end Param
 #requires -version 3.0
 #requires -module vmxtoolkit
@@ -2966,9 +2969,13 @@ switch ($PsCmdlet.ParameterSetName)
 "E16"
 	{
         $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\E2016"
-            $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features"
-            $AddonFeatures = "$AddonFeatures, RSAT-DNS-Server, AS-HTTP-Activation, Desktop-Experience, NET-Framework-45-Features, RPC-over-HTTP-proxy, RSAT-Clustering, RSAT-Clustering-CmdInterface, RSAT-Clustering-Mgmt, RSAT-Clustering-PowerShell, Web-Mgmt-Console, WAS-Process-Model, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI, Windows-Identity-Foundation"
-        # we need ipv4
+        $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features"
+        $AddonFeatures = "$AddonFeatures, RSAT-DNS-Server, AS-HTTP-Activation, Desktop-Experience, NET-Framework-45-Features, RPC-over-HTTP-proxy, RSAT-Clustering, RSAT-Clustering-CmdInterface, RSAT-Clustering-Mgmt, RSAT-Clustering-PowerShell, Web-Mgmt-Console, WAS-Process-Model, Web-Asp-Net45, Web-Basic-Auth, Web-Client-Auth, Web-Digest-Auth, Web-Dir-Browsing, Web-Dyn-Compression, Web-Http-Errors, Web-Http-Logging, Web-Http-Redirect, Web-Http-Tracing, Web-ISAPI-Ext, Web-ISAPI-Filter, Web-Lgcy-Mgmt-Console, Web-Metabase, Web-Mgmt-Console, Web-Mgmt-Service, Web-Net-Ext45, Web-Request-Monitor, Web-Server, Web-Stat-Compression, Web-Static-Content, Web-Windows-Auth, Web-WMI, Windows-Identity-Foundation"
+        if ($iSCSI.IsPresent)
+			{
+			$AddonFeatures = "$AddonFeatures, Multipath-IO"
+			}
+		# we need ipv4
         if ($AddressFamily -notmatch 'ipv4')
             {
             $EXAddressFamiliy = 'IPv4IPv6'
@@ -3015,7 +3022,16 @@ switch ($PsCmdlet.ParameterSetName)
                 }
             $Exchangesize = "XXL"
 		    test-dcrunning
-		    $CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -AddDisks -Disks 3 -Disksize 500GB -Size $Exchangesize -Sourcedir $Sourcedir "
+			if ($iSCSI.IsPresent)
+				{
+				$Diskparm = " "
+				}
+			else
+				{
+				$Diskparm =  "-AddDisks -Disks 3 -Disksize 500GB" 
+				}
+				
+		    $CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain $Diskparm -Size $Exchangesize -Sourcedir $Sourcedir "
 		    ###################################################
 		    If ($CloneOK)
                 {
@@ -3023,11 +3039,15 @@ switch ($PsCmdlet.ParameterSetName)
                 $EXnew = $True
 			    test-user -whois Administrator
 			    domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $EXAddressFamiliy -AddOnfeatures $AddonFeatures
-			    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script prepare-disks.ps1
+			    if ($iSCSI.IsPresent)
+					{
+					$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script enable-labiscsi.ps1 -Parameter "-Target_IP $IPv4Subnet.$iSCSI_TARGET" -interactive
+					}
 			    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchangeprereqs.ps1 -interactive
                 checkpoint-progress -step exprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
 			    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script powerconf.ps1 -interactive
-			    Switch ($e16_cu)
+				$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script prepare-disks.ps1 -interactive
+				Switch ($e16_cu)
                         {
                         "final"
                             {
