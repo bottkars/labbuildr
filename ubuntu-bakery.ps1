@@ -292,13 +292,13 @@ if ($scaleio.IsPresent)
         }
 	Write-Host -ForegroundColor Gray " ==>using MDM IP´s $mdm_ip"
 	$ubuntu_sio_ver = $ubuntu_ver -replace "_",".0"
-	$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include "*UBUNTU_$ubuntu_sio_ver*" -Recurse -Directory -ErrorAction SilentlyContinue
+	$Ubuntu = Get-ChildItem *$ubuntu_sio_ver* -Path $scaleio_dir -Include "*UBUNTU_$ubuntu_sio_ver*" -Recurse -Directory -ErrorAction SilentlyContinue
 if (!$ubuntu)
 	{
 	Receive-LABScaleIO -Destination $Sourcedir -arch linux -unzip -force
-	$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include "*UBUNTU_$ubuntu_sio_ver*" -Recurse -Directory -ErrorAction SilentlyContinue
+	$Ubuntu = Get-ChildItem *$ubuntu_sio_ver* -Path $scaleio_dir -Include "*UBUNTU_$ubuntu_sio_ver*" -Recurse -Directory -ErrorAction SilentlyContinue
 	}
-if (!$Ubuntu)
+if (!$Ubuntu -or $ubuntu -notmatch $ubuntu_sio_ver)
 	{
 	Write-Warning "could not download / find any valid scaleio ubuntu source"
 	exit
