@@ -721,8 +721,8 @@ if ($scaleio.IsPresent)
 					#$NodeClone | Invoke-VMXBash -Scriptblock "export SIO_GW_KEYTOOL=/usr/bin/;export GATEWAY_ADMIN_PASSWORD='Password123!';dpkg -i $SIOGatewayrpm;dpkg -l emc-scaleio-gateway" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 					Write-Host $Scriptblock
 					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword   -nowait| Out-Null #-logfile $Logfile
-					if ($SIOMajor -ne "2.0.1")
-						{
+					#if ($SIOMajor -ne "2.0.1")
+					#	{
 						Write-Host -ForegroundColor Red " ==>waiting for strings process"
 						do {
 							$Processlist = $NodeClone | Get-VMXProcessesInGuest -Guestuser $rootuser -Guestpassword $Guestpassword
@@ -732,7 +732,7 @@ if ($scaleio.IsPresent)
 						until ($Processlist -match 'strings')
 						$Scriptblock = "killall strings"
 						$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword   -nowait| Out-Null #-logfile $Logfile
-						}
+					#	}
 					Write-Host -ForegroundColor White " ==>waiting for scaleio gateway"
 					do {
 						$Processlist = $NodeClone | Get-VMXProcessesInGuest -Guestuser $rootuser -Guestpassword $Guestpassword
