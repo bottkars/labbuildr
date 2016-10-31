@@ -240,7 +240,7 @@ Specify if Networker Scenario sould be installed
 	<# ScaleIO on hyper-v #>
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch][alias('sc')]$ScaleIO,
 	<# ScaleIOVersion
-	'2.0-10000.2072',
+	'2.0-10000.2075',
 	'2.0-7120.0','2.0-6035.0','2.0-5014.0',
 	'1.32-277.0','1.32-402.1','1.32-403.2','1.32-2451.4','1.32-3455.5','1.32-4503.5',
 	'1.31-258.2','1.31-1277.3','1.31-2333.2',
@@ -248,7 +248,7 @@ Specify if Networker Scenario sould be installed
 	#>
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][string]
     [ValidateSet(
-	'2.0-10000.2072',
+	'2.0-10000.2075',
 	'2.0-7120.0','2.0-6035.0','2.0-5014.0',
 	'1.32-277.0','1.32-402.1','1.32-403.2','1.32-2451.4','1.32-3455.5','1.32-4503.5',
 	'1.31-258.2','1.31-1277.3','1.31-2333.2',
@@ -2326,6 +2326,10 @@ if ($ScaleIO.IsPresent)
     # ScaleIO_1.32_Complete_Windows_SW_Download\ScaleIO_1.32_Windows_Download #
     Write-Verbose "Now Checking for ScaleIO $ScaleIOVer"
     $ScaleIO_Major = $ScaleIOVer[0]
+	if ($ScaleIOVer -match "2.0.1000")
+		{
+		$ScaleIO_Major = "2.0.1"
+		}
     $ScaleIORoot = join-path $Sourcedir "Scaleio\"
     $ScaleIOPath = (Get-ChildItem -Path $ScaleIORoot -Recurse -Filter "*mdm-$ScaleIOVer.msi" -ErrorAction SilentlyContinue ).Directory.FullName
     try
