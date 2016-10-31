@@ -248,6 +248,14 @@ switch ($PsCmdlet.ParameterSetName)
 		{
 			"openstack"
 			{
+			if ($openstack_release -eq 'newton')
+				{
+				$ubuntu_ver = '16_4'
+				}
+			else
+				{
+				$ubuntu_ver = '14_4'
+				}
 			if ($cinder)
 				{
 				$cinder_parm = " -cb "+($cinder -join ",")
