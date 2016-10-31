@@ -688,7 +688,7 @@ if ($scaleio.IsPresent)
 			{
 			$NodeClone = get-vmx $Node
 			$Primary = get-vmx $machinesBuilt[0]
-			$scriptblock = "apt-get install -y libaio1 libnuma1 openssl dos2unix git software-properties-common"
+			$scriptblock = "apt-get update;apt-get install -y libaio1 libnuma1 openssl dos2unix git software-properties-common"
 			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 			if ($Nodecounter -eq 1 -and !$debfiles)
 				{
