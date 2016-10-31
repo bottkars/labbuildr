@@ -54,7 +54,7 @@ Param(
 #[Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateSet('16_4','15_10','14_4')]
+[ValidateSet('16_4','14_4')]
 [string]$ubuntu_ver = "16_4",
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
@@ -283,12 +283,12 @@ if ($scaleio.IsPresent)
         }
 	Write-Host -ForegroundColor Gray " ==>using MDM IP´s $mdm_ip"
 	Write-Host -ForegroundColor Gray " ==>defaulting to Ubuntu 14_4"
-	$ubuntu_ver = "14_4"
-	$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Recurse -Directory -ErrorAction SilentlyContinue
+	$ubuntu_sio_ver = $ubuntu_ver -replace "_",".0"
+	$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include "*UBUNTU_$ubuntu_sio_ver*" -Recurse -Directory -ErrorAction SilentlyContinue
 if (!$ubuntu)
 	{
 	Receive-LABScaleIO -Destination $Sourcedir -arch linux -unzip -force
-	$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Recurse -Directory -ErrorAction SilentlyContinue
+	$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include "*UBUNTU_$ubuntu_sio_ver*" -Recurse -Directory -ErrorAction SilentlyContinue
 	}
 if (!$Ubuntu)
 	{
