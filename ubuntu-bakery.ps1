@@ -747,7 +747,7 @@ if ($scaleio.IsPresent)
 						sleep 2
 						write-verbose "Still Waiting ! "
 						}
-					until ($Processlist -match '/usr/bin/java')
+					until ($Processlist -match 'java')
 					#}
 					$installmessage += "Scaleio Gateway can be reached via https://$($tb_ip):443 with admin:$($Guestpassword)`n"
 					if (!$singlemdm)
