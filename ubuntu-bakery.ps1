@@ -305,7 +305,7 @@ if (!$Ubuntu -or $ubuntu -notmatch $ubuntu_sio_ver)
 	}
 	Write-Host " ==>got Ubuntu files"
 	Write-Host -ForegroundColor Gray " ==>evaluating ubuntu files"
-	$Ubuntu = Get-ChildItem -Path $scaleio_dir -Include *UBUNTU* -Exclude "*.zip" -Recurse -Directory
+	$Ubuntu = Get-ChildItem *$ubuntu_sio_ver* -Path $scaleio_dir -Include *UBUNTU* -Exclude "*.zip" -Recurse -Directory
 	$Ubuntudir = $Ubuntu | Sort-Object -Descending | Select-Object -First 1
 	Write-Host -ForegroundColor Gray " ==>Using Ubuntu Dir $Ubuntudir"
 	If ($Ubuntudir -match 2.0.1.0)
