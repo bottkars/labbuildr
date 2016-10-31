@@ -3271,7 +3271,7 @@ switch ($PsCmdlet.ParameterSetName)
                             }
                         2
                             {
-                            if ($ScaleIO_Major -ge 2)
+                            if ($ScaleIO_Major -ge "2")
                                 {
                                 $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-openssl.ps1  -Parameter "-openssl_ver $($OpenSSL.Version)" -interactive
                                 }
@@ -3286,7 +3286,7 @@ switch ($PsCmdlet.ParameterSetName)
                             }
                         3
                             {
-                            if ($ScaleIO_Major -ge 2)
+                            if ($ScaleIO_Major -ge "2")
                                 {
                                 $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-openssl.ps1  -Parameter "-openssl_ver $($OpenSSL.Version)" -interactive
                                 }
@@ -3294,11 +3294,11 @@ switch ($PsCmdlet.ParameterSetName)
                                 {
                                 switch ($scaleio_major)
                                     {
-                                    1
+                                    "1"
                                         {
                                         $script_invoke = $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role TB -disks $Disks -ScaleIOVer $ScaleIOVer -mdmipa $mdmipa -mdmipb $mdmipb" -interactive
                                         }
-                                    2
+                                    default
                                         {
                                         $script_invoke = $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-scaleio.ps1 -Parameter "-Role TB -disks $Disks -ScaleIOVer $ScaleIOVer -mdmipa $mdmipa -mdmipb $mdmipb" -interactive
                                         }
@@ -3322,7 +3322,7 @@ switch ($PsCmdlet.ParameterSetName)
                             }
                         default
                             {
-                            if ($ScaleIO_Major -ge 2)
+                            if ($ScaleIO_Major -ge "2")
                                 {
                                 $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-openssl.ps1 -Parameter "-openssl_ver $($OpenSSL.Version)" -interactive
                                 }
