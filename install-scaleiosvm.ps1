@@ -216,8 +216,11 @@ switch ($PsCmdlet.ParameterSetName)
             Write-Warning "Configure Present, setting nodes to 3"
             $Nodes = 3
             }
-		if ($MasterVMX.VMXname -match '2.1.0')
-			{$SIO_Major = '2.0.1'}
+		if ($MasterVMX.VMXname -match '2.0.1000')
+			{
+			$SIO_Major = '2.0.1'
+			Write-Host -ForegroundColor Magenta " ==> installing ScaleIO Branch 2.0.1 "
+			}
         If ($singlemdm.IsPresent)
             {
             Write-Warning "Single MDM installations with MemoryTweaking  are only for Test Deployments and Memory Contraints/Manager Laptops :-)"
