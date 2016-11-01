@@ -414,7 +414,7 @@ Example:
 										$iscsi_host = "$iscsi_hosts_tag$Node.$BuildDomain.$custom_domainsuffix"
 										$ISCSI_IQN = "iqn.1991-05.com.microsoft:$($iscsi_host)"
 										$Scriptblocks = (
-										"$uemcli /remote/host create -name $iscsi_host -descr 'Exchange Node $iscsi_host' -type host -addr $subnet.16$Node -osType win2012srv ",
+										"$uemcli /remote/host create -name $iscsi_host -descr 'SQL Node $iscsi_host' -type host -addr $subnet.16$Node -osType win2012srv ",
 										"$uemcli /remote/initiator create -host Host_$hostcount -uid '$ISCSI_IQN' -type iscsi"
 										)
 										foreach ($Scriptblock in $Scriptblocks)
@@ -423,8 +423,16 @@ Example:
 											}
 										foreach ($LUN in (0..3))
 											{
+											if ((0,2) -contains $LUN)
+												{
+												$CLI_Disk_Size = "200G"
+												}
+											else
+												{
+												$CLI_DISK_SIZE = "50G"
+												}
 											$Scriptblocks = (
-											"$uemcli /stor/prov/luns/lun create -name '$iscsi_hosts_tag$($node)_LUN$($LUN)' -descr 'Always On LUN_$LUN' -pool vPool -size 200G -thin yes",
+											"$uemcli /stor/prov/luns/lun create -name '$iscsi_hosts_tag$($node)_LUN$($LUN)' -descr 'Always On LUN_$LUN' -pool vPool -size $CLI_SIZE -thin yes",
 											"$uemcli /stor/prov/luns/lun -id sv_$luncount set -lunHosts Host_$hostcount"
 											)
 											foreach ($Scriptblock in $Scriptblocks)
