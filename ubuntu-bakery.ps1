@@ -821,7 +821,7 @@ repo_public_rsa_key = /bin/emc/scaleio/scini_sync/scini_repo_key.pub`
 			Write-Host -ForegroundColor Gray " ==>adding tiebreaker $tb_ip"
 			if ($SIOMajor -eq "2.0.1")
 				{
-				$sclicmd = "$mdmconnect; scli --add_standby_mdm --mdm_role tb  --new_mdm_ip $tb_ip --mdm_ip $mdm_ipa"
+				$sclicmd = "$mdmconnect; scli --add_standby_mdm --mdm_role tb  --new_mdm_ip $tb_ip --add_tb_name $tb_name--mdm_ip $mdm_ipa"
 				}
 			else
 				{
