@@ -3058,10 +3058,10 @@ switch ($PsCmdlet.ParameterSetName)
                 $EXnew = $True
 			    test-user -whois Administrator
 			    domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $EXAddressFamiliy -AddOnfeatures $AddonFeatures
-			    if ($iSCSI.IsPresent)
-					{
-					$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script enable-labiscsi.ps1 -Parameter "-Target_IP $IPv4Subnet.$iSCSI_TARGET" -interactive
-					}
+			    #if ($iSCSI.IsPresent)
+				#	{
+				#	$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script enable-labiscsi.ps1 -Parameter "-Target_IP $IPv4Subnet.$iSCSI_TARGET" -interactive
+				#	}
 			    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchangeprereqs.ps1 -interactive
                 checkpoint-progress -step exprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
 			    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script powerconf.ps1 -interactive
