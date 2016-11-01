@@ -51,44 +51,65 @@
 [CmdletBinding(DefaultParametersetName = "default")]
 Param(
 [Parameter(ParameterSetName = "import",Mandatory=$true)][String]
-[ValidateScript({ Test-Path -Path $_ -Filter *.ova -PathType Leaf -ErrorAction SilentlyContinue })]$ovf,
+[ValidateScript({ Test-Path -Path $_ -Filter *.ova -PathType Leaf -ErrorAction SilentlyContinue })]
+$ovf,
 [Parameter(ParameterSetName = "defaults",Mandatory=$False)]
 [Parameter(ParameterSetName = "install",Mandatory=$true)]
-[Parameter(ParameterSetName = "import",Mandatory=$false)][String]$Mastername,
+[Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
+[Parameter(ParameterSetName = "import",Mandatory=$false)][String]
+$Mastername,
 [Parameter(ParameterSetName = "defaults",Mandatory=$False)]
+[Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
 [Parameter(ParameterSetName = "import",Mandatory=$false)]
-[Parameter(ParameterSetName = "install",Mandatory=$true)]$MasterPath,
-[Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+[Parameter(ParameterSetName = "install",Mandatory=$true)]
+$MasterPath,
+[Parameter(ParameterSetName = "generateuuid",Mandatory=$true)]
+[switch]
+$generate_uuid_and_exit,
+[Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]
+$Defaults,
+[Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]
+$Defaultsfile=".\defaults.xml",
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
+[ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]
+$subnet = "192.168.2.0",
 [Parameter(ParameterSetName = "install",Mandatory=$False)]
-[ValidateLength(1,63)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,63}[a-zA-Z0-9]+$")][string]$BuildDomain = "labbuildr",
+[ValidateLength(1,63)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,63}[a-zA-Z0-9]+$")][string]
+$BuildDomain = "labbuildr",
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = "vmnet2",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [ValidateRange(3,14)]
-[int]$Disks = 3,
+[int]
+$Disks = 3,
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[switch]$configure,
+[switch]
+$configure,
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [ValidateSet('E2016','DCNODE','SQL','AlwaysOn')]
-[string[]]$iscsi_hosts,
+[string[]]
+$iscsi_hosts,
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [ValidateScript({ Test-Path -Path $_ })]$Lic_file,
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [ValidateSet('iscsi','cifs','nfs')]
-[string[]]$Protocols,
+[string[]]
+$Protocols,
+[Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [ValidateRange(1,2)]
-[int]$Nodes = 1,
+[int]
+$Nodes = 1,
+[Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [ValidateRange(1,2)]
@@ -214,253 +235,268 @@ switch ($PsCmdlet.ParameterSetName)
         Write-Host -ForegroundColor Gray " ==>Base snap does not exist, creating now"
         $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName Base
         }
-            # $Basesnap
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
-    {
-    $ipoffset = $ipoffset+$Node
-    If (!(get-vmx -path $Nodeprefix$node -WarningAction SilentlyContinue))
-        {
-        $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXlinkedClone -CloneName $Nodeprefix$node -Clonepath "$Builddir"
-        foreach ($nic in 0..5)
-            {
-            $Netadater0 = $NodeClone | Set-VMXVnet -Adapter $nic -vnet $VMnet -WarningAction SilentlyContinue
-            }
-        $SCSI = 1
-        [uint64]$Disksize = 100GB
-        if ($Disks -ne 0)
-            {
-            foreach ($LUN in (0..($Disks-1)))
-                {
-				if ($LUN -ge 7)
-					{
-					$LUN = $LUN+1
-					}
-                $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-                $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path
-                $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
-                }
-            }
-        [string]$ip="$($subnet.ToString()).$($ipoffset.ToString())"
-		[string]$ip_if0="$($subnet.ToString())."+($ipoffset+1+$Node)
-		[string]$ip_if1="$($subnet.ToString())."+($ipoffset+3+$Node)
-		[string]$ip_if2="$($subnet.ToString())."+($ipoffset+5+$Node)
-		[string]$ip_if3="$($subnet.ToString())."+($ipoffset+7+$Node)
-        $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
-        $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
-		if ($configure.IsPresent)
+		{
+		$ipoffset = $ipoffset+$Node
+		If (!(get-vmx -path $Nodeprefix$node -WarningAction SilentlyContinue))
 			{
-			$Annotation = $Nodeclone | Set-VMXAnnotation -Line1 "System User" -Line2 "sysadmin:sysadmin" -Line3 "Unity User" -Line4 "admin:$Password"
-			}
-		else
-			{
-			$Annotation = $Nodeclone | Set-VMXAnnotation -Line1 "System User" -Line2 "sysadmin:sysadmin" -Line3 "Unity User" -Line4 "admin:$oldpasswd"
-			}
-        $NodeClone | start-vmx | Out-Null
-		$sleep = 2
-		if ($configure.IsPresent)
-			{
-			Write-Host -ForegroundColor White " ==>Waiting for $($NodeClone.Clonename) first boot finished, this may take up to 10 minutes " -NoNewline
-			$StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
-			while (($NodeClone | Get-VMXToolsState).state -notmatch "running")
+			$NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXlinkedClone -CloneName $Nodeprefix$node -Clonepath "$Builddir"
+        
+			if ($generate_uuid_and_exit )
 				{
-				foreach ($i in (1..$sleep))
-					{
-					Write-Host -ForegroundColor Yellow "-`b" -NoNewline
-					sleep 1
-					Write-Host -ForegroundColor Yellow "\`b" -NoNewline
-					sleep 1
-					Write-Host -ForegroundColor Yellow "|`b" -NoNewline
-					sleep 1
-					Write-Host -ForegroundColor Yellow "/`b" -NoNewline
-					sleep 1
-					}
+				$NodeClone | start-vmx | Out-Null
+				$License_UUID = $NodeClone | Get-VMXUUID -unityformat
+				$NodeClone | Remove-vmx -Confirm:$False | Out-Null
+				Write-Host -ForegroundColor Gray  -NoNewline " ==use UUID"
+				Write-Host -ForegroundColor White -NoNewline " $($License_UUID.UUID) "
+				Write-Host -ForegroundColor Gray "to activate your license at https://www.emc.com/auth/elmeval.htm
+You can redeploy you Unity Node with the licensefile retrieved
+Example:
+.\$($MyInvocation.MyCommand) -Defaults -Masterpath $($MasterVMX.path) -Lic_file [lic_file_path] -configure -Disks 6 -protocols [iSCSI,NFS,CIFS] -configure_iscsi_hosts [E2016,DCNODE]"
 				}
-			Write-Host
-			$StopWatch.Stop()
-			Write-host -ForegroundColor White "Firstboot took $($StopWatch.Elapsed.ToString())"
-			Write-Host -ForegroundColor White " ==>Waiting for $($NodeClone.Clonename) to become ready, the network config may need to wait up to 5 Minutes"
-			$Network = $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/sudo -n /EMC/Platform/bin/svc_initial_config -4 '$ip 255.255.255.0 $DefaultGateway'" -Guestuser $guestuser -Guestpassword $guestpassword -SleepSec 60 -Confirm:$False -WarningAction SilentlyContinue
-			$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/uemcli -u admin -p $oldpasswd /sys/eula set -agree yes" -Guestuser $guestuser -Guestpassword $guestpassword -SleepSec 5 -Confirm:$False -WarningAction SilentlyContinue
-			$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/uemcli -u admin -p $oldpasswd /user/account -id user_admin set -passwd $Password -oldpasswd $oldpasswd" -Guestuser $guestuser -Guestpassword $guestpassword
-			$uemcli = "/usr/bin/uemcli -u admin -p $Password"
-			$uemcli_service = "/usr/bin/uemcli -u service -p service"
-
-			$Vdisks =  @()
-				foreach ($Disk in 1..$Disks)
-					{
-					$cmdline = $Nodeclone | Invoke-VMXBash -Scriptblock "$uemcli /env/disk -id vdisk_$Disk set -tier extreme" -Guestuser $guestuser -Guestpassword $guestpassword
-					$vdisks += "vdisk_$Disk"
-					}
-			$Vdisks = $Vdisks -join ","
-			if ($Lic_file)
+			else
 				{
-				$NAS_SERVER = "$($BuildDomain)_NAS_"+($ipoffset+3+$Node)
-				Write-Host -ForegroundColor Gray " ==>Trying to license with provided licfile"
-				$Target_lic = Split-Path -Leaf $Lic_file
-				$Target_lic = "/home/service/$Target_lic"
-				$FileCopy = $NodeClone | Copy-VMXFile2Guest -Sourcefile $Lic_file -targetfile $Target_lic -Guestuser $guestuser -Guestpassword $guestpassword
-				$cmdline = $Nodeclone | Invoke-VMXBash -Scriptblock "$uemcli -upload -f $Target_lic license" -Guestuser $guestuser -Guestpassword $guestpassword
-				$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli_service /service/ssh set -enabled yes" -Guestuser $guestuser -Guestpassword $guestpassword
-				$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/config/pool create -name vPool -descr '$BuildDomain pool' -disk $Vdisks" -Guestuser $guestuser -Guestpassword $guestpassword
-				If ($Protocols -contains 'iscsi')
+				foreach ($nic in 0..5)
 					{
-					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/if create -type iscsi -port spa_eth0 -addr $ip_if0 -netmask 255.255.255.0 -gateway $DefaultGateway" -Guestuser $guestuser -Guestpassword $guestpassword
-					if ($iscsi_hosts)
+					$Netadater0 = $NodeClone | Set-VMXVnet -Adapter $nic -vnet $VMnet -WarningAction SilentlyContinue
+					}
+				$SCSI = 1
+				[uint64]$Disksize = 100GB
+				if ($Disks -ne 0)
+					{
+					foreach ($LUN in (0..($Disks-1)))
 						{
-						$hostcount = 1
-						$luncount = 1
+						if ($LUN -ge 7)
+							{
+							$LUN = $LUN+1
+							}
+						$Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
+						$Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path
+						$AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
+						}
+					}
+				[string]$ip="$($subnet.ToString()).$($ipoffset.ToString())"
+				[string]$ip_if0="$($subnet.ToString())."+($ipoffset+1+$Node)
+				[string]$ip_if1="$($subnet.ToString())."+($ipoffset+3+$Node)
+				[string]$ip_if2="$($subnet.ToString())."+($ipoffset+5+$Node)
+				[string]$ip_if3="$($subnet.ToString())."+($ipoffset+7+$Node)
+				$Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
+				$MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
+				if ($configure.IsPresent)
+					{
+					$Annotation = $Nodeclone | Set-VMXAnnotation -Line1 "System User" -Line2 "sysadmin:sysadmin" -Line3 "Unity User" -Line4 "admin:$Password"
+					}
+				else
+					{
+					$Annotation = $Nodeclone | Set-VMXAnnotation -Line1 "System User" -Line2 "sysadmin:sysadmin" -Line3 "Unity User" -Line4 "admin:$oldpasswd"
+					}
+				$NodeClone | start-vmx | Out-Null
+				$sleep = 2
+				if ($configure.IsPresent)
+					{
+					Write-Host -ForegroundColor White " ==>Waiting for $($NodeClone.Clonename) first boot finished, this may take up to 10 minutes " -NoNewline
+					$StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
+					while (($NodeClone | Get-VMXToolsState).state -notmatch "running")
+						{
+						foreach ($i in (1..$sleep))
+							{
+							Write-Host -ForegroundColor Yellow "-`b" -NoNewline
+							sleep 1
+							Write-Host -ForegroundColor Yellow "\`b" -NoNewline
+							sleep 1
+							Write-Host -ForegroundColor Yellow "|`b" -NoNewline
+							sleep 1
+							Write-Host -ForegroundColor Yellow "/`b" -NoNewline
+							sleep 1
+							}
+						}
+					Write-Host
+					$StopWatch.Stop()
+					Write-host -ForegroundColor White "Firstboot took $($StopWatch.Elapsed.ToString())"
+					Write-Host -ForegroundColor White " ==>Waiting for $($NodeClone.Clonename) to become ready, the network config may need to wait up to 5 Minutes"
+					$Network = $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/sudo -n /EMC/Platform/bin/svc_initial_config -4 '$ip 255.255.255.0 $DefaultGateway'" -Guestuser $guestuser -Guestpassword $guestpassword -SleepSec 60 -Confirm:$False -WarningAction SilentlyContinue
+					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/uemcli -u admin -p $oldpasswd /sys/eula set -agree yes" -Guestuser $guestuser -Guestpassword $guestpassword -SleepSec 5 -Confirm:$False -WarningAction SilentlyContinue
+					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/uemcli -u admin -p $oldpasswd /user/account -id user_admin set -passwd $Password -oldpasswd $oldpasswd" -Guestuser $guestuser -Guestpassword $guestpassword
+					$uemcli = "/usr/bin/uemcli -u admin -p $Password"
+					$uemcli_service = "/usr/bin/uemcli -u service -p service"
 
-						#create ubuntu hosts
-					<#	foreach ($ip in (201..209))
+					$Vdisks =  @()
+						foreach ($Disk in 1..$Disks)
 							{
-							$iscsi_host = "Ubuntu$hostcount"
-							$ISCSI_IQN = "iqn.2016-10.org.linux:$($iscsi_host).$BuildDomain.$custom_domainsuffix.c0"
-							$Scriptblocks = (
-							"$uemcli /remote/host create -name $iscsi_host -descr 'Openstack Compute $iscsi_host' -type host -addr $subnet.$ip -osType Linux",
-							"$uemcli /remote/initiator create -host Host_$hostcount -uid '$ISCSI_IQN' -type iscsi"
-							)
-							foreach ($Scriptblock in $Scriptblocks)
-								{
-								$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
-								}
-							$hostcount++
-							}#>
-						#create dcnode
-						If ($iscsi_hosts -contains 'DCNODE')
-							{
-							$iscsi_host = "$($BuildDomain)DC"
-							$ISCSI_IQN = "iqn.1991-05.com.microsoft:$($iscsi_host).$BuildDomain.$custom_domainsuffix"
-							$Scriptblocks = (
-								"$uemcli /remote/host create -name $iscsi_host -descr 'Windows DC $iscsi_host' -type host -addr $subnet.10 -osType win2012srv",
-								"$uemcli /remote/initiator create -host Host_$hostcount -uid '$ISCSI_IQN' -type iscsi"
-								)
-							foreach ($Scriptblock in $Scriptblocks)
-								{
-								$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword |Out-Null
-								}
-							$hostcount++
+							$cmdline = $Nodeclone | Invoke-VMXBash -Scriptblock "$uemcli /env/disk -id vdisk_$Disk set -tier extreme" -Guestuser $guestuser -Guestpassword $guestpassword
+							$vdisks += "vdisk_$Disk"
 							}
-						#create exchange 2016 hosts
-						if ($iscsi_hosts -contains 'E2016')
+					$Vdisks = $Vdisks -join ","
+					if ($Lic_file)
+						{
+						$NAS_SERVER = "$($BuildDomain)_NAS_"+($ipoffset+3+$Node)
+						Write-Host -ForegroundColor Gray " ==>Trying to license with provided licfile"
+						$Target_lic = Split-Path -Leaf $Lic_file
+						$Target_lic = "/home/service/$Target_lic"
+						$FileCopy = $NodeClone | Copy-VMXFile2Guest -Sourcefile $Lic_file -targetfile $Target_lic -Guestuser $guestuser -Guestpassword $guestpassword
+						$cmdline = $Nodeclone | Invoke-VMXBash -Scriptblock "$uemcli -upload -f $Target_lic license" -Guestuser $guestuser -Guestpassword $guestpassword
+						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli_service /service/ssh set -enabled yes" -Guestuser $guestuser -Guestpassword $guestpassword
+						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/config/pool create -name vPool -descr '$BuildDomain pool' -disk $Vdisks" -Guestuser $guestuser -Guestpassword $guestpassword
+						If ($Protocols -contains 'iscsi')
 							{
-							$iscsi_hosts_tag = 'E2016N'
-							foreach ($node in (1..2))
+							$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/if create -type iscsi -port spa_eth0 -addr $ip_if0 -netmask 255.255.255.0 -gateway $DefaultGateway" -Guestuser $guestuser -Guestpassword $guestpassword
+							if ($iscsi_hosts)
 								{
-								$iscsi_host = "$iscsi_hosts_tag$Node.$BuildDomain.$custom_domainsuffix"
-								$ISCSI_IQN = "iqn.1991-05.com.microsoft:$($iscsi_host)"
-								$Scriptblocks = (
-								"$uemcli /remote/host create -name $iscsi_host -descr 'Exchange Node $iscsi_host' -type host -addr $subnet.12$Node -osType win2012srv ",
-								"$uemcli /remote/initiator create -host Host_$hostcount -uid '$ISCSI_IQN' -type iscsi"
-								)
-								foreach ($Scriptblock in $Scriptblocks)
+								$hostcount = 1
+								$luncount = 1
+
+								#create ubuntu hosts
+							<#	foreach ($ip in (201..209))
 									{
-									$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
-									}
-								foreach ($LUN in (0..2))
-									{
+									$iscsi_host = "Ubuntu$hostcount"
+									$ISCSI_IQN = "iqn.2016-10.org.linux:$($iscsi_host).$BuildDomain.$custom_domainsuffix.c0"
 									$Scriptblocks = (
-									"$uemcli /stor/prov/luns/lun create -name '$iscsi_hosts_tag$($node)_LUN$($LUN)' -descr 'Exchange LUN_$LUN' -pool vPool -size 500G -thin yes",
-									"$uemcli /stor/prov/luns/lun -id sv_$luncount set -lunHosts Host_$hostcount"
+									"$uemcli /remote/host create -name $iscsi_host -descr 'Openstack Compute $iscsi_host' -type host -addr $subnet.$ip -osType Linux",
+									"$uemcli /remote/initiator create -host Host_$hostcount -uid '$ISCSI_IQN' -type iscsi"
 									)
 									foreach ($Scriptblock in $Scriptblocks)
 										{
 										$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
 										}
-									$luncount++
-									}
-								$hostcount++
-								}
-							}
-						if ($iscsi_hosts -contains 'AlwaysOn')
-							{
-							$iscsi_hosts_tag = 'AAGNODE'
-							foreach ($node in (1..4))
-								{
-								$iscsi_host = "$iscsi_hosts_tag$Node.$BuildDomain.$custom_domainsuffix"
-								$ISCSI_IQN = "iqn.1991-05.com.microsoft:$($iscsi_host)"
-								$Scriptblocks = (
-								"$uemcli /remote/host create -name $iscsi_host -descr 'Exchange Node $iscsi_host' -type host -addr $subnet.16$Node -osType win2012srv ",
-								"$uemcli /remote/initiator create -host Host_$hostcount -uid '$ISCSI_IQN' -type iscsi"
-								)
-								foreach ($Scriptblock in $Scriptblocks)
+									$hostcount++
+									}#>
+								#create dcnode
+								If ($iscsi_hosts -contains 'DCNODE')
 									{
-									$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
-									}
-								foreach ($LUN in (0..3))
-									{
+									$iscsi_host = "$($BuildDomain)DC"
+									$ISCSI_IQN = "iqn.1991-05.com.microsoft:$($iscsi_host).$BuildDomain.$custom_domainsuffix"
 									$Scriptblocks = (
-									"$uemcli /stor/prov/luns/lun create -name '$iscsi_hosts_tag$($node)_LUN$($LUN)' -descr 'Always On LUN_$LUN' -pool vPool -size 200G -thin yes",
-									"$uemcli /stor/prov/luns/lun -id sv_$luncount set -lunHosts Host_$hostcount"
-									)
+										"$uemcli /remote/host create -name $iscsi_host -descr 'Windows DC $iscsi_host' -type host -addr $subnet.10 -osType win2012srv",
+										"$uemcli /remote/initiator create -host Host_$hostcount -uid '$ISCSI_IQN' -type iscsi"
+										)
 									foreach ($Scriptblock in $Scriptblocks)
 										{
-										$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
+										$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword |Out-Null
 										}
-									$luncount++
+									$hostcount++
 									}
-								$hostcount++
+								#create exchange 2016 hosts
+								if ($iscsi_hosts -contains 'E2016')
+									{
+									$iscsi_hosts_tag = 'E2016N'
+									foreach ($node in (1..2))
+										{
+										$iscsi_host = "$iscsi_hosts_tag$Node.$BuildDomain.$custom_domainsuffix"
+										$ISCSI_IQN = "iqn.1991-05.com.microsoft:$($iscsi_host)"
+										$Scriptblocks = (
+										"$uemcli /remote/host create -name $iscsi_host -descr 'Exchange Node $iscsi_host' -type host -addr $subnet.12$Node -osType win2012srv ",
+										"$uemcli /remote/initiator create -host Host_$hostcount -uid '$ISCSI_IQN' -type iscsi"
+										)
+										foreach ($Scriptblock in $Scriptblocks)
+											{
+											$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
+											}
+										foreach ($LUN in (0..2))
+											{
+											$Scriptblocks = (
+											"$uemcli /stor/prov/luns/lun create -name '$iscsi_hosts_tag$($node)_LUN$($LUN)' -descr 'Exchange LUN_$LUN' -pool vPool -size 500G -thin yes",
+											"$uemcli /stor/prov/luns/lun -id sv_$luncount set -lunHosts Host_$hostcount"
+											)
+											foreach ($Scriptblock in $Scriptblocks)
+												{
+												$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
+												}
+											$luncount++
+											}
+										$hostcount++
+										}
+									}
+								if ($iscsi_hosts -contains 'AlwaysOn')
+									{
+									$iscsi_hosts_tag = 'AAGNODE'
+									foreach ($node in (1..4))
+										{
+										$iscsi_host = "$iscsi_hosts_tag$Node.$BuildDomain.$custom_domainsuffix"
+										$ISCSI_IQN = "iqn.1991-05.com.microsoft:$($iscsi_host)"
+										$Scriptblocks = (
+										"$uemcli /remote/host create -name $iscsi_host -descr 'Exchange Node $iscsi_host' -type host -addr $subnet.16$Node -osType win2012srv ",
+										"$uemcli /remote/initiator create -host Host_$hostcount -uid '$ISCSI_IQN' -type iscsi"
+										)
+										foreach ($Scriptblock in $Scriptblocks)
+											{
+											$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
+											}
+										foreach ($LUN in (0..3))
+											{
+											$Scriptblocks = (
+											"$uemcli /stor/prov/luns/lun create -name '$iscsi_hosts_tag$($node)_LUN$($LUN)' -descr 'Always On LUN_$LUN' -pool vPool -size 200G -thin yes",
+											"$uemcli /stor/prov/luns/lun -id sv_$luncount set -lunHosts Host_$hostcount"
+											)
+											foreach ($Scriptblock in $Scriptblocks)
+												{
+												$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
+												}
+											$luncount++
+											}
+										$hostcount++
+										}
+									}
 								}
+							}
+						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/dns/config set -nameServer $DNS1" -Guestuser $guestuser -Guestpassword $guestpassword
+						If ($Protocols -match "fs")
+							{
+							$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/server create -name $NAS_SERVER -sp spa -pool pool_1" -Guestuser $guestuser -Guestpassword $guestpassword
+							$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/if create -server nas_1 -port spa_eth0 -addr $ip_if1 -netmask 255.255.255.0" -Guestuser $guestuser -Guestpassword $guestpassword
+							$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/dns -server nas_1 set -name $($BuildDomain).$($custom_domainsuffix) -nameServer 192.168.2.10” -Guestuser $guestuser -Guestpassword $guestpassword
+							}
+						if ($Protocols -contains 'cifs')
+							{
+							Write-Host -ForegroundColor Gray " ==>Setting NTP, unity will reboot automatically"
+							$cmdline = $Nodeclone | Invoke-VMXBash -Scriptblock "$uemcli /net/ntp/server create -server 192.168.2.10 -force allowDU" -Guestuser $guestuser -Guestpassword $guestpassword
+							sleep 120
+							$cmdline = $Nodeclone | Invoke-VMXBash -Scriptblock "$uemcli /net/ntp/server show -detail" -Guestuser $guestuser -Guestpassword $guestpassword -SleepSec 5 -Confirm:$False -WarningAction SilentlyContinue
+							$CIFS_FS1 = "FileSystem01"
+							$CIFS_SERVER_NAME = "CIFSserver"+($ipoffset+3+$Node)
+							$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/cifs create -server nas_1 -name $CIFS_SERVER_NAME -description 'Default CIFS Server for $BuildDomain' -domain $($BuildDomain).$($custom_domainsuffix) -username Administrator -passwd $Password"  -Guestuser $guestuser -Guestpassword $guestpassword
+							$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/prov/fs create -name $CIFS_FS1 -descr 'CIFS shares' -server nas_1 -pool pool_1 -size 100G -type cifs" -Guestuser $guestuser -Guestpassword $guestpassword
+							$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/prov/fs/cifs create -name CIFSroot -descr 'CIFS root' -fs res_1 -path '/' -enableContinuousAvailability yes"  -Guestuser $guestuser -Guestpassword $guestpassword
+							}
+						if ($Protocols -contains 'nfs')
+							{
+							$NFS_FS1 = "FileSystem02"
+							$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/nfs -id nfs_1 set -v4 yes" -Guestuser $guestuser -Guestpassword $guestpassword
+							$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/prov/fs create -name $NFS_FS1 -descr 'NFS shares' -server nas_1 -pool pool_1 -size 100G -type nfs" -Guestuser $guestuser -Guestpassword $guestpassword
+							$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/prov/fs/nfs create -name NFSshare1 -descr 'NFSroot' -fs res_2 -path '/'"  -Guestuser $guestuser -Guestpassword $guestpassword
 							}
 						}
 					}
-				$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/dns/config set -nameServer $DNS1" -Guestuser $guestuser -Guestpassword $guestpassword
-				If ($Protocols -match "fs")
+				If (!$configure.IsPresent)
 					{
-					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/server create -name $NAS_SERVER -sp spa -pool pool_1" -Guestuser $guestuser -Guestpassword $guestpassword
-					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/if create -server nas_1 -port spa_eth0 -addr $ip_if1 -netmask 255.255.255.0" -Guestuser $guestuser -Guestpassword $guestpassword
-					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/dns -server nas_1 set -name $($BuildDomain).$($custom_domainsuffix) -nameServer 192.168.2.10” -Guestuser $guestuser -Guestpassword $guestpassword
+					Write-host -ForegroundColor White "****** To Configure  Unity 4 ******
+	Go to VMware Console an wait for system to boot
+	It might take up to 15 Minutes on First boot
+	Login with
+	service/service
+	and run
+	svc_initial_config -4 `"$ip 255.255.255.0 $DefaultGateway`"
+	once configured
+	open browser to
+	https://$ip and login with admin / $oldpasswd
+	activate your license at
+	https://www.emc.com/auth/elmeval.htm
+	Please keep your license in a save location as it might me re-used when re-deploying $Nodeprefix$Node"
 					}
-				if ($Protocols -contains 'cifs')
+				else
 					{
-					Write-Host -ForegroundColor Gray " ==>Setting NTP, unity will reboot automatically"
-					$cmdline = $Nodeclone | Invoke-VMXBash -Scriptblock "$uemcli /net/ntp/server create -server 192.168.2.10 -force allowDU" -Guestuser $guestuser -Guestpassword $guestpassword
-					sleep 120
-					$cmdline = $Nodeclone | Invoke-VMXBash -Scriptblock "$uemcli /net/ntp/server show -detail" -Guestuser $guestuser -Guestpassword $guestpassword -SleepSec 5 -Confirm:$False -WarningAction SilentlyContinue
-					$CIFS_FS1 = "FileSystem01"
-					$CIFS_SERVER_NAME = "CIFSserver"+($ipoffset+3+$Node)
-					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/cifs create -server nas_1 -name $CIFS_SERVER_NAME -description 'Default CIFS Server for $BuildDomain' -domain $($BuildDomain).$($custom_domainsuffix) -username Administrator -passwd $Password"  -Guestuser $guestuser -Guestpassword $guestpassword
-					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/prov/fs create -name $CIFS_FS1 -descr 'CIFS shares' -server nas_1 -pool pool_1 -size 100G -type cifs" -Guestuser $guestuser -Guestpassword $guestpassword
-					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/prov/fs/cifs create -name CIFSroot -descr 'CIFS root' -fs res_1 -path '/' -enableContinuousAvailability yes"  -Guestuser $guestuser -Guestpassword $guestpassword
-					}
-				if ($Protocols -contains 'nfs')
-					{
-					$NFS_FS1 = "FileSystem02"
-					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/nfs -id nfs_1 set -v4 yes" -Guestuser $guestuser -Guestpassword $guestpassword
-					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/prov/fs create -name $NFS_FS1 -descr 'NFS shares' -server nas_1 -pool pool_1 -size 100G -type nfs" -Guestuser $guestuser -Guestpassword $guestpassword
-					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/prov/fs/nfs create -name NFSshare1 -descr 'NFSroot' -fs res_2 -path '/'"  -Guestuser $guestuser -Guestpassword $guestpassword
+					Write-Host -ForegroundColor White "Your System is now ready. Browse to https://$ip and login with admin / $Password "
+					if (!$Lic_file)
+						{
+						Write-Host -ForegroundColor Gray "activate your license at https://www.emc.com/auth/elmeval.htm
+	Please keep your license in a save location as it might me re-used when re-deploying $Nodeprefix$Node"
+						}
 					}
 				}
-			}
-		If (!$configure.IsPresent)
-			{
-			Write-host -ForegroundColor White "****** To Configure  Unity 4 ******
-Go to VMware Console an wait for system to boot
-It might take up to 15 Minutes on First boot
-Login with
-service/service
-and run
-svc_initial_config -4 `"$ip 255.255.255.0 $DefaultGateway`"
-once configured
-open browser to
-https://$ip and login with admin / $oldpasswd
-activate your license at
-https://www.emc.com/auth/elmeval.htm
-Please keep your license in a save location as it might me re-used when re-deploying $Nodeprefix$Node"
 			}
 		else
 			{
-			Write-Host -ForegroundColor White "Your System is now ready. Browse to https://$ip and login with admin / $Password "
-			if (!$Lic_file)
-				{
-				Write-Host -ForegroundColor Gray "activate your license at https://www.emc.com/auth/elmeval.htm
-Please keep your license in a save location as it might me re-used when re-deploying $Nodeprefix$Node"
-				}
+			Write-Warning "Node $Nodeprefix$node already exists"
 			}
 		}
-    else
-        {
-        Write-Warning "Node $Nodeprefix$node already exists"
-        }
 	}
-    }# end default
 }
