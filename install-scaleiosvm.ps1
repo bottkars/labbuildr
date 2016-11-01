@@ -198,7 +198,7 @@ switch ($PsCmdlet.ParameterSetName)
             }
         if ($SCALEIOMaster -notmatch $ScaleIO_tag)
             {
-            Write-Warning "Master must math $ScaleIO_tag"
+            Write-Warning "Master must match $ScaleIO_tag"
             exit
             }
         $Mastervmxlist = get-vmx -Path $SCALEIOMaster | Sort-Object -Descending
@@ -216,6 +216,8 @@ switch ($PsCmdlet.ParameterSetName)
             Write-Warning "Configure Present, setting nodes to 3"
             $Nodes = 3
             }
+		if ($MasterVMX.VMXname -match '2.1.0')
+			{$SIO_Major = '2.0.1'}
         If ($singlemdm.IsPresent)
             {
             Write-Warning "Single MDM installations with MemoryTweaking  are only for Test Deployments and Memory Contraints/Manager Laptops :-)"
@@ -387,7 +389,15 @@ if ($configure.IsPresent)
             Write-Verbose $sclicmd
             $Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
             Write-Host -ForegroundColor Gray " ==>adding tiebreaker $tb_ip"
-            $sclicmd = "$mdmconnect; scli --add_standby_mdm --mdm_role tb  --new_mdm_ip $tb_ip --tb_name $tb_name --mdm_ip $mdm_ipa"
+			if ($SIO_Major -eq '2.0.1')
+				{
+	            $sclicmd = "$mdmconnect; scli --add_standby_mdm --mdm_role tb  --new_mdm_ip $tb_ip --mdm_ip $mdm_ipa"
+				}
+			else
+				{
+				$sclicmd = "$mdmconnect; scli --add_standby_mdm --mdm_role tb  --new_mdm_ip $tb_ip --tb_name $tb_name --mdm_ip $mdm_ipa"
+				}
+
             Write-Verbose $sclicmd
             $Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 
