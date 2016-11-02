@@ -227,7 +227,6 @@ switch ($PsCmdlet.ParameterSetName)
         $template = $MasterVMX | Set-VMXTemplate
         }
     $Basesnap = $MasterVMX | Get-VMXSnapshot -WarningAction SilentlyContinue| where Snapshot -Match "Base"
-
     if (!$Basesnap)
         {
         Write-Host -ForegroundColor Gray "Tweaking Base VMX"
@@ -369,6 +368,7 @@ Example:
 									$hostcount++
 									}#>
 								#create dcnode
+								$Possible_Error_Fix = "Error in Host / lun Creation, you may skip this"
 								If ($iscsi_hosts -contains 'DCNODE' -or $iscsi_hosts -contains 'all')
 									{
 									$iscsi_host = "$($BuildDomain)DC"
@@ -379,7 +379,7 @@ Example:
 										)
 									foreach ($Scriptblock in $Scriptblocks)
 										{
-										$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword |Out-Null
+										$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword -Possible_Error_Fix $Possible_Error_Fix |Out-Null
 										}
 									$hostcount++
 									}
@@ -394,7 +394,7 @@ Example:
 										)
 									foreach ($Scriptblock in $Scriptblocks)
 										{
-										$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword |Out-Null
+										$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword -Possible_Error_Fix $Possible_Error_Fix |Out-Null
 										}
 									$hostcount++
 									}
@@ -412,7 +412,7 @@ Example:
 										)
 										foreach ($Scriptblock in $Scriptblocks)
 											{
-											$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
+											$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword -Possible_Error_Fix $Possible_Error_Fix | Out-Null
 											}
 										foreach ($LUN in (0..2))
 											{
@@ -422,7 +422,7 @@ Example:
 											)
 											foreach ($Scriptblock in $Scriptblocks)
 												{
-												$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
+												$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword -Possible_Error_Fix $Possible_Error_Fix | Out-Null
 												}
 											$luncount++
 											}
@@ -442,7 +442,7 @@ Example:
 										)
 										foreach ($Scriptblock in $Scriptblocks)
 											{
-											$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
+											$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword -Possible_Error_Fix $Possible_Error_Fix | Out-Null
 											}
 										foreach ($LUN in (0..3))
 											{
@@ -460,7 +460,7 @@ Example:
 											)
 											foreach ($Scriptblock in $Scriptblocks)
 												{
-												$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
+												$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword -Possible_Error_Fix $Possible_Error_Fix | Out-Null
 												}
 											$luncount++
 											}
@@ -480,7 +480,7 @@ Example:
 										)
 										foreach ($Scriptblock in $Scriptblocks)
 											{
-											$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
+											$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword -Possible_Error_Fix $Possible_Error_Fix | Out-Null
 											}
 										foreach ($LUN in (0..3))
 											{
@@ -498,7 +498,7 @@ Example:
 											)
 											foreach ($Scriptblock in $Scriptblocks)
 												{
-												$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
+												$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword -Possible_Error_Fix $Possible_Error_Fix | Out-Null
 												}
 											$luncount++
 											}
@@ -520,7 +520,7 @@ Example:
 										)
 										foreach ($Scriptblock in $Scriptblocks)
 											{
-											$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
+											$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword -Possible_Error_Fix $Possible_Error_Fix | Out-Null
 											}
 										$HyperV_Hosts+= "Host_$hostcount"
 										$hostcount++
@@ -535,7 +535,7 @@ Example:
 											)
 											foreach ($Scriptblock in $Scriptblocks)
 												{
-												$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
+												$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword -Possible_Error_Fix  $Possible_Error_Fix | Out-Null
 												}
 											$luncount++
 											}
@@ -552,7 +552,7 @@ Example:
 										)
 										foreach ($Scriptblock in $Scriptblocks)
 											{
-											$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
+											$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword -Possible_Error_Fix $Possible_Error_Fix | Out-Null
 											}
 										$HyperV_Hosts+= "Host_$hostcount"
 										$hostcount++
@@ -567,7 +567,7 @@ Example:
 											)
 											foreach ($Scriptblock in $Scriptblocks)
 												{
-												$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
+												$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword -Possible_Error_Fix $Possible_Error_Fix | Out-Null
 												}
 											$luncount++
 											}
