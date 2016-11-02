@@ -53,32 +53,12 @@ Param(
 [Parameter(ParameterSetName = "import",Mandatory=$true)][String]
 [ValidateScript({ Test-Path -Path $_ -Filter *.ova -PathType Leaf -ErrorAction SilentlyContinue })]
 $ovf,
-[Parameter(ParameterSetName = "defaults",Mandatory=$False)]
-[Parameter(ParameterSetName = "install",Mandatory=$true)]
-[Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
-[Parameter(ParameterSetName = "import",Mandatory=$false)][String]
-$Mastername,
-[Parameter(ParameterSetName = "defaults",Mandatory=$False)]
-[Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
-[Parameter(ParameterSetName = "import",Mandatory=$false)]
-[Parameter(ParameterSetName = "install",Mandatory=$true)]
-$MasterPath,
 [Parameter(ParameterSetName = "generateuuid",Mandatory=$true)]
 [switch]
 $generate_uuid_and_exit,
 [Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]
 $Defaults,
-[Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]
-$Defaultsfile=".\defaults.xml",
-<# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]
-$subnet = "192.168.2.0",
-[Parameter(ParameterSetName = "install",Mandatory=$False)]
-[ValidateLength(1,63)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,63}[a-zA-Z0-9]+$")][string]
-$BuildDomain = "labbuildr",
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = "vmnet2",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
@@ -103,12 +83,32 @@ $iscsi_hosts,
 [ValidateSet('iscsi','cifs','nfs')]
 [string[]]
 $Protocols,
+[Parameter(ParameterSetName = "defaults",Mandatory=$False)]
+[Parameter(ParameterSetName = "install",Mandatory=$true)]
+[Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
+[Parameter(ParameterSetName = "import",Mandatory=$false)][String]
+$Mastername,
+[Parameter(ParameterSetName = "defaults",Mandatory=$False)]
+[Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
+[Parameter(ParameterSetName = "import",Mandatory=$false)]
+[Parameter(ParameterSetName = "install",Mandatory=$true)]
+$MasterPath,
 [Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [ValidateRange(1,2)]
 [int]
 $Nodes = 1,
+[Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]
+$Defaultsfile=".\defaults.xml",
+<# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
+[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]
+$subnet = "192.168.2.0",
+[Parameter(ParameterSetName = "install",Mandatory=$False)]
+[ValidateLength(1,63)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,63}[a-zA-Z0-9]+$")][string]
+$BuildDomain = "labbuildr",
 [Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
@@ -152,6 +152,14 @@ switch ($PsCmdlet.ParameterSetName)
 
     default
     {
+	If ($Lic_file -or $Protocols -or $iscsi_hosts)
+		{
+		$configure = $True
+		}
+	IF ($iscsi_hosts -and $Protocols -notcontains 'iscsi')
+		{
+		$Protocols+= 'iscsi'
+		}
     If ($Defaults.IsPresent)
         {
         $labdefaults = Get-labDefaults
