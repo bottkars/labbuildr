@@ -1973,8 +1973,9 @@ if ($SOFS.IsPresent)
     if ($DefaultGateway.IsPresent){ Write-Host -ForegroundColor Magenta " ==>The Gateway will be $DefaultGateway"}
 	if ($Cluster.IsPresent) { write-verbose "The Nodes will be Clustered ( Single Node Clusters )" }
 }
-if ($HyperV.IsPresent)
+if ($HyperV.IsPresent -and $iSCSI.IsPresent)
 {
+$Cluster = $true
 }#end Hyperv.ispresent
 if ($ScaleIO.IsPresent)
 {
