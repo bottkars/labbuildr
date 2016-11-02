@@ -734,14 +734,29 @@ Sources should be populated from a bases sources.zip
 	#[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
 	#[Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
     #[Parameter(ParameterSetName = "DConly", Mandatory = $false)]
-	#[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
+	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
     #[Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
     #[Parameter(ParameterSetName = "SRM", Mandatory = $false)]
-    #[Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
+    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
     #[Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     #[Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	#[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 	[switch]$iSCSI,
+	# [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
+	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+	#[Parameter(ParameterSetName = "E14", Mandatory = $false)]
+	#[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+    [Parameter(ParameterSetName = "E16", Mandatory = $false)]
+	#[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
+	#[Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "DConly", Mandatory = $false)]
+	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
+	#[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 	$iSCSI_TARGET = "173"
 ) # end Param
 #requires -version 3.0
@@ -2695,6 +2710,8 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 				test-user -whois Administrator
 			    domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
 				invoke-postsection -wait
+				$Possible_Error_Fix = " 1.) Host has no iSCSI Luns `n 2.) Unity not configured for Host `n 3.) Unity VM is not running"
+				$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script test-disk.ps1 -Parameter "-DiskCount 4" -interactive -Possible_Error_Fix $Possible_Error_Fix
 				$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $In_Guest_UNC_SQLScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -reboot" -interactive -nowait
                 $SQLSetupStart = Get-Date
 			}
@@ -3065,6 +3082,10 @@ switch ($PsCmdlet.ParameterSetName)
 			    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchangeprereqs.ps1 -interactive
                 checkpoint-progress -step exprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
 			    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script powerconf.ps1 -interactive
+				$Possible_Error_Fix = " 1.) Host has no iSCSI Luns `n 2.) Unity not configured for Host `n 3.) Unity VM is not running"
+				$Possible_Error_Fix = " 1.) Host has no iSCSI Luns `n 2.) Unity not configured for Host `n 3.) Unity VM is not running"
+				$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script test-disk.ps1 -Parameter "-DiskCount 3" -interactive -Possible_Error_Fix $Possible_Error_Fix
+
 				$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script prepare-disks.ps1 -interactive
 				Switch ($e16_cu)
                         {
@@ -3753,7 +3774,8 @@ switch ($PsCmdlet.ParameterSetName)
 			domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
 			invoke-postsection -wait
             #$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script prepare-disks.ps1
-			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER $CommonParameter" -interactive
+			$Possible_Error_Fix = " 1.) Host has no iSCSI Luns `n 2.) Unity not configured for Host `n 3.) Unity VM is not running"
+			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER $CommonParameter" -interactive -Possible_Error_Fix $Possible_Error_Fix
             $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script set-sqlroles.ps1 -interactive
 			if ($NMM.IsPresent)
 			{

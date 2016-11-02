@@ -92,7 +92,7 @@ $Disks = 3,
 $configure,
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateSet('E2016','DCNODE','SQL','AlwaysOn')]
+[ValidateSet('E2016','DCNODE','SQL','AlwaysOn','AppSync')]
 [string[]]
 $iscsi_hosts,
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
@@ -375,6 +375,21 @@ Example:
 										}
 									$hostcount++
 									}
+								#create appsync host	
+								If ($iscsi_hosts -contains 'AppSync')
+									{
+									$iscsi_host = "AppSync"
+									$ISCSI_IQN = "iqn.1991-05.com.microsoft:$($iscsi_host).$BuildDomain.$custom_domainsuffix"
+									$Scriptblocks = (
+										"$uemcli /remote/host create -name $iscsi_host -descr 'Windows DC $iscsi_host' -type host -addr $subnet.14 -osType win2012srv",
+										"$uemcli /remote/initiator create -host Host_$hostcount -uid '$ISCSI_IQN' -type iscsi"
+										)
+									foreach ($Scriptblock in $Scriptblocks)
+										{
+										$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword |Out-Null
+										}
+									$hostcount++
+									}
 								#create exchange 2016 hosts
 								if ($iscsi_hosts -contains 'E2016')
 									{
@@ -415,6 +430,44 @@ Example:
 										$ISCSI_IQN = "iqn.1991-05.com.microsoft:$($iscsi_host)"
 										$Scriptblocks = (
 										"$uemcli /remote/host create -name $iscsi_host -descr 'SQL Node $iscsi_host' -type host -addr $subnet.16$Node -osType win2012srv ",
+										"$uemcli /remote/initiator create -host Host_$hostcount -uid '$ISCSI_IQN' -type iscsi"
+										)
+										foreach ($Scriptblock in $Scriptblocks)
+											{
+											$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
+											}
+										foreach ($LUN in (0..3))
+											{
+											if ((0,2) -contains $LUN)
+												{
+												$CLI_Disk_Size = "200G"
+												}
+											else
+												{
+												$CLI_DISK_SIZE = "50G"
+												}
+											$Scriptblocks = (
+											"$uemcli /stor/prov/luns/lun create -name '$iscsi_hosts_tag$($node)_LUN$($LUN)' -descr 'Always On LUN_$LUN' -pool vPool -size $CLI_SIZE -thin yes",
+											"$uemcli /stor/prov/luns/lun -id sv_$luncount set -lunHosts Host_$hostcount"
+											)
+											foreach ($Scriptblock in $Scriptblocks)
+												{
+												$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
+												}
+											$luncount++
+											}
+										$hostcount++
+										}
+									}
+								if ($iscsi_hosts -contains 'SQL')
+									{
+									$iscsi_hosts_tag = 'SQLNODE'
+									foreach ($node in (1..4))
+										{
+										$iscsi_host = "$iscsi_hosts_tag$Node.$BuildDomain.$custom_domainsuffix"
+										$ISCSI_IQN = "iqn.1991-05.com.microsoft:$($iscsi_host)"
+										$Scriptblocks = (
+										"$uemcli /remote/host create -name $iscsi_host -descr 'SQL Node $iscsi_host' -type host -addr $subnet.13$Node -osType win2012srv ",
 										"$uemcli /remote/initiator create -host Host_$hostcount -uid '$ISCSI_IQN' -type iscsi"
 										)
 										foreach ($Scriptblock in $Scriptblocks)
