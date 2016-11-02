@@ -3394,7 +3394,7 @@ switch ($PsCmdlet.ParameterSetName)
 		{
 		$Possible_Error_Fix = "have you configured shared lun access on unity ?"
 		$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script test-disk.ps1 -Parameter "-DiskCount 3" -interactive -Possible_Error_Fix $Possible_Error_Fix
-		$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script configure-csv.ps1 -interactive
+		$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script configure-csv.ps1 -interactive -Parameter " -CSVnum 3"
 		}
 	    if ($ScaleIO.IsPresent)
             {
