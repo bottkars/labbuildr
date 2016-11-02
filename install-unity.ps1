@@ -558,7 +558,7 @@ Example:
 							$cmdline = $Nodeclone | Invoke-VMXBash -Scriptblock "$uemcli /net/ntp/server show -detail" -Guestuser $guestuser -Guestpassword $guestpassword -SleepSec 5 -Confirm:$False -WarningAction SilentlyContinue
 							$CIFS_FS1 = "FileSystem01"
 							$CIFS_SERVER_NAME = "CIFSserver"+($ipoffset+3+$Node)
-							$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/cifs create -server nas_1 -name $CIFS_SERVER_NAME -description 'Default CIFS Server for $BuildDomain' -domain $($BuildDomain).$($custom_domainsuffix) -username Administrator -passwd $Password"  -Guestuser $guestuser -Guestpassword $guestpassword
+							$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/cifs create -server nas_1 -name $CIFS_SERVER_NAME -description 'Default CIFS Server for $BuildDomain' -domain $($BuildDomain).$($custom_domainsuffix) -username Administrator -passwd $Password"  -Guestuser $guestuser -Guestpassword $guestpassword -Possible_Error_Fix " error durring cifs join may indicate that `n 1.) no domain controller is up and running `n 2.)Computeraccount already exists in Domain"
 							$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/prov/fs create -name $CIFS_FS1 -descr 'CIFS shares' -server nas_1 -pool pool_1 -size 100G -type cifs" -Guestuser $guestuser -Guestpassword $guestpassword
 							$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/prov/fs/cifs create -name CIFSroot -descr 'CIFS root' -fs res_1 -path '/' -enableContinuousAvailability yes"  -Guestuser $guestuser -Guestpassword $guestpassword
 							}
