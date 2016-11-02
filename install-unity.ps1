@@ -72,7 +72,7 @@ $Disks = 3,
 $configure,
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateSet('E2016','DCNODE','SQL','AlwaysOn','AppSync')]
+[ValidateSet('all','E2016','DCNODE','SQL','AlwaysOn','AppSync','HyperV')]
 [string[]]
 $iscsi_hosts,
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
@@ -369,7 +369,7 @@ Example:
 									$hostcount++
 									}#>
 								#create dcnode
-								If ($iscsi_hosts -contains 'DCNODE')
+								If ($iscsi_hosts -contains 'DCNODE' -or $iscsi_hosts -contains 'all')
 									{
 									$iscsi_host = "$($BuildDomain)DC"
 									$ISCSI_IQN = "iqn.1991-05.com.microsoft:$($iscsi_host).$BuildDomain.$custom_domainsuffix"
@@ -384,7 +384,7 @@ Example:
 									$hostcount++
 									}
 								#create appsync host	
-								If ($iscsi_hosts -contains 'AppSync')
+								If ($iscsi_hosts -contains 'AppSync' -or $iscsi_hosts -contains 'all')
 									{
 									$iscsi_host = "AppSync"
 									$ISCSI_IQN = "iqn.1991-05.com.microsoft:$($iscsi_host).$BuildDomain.$custom_domainsuffix"
@@ -399,7 +399,7 @@ Example:
 									$hostcount++
 									}
 								#create exchange 2016 hosts
-								if ($iscsi_hosts -contains 'E2016')
+								if ($iscsi_hosts -contains 'E2016' -or $iscsi_hosts -contains 'all')
 									{
 									$iscsi_hosts_tag = 'E2016N'
 									foreach ($node in (1..2))
@@ -429,7 +429,7 @@ Example:
 										$hostcount++
 										}
 									}
-								if ($iscsi_hosts -contains 'AlwaysOn')
+								if ($iscsi_hosts -contains 'AlwaysOn' -or $iscsi_hosts -contains 'all')
 									{
 									$iscsi_hosts_tag = 'AAGNODE'
 									foreach ($node in (1..4))
@@ -467,7 +467,7 @@ Example:
 										$hostcount++
 										}
 									}
-								if ($iscsi_hosts -contains 'SQL')
+								if ($iscsi_hosts -contains 'SQL' -or $iscsi_hosts -contains 'all')
 									{
 									$iscsi_hosts_tag = 'SQLNODE'
 									foreach ($node in (1..4))
@@ -486,14 +486,14 @@ Example:
 											{
 											if ((0,2) -contains $LUN)
 												{
-												$CLI_Disk_Size = "1i disk size00G"
+												$CLI_DISK_SIZE = "100G"
 												}
 											else
 												{
 												$CLI_DISK_SIZE = "50G"
 												}
 											$Scriptblocks = (
-											"$uemcli /stor/prov/luns/lun create -name '$iscsi_hosts_tag$($node)_LUN$($LUN)' -descr 'Always On LUN_$LUN' -pool vPool -size $CLI_Disk_Size -thin yes",
+											"$uemcli /stor/prov/luns/lun create -name '$iscsi_hosts_tag$($node)_LUN$($LUN)' -descr 'SQL LUN_$LUN' -pool vPool -size $CLI_Disk_Size -thin yes",
 											"$uemcli /stor/prov/luns/lun -id sv_$luncount set -lunHosts Host_$hostcount"
 											)
 											foreach ($Scriptblock in $Scriptblocks)
@@ -505,6 +505,42 @@ Example:
 										$hostcount++
 										}
 									}
+								if ($iscsi_hosts -contains 'HyperV' -or $iscsi_hosts -contains 'all')
+									{
+									$iscsi_hosts_tag = 'HV1Node'
+									$HyperV_Hosts = @()
+									foreach ($node in (1..4))
+										{
+										$iscsi_host = "$iscsi_hosts_tag$Node.$BuildDomain.$custom_domainsuffix"
+										$ISCSI_IQN = "iqn.1991-05.com.microsoft:$($iscsi_host)"
+										$Scriptblocks = (
+										"$uemcli /remote/host create -name $iscsi_host -descr 'SQL Node $iscsi_host' -type host -addr $subnet.13$Node -osType win2012srv ",
+										"$uemcli /remote/initiator create -host Host_$hostcount -uid '$ISCSI_IQN' -type iscsi"
+										)
+										foreach ($Scriptblock in $Scriptblocks)
+											{
+											$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
+											}
+										$HyperV_Hosts+= "Host_$hostcount"
+										$hostcount++
+										}
+										$HyperV_Hosts = $HyperV_Hosts -join ","
+										foreach ($LUN in (0..3))
+											{
+											$CLI_DISK_SIZE = "100G"
+											$Scriptblocks = (
+											"$uemcli /stor/prov/luns/lun create -name '$iscsi_hosts_tag$($node)_LUN$($LUN)' -descr 'SQL LUN_$LUN' -pool vPool -size $CLI_Disk_Size -thin yes",
+											"$uemcli /stor/prov/luns/lun -id sv_$luncount set -lunHosts $HyperV_Hosts"
+											)
+											foreach ($Scriptblock in $Scriptblocks)
+												{
+												$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
+												}
+											$luncount++
+											}
+									}
+
+
 								}
 							}
 						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/dns/config set -nameServer $DNS1" -Guestuser $guestuser -Guestpassword $guestpassword

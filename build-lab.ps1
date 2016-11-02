@@ -726,7 +726,7 @@ Sources should be populated from a bases sources.zip
     [Parameter(ParameterSetName = "update",Mandatory = $false, HelpMessage = "this will force update labbuildr")]
     [switch]$force,
     <# Turn on Logging to Console#>
-	# [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
+	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
 	#[Parameter(ParameterSetName = "E14", Mandatory = $false)]
 	#[Parameter(ParameterSetName = "E15", Mandatory = $false)]
@@ -742,7 +742,7 @@ Sources should be populated from a bases sources.zip
     #[Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	#[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 	[switch]$iSCSI,
-	# [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
+	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
 	#[Parameter(ParameterSetName = "E14", Mandatory = $false)]
 	#[Parameter(ParameterSetName = "E15", Mandatory = $false)]
@@ -3389,6 +3389,12 @@ switch ($PsCmdlet.ParameterSetName)
 			Write-Host -ForegroundColor Gray " ==>setting up Hyper-V Replica Broker"
             $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script new-hypervreplicabroker.ps1 -interactive
         }
+		if ($iscsi.IsPresent)
+		{
+		$Possible_Error_Fix = "have you configured shared lun access on unity ?"
+		$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script test-disk.ps1 -Parameter "-DiskCount 3" -interactive -Possible_Error_Fix $Possible_Error_Fix
+		$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script configure-csv.ps1 -interactive
+		}
 	    if ($ScaleIO.IsPresent)
             {
             Write-Host -ForegroundColor Gray " ==>configuring mdm"
