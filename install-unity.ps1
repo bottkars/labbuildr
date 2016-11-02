@@ -478,7 +478,7 @@ Example:
 											{
 											if ((0,2) -contains $LUN)
 												{
-												$CLI_Disk_Size = "200G"
+												$CLI_Disk_Size = "1i disk size00G"
 												}
 											else
 												{
