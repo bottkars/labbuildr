@@ -508,13 +508,14 @@ Example:
 								if ($iscsi_hosts -contains 'HyperV' -or $iscsi_hosts -contains 'all')
 									{
 									$iscsi_hosts_tag = 'HV1Node'
+									$descr = "Hyper-V"
 									$HyperV_Hosts = @()
 									foreach ($node in (1..4))
 										{
 										$iscsi_host = "$iscsi_hosts_tag$Node.$BuildDomain.$custom_domainsuffix"
 										$ISCSI_IQN = "iqn.1991-05.com.microsoft:$($iscsi_host)"
 										$Scriptblocks = (
-										"$uemcli /remote/host create -name $iscsi_host -descr 'SQL Node $iscsi_host' -type host -addr $subnet.13$Node -osType win2012srv ",
+										"$uemcli /remote/host create -name $iscsi_host -descr '$descr Node $iscsi_host' -type host -addr $subnet.15$Node -osType win2012srv ",
 										"$uemcli /remote/initiator create -host Host_$hostcount -uid '$ISCSI_IQN' -type iscsi"
 										)
 										foreach ($Scriptblock in $Scriptblocks)
@@ -525,11 +526,11 @@ Example:
 										$hostcount++
 										}
 										$HyperV_Hosts = $HyperV_Hosts -join ","
-										foreach ($LUN in (0..3))
+										foreach ($LUN in (0..1))
 											{
-											$CLI_DISK_SIZE = "100G"
+											$CLI_DISK_SIZE = "1000G"
 											$Scriptblocks = (
-											"$uemcli /stor/prov/luns/lun create -name '$iscsi_hosts_tag$($node)_LUN$($LUN)' -descr 'SQL LUN_$LUN' -pool vPool -size $CLI_Disk_Size -thin yes",
+											"$uemcli /stor/prov/luns/lun create -name '$iscsi_hosts_tag$($node)_LUN$($LUN)' -descr '$descr LUN_$LUN' -pool vPool -size $CLI_Disk_Size -thin yes",
 											"$uemcli /stor/prov/luns/lun -id sv_$luncount set -lunHosts $HyperV_Hosts"
 											)
 											foreach ($Scriptblock in $Scriptblocks)
@@ -538,6 +539,39 @@ Example:
 												}
 											$luncount++
 											}
+									$iscsi_hosts_tag = 'HV2Node'
+									$descr = "Hyper-V"
+									$HyperV_Hosts = @()
+									foreach ($node in (1..4))
+										{
+										$iscsi_host = "$iscsi_hosts_tag$Node.$BuildDomain.$custom_domainsuffix"
+										$ISCSI_IQN = "iqn.1991-05.com.microsoft:$($iscsi_host)"
+										$Scriptblocks = (
+										"$uemcli /remote/host create -name $iscsi_host -descr '$descr Node $iscsi_host' -type host -addr $subnet.15$($Node+5) -osType win2012srv ",
+										"$uemcli /remote/initiator create -host Host_$hostcount -uid '$ISCSI_IQN' -type iscsi"
+										)
+										foreach ($Scriptblock in $Scriptblocks)
+											{
+											$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
+											}
+										$HyperV_Hosts+= "Host_$hostcount"
+										$hostcount++
+										}
+										$HyperV_Hosts = $HyperV_Hosts -join ","
+										foreach ($LUN in (0..1))
+											{
+											$CLI_DISK_SIZE = "1000G"
+											$Scriptblocks = (
+											"$uemcli /stor/prov/luns/lun create -name '$iscsi_hosts_tag$($node)_LUN$($LUN)' -descr '$descr LUN_$LUN' -pool vPool -size $CLI_Disk_Size -thin yes",
+											"$uemcli /stor/prov/luns/lun -id sv_$luncount set -lunHosts $HyperV_Hosts"
+											)
+											foreach ($Scriptblock in $Scriptblocks)
+												{
+												$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword | Out-Null
+												}
+											$luncount++
+											}
+
 									}
 
 
