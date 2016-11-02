@@ -485,7 +485,7 @@ Example:
 												$CLI_DISK_SIZE = "50G"
 												}
 											$Scriptblocks = (
-											"$uemcli /stor/prov/luns/lun create -name '$iscsi_hosts_tag$($node)_LUN$($LUN)' -descr 'Always On LUN_$LUN' -pool vPool -size $CLI_SIZE -thin yes",
+											"$uemcli /stor/prov/luns/lun create -name '$iscsi_hosts_tag$($node)_LUN$($LUN)' -descr 'Always On LUN_$LUN' -pool vPool -size $CLI_Disk_Size -thin yes",
 											"$uemcli /stor/prov/luns/lun -id sv_$luncount set -lunHosts Host_$hostcount"
 											)
 											foreach ($Scriptblock in $Scriptblocks)
