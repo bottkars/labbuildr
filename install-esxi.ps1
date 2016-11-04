@@ -225,7 +225,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         $Drivervib| Copy-Item -Destination .\iso\KS\ESXUI.VIB
         $Content += "cp -a /vmfs/volumes/mpx.vmhba32:C0:T0:L0/KS/ESXUI.VIB /vmfs/volumes/Datastore1@$Nodeprefix$node"
         }
-        if ($kdriver.IsPresent)
+    if ($kdriver.IsPresent)
         {
         if (!$Post_section)
             {

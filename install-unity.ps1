@@ -279,7 +279,7 @@ Example:
 							}
 						$Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
 						$Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path
-						$AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
+						$AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI -VirtualSSD
 						}
 					}
 				[string]$ip="$($subnet.ToString()).$($ipoffset.ToString())"

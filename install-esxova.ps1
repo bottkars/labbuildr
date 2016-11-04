@@ -49,10 +49,29 @@ Param(
 [Parameter(ParameterSetName = "defaults",Mandatory=$False)]
 [Parameter(ParameterSetName = "import",Mandatory=$false)]
 [Parameter(ParameterSetName = "install",Mandatory=$true)]$MasterPath,
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[Parameter(ParameterSetName = "install", Mandatory = $false)]
+[ValidateRange(3,14)]
+[int]
+$Disks = 3,
 [Parameter(ParameterSetName = "defaults",Mandatory=$False)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateRange(1,6)]
-[int]$Startnode = 1,
+[ValidateRange(1,6)][int]
+$Startnode = 1,
+<#
+Size for openstack compute nodes
+'XS'  = 1vCPU, 512MB
+'S'   = 1vCPU, 768MB
+'M'   = 1vCPU, 1024MB
+'L'   = 2vCPU, 2048MB
+'XL'  = 2vCPU, 4096MB
+'TXL' = 4vCPU, 6144MB
+'XXL' = 4vCPU, 8192MB
+#>
+[Parameter(ParameterSetName = "defaults",Mandatory=$False)]
+[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]
+$Size = "XL",
 [Parameter(ParameterSetName = "defaults",Mandatory=$False)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateRange(1,6)]
@@ -75,9 +94,14 @@ $Password = "Password123!"
 $SSO_Domain = "vmware.local"
 switch ($PsCmdlet.ParameterSetName)
 {
-
     "import"
     {
+        
+        if (!$Sourcedir)
+            {
+            $Sourcedir = (get-labdefaults).Sourcedir
+            }
+        
         if (!$Masterpath)
             {
             try
@@ -94,7 +118,7 @@ switch ($PsCmdlet.ParameterSetName)
             {
             #download template
 			Write-Host -ForegroundColor Gray " ==>No OVA Template specified, checking for latest $nestedesx_ver"
-			$OVF = Receive-LABnestedesxtemplate -Destination C:\sources\OVA -nestedesx_ver Nested_ESXi6
+			$OVF = Receive-LABnestedesxtemplate -Destination (Join-Path $Sourcedir "OVA") -nestedesx_ver Nested_ESXi6
 			$OVFfile = Get-Item $ovf
             $mastername = $OVFfile.BaseName
             }
@@ -226,6 +250,24 @@ default
 			$config += "guestinfo.password = `"$Password`""
 			$config += "guestinfo.createvmfs = `"false`""
 			$config | Set-Content -Path $NodeClone.config
+			
+			if ($Disks -ne 0)
+				{
+				$SCSI = 1
+				[uint64]$Disksize = 100GB
+				$NodeClone | Set-VMXScsiController -SCSIController 1 -Type lsilogic | Out-Null
+				foreach ($LUN in (0..($Disks-1)))
+					{
+					if ($LUN -ge 7)
+						{
+						$LUN = $LUN+1
+						}
+					$Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
+					$Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path
+					$AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI -VirtualSSD
+					}
+				}
+			$result = $NodeClone | Set-VMXSize -Size $Size
 			$result = $NodeClone | Set-VMXGuestOS -GuestOS vmkernel6
 			$result = $NodeClone | Set-VMXVTBit -VTBit:$true
             $result = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
