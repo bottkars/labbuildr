@@ -24,7 +24,7 @@
  Download and Install ViPR 2.3:
  .\install-vipr.ps1 -Defaults -viprmaster vipr-2.3.0.0.828
 #>
-[CmdletBinding()]op
+[CmdletBinding()]
 Param(
 
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$Defaults = $true,
