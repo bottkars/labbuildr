@@ -47,7 +47,7 @@ $Nodes = 3
 
 $ovf = "coreos_$version.ova"
 $masterpath = (get-labdefaults).Masterpath
-$Master = "$masterpath/Coreos_$Version" 
+$Master = "$masterpath/coreos_$Version" 
 switch ($PsCmdlet.ParameterSetName)
 {
 
@@ -153,7 +153,7 @@ switch ($PsCmdlet.ParameterSetName)
     $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 
 
-    If (!($MasterVMX = get-vmx -path "$Masterpath/$Master"))
+    If (!($MasterVMX = get-vmx -path $Master))
      {
       Write-Error "No Valid Master Found"
       break
