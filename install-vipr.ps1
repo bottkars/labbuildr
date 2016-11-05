@@ -24,11 +24,11 @@
  Download and Install ViPR 2.3:
  .\install-vipr.ps1 -Defaults -viprmaster vipr-2.3.0.0.828
 #>
-[CmdletBinding()]
+[CmdletBinding()]op
 Param(
 
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$Defaults = $true,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateSet('vipr-2.3.0.0.828','vipr-2.2.1.0.1106','vipr-2.4.0.0.519','vipr-2.4.1.0.220','vipr-3.0.0.0.814')]$viprmaster = "vipr-3.0.0.0.814",
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateSet('vipr-2.3.0.0.828','vipr-2.2.1.0.1106','vipr-2.4.0.0.519','vipr-2.4.1.0.220','vipr-3.0.0.0.814','vipr-3.5.0.0.814')]$viprmaster = "vipr-3.0.0.0.814",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
 
 )
@@ -113,9 +113,10 @@ foreach ($Disk in $Disks)
                 $ViprZip = Split-Path -Leaf $ViprURL
                 try
                     {
-					Get-LABHttpFile -SourceURL $ViprURL -TarGetFile (Join-Path $Sourcedir $ViprZip )
-                    #Invoke-WebRequest $ViprURL -OutFile 
-                    Start-BitsTransfer -DisplayName ViPR -Description "ViPR Controller" -Destination $Sourcedir -Source  $ViprURL
+					Receive-LABBitsFile -DownLoadUrl $ViprURL -destination (Join-Path $Sourcedir $ViprZip )
+					# Get-LABHttpFile -SourceURL $ViprURL -TarGetFile (Join-Path $Sourcedir $ViprZip )
+                    # Invoke-WebRequest $ViprURL -OutFile 
+                    # Start-BitsTransfer -DisplayName ViPR -Description "ViPR Controller" -Destination $Sourcedir -Source  $ViprURL
                     }
                 catch [Exception] 
                     {
