@@ -234,7 +234,8 @@ if (!(Test-Path $ViprcdDir))
 $ovffile = (Join-Path $ViprcdDir ovf-env.xml)
 $ovfenv  | Set-Content -Path $ovffile -Force
 convert-VMXdos2unix -Sourcefile $ovffile -Verbose
-& $Global:vmwarepath/mkisofs.exe -J -R -o "$PSScriptRoot/$Targetname/vipr.iso" $PSScriptRoot/scripts/viprmaster/cd 2>&1 | Out-Null
+
+& $Global:mkisofs -J -R -o "$PSScriptRoot/$Targetname/vipr.iso" $PSScriptRoot/scripts/viprmaster/cd 2>&1 | Out-Null
 $vmx | Set-VMXIDECDrom -IDEcontroller 0 -IDElun 0 -ISOfile "vipr.iso"  | Out-Null
 $Annotation = $VMX | Set-VMXAnnotation -Line1 "https://$subnet.9" -Line2 "user:root" -Line3 "password:ChangeMe" -Line4 "add license from $masterpath" -Line5 "labbuildr by @sddc_guy" -builddate
 $vmx | Start-VMX | Out-Null
