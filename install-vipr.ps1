@@ -134,7 +134,7 @@ foreach ($Disk in $Disks)
             $Zipfiles = $Zipfiles| Sort-Object -Property Name -Descending
 		    $LatestZip = $Zipfiles[0].FullName
 	        write-verbose "We are going to extract $LatestZip now"    	
-            Expand-LABZip -zipfilename $LatestZip -destination $Sourcedir
+            Expand-LABpackage -Archive $LatestZip -destination $Sourcedir
             }
 			$StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
             $Viprova = Get-ChildItem -Path "$Sourcedir\Vipr*" -filter "$($viprmaster)-controller-1+0.ova" -Recurse -ErrorAction SilentlyContinue
@@ -159,7 +159,6 @@ foreach ($Disk in $Disks)
         }
 
     }
-
 
 Write-Host -ForegroundColor Gray " ==>importing the disks "
 
