@@ -34,7 +34,7 @@ Param(
 [Parameter(ParameterSetName = "install",Mandatory=$False)]
 [ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain = "labbuildr",
 [Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile="./defaults.xml",
 [Parameter(ParameterSetName = "download", Mandatory = $true)][switch]$download,
 [Parameter(ParameterSetName = "import",Mandatory=$true)][switch]$Import,
 [Parameter(ParameterSetName = "import",Mandatory=$false)]
@@ -46,7 +46,7 @@ $Nodes = 3
 #requires -module vmxtoolkit
 
 $ovf = "coreos_$version.ova"
-$Master = "$PSScriptRoot\Coreos_$Version" 
+$Master = "$PSScriptRoot/Coreos_$Version" 
 switch ($PsCmdlet.ParameterSetName)
 {
 
@@ -71,7 +71,7 @@ switch ($PsCmdlet.ParameterSetName)
             }
             $Target = join-path $Sourcedir $ovf 
             Write-Host "Trying Download of $ovf"
-            Get-LABHttpFile -SourceURL $CoreOSURL -TarGetFile $Target
+            Receive-LABBitsFile -DownLoadUrl $CoreOSURL -destination $Target
             Write-Host "Now run install-coreos.ps1 -import -version $version"
             
 
@@ -123,7 +123,7 @@ switch ($PsCmdlet.ParameterSetName)
     {
     $Nodeprefix = "CoreOSNode"
     $Startnode = 1
-    New-Item -ItemType Directory .\Scripts\CoreOS\config-drive\openstack\latest -Force | Out-Null
+    New-Item -ItemType Directory ./Scripts/CoreOS/config-drive/openstack/latest -Force | Out-Null
     If ($Defaults.IsPresent)
         {
         $labdefaults = Get-labDefaults
@@ -216,12 +216,12 @@ coreos:
             [Install]
             WantedBy=multi-user.target"
 
-    $User_data | Set-Content -Path "$PSScriptRoot\Scripts\CoreOS\config-drive\openstack\latest\user_data"
-    convert-VMXdos2unix -Sourcefile "$PSScriptRoot\Scripts\CoreOS\config-drive\openstack\latest\user_data"
+    $User_data | Set-Content -Path "$PSScriptRoot/Scripts/CoreOS/config-drive/openstack/latest/user_data"
+    convert-VMXdos2unix -Sourcefile "$PSScriptRoot/Scripts/CoreOS/config-drive/openstack/latest/user_data"
     Write-Host "Creating config-2 CD"
-    .$global:mkisofs -r -V config-2 -o "$($NodeClone.path)\config.iso"  "$PSScriptRoot\Scripts\CoreOS\config-drive" #  | Out-Null
+    .$global:mkisofs -r -V config-2 -o "$($NodeClone.path)/config.iso"  "$PSScriptRoot/Scripts/CoreOS/config-drive" #  | Out-Null
 
-    $NodeClone | Connect-VMXcdromImage -ISOfile "$($NodeClone.path)\config.iso" -Contoller ide -Port 1:0
+    $NodeClone | Connect-VMXcdromImage -ISOfile "$($NodeClone.path)/config.iso" -Contoller ide -Port 1:0
     $NodeClone | Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3
     $NodeClone | Set-VMXVnet -Adapter 0 -Vnet $vmnet
     $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.Clonename)@$BuildDomain"
