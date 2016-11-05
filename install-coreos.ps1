@@ -145,13 +145,14 @@ switch ($PsCmdlet.ParameterSetName)
         $Hostkey = $labdefaults.HostKey
         $DNS1 = $labdefaults.DNS1
         $DefaultGateway = $labdefaults.Defaultgateway
+		$Masterpath = $labdefaults.Masterpath
         }
 
     [System.Version]$subnet = $Subnet.ToString()
     $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 
 
-    If (!($MasterVMX = get-vmx -path $Master))
+    If (!($MasterVMX = get-vmx -path "$Masterpath/$Master"))
      {
       Write-Error "No Valid Master Found"
       break
