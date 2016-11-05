@@ -84,16 +84,16 @@ if (get-vmx $targetname)
     }
 
 $Disks = ('disk1','disk2','disk5')
-$masterpath = "$PSScriptRoot\$viprmaster"
+$masterpath = "$PSScriptRoot/$viprmaster"
 $Missing = @()
 foreach ($Disk in $Disks)
     {
-    if (!(Test-Path -Path "$masterpath\*$Disk.vmdk"))
+    if (!(Test-Path -Path "$masterpath/*$Disk.vmdk"))
         {
-        if (!(test-path "$Sourcedir\*\$viprmaster-controller-1+0.ova"))
+        if (!(test-path "$Sourcedir/*/$viprmaster-controller-1+0.ova"))
             {
             Write-Host -ForegroundColor Gray " ==>Vipr OVA for $Viprver not Found, we try for Zip Package in Sources"
-            if (!(Test-Path "$Sourcedir\$ViprZip"))
+            if (!(Test-Path "$Sourcedir/$ViprZip"))
                 {
                 Write-Warning "Vipr Controller Download Package not found
                                we will try download"
@@ -106,7 +106,7 @@ foreach ($Disk in $Disks)
                 {
                 $ViprURL = "ftp://ftp.emc.com/ViPR/ViPR_Controller_Download.zip"
                 $Zippackage = Split-Path -Leaf $ViprURL
-                Get-LABFTPFile -Source $ViprURL -Defaultcredentials -Target "$Sourcedir\$viprmaster.zip" -Verbose
+                Get-LABFTPFile -Source $ViprURL -Defaultcredentials -Target "$Sourcedir/$viprmaster.zip" -Verbose
 
                 }
             default
@@ -130,20 +130,20 @@ foreach ($Disk in $Disks)
             }
 
              }
-            $Zipfiles = Get-ChildItem "$Sourcedir\$ViprZip"
+            $Zipfiles = Get-ChildItem "$Sourcedir/$ViprZip"
             $Zipfiles = $Zipfiles| Sort-Object -Property Name -Descending
 		    $LatestZip = $Zipfiles[0].FullName
 	        write-verbose "We are going to extract $LatestZip now"    	
             Expand-LABpackage -Archive $LatestZip -destination $Sourcedir
             }
 			$StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
-            $Viprova = Get-ChildItem -Path "$Sourcedir\Vipr*" -filter "$($viprmaster)-controller-1+0.ova" -Recurse -ErrorAction SilentlyContinue
+            $Viprova = Get-ChildItem -Path "$Sourcedir/Vipr*" -filter "$($viprmaster)-controller-1+0.ova" -Recurse -ErrorAction SilentlyContinue
             $Viprova = $Viprova | Sort-Object -Property Name -Descending | Select-Object -Last 1
 		    $LatestViprOVA = $Viprova.FullName
             $LatestVipr = $Viprova.Name.Replace("-controller-1+0.ova","")
-            $LatestViprLic = Get-ChildItem -Path "$Sourcedir\ViPRC*$ViprMajor*\*" -Filter *.lic
+            $LatestViprLic = Get-ChildItem -Path "$Sourcedir/ViPRC*$ViprMajor*/*" -Filter *.lic
             Write-Warning "We found $LatestVipr"
-            $masterpath = "$Sourcedir\$LatestVipr"
+            $masterpath = "$Sourcedir/$LatestVipr"
             if (!$LatestViprOVA)
                 { 
                 Write-Warning "Could not find any ViprOVA in $Sourcedir to use"
@@ -151,10 +151,10 @@ foreach ($Disk in $Disks)
                 }
 			Write-Host -ForegroundColor Gray " ==>$Disk not found, deflating ViprDisk from OVA"
 			Expand-LABpackage -Archive $LatestViprOVA -filepattern  "*$Disk.vmdk"  -destination $Masterpath -force
-            #& $global:vmwarepath\7za.exe x "-o$masterpath" -y $LatestViprOVA "*$Disk.vmdk" 
-            if (!(Test-Path "$Sourcedir\$LatestVipr\$($LatestViprLic.Name)"))
+            #& $global:vmwarepath/7za.exe x "-o$masterpath" -y $LatestViprOVA "*$Disk.vmdk" 
+            if (!(Test-Path "$Sourcedir/$LatestVipr/$($LatestViprLic.Name)"))
                 {
-                Copy-Item $LatestViprLic.FullName -Destination "$masterpath\$($LatestViprLic.Name)" -Force
+                Copy-Item $LatestViprLic.FullName -Destination "$masterpath/$($LatestViprLic.Name)" -Force
                 }
         }
 
@@ -181,7 +181,7 @@ foreach ($Disk in $Disks)
         If ($Disk -match "Disk5")
             {
             # will need this for the storageos installer once figure out ovf-env disk :-)
-            # & $VMwarepath\vmware-vdiskmanager.exe $PSScriptRoot\$targetname\disk3.vmdk -x 122GB
+            # & $VMwarepath/vmware-vdiskmanager.exe $PSScriptRoot/$targetname/disk3.vmdk -x 122GB
             }
         }
     }
@@ -226,7 +226,7 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     Write-Host -ForegroundColor Yellow $ovfenv
     }
 
-$ViprcdDir = join-path $PSScriptRoot "scripts\viprmaster\cd\"
+$ViprcdDir = join-path $PSScriptRoot "scripts/viprmaster/cd/"
 if (!(Test-Path $ViprcdDir))
     {
     New-Item -ItemType Directory -Path $ViprcdDir
@@ -234,7 +234,7 @@ if (!(Test-Path $ViprcdDir))
 $ovffile = (Join-Path $ViprcdDir ovf-env.xml)
 $ovfenv  | Set-Content -Path $ovffile -Force
 convert-VMXdos2unix -Sourcefile $ovffile -Verbose
-& $Global:vmwarepath\mkisofs.exe -J -R -o "$PSScriptRoot\$Targetname\vipr.iso" $PSScriptRoot\scripts\viprmaster\cd 2>&1 | Out-Null
+& $Global:vmwarepath/mkisofs.exe -J -R -o "$PSScriptRoot/$Targetname/vipr.iso" $PSScriptRoot/scripts/viprmaster/cd 2>&1 | Out-Null
 $vmx | Set-VMXIDECDrom -IDEcontroller 0 -IDElun 0 -ISOfile "vipr.iso"  | Out-Null
 $Annotation = $VMX | Set-VMXAnnotation -Line1 "https://$subnet.9" -Line2 "user:root" -Line3 "password:ChangeMe" -Line4 "add license from $masterpath" -Line5 "labbuildr by @sddc_guy" -builddate
 $vmx | Start-VMX | Out-Null
