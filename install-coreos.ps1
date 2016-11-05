@@ -46,7 +46,8 @@ $Nodes = 3
 #requires -module vmxtoolkit
 
 $ovf = "coreos_$version.ova"
-$Master = "$PSScriptRoot/Coreos_$Version" 
+$masterpath = (get-labdefaults).Masterpath
+$Master = "$masterpath/Coreos_$Version" 
 switch ($PsCmdlet.ParameterSetName)
 {
 
@@ -121,7 +122,7 @@ switch ($PsCmdlet.ParameterSetName)
 
         import-VMXOVATemplate -OVA $Target -destination $Masterpath
         # & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck  --name=$mastername $ovf $PSScriptRoot #
-        $Mastervmx = get-vmx -path $Masterpath/$Mastername
+        $Mastervmx = get-vmx -path $Mastername
 #       $Mastervmx | Set-VMXHWversion -HWversion 7
         write-Warning "Now run .\install-coreos.ps1 -defaults -version $Version" 
         }
