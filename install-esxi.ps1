@@ -291,13 +291,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     Get-ChildItem $KSDirectory -Recurse | Rename-Item -newname { $_.name.ToUpper() } -ErrorAction SilentlyContinue
 
 
-    ####have to work on abs pathnames here
-
-    IF (!(Test-Path $VMWAREpath\mkisofs.exe))
-        {
-        Write-Warning "VMware ISO Tools not found, exiting"
-        }
-
+  
     Write-Verbose "Node Clonepath =  $($NodeClone.Path)"
     Write-Host -ForegroundColor Gray "Creating VM $Nodeprefix$Node"
     write-verbose "Cloning $Nodeprefix$node"
@@ -312,7 +306,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
             }    
 		write-verbose "Config : $($Nodeclone.config)"
 		Write-Host -ForegroundColor Gray " ==>Creating Kickstart CD"
-		.$VMWAREpath\mkisofs.exe -o "$($NodeClone.path)\ks.iso"  "$Builddir\iso"   | Out-Null
+		.$Global:mkisofs -o "$($NodeClone.path)\ks.iso"  "$Builddir\iso"   | Out-Null
 		switch ($LASTEXITCODE)
 			{
 				2

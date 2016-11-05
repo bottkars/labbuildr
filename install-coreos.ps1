@@ -219,7 +219,7 @@ coreos:
     $User_data | Set-Content -Path "$PSScriptRoot\Scripts\CoreOS\config-drive\openstack\latest\user_data"
     convert-VMXdos2unix -Sourcefile "$PSScriptRoot\Scripts\CoreOS\config-drive\openstack\latest\user_data"
     Write-Host "Creating config-2 CD"
-    .$VMWAREpath\mkisofs.exe -r -V config-2 -o "$($NodeClone.path)\config.iso"  "$PSScriptRoot\Scripts\CoreOS\config-drive" #  | Out-Null
+    .$global:mkisofs -r -V config-2 -o "$($NodeClone.path)\config.iso"  "$PSScriptRoot\Scripts\CoreOS\config-drive" #  | Out-Null
 
     $NodeClone | Connect-VMXcdromImage -ISOfile "$($NodeClone.path)\config.iso" -Contoller ide -Port 1:0
     $NodeClone | Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3
