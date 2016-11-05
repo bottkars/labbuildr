@@ -90,7 +90,7 @@ foreach ($Disk in $Disks)
     {
     if (!(Test-Path -Path "$masterpath\*$Disk.vmdk"))
         {
-        if (!(test-path "$Sourcedir\Vipr*\$viprmaster-controller-1+0.ova"))
+        if (!(test-path "$Sourcedir\*\$viprmaster-controller-1+0.ova"))
             {
             Write-Host -ForegroundColor Gray " ==>Vipr OVA for $Viprver not Found, we try for Zip Package in Sources"
             if (!(Test-Path "$Sourcedir\$ViprZip"))
@@ -137,7 +137,7 @@ foreach ($Disk in $Disks)
             Expand-LABZip -zipfilename $LatestZip -destination $Sourcedir
             }
 			$StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
-            $Viprova = Get-Item "$Sourcedir\Vipr*\$viprmaster-controller-1+0.ova" -filter "*.ova" -ErrorAction SilentlyContinue
+            $Viprova = Get-ChildItem -Path "$Sourcedir\Vipr*" -filter "$($viprmaster)-controller-1+0.ova"  -ErrorAction SilentlyContinue
             $Viprova = $Viprova | Sort-Object -Property Name -Descending | Select-Object -Last 1
 		    $LatestViprOVA = $Viprova.FullName
             $LatestVipr = $Viprova.Name.Replace("-controller-1+0.ova","")
