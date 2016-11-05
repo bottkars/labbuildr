@@ -149,15 +149,9 @@ foreach ($Disk in $Disks)
                 Write-Warning "Could not find any ViprOVA in $Sourcedir to use"
                 exit
                 }
-            if (!(Test-Path "$global:vmwarepath\7za.exe"))
-                    {
-                    Write-Warning " 7zip not found
-                    7za is part of VMware Workstation 11 or the 7zip Distribution
-                    please get and copy 7za to & $global:vmwarepath\7za.exe"
-                    exit
-                    }
-            Write-Host -ForegroundColor Gray " ==>$Disk not found, deflating ViprDisk from OVA"
-            & $global:vmwarepath\7za.exe x "-o$masterpath" -y $LatestViprOVA "*$Disk.vmdk" 
+			Write-Host -ForegroundColor Gray " ==>$Disk not found, deflating ViprDisk from OVA"
+			Expand-LABpackage -Archive $LatestViprOVA -filepattern  "*$Disk.vmdk"  -destination $Masterpath -force
+            #& $global:vmwarepath\7za.exe x "-o$masterpath" -y $LatestViprOVA "*$Disk.vmdk" 
             if (!(Test-Path "$Sourcedir\$LatestVipr\$($LatestViprLic.Name)"))
                 {
                 Copy-Item $LatestViprLic.FullName -Destination "$masterpath\$($LatestViprLic.Name)" -Force
