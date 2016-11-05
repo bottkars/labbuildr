@@ -78,21 +78,32 @@ switch ($PsCmdlet.ParameterSetName)
       }
     "import"
         {
-
-           Try 
-                {
-                test-Path $Sourcedir
-                } 
-            Catch 
-                { 
-                Write-Verbose $_ 
-                Write-Warning "We need a Valid Sourcedir, trying Defaults"
-                if (!($Sourcedir = (Get-labDefaults).Sourcedir))
-                {
-                Write-Warning "no sourcedir Specified"
-                exit
-                }
-            $Target = join-path $Sourcedir $ovf
+		if (!$Masterpath)
+			{
+			try
+				{
+				$Masterpath = (get-labdefaults).Masterpath
+				}
+			catch
+				{
+				Write-Host -ForegroundColor Gray " ==> No Masterpath specified, trying default"
+				$Masterpath = $Builddir
+				}
+			}           
+		Try 
+            {
+            test-Path $Sourcedir
+            } 
+        Catch 
+            { 
+            Write-Verbose $_ 
+            Write-Warning "We need a Valid Sourcedir, trying Defaults"
+            if (!($Sourcedir = (Get-labDefaults).Sourcedir))
+            {
+            Write-Warning "no sourcedir Specified"
+            exit
+            }
+        $Target = join-path $Sourcedir $ovf
 
         if (!(($Mymaster = Get-Item $Target -ErrorAction SilentlyContinue).Extension -match "ovf" -or "ova"))
             {
@@ -108,9 +119,9 @@ switch ($PsCmdlet.ParameterSetName)
         # if (!($mastername)) {$mastername = (Split-Path -Leaf $ovf).Replace(".ovf","")}
         # $Mymaster = Get-Item $ovf
 
-        import-VMXOVATemplate -OVA $Target #-destination ".\CoreOSMaster"
+        import-VMXOVATemplate -OVA $Target -destination $Masterpath
         # & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck  --name=$mastername $ovf $PSScriptRoot #
-        $Mastervmx = get-vmx $Mastername
+        $Mastervmx = get-vmx -path $Masterpath/$Mastername
 #       $Mastervmx | Set-VMXHWversion -HWversion 7
         write-Warning "Now run .\install-coreos.ps1 -defaults -version $Version" 
         }
