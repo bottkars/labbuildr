@@ -177,7 +177,7 @@ foreach ($Disk in $Disks)
     else
         {
         Write-Host -ForegroundColor Gray " ==>converting $TargetDisk"
-        .$Global:Vmware_vdiskmanager.exe -r $SOURCEDISK.FullName -t 0 $TargetDisk  2>&1 | Out-Null
+        .$Global:Vmware_vdiskmanager -r $SOURCEDISK.FullName -t 0 $TargetDisk  2>&1 | Out-Null
         If ($Disk -match "Disk5")
             {
             # will need this for the storageos installer once figure out ovf-env disk :-)
