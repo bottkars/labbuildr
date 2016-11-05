@@ -137,7 +137,7 @@ foreach ($Disk in $Disks)
             Expand-LABZip -zipfilename $LatestZip -destination $Sourcedir
             }
 			$StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
-            $Viprova = Get-ChildItem -Path "$Sourcedir\Vipr*" -filter "$($viprmaster)-controller-1+0.ova"  -ErrorAction SilentlyContinue
+            $Viprova = Get-ChildItem -Path "$Sourcedir\Vipr*" -filter "$($viprmaster)-controller-1+0.ova" -Recurse -ErrorAction SilentlyContinue
             $Viprova = $Viprova | Sort-Object -Property Name -Descending | Select-Object -Last 1
 		    $LatestViprOVA = $Viprova.FullName
             $LatestVipr = $Viprova.Name.Replace("-controller-1+0.ova","")
