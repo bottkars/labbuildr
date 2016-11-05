@@ -161,15 +161,15 @@ foreach ($Disk in $Disks)
     }
 
 Write-Host -ForegroundColor Gray " ==>importing the disks "
-
-if(!(Test-Path $PSScriptRoot\$targetname))
+$Target_path = Join-Path $PSScriptRoot $targetname
+if(!(Test-Path $Target_path))
     {
-    New-Item -ItemType Directory $PSScriptRoot\$targetname | Out-Null
+    New-Item -ItemType Directory $Target_path | Out-Null
     }
 foreach ($Disk in $Disks)
     {
-    $SOURCEDISK = Get-ChildItem -Path "$masterpath\vipr-*$disk.vmdk"
-    $TargetDisk = "$PSScriptRoot\$targetname\$Disk.vmdk"
+    $SOURCEDISK = Get-ChildItem -Path (join-path $masterpath "vipr-*$disk.vmdk")
+    $TargetDisk = join-path $Target_path "$($Disk).vmdk"
     if (Test-Path $TargetDisk)
         { 
         write-Host -ForegroundColor Gray " ==>Master $TargetDisk already present, no conversion needed"
@@ -186,7 +186,7 @@ foreach ($Disk in $Disks)
         }
     }
 Write-host -ForegroundColor Gray " ==>copy base vm config to new master"
-Copy-Item $PSScriptRoot\labbuildr-scripts\viprmaster\viprmaster.template $targetname\$targetname.vmx
+Copy-Item "$PSScriptRoot/labbuildr-scripts/viprmaster/viprmaster.template" "$Target_path/$targetname.vmx"
 $vmx = get-vmx $targetname
 $vmx | Set-VMXTemplate -unprotect | Out-Null
 $vmx | Set-VMXNetworkAdapter -Adapter 0 -AdapterType vmxnet3 -ConnectionType custom -WarningAction SilentlyContinue | Out-Null
