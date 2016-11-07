@@ -971,10 +971,18 @@ function update-fromGit
                 Write-Host -ForegroundColor Gray "==>cleaning $Destination"
                 Remove-Item -Path $Destination -Recurse -ErrorAction SilentlyContinue
                 }
-            Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir/update/$repo-$branch.zip" -ignoresize
-            Expand-LABZip -zipfilename "$Builddir/update/$repo-$branch.zip" -destination $Destination -Folder $repo-$branch
+			if ($Global:vmxtoolkit_type -eq "win_x86_64")
+				{
+				Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir/update/$repo-$branch.zip" -ignoresize
+				Expand-LABZip -zipfilename "$Builddir/update/$repo-$branch.zip" -destination $Destination -Folder $repo-$branch
+				}
+			else
+				{
+				Receive-LABBitsFile -DownLoadUrl $Zip -destination "$Builddir/update/$repo-$branch.zip"
+				Expand-LABpackage -Archive "$Builddir/update/$repo-$branch.zip" -filepattern $Repo-$branch -destination $Destination
+				}
             $Isnew = $true
-            $request.Headers.'Last-Modified' | Set-Content ($Builddir+"/$repo-$branch.gitver")
+            $latest_OnGit | Set-Content ($Builddir+"/$repo-$branch.gitver")
             }
         else
             {
