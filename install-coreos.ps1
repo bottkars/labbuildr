@@ -223,28 +223,28 @@ coreos:
             [Install]
             WantedBy=multi-user.target"
 
-    $User_data | Set-Content -Path "$PSScriptRoot/labbuildr-scripts/CoreOS/config-drive/openstack/latest/user_data" | Out-Null 
-    convert-VMXdos2unix -Sourcefile "$PSScriptRoot/labbuildr-scripts/CoreOS/config-drive/openstack/latest/user_data" | Out-Null 
-    Write-Host -ForegroundColor Gray "  ==>Creating config-2 CD"
-    .$global:mkisofs -r -V config-2 -o "$($NodeClone.path)/config.iso"  "$PSScriptRoot/Scripts/CoreOS/config-drive" #  | Out-Null
+		$User_data | Set-Content -Path "$PSScriptRoot/labbuildr-scripts/CoreOS/config-drive/openstack/latest/user_data" | Out-Null 
+		convert-VMXdos2unix -Sourcefile "$PSScriptRoot/labbuildr-scripts/CoreOS/config-drive/openstack/latest/user_data" | Out-Null 
+		Write-Host -ForegroundColor Gray "  ==>Creating config-2 CD"
+		.$global:mkisofs -r -V config-2 -o "$($NodeClone.path)/config.iso"  "$PSScriptRoot/Scripts/CoreOS/config-drive" #  | Out-Null
 
-    $NodeClone | Connect-VMXcdromImage -ISOfile "$($NodeClone.path)/config.iso" -Contoller ide -Port 1:0 | Out-Null 
-    $NodeClone | Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 | Out-Null 
-    $NodeClone | Set-VMXVnet -Adapter 0 -Vnet $vmnet | Out-Null 
-    $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.Clonename)@$BuildDomain" | Out-Null 
-    $Content = $Nodeclone | Get-VMXConfig | Out-Null 
-    $Content = $Content -replace 'preset','soft' | Out-Null 
-    $Content | Set-Content -Path $NodeClone.config 
-    $NodeClone | start-vmx | Out-Null 
-}#end machine
+		$NodeClone | Connect-VMXcdromImage -ISOfile "$($NodeClone.path)/config.iso" -Contoller ide -Port 1:0 | Out-Null 
+		$NodeClone | Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 | Out-Null 
+		$NodeClone | Set-VMXVnet -Adapter 0 -Vnet $vmnet | Out-Null 
+		$NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.Clonename)@$BuildDomain" | Out-Null 
+		$Content = $Nodeclone | Get-VMXConfig 
+		$Content = $Content -replace 'preset','soft'
+		$Content | Set-Content -Path $NodeClone.config 
+		$NodeClone | start-vmx | Out-Null 
+	}#end machine
 
-else 
-    {
-    Write-Warning "Machine already exists"
-    }
+	else 
+		{
+		Write-Warning "Machine already exists"
+		}
 
 
-}#end foreach
+	}#end foreach
 
 }#end default
 }
