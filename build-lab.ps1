@@ -953,7 +953,7 @@ function update-fromGit
 		else
 			{
 			$request = curl -D - $Uri | grep Last-Modified
-			Write-Verbose $request
+			$request
 			[datetime]$latest_OnGit = $request -replace 'Last-Modified: '
 			}
         Write-Verbose " ==>we have $repo version $latest_local_Git, $latest_OnGit is online !"
