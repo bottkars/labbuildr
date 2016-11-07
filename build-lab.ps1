@@ -933,44 +933,52 @@ function update-fromGit
         Write-Verbose "Using update-fromgit function for $repo"
         $Uri = "https://api.github.com/repos/$RepoLocation/$repo/commits/$branch"
         $Zip = ("https://github.com/$RepoLocation/$repo/archive/$branch.zip").ToLower()
-        try
+        if ($Global:vmxtoolkit_type -eq "win_x86_64" )
+			{
+			try
+				{
+				$request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head -ErrorAction Stop
+				}
+			Catch
+				{
+				Write-Warning "Error connecting to git"
+				if ($_.Exception.Response.StatusCode -match "Forbidden")
+					{
+					Write-Host -ForegroundColor Gray " ==>Status inidicates that Connection Limit is exceeded"
+					}
+				exit
+				}
+			[datetime]$latest_OnGit = $request.Headers.'Last-Modified'
+			}
+		else
+			{
+			request = curl -D - $Uri | grep Last-Modified
+			[datetime]$latest_OnGit = $request -replace 'Last-Modified: '
+			}
+        Write-Verbose " ==>we have $repo version $latest_local_Git, $latest_OnGit is online !"
+        $latest_local_Git -lt $latest_OnGit
+        if ($latest_local_Git -lt $latest_OnGit -or $force.IsPresent )
             {
-            $request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head -ErrorAction Stop
-            }
-        Catch
-            {
-            Write-Warning "Error connecting to git"
-            if ($_.Exception.Response.StatusCode -match "Forbidden")
+            $Updatepath = "$Builddir/Update"
+			if (!(Get-Item -Path $Updatepath -ErrorAction SilentlyContinue))
+					{
+					$newDir = New-Item -ItemType Directory -Path "$Updatepath" | out-null
+                    }
+            Write-Host -ForegroundColor Gray " ==>we found a newer Version for $repo on Git Dated $($request.Headers.'Last-Modified')"
+            if ($delete.IsPresent)
                 {
-                Write-Host -ForegroundColor Gray " ==>Status inidicates that Connection Limit is exceeded"
+                Write-Host -ForegroundColor Gray "==>cleaning $Destination"
+                Remove-Item -Path $Destination -Recurse -ErrorAction SilentlyContinue
                 }
-            exit
+            Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir/update/$repo-$branch.zip" -ignoresize
+            Expand-LABZip -zipfilename "$Builddir/update/$repo-$branch.zip" -destination $Destination -Folder $repo-$branch
+            $Isnew = $true
+            $request.Headers.'Last-Modified' | Set-Content ($Builddir+"/$repo-$branch.gitver")
             }
-        [datetime]$latest_OnGit = $request.Headers.'Last-Modified'
-                Write-Verbose " ==>we have $repo version $latest_local_Git, $latest_OnGit is online !"
-                $latest_local_Git -lt $latest_OnGit
-                if ($latest_local_Git -lt $latest_OnGit -or $force.IsPresent )
-                    {
-                    $Updatepath = "$Builddir\Update"
-					if (!(Get-Item -Path $Updatepath -ErrorAction SilentlyContinue))
-					        {
-						    $newDir = New-Item -ItemType Directory -Path "$Updatepath" | out-null
-                            }
-                    Write-Host -ForegroundColor Gray " ==>we found a newer Version for $repo on Git Dated $($request.Headers.'Last-Modified')"
-                    if ($delete.IsPresent)
-                        {
-                        Write-Host -ForegroundColor Gray "==>cleaning $Destination"
-                        Remove-Item -Path $Destination -Recurse -ErrorAction SilentlyContinue
-                        }
-                    Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir\update\$repo-$branch.zip" -ignoresize
-                    Expand-LABZip -zipfilename "$Builddir\update\$repo-$branch.zip" -destination $Destination -Folder $repo-$branch
-                    $Isnew = $true
-                    $request.Headers.'Last-Modified' | Set-Content ($Builddir+"\$repo-$branch.gitver")
-                    }
-                else
-                    {
-                    Write-Host -ForegroundColor Gray " ==>no update required for $repo on $branch, already newest version "
-                    }
+        else
+            {
+            Write-Host -ForegroundColor Gray " ==>no update required for $repo on $branch, already newest version "
+            }
 if ($Isnew) {return $true}
 }
 #####
