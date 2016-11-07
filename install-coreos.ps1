@@ -170,7 +170,7 @@ switch ($PsCmdlet.ParameterSetName)
         if (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue))
             {   
             write-verbose "Creating $Nodeprefix$node"
-            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node | Out-Null 
+            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node 
             $IP = "$subnet.4$Node"
 
     $User_data= "#cloud-config
@@ -223,8 +223,8 @@ coreos:
             [Install]
             WantedBy=multi-user.target"
 
-    $User_data | Set-Content -Path "$PSScriptRoot/Scripts/CoreOS/config-drive/openstack/latest/user_data" | Out-Null 
-    convert-VMXdos2unix -Sourcefile "$PSScriptRoot/Scripts/CoreOS/config-drive/openstack/latest/user_data" | Out-Null 
+    $User_data | Set-Content -Path "$PSScriptRoot/labbuildr-scripts/CoreOS/config-drive/openstack/latest/user_data" | Out-Null 
+    convert-VMXdos2unix -Sourcefile "$PSScriptRoot/labbuildr-scripts/CoreOS/config-drive/openstack/latest/user_data" | Out-Null 
     Write-Host -ForegroundColor Gray "  ==>Creating config-2 CD"
     .$global:mkisofs -r -V config-2 -o "$($NodeClone.path)/config.iso"  "$PSScriptRoot/Scripts/CoreOS/config-drive" #  | Out-Null
 
