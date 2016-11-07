@@ -116,15 +116,9 @@ switch ($PsCmdlet.ParameterSetName)
             $Mastername = $Mymaster.Basename
             }  
             
-        Write-Warning "Importing $OVF, this may take a While"        
-        # if (!($mastername)) {$mastername = (Split-Path -Leaf $ovf).Replace(".ovf","")}
-        # $Mymaster = Get-Item $ovf
-
-        import-VMXOVATemplate -OVA $Target -destination $Masterpath
-        # & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck  --name=$mastername $ovf $PSScriptRoot #
-        $Mastervmx = get-vmx -path $Mastername
-#       $Mastervmx | Set-VMXHWversion -HWversion 7
-        write-Warning "Now run .\install-coreos.ps1 -defaults -version $Version" 
+        Write-Host -ForegroundColor Gray " ==>Importing $OVF, this may take a While"        
+        import-VMXOVATemplate -OVA $Target -destination $Masterpath | Out-Null
+        Write-Host " ==>Now run ./install-coreos.ps1 -defaults -version $Version" 
         }
 
 
@@ -153,30 +147,30 @@ switch ($PsCmdlet.ParameterSetName)
     $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 
 
-    If (!($MasterVMX = get-vmx -path $Master))
+    If (!($MasterVMX = get-vmx -path $Master -WarningAction SilentlyContinue))
      {
       Write-Error "No Valid Master Found"
       break
      }
     
 
-    $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
+    $Basesnap = $MasterVMX | Get-VMXSnapshot -WarningAction SilentlyContinue | where Snapshot -Match "Base"
     if (!$Basesnap) 
         {
         Write-verbose "Base snap does not exist, creating now"
-        $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
+        $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE | Out-Null 
         if (!$MasterVMX.Template) 
             {
             write-verbose "Templating Master VMX"
-            $template = $MasterVMX | Set-VMXTemplate
+            $template = $MasterVMX | Set-VMXTemplate | Out-Null  
             }
         }
     foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         {
-        if (!(get-vmx $Nodeprefix$node))
+        if (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue))
             {   
             write-verbose "Creating $Nodeprefix$node"
-            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node 
+            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node | Out-Null 
             $IP = "$subnet.4$Node"
 
     $User_data= "#cloud-config
@@ -229,20 +223,19 @@ coreos:
             [Install]
             WantedBy=multi-user.target"
 
-    $User_data | Set-Content -Path "$PSScriptRoot/Scripts/CoreOS/config-drive/openstack/latest/user_data"
-    convert-VMXdos2unix -Sourcefile "$PSScriptRoot/Scripts/CoreOS/config-drive/openstack/latest/user_data"
-    Write-Host "Creating config-2 CD"
+    $User_data | Set-Content -Path "$PSScriptRoot/Scripts/CoreOS/config-drive/openstack/latest/user_data" | Out-Null 
+    convert-VMXdos2unix -Sourcefile "$PSScriptRoot/Scripts/CoreOS/config-drive/openstack/latest/user_data" | Out-Null 
+    Write-Host -ForegroundColor Gray "  ==>Creating config-2 CD"
     .$global:mkisofs -r -V config-2 -o "$($NodeClone.path)/config.iso"  "$PSScriptRoot/Scripts/CoreOS/config-drive" #  | Out-Null
 
-    $NodeClone | Connect-VMXcdromImage -ISOfile "$($NodeClone.path)/config.iso" -Contoller ide -Port 1:0
-    $NodeClone | Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3
-    $NodeClone | Set-VMXVnet -Adapter 0 -Vnet $vmnet
-    $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.Clonename)@$BuildDomain"
-    $Content = $Nodeclone | Get-VMXConfig
-    $Content = $Content -replace 'preset','soft'
-    $Content | Set-Content -Path $NodeClone.config
-    Write-Host "Startding $($NodeClone.clonename)"
-    $NodeClone | start-vmx
+    $NodeClone | Connect-VMXcdromImage -ISOfile "$($NodeClone.path)/config.iso" -Contoller ide -Port 1:0 | Out-Null 
+    $NodeClone | Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 | Out-Null 
+    $NodeClone | Set-VMXVnet -Adapter 0 -Vnet $vmnet | Out-Null 
+    $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.Clonename)@$BuildDomain" | Out-Null 
+    $Content = $Nodeclone | Get-VMXConfig | Out-Null 
+    $Content = $Content -replace 'preset','soft' | Out-Null 
+    $Content | Set-Content -Path $NodeClone.config 
+    $NodeClone | start-vmx | Out-Null 
 }#end machine
 
 else 
