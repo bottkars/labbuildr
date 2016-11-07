@@ -996,11 +996,7 @@ function update-fromGit
 			return $true
 			}
 		}
-		else
-			{
-			.$Builddir/update.ps1
-			return $true
-			}
+
 }
 #####
 function Extract-Zip
