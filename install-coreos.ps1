@@ -129,7 +129,7 @@ switch ($PsCmdlet.ParameterSetName)
     {
     $Nodeprefix = "CoreOSNode"
     $Startnode = 1
-    New-Item -ItemType Directory ./Scripts/CoreOS/config-drive/openstack/latest -Force | Out-Null
+    New-Item -ItemType Directory ./labbuildr-scripts/CoreOS/config-drive/openstack/latest -Force | Out-Null
     If ($Defaults.IsPresent)
         {
         $labdefaults = Get-labDefaults
