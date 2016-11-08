@@ -31,7 +31,8 @@ Param(
 [switch]$Gateway,
 [switch]$sql,
 $Sourcedir,
-$Scripts = "labbuildr-scripts"
+$Scripts = "labbuildr-scripts",
+$mainMemUseFile
 # $Machinetype
 )
 # $SharedFolder = "Sources"
@@ -123,7 +124,15 @@ $Content += 'gui.exitAtPowerOff = "TRUE"'
 $Content = $Content | where {$_ -notmatch "virtualHW.version"}
 $Content += 'virtualHW.version = "'+"$($Global:vmwareversion.Major)"+'"'
 Set-Content -Path $Clone.config -Value $content -Force
-$Clone | Set-VMXMainMemory -usefile:$false
+If ($mainMemUseFile -eq 'false')
+	{
+	$Clone | Set-VMXMainMemory -usefile:$false
+	}
+else
+	{
+	$Clone | Set-VMXMainMemory -usefile:$true
+	}
+
 $Clone | Set-VMXDisplayName -DisplayName $Displayname
 $Clone | Set-VMXAnnotation -builddate -Line1 "This is node $Nodename for domain $Domainname"-Line2 "Adminpasswords: Password123!" -Line3 "Userpasswords: Welcome1"
 $Clone | Set-VMXAnnotation -builddate -Line1 "This is node $Nodename for domain $Domainname"-Line2 "Adminpasswords: Password123!" -Line3 "Userpasswords: Welcome1"

@@ -862,10 +862,10 @@ $latest_e16_cu = 'cu3'
 $latest_e15_cu = 'cu14'
 $latest_e14_sp = 'sp3'
 $latest_e14_ur = 'ur13'
-$latest_sqlver  = 'SQL2016'
+$latest_sqlver  = 'SQL2016_ISO'
 $latest_master = '2012R2FallUpdate'
-$Latest_2016 = '2016'
-$latest_sql_2012 = 'SQL2012SP2'
+$Latest_2016 = '2016_ISO'
+$latest_sql_2012 = 'SQL2012_ISO'
 $NW85_requiredJava = "jre-7u61-windows-x64"
 $Adminuser = "Administrator"
 $Adminpassword = "Password123!"
@@ -1450,6 +1450,7 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     }
 ###################################################
 ## do we want defaults ?
+[switch]$lab_MainMemUseFile = $false
 if ($defaults.IsPresent)
     {
     if (Test-Path $Builddir\defaults.xml)
@@ -1714,6 +1715,11 @@ if ($defaults.IsPresent)
                 $nw = $true
                 }
             }
+		if ($LabDefaults.MainMemUseFile -eq 'true')
+			{
+			[switch]$lab_MainMemUseFile = $true
+			}
+		
     }
 if (!$MySubnet) {$MySubnet = "192.168.2.0"}
 $IPv4Subnet = convert-iptosubnet $MySubnet
@@ -2591,7 +2597,7 @@ else
         Pause
         }
     Set-LABDNS1 -DNS1 "$IPv4Subnet.10"
-	$CloneOK = Invoke-Expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 0 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Size 'L' -Sourcedir $Sourcedir"
+	$CloneOK = Invoke-Expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 0 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Size 'L' -Sourcedir $Sourcedir -MainMemUseFile:$($lab_MainMemUseFile)"
 	###################################################
 	#
 	# DC Setup
@@ -2724,11 +2730,11 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 			# Clone Base Machine
 			if ($iSCSI.IsPresent)
 				{
-				$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $AAGNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $SQLSize -Sourcedir $Sourcedir"
+				$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $AAGNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $SQLSize -Sourcedir $Sourcedir -MainMemUseFile:$($lab_MainMemUseFile)"
 				}
 			else
 				{
-				$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $AAGNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $SQLSize -Sourcedir $Sourcedir -sql"
+				$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $AAGNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $SQLSize -Sourcedir $Sourcedir -sql -MainMemUseFile:$($lab_MainMemUseFile)"
 				}
 			###################################################
 			If ($CloneOK)
@@ -2834,7 +2840,7 @@ switch ($PsCmdlet.ParameterSetName)
                 }
             $Exchangesize = "XXL"
 		    test-dcrunning
-		    $CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -AddDisks -Disks 3 -Disksize 500GB -Size $Exchangesize -Sourcedir $Sourcedir "
+		    $CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -AddDisks -Disks 3 -Disksize 500GB -Size $Exchangesize -Sourcedir $Sourcedir -MainMemUseFile:$($lab_MainMemUseFile)"
 		    ###################################################
 		    If ($CloneOK)
                 {
@@ -2957,7 +2963,7 @@ switch ($PsCmdlet.ParameterSetName)
             pause
             }
 		test-dcrunning
-		$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -AddDisks -Disks 3 -Disksize 500GB -Size $Exchangesize -Sourcedir $Sourcedir "
+		$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -AddDisks -Disks 3 -Disksize 500GB -Size $Exchangesize -Sourcedir $Sourcedir -MainMemUseFile:$($lab_MainMemUseFile)"
 		###################################################
 		If ($CloneOK)
         {
@@ -3094,7 +3100,7 @@ switch ($PsCmdlet.ParameterSetName)
 				$Diskparm =  "-AddDisks -Disks 3 -Disksize 500GB" 
 				}
 				
-		    $CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain $Diskparm -Size $Exchangesize -Sourcedir $Sourcedir "
+		    $CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $EXNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain $Diskparm -Size $Exchangesize -Sourcedir $Sourcedir -MainMemUseFile:$($lab_MainMemUseFile)"
 		    ###################################################
 		    If ($CloneOK)
                 {
@@ -3293,7 +3299,7 @@ switch ($PsCmdlet.ParameterSetName)
 			# Clone BAse Machine
 			# Write-Host -ForegroundColor White  "Hyper-V Development is still not finished and untested, be careful"
 			test-dcrunning
-			$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $HVNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir $cloneparm"
+			$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $HVNode -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir $cloneparm -MainMemUseFile:$($lab_MainMemUseFile)"
 			###################################################
             If ($CloneOK)
 			    {
@@ -3480,7 +3486,7 @@ switch ($PsCmdlet.ParameterSetName)
                 }
 			test-dcrunning
 			# Clone Base Machine
-			$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir "
+			$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -MainMemUseFile:$($lab_MainMemUseFile)"
 			###################################################
 			If ($CloneOK)
 				{
@@ -3537,7 +3543,7 @@ switch ($PsCmdlet.ParameterSetName)
                 }
 			test-dcrunning
 			# Clone Base Machine
-		    $CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $SPSize -Sourcedir $Sourcedir $cloneparm"
+		    $CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $SPSize -Sourcedir $Sourcedir $cloneparm -MainMemUseFile:$($lab_MainMemUseFile)"
 			###################################################
 			If ($CloneOK)
 				{
@@ -3630,11 +3636,11 @@ switch ($PsCmdlet.ParameterSetName)
 			# Clone Base Machine
 			if ($VTbit)
 			{
-				$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir -SharedDisk $cloneparm"
+				$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir -SharedDisk $cloneparm -MainMemUseFile:$($lab_MainMemUseFile)"
 			}
 			else
 			{
-				$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir $cloneparm"
+				$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir $cloneparm -MainMemUseFile:$($lab_MainMemUseFile)"
 			}
 			###################################################
 			If ($CloneOK)
@@ -3700,7 +3706,7 @@ switch ($PsCmdlet.ParameterSetName)
                 pause
                 }
 			# Clone Base Machine
-			$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir -SharedDisk $cloneparm"
+			$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir -SharedDisk $cloneparm -MainMemUseFile:$($lab_MainMemUseFile)"
 			###################################################
 			If ($CloneOK)
 				{
@@ -3756,7 +3762,7 @@ switch ($PsCmdlet.ParameterSetName)
                 }
 			test-dcrunning
 			if ($SpaceNodes -gt 1) {$AddonFeatures = "Failover-Clustering, RSAT-Clustering"}
-			$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -AddOnfeatures $AddonFeature"
+			$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -MainMemUseFile:$($lab_MainMemUseFile)"
 			###################################################
 			If ($CloneOK)
 				{
@@ -3797,7 +3803,7 @@ switch ($PsCmdlet.ParameterSetName)
              }
         if ($Cluster.IsPresent) {$AddonFeatures = ("$AddonFeatures", "Failover-Clustering")}
 		test-dcrunning
-		$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -sql"
+		$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -sql -MainMemUseFile:$($lab_MainMemUseFile)"
 		###################################################
 		If ($CloneOK)
 			{
@@ -3839,7 +3845,7 @@ switch ($PsCmdlet.ParameterSetName)
         pause
         }
 	test-dcrunning
-	$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -bridge -Gateway -size $Size -Sourcedir $Sourcedir $CommonParameter"
+	$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -bridge -Gateway -size $Size -Sourcedir $Sourcedir $CommonParameter -MainMemUseFile:$($lab_MainMemUseFile)"
 	###################################################
 	If ($CloneOK)
 		{
@@ -3873,7 +3879,7 @@ switch ($PsCmdlet.ParameterSetName)
         pause
         }
 	test-dcrunning
-	$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Gateway -size XXL -Sourcedir $Sourcedir $CommonParameter"
+	$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Gateway -size XXL -Sourcedir $Sourcedir $CommonParameter -MainMemUseFile:$($lab_MainMemUseFile)"
 	###################################################
 	If ($CloneOK)
 		{
@@ -3912,7 +3918,7 @@ switch ($PsCmdlet.ParameterSetName)
         pause
         }
 	test-dcrunning
-	$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Gateway -size XXL -Sourcedir $Sourcedir $CommonParameter"
+	$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Gateway -size XXL -Sourcedir $Sourcedir $CommonParameter -MainMemUseFile:$($lab_MainMemUseFile)"
 	###################################################
 	If ($CloneOK)
 	{
@@ -3950,7 +3956,7 @@ switch ($PsCmdlet.ParameterSetName)
         pause
         }
 	test-dcrunning
-	$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Gateway -size XXL -Sourcedir $Sourcedir $CommonParameter"
+	$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 6 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Gateway -size XXL -Sourcedir $Sourcedir $CommonParameter -MainMemUseFile:$($lab_MainMemUseFile)"
 	###################################################
 	If ($CloneOK)
 	{
@@ -4031,7 +4037,7 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
 	test-dcrunning
     If ($DefaultGateway -match $Nodeip){$SetGateway = "-Gateway"}
 
-	$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 9 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -NW $SetGateway -size $Size -Sourcedir $Sourcedir $CommonParameter"
+	$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 9 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -NW $SetGateway -size $Size -Sourcedir $Sourcedir $CommonParameter -MainMemUseFile:$($lab_MainMemUseFile)"
 	###################################################
 	If ($CloneOK)
 	    {
