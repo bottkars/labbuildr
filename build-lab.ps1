@@ -2259,10 +2259,10 @@ if ($SCVMM.IsPresent)
 		"SC2012_R2"
 	        {
 			$SQLVER = "SQL2012_ISO"
+			$Master = "2012R2FallUpdate"
 			}
 		"SC2016"
 	        {
-			$SQLVER = "SQL2014SP2_ISO"
 			$Master ="2016"
 			}
         }
@@ -2283,10 +2283,11 @@ if ($SCOM.IsPresent)
 		"SC2012_R2"
 	        {
 			$SQLVER = "SQL2012_ISO"
+			$Master = "2012R2FallUpdate"
 			}
 		"SC2016"
 	        {
-			$SQLVER = "SQL2014SP2_ISO"
+
 			}
         }
     If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCOM -Destination $Sourcedir -unzip -WarningAction SilentlyContinue))
