@@ -818,7 +818,7 @@ try
     {
     [datetime]$Latest_labbuildr_git = "07/11/2015"
     }
-	[datetime]$Latest_labbuildr_git =  [datetime]::parse($Latest_labbuildr_git, $git_Culture)
+[datetime]$Latest_labbuildr_git =  get-date $Latest_labbuildr_git
 
 try
     {
@@ -828,27 +828,27 @@ try
     {
     [datetime]$Latest_labbuildr_scripts_git = "07/11/2015"
     }
-    [datetime]$Latest_labbuildr_scripts_git =  [datetime]::parse($Latest_labbuildr_scripts_git, $git_Culture)
+[datetime]$Latest_labbuildr_scripts_git =  Get-Date $Latest_labbuildr_scripts_git
 	
 try
     {
-    [datetime]$Latest_labtools_git = Get-Content  (Join-Path $Builddir "labtools-$branch.gitver") -ErrorAction Stop
+    $Latest_labtools_git = Get-Content  (Join-Path $Builddir "labtools-$branch.gitver") -ErrorAction Stop
 	}
     catch
     {
     [datetime]$Latest_labtools_git = "07/11/2015"
     }
-[datetime]$Latest_labtools_git =  [datetime]::parse($Latest_labtools_git, $git_Culture)
+[datetime]$Latest_labtools_git =  Get-Date $Latest_labtools_git
 
 try
     {
-    [datetime]$Latest_vmxtoolkit_git = Get-Content  (Join-Path $Builddir "vmxtoolkit-$branch.gitver") -ErrorAction Stop
+    $Latest_vmxtoolkit_git = Get-Content  (Join-Path $Builddir "vmxtoolkit-$branch.gitver") -ErrorAction Stop
     }
 catch
     {
     [datetime]$Latest_vmxtoolkit_git = "07/11/2015"
     }
-[datetime]$Latest_vmxtoolkit_git =  [datetime]::parse($Latest_vmxtoolkit_git, $git_Culture)
+[datetime]$Latest_vmxtoolkit_git =  get-date $Latest_vmxtoolkit_git 
 
 ################## Statics
 $custom_domainsuffix = "local"
@@ -998,7 +998,7 @@ function update-fromGit
 					Expand-LABpackage -Archive "$Builddir/update/$repo-$branch.zip" -filepattern $Repo-$branch -destination $Destination
 					}
 				$Isnew = $true
-				$latest_OnGit | Set-Content (join-path $Builddir "$repo-$branch.gitver")
+				get-date $latest_OnGit -format $git_culture.DateTimeFormat.RFC1123Pattern  | Set-Content (join-path $Builddir "$repo-$branch.gitver")
 				}
 			else
 				{
@@ -1425,19 +1425,19 @@ Write-Host
                     }
                 if ($Latest_labbuildr_git)
                     {
-                    Write-Host -ForegroundColor White "$my_repo Git Release "(get-date $Latest_labbuildr_git)
+                    Write-Host -ForegroundColor White "$my_repo Git Release "(get-date -format $local_culture.DateTimeFormat.RFC1123Pattern $Latest_labbuildr_git)
                     }
                 if ($Latest_vmxtoolkit_git)
                     {
-                    Write-Host -ForegroundColor White  "vmxtoolkit Git Release"(get-date $Latest_vmxtoolkit_git)
+                    Write-Host -ForegroundColor White  "vmxtoolkit Git Release"(get-date -format $local_culture.DateTimeFormat.RFC1123Pattern $Latest_vmxtoolkit_git)
                     }
                 if ($Latest_labbuildr_scripts_git)
                     {
-                    Write-Host -ForegroundColor White  "scripts Git Release "(get-date $Latest_labbuildr_scripts_git)
+                    Write-Host -ForegroundColor White  "scripts Git Release "(get-date -format $local_culture.DateTimeFormat.RFC1123Pattern $Latest_labbuildr_scripts_git)
                     }
                 if ($Latest_labtools_git)
                     {
-                    Write-Host -ForegroundColor White  "labtools Git Release "(get-date $Latest_labtools_git)
+                    Write-Host -ForegroundColor White  "labtools Git Release "(get-date -format $local_culture.DateTimeFormat.RFC1123Pattern $Latest_labtools_git)
                     }
                 Write-Host -ForegroundColor Gray '   Copyright 2016 Karsten Bott
    Licensed under the Apache License, Version 2.0 (the "License");
