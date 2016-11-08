@@ -1760,6 +1760,7 @@ else
 	{
 	$LanguageTag = "en_US"
 	}
+$DCMaster = $Master
 write-verbose "After defaults !!!! "
 Write-Verbose "Sourcedir : $Sourcedir"
 Write-Verbose "NWVER : $nw_ver"
@@ -2535,6 +2536,7 @@ if ($Dockerhost.IsPresent)
 $MyMaster = test-labmaster -Masterpath "$Masterpath" -Master $Master -mastertype vmware -Confirm:$Confirm
 $MasterVMX = $mymaster.config
 Write-Verbose " ==>we got master $MasterVMX"
+
 ##########################################
 Write-Host -ForegroundColor Magenta " ==>leaving download section"
 if ($Work_Items)
@@ -2601,6 +2603,16 @@ if (!$NoDomainCheck.IsPresent)
 		Write-Verbose "AddressFamily : $AddressFamily"
 		Write-Verbose "DefaultGateway : $DefaultGateway"
 		Write-Verbose "DNS1 : $DNS1"
+		####
+if ($DCMaster -ne $Master)
+	{
+	$My_DC_Master = test-labmaster -Masterpath "$Masterpath" -Master $DCMaster -mastertype vmware -Confirm:$Confirm
+	$DC_MasterVMX = $My_DC_Master.config
+	Write-Verbose " ==>we got master $DC_MasterVMX"
+	}
+else
+	{$DC_MasterVMX = $MyMaster.config}
+		####
 		If ($DefaultGateway.IsPresent)
 			{
 			Write-Verbose "Gateway : $DefaultGateway"
@@ -2614,7 +2626,7 @@ if (!$NoDomainCheck.IsPresent)
 			Pause
 			}
 		Set-LABDNS1 -DNS1 "$IPv4Subnet.10"
-		$CloneOK = Invoke-Expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 0 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Size 'L' -Sourcedir $Sourcedir -MainMemUseFile:$($lab_MainMemUseFile)"
+		$CloneOK = Invoke-Expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 0 -Builddir $Builddir -Mastervmx $DC_MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Size 'L' -Sourcedir $Sourcedir -MainMemUseFile:$($lab_MainMemUseFile)"
 		###################################################
 		#
 		# DC Setup
