@@ -818,7 +818,6 @@ try
     {
     [datetime]$Latest_labbuildr_git = "07/11/2015"
     }
-[datetime]$Latest_labbuildr_git =  get-date $Latest_labbuildr_git
 
 try
     {
@@ -828,7 +827,6 @@ try
     {
     [datetime]$Latest_labbuildr_scripts_git = "07/11/2015"
     }
-[datetime]$Latest_labbuildr_scripts_git =  Get-Date $Latest_labbuildr_scripts_git
 	
 try
     {
@@ -838,7 +836,6 @@ try
     {
     [datetime]$Latest_labtools_git = "07/11/2015"
     }
-[datetime]$Latest_labtools_git =  Get-Date $Latest_labtools_git
 
 try
     {
@@ -848,7 +845,6 @@ catch
     {
     [datetime]$Latest_vmxtoolkit_git = "07/11/2015"
     }
-[datetime]$Latest_vmxtoolkit_git =  get-date $Latest_vmxtoolkit_git 
 
 ################## Statics
 $custom_domainsuffix = "local"
@@ -963,7 +959,7 @@ function update-fromGit
 					exit
 					}
 				
-				[datetime]$latest_OnGit =  [datetime]::parse($request.Headers.'Last-Modified', $git_Culture)
+				$latest_OnGit =  $request.Headers.'Last-Modified'
 				#Write-Host $latest_OnGit
 				}
 			##else
@@ -998,7 +994,7 @@ function update-fromGit
 					Expand-LABpackage -Archive "$Builddir/update/$repo-$branch.zip" -filepattern $Repo-$branch -destination $Destination
 					}
 				$Isnew = $true
-				get-date $latest_OnGit -format $git_culture.DateTimeFormat.RFC1123Pattern  | Set-Content (join-path $Builddir "$repo-$branch.gitver")
+				$latest_OnGit | Set-Content (join-path $Builddir "$repo-$branch.gitver")
 				}
 			else
 				{
@@ -1378,7 +1374,7 @@ switch ($PsCmdlet.ParameterSetName)
         $RepoLocation = "bottkars"
         try
             {
-            [datetime]$latest_local_file = Get-Content  (Join-Path $Builddir "$($Repo)-$branch.gitver") -ErrorAction SilentlyContinue
+            $latest_local_file = Get-Content  (Join-Path $Builddir "$($Repo)-$branch.gitver") -ErrorAction SilentlyContinue
 			[datetime]$latest_local_git =  [datetime]::parse($latest_local_file, $local_culture)
             }
         catch
