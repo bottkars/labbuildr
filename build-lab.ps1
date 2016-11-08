@@ -953,7 +953,7 @@ function update-fromGit
 					exit
 					}
 				[datetime]$latest_OnGit = $request.Headers.'Last-Modified'
-				Write-Host $latest_OnGit
+				#Write-Host $latest_OnGit
 				}
 			##else
 		#		{
@@ -961,7 +961,7 @@ function update-fromGit
 	#			$request
 	#			[datetime]$latest_OnGit = $request -replace 'Last-Modified: '
 	#			}
-			Write-Verbose " ==>we have $repo version $latest_local_Git, $latest_OnGit is online !"
+			Write-Host " ==>we have $repo version $latest_local_Git, $latest_OnGit is online !"
 	#		$latest_local_Git -lt $latest_OnGit
 			if ($latest_local_Git -lt $latest_OnGit -or $force.IsPresent )
 				{
