@@ -207,6 +207,7 @@ elseif(!$Isilon.IsPresent)
         $Clone | Set-VMXVnet -Adapter 0 -vnet $vmnet
         }
 
+$Clone | Connect-VMXcdromImage -Contoller sata -Port 0:1 -connect:$false
 $Clone | Set-VMXToolsReminder -enabled:$false
 $Clone | Start-VMX
 if (!$Isilon.IsPresent)
