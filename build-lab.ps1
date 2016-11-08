@@ -2253,9 +2253,17 @@ if ($SCVMM.IsPresent)
     Write-Host -ForegroundColor Gray " ==>Entering SCVMM Prereq Section"
     [switch]$SQL=$true
     $Prereqdir = "prereq"
-    if ($SC_Version -match "2012")
-        {
-        $SQLVER = "SQL2012_ISO"
+	switch ($SC_Version)
+		{
+		"SC2012_R2"
+	        {
+			$SQLVER = "SQL2012_ISO"
+			}
+		"SC2016"
+	        {
+			$SQLVER = "SQL2014SP2_ISO"
+			$Master ="2016"
+			}
         }
     If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCVMM -Destination $Sourcedir -unzip -WarningAction SilentlyContinue))
         {
@@ -2269,9 +2277,16 @@ if ($SCOM.IsPresent)
     Write-Host -ForegroundColor Gray " ==>Entering SCOM Prereq Section"
     [switch]$SQL=$true
     $Prereqdir = "prereq"
-    if ($SC_Version -match "2012")
-        {
-        $SQLVER = "SQL2012SP2"
+	switch ($SC_Version)
+		{
+		"SC2012_R2"
+	        {
+			$SQLVER = "SQL2012_ISO"
+			}
+		"SC2016"
+	        {
+			$SQLVER = "SQL2014SP2_ISO"
+			}
         }
     If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCOM -Destination $Sourcedir -unzip -WarningAction SilentlyContinue))
         {
