@@ -1338,7 +1338,7 @@ switch ($PsCmdlet.ParameterSetName)
         $ReloadProfile = $False
         $Repo = $my_repo
         $RepoLocation = "bottkars"
-		[datetime]$latest_local_git =  [datetime]::parse($Latest_labbuildr_git, $local_culture)
+		[datetime]$latest_local_git =  [datetime]::parse($Latest_labbuildr_git, $git_Culture)
 
         #[datetime]$Latest_local_git = $Latest_labbuildr_git
         $Destination = "$Builddir"
@@ -1365,7 +1365,7 @@ switch ($PsCmdlet.ParameterSetName)
         ####
         $Repo = "labbuildr-scripts"
         $RepoLocation = "bottkars"
-		[datetime]$latest_local_git =  [datetime]::parse($Latest_labbuildr_scripts_git, $local_culture)
+		$latest_local_git =  Get-Date $Latest_labbuildr_git
         #$Latest_local_git = $Latest_labbuildr_scripts_git
         $Destination = "$Default_Host_ScriptDir"
         $Has_update = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -delete
@@ -1375,7 +1375,7 @@ switch ($PsCmdlet.ParameterSetName)
         try
             {
             $latest_local_file = Get-Content  (Join-Path $Builddir "$($Repo)-$branch.gitver") -ErrorAction SilentlyContinue
-			[datetime]$latest_local_git =  [datetime]::parse($latest_local_file, $local_culture)
+			$latest_local_git =  get-date $latest_local_file
             }
         catch
             {}
