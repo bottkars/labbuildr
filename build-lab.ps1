@@ -953,6 +953,7 @@ function update-fromGit
 					exit
 					}
 				[datetime]$latest_OnGit = $request.Headers.'Last-Modified'
+				Write-Host $latest_OnGit
 				}
 			##else
 		#		{
