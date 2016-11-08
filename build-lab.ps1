@@ -985,7 +985,7 @@ function update-fromGit
 					Expand-LABpackage -Archive "$Builddir/update/$repo-$branch.zip" -filepattern $Repo-$branch -destination $Destination
 					}
 				$Isnew = $true
-				$latest_OnGit | Set-Content ($Builddir+"/$repo-$branch.gitver")
+				$latest_OnGit | Set-Content (join-path $Builddir "$repo-$branch.gitver")
 				}
 			else
 				{
