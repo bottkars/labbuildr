@@ -928,6 +928,7 @@ function update-fromGit
             [string]$Destination,
             [switch]$delete
             )
+		$AuthHeaders = @{'Authorization' = "token b64154d0de42396ebd72b9f53ec863f2234f6997"}
 		if ($Global:vmxtoolkit_type -eq "win_x86_64" )
 			{
 			$branch =  $branch.ToLower()
@@ -940,7 +941,7 @@ function update-fromGit
 				{
 				try
 					{
-					$request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head -ErrorAction Stop
+					$request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head -ErrorAction Stop -Headers $AuthHeaders
 					}
 				Catch
 					{
@@ -952,16 +953,15 @@ function update-fromGit
 					exit
 					}
 				[datetime]$latest_OnGit = $request.Headers.'Last-Modified'
-				Write-Host $
 				}
-			else
-				{
-				$request = curl -D - $Uri | grep Last-Modified
-				$request
-				[datetime]$latest_OnGit = $request -replace 'Last-Modified: '
-				}
+			##else
+		#		{
+		#		$request = curl -D - $Uri | grep Last-Modified
+	#			$request
+	#			[datetime]$latest_OnGit = $request -replace 'Last-Modified: '
+	#			}
 			Write-Verbose " ==>we have $repo version $latest_local_Git, $latest_OnGit is online !"
-			$latest_local_Git -lt $latest_OnGit
+	#		$latest_local_Git -lt $latest_OnGit
 			if ($latest_local_Git -lt $latest_OnGit -or $force.IsPresent )
 				{
 				$Updatepath = "$Builddir/Update"
@@ -1330,12 +1330,12 @@ switch ($PsCmdlet.ParameterSetName)
         $ReloadProfile = $False
         $Repo = $my_repo
         $RepoLocation = "bottkars"
-        [date]$Latest_local_git = $Latest_labbuildr_git
+        [datetime]$Latest_local_git = $Latest_labbuildr_git
         $Destination = "$Builddir"
         $Has_update = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination
-        if (Test-Path "$Builddir\deletefiles.txt")
+        if (Test-Path (join-path $Builddir "deletefiles.txt"))
 		    {
-			$deletefiles = get-content "$Builddir\deletefiles.txt"
+			$deletefiles = get-content (join-path $Builddir "deletefiles.txt")
 			foreach ($deletefile in $deletefiles)
 			    {
 				try
@@ -1363,7 +1363,7 @@ switch ($PsCmdlet.ParameterSetName)
         $RepoLocation = "bottkars"
         try
             {
-            [datetime]$Latest_local_git = Get-Content  ($Builddir + "\$($Repo)-$branch.gitver")  -ErrorAction SilentlyContinue
+            [datetime]$Latest_local_git = Get-Content  (Join-Path $Builddir "$($Repo)-$branch.gitver") -ErrorAction SilentlyContinue
             }
         catch
             {}
@@ -1386,7 +1386,7 @@ switch ($PsCmdlet.ParameterSetName)
             }
         else
             {
-            ."./$Myself_ps1"
+            ./$Myself_ps1
             }
     return
     #$ReloadProfile
