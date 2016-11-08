@@ -28,4 +28,5 @@
 <Puppet></Puppet>
 <PuppetMaster></PuppetMaster>
 <Hostkey></Hostkey>
+<MainMemUseFile>True</MainMemUseFile>  
 </config>
