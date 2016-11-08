@@ -1107,6 +1107,7 @@ function debug
 function runtime
 {
 	param ($Time, $InstallProg)
+	$Dots = ":"
 	$Timenow = Get-Date
 	$Difftime = $Timenow - $Time
 	$StrgTime = ("{0:D2}" -f $Difftime.Hours).ToString() + $Dots + ("{0:D2}" -f $Difftime.Minutes).ToString() + $Dots + ("{0:D2}" -f $Difftime.Seconds).ToString()
@@ -2532,162 +2533,171 @@ if (!($SourceOK = test-source -SourceVer $Sourcever -SourceDir $Sourcedir))
 }
 if ($DefaultGateway) {$AddGateway  = "-DefaultGateway $DefaultGateway"}
 If ($VMnet -ne "VMnet2") { debug "setting different Network is untested and own Risk !" }
-if (!$NoDomainCheck.IsPresent){
-####################################################################
-# DC Validation
-$Nodename = $DCNODE
-$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
-if ($Nodeclone = get-vmx $DCNODE -WarningAction SilentlyContinue)
-{
-	Write-Host -ForegroundColor White  " ==>Domaincontroller already deployed, Comparing Workorder Parameters with Running Environment"
-	test-dcrunning
-    if ( $AddressFamily -match 'IPv4' )
-        {
-	    test-user -whois Administrator
-	    write-verbose "Verifiying Domainsetup"
-        $EnableFolders = get-vmx -path $DCNODE | Set-VMXSharedFolderState -enabled
-	    $Checkdom = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$IN_Guest_UNC_Scriptroot\$DCNODE" -Script checkdom.ps1 # $CommonParameter
-	    $BuildDomain, $RunningIP, $VMnet, $MyGateway = test-domainsetup
-	    $IPv4Subnet = convert-iptosubnet $RunningIP
-	    $Work_Items +=  " ==>will Use Domain $BuildDomain and Subnet $IPv4Subnet.0 for on $VMnet the Running Workorder"
-        $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
-        If ($MyGateway)
-            {
-            $Work_Items +=  " ==>we will configure Default Gateway at $MyGateway"
-            $AddGateway  = "-DefaultGateway $MyGateway"
-            Write-Verbose -Message " ==>we will add a Gateway with $AddGateway"
-            }
-    else
-        {
-        write-verbose " no domain check on IPv6only"
-        $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
-        }
-    }
-}#end test-domain
-else
-{
-    $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
-	###################################################
-	# Part 1, Definition of Domain Controller
-	###################################################
-	#$Nodename = $DCNODE
-	$DCName = $BuildDomain + "DC"
-	#$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
-	$IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$DCNODE"
-	###################################################
-	Write-Verbose "IPv4Subnet :$IPv4Subnet"
-    Write-Verbose "IPV6Prefix :$IPv6Prefix"
-    Write-Verbose "IPv6Prefixlength : $IPv6PrefixLength"
-    write-verbose "DCName : $DCName"
-    Write-Verbose "Domainsuffix : $custom_domainsuffix"
-    Write-Verbose "Domain : $BuildDomain"
-    Write-Verbose "AddressFamily : $AddressFamily"
-    Write-Verbose "DefaultGateway : $DefaultGateway"
-    Write-Verbose "DNS1 : $DNS1"
-    If ($DefaultGateway.IsPresent)
-        {
-        Write-Verbose "Gateway : $DefaultGateway"
-        }
-	Write-Host -ForegroundColor Magenta " ==>we will Build Domain $BuildDomain and Subnet $IPv4subnet.0  on $VMnet for the Running Workorder"
-    Write-Host -ForegroundColor Magenta " ==>setting Language to $LanguageTag"
-    if ($DefaultGateway){ Write-Host -ForegroundColor Magenta " ==>The Gateway will be $DefaultGateway"}
-	if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
-        {
-        Write-Verbose "Press any key to Continue Cloning"
-        Pause
-        }
-    Set-LABDNS1 -DNS1 "$IPv4Subnet.10"
-	$CloneOK = Invoke-Expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 0 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Size 'L' -Sourcedir $Sourcedir -MainMemUseFile:$($lab_MainMemUseFile)"
-	###################################################
-	#
-	# DC Setup
-	#
-	###################################################
-	if ($CloneOK)
+if (!$NoDomainCheck.IsPresent)
+	{
+	####################################################################
+	# DC Validation
+	$Nodename = $DCNODE
+	$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
+	if ($Nodeclone = get-vmx $DCNODE -WarningAction SilentlyContinue)
 		{
-		$NodeClone = Get-VMX -Path $CloneVMX
-		test-user -whois Administrator
-		Write-Verbose $IN_Guest_UNC_ScenarioScriptDir
-        $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script new-dc.ps1 -Parameter "-dcname $DCName -Domain $BuildDomain -IPv4subnet $IPv4subnet -IPv4Prefixlength $IPv4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -IPv6Prefix $IPv6Prefix  -AddressFamily $AddressFamily $AddGateway $CommonParameter" -interactive -nowait
-        Write-Host -ForegroundColor White  " ==>preparing Domain " -NoNewline
-        if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
-            {
-            write-verbose "verbose enabled, Please press any key within VM $Dcname"
-            While ($FileOK = (&$vmrun -gu Administrator -gp Password123! fileExistsInGuest $CloneVMX $IN_Guest_LogDir\2.pass) -ne "The file exists.")
+		Write-Host -ForegroundColor White  " ==>Domaincontroller already deployed, Comparing Workorder Parameters with Running Environment"
+		test-dcrunning
+		if ( $AddressFamily -match 'IPv4' )
+			{
+			test-user -whois Administrator
+			write-verbose "Verifiying Domainsetup"
+			$EnableFolders = get-vmx -path $DCNODE | Set-VMXSharedFolderState -enabled
+			$Checkdom = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$IN_Guest_UNC_Scriptroot\$DCNODE" -Script checkdom.ps1 # $CommonParameter
+			$BuildDomain, $RunningIP, $VMnet, $MyGateway = test-domainsetup
+			$IPv4Subnet = convert-iptosubnet $RunningIP
+			$Work_Items +=  " ==>will Use Domain $BuildDomain and Subnet $IPv4Subnet.0 for on $VMnet the Running Workorder"
+			$StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
+			If ($MyGateway)
 				{
-				foreach ($i in (1..$sleep))
+				$Work_Items +=  " ==>we will configure Default Gateway at $MyGateway"
+				$AddGateway  = "-DefaultGateway $MyGateway"
+				Write-Verbose -Message " ==>we will add a Gateway with $AddGateway"
+				}
+		else
+			{
+			write-verbose " no domain check on IPv6only"
+			$StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
+			}
+		}
+	}#end test-domain
+	else
+		{
+		$StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
+		###################################################
+		# Part 1, Definition of Domain Controller
+		###################################################
+		#$Nodename = $DCNODE
+		$DCName = $BuildDomain + "DC"
+		#$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
+		$IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$DCNODE"
+		###################################################
+		Write-Verbose "IPv4Subnet :$IPv4Subnet"
+		Write-Verbose "IPV6Prefix :$IPv6Prefix"
+		Write-Verbose "IPv6Prefixlength : $IPv6PrefixLength"
+		write-verbose "DCName : $DCName"
+		Write-Verbose "Domainsuffix : $custom_domainsuffix"
+		Write-Verbose "Domain : $BuildDomain"
+		Write-Verbose "AddressFamily : $AddressFamily"
+		Write-Verbose "DefaultGateway : $DefaultGateway"
+		Write-Verbose "DNS1 : $DNS1"
+		If ($DefaultGateway.IsPresent)
+			{
+			Write-Verbose "Gateway : $DefaultGateway"
+			}
+		Write-Host -ForegroundColor Magenta " ==>we will Build Domain $BuildDomain and Subnet $IPv4subnet.0  on $VMnet for the Running Workorder"
+		Write-Host -ForegroundColor Magenta " ==>setting Language to $LanguageTag"
+		if ($DefaultGateway){ Write-Host -ForegroundColor Magenta " ==>The Gateway will be $DefaultGateway"}
+		if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+			{
+			Write-Verbose "Press any key to Continue Cloning"
+			Pause
+			}
+		Set-LABDNS1 -DNS1 "$IPv4Subnet.10"
+		$CloneOK = Invoke-Expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 0 -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Size 'L' -Sourcedir $Sourcedir -MainMemUseFile:$($lab_MainMemUseFile)"
+		###################################################
+		#
+		# DC Setup
+		#
+		###################################################
+		if ($CloneOK)
+			{
+			$NodeClone = Get-VMX -Path $CloneVMX
+			test-user -whois Administrator
+			Write-Verbose $IN_Guest_UNC_ScenarioScriptDir
+			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script new-dc.ps1 -Parameter "-dcname $DCName -Domain $BuildDomain -IPv4subnet $IPv4subnet -IPv4Prefixlength $IPv4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -IPv6Prefix $IPv6Prefix  -AddressFamily $AddressFamily $AddGateway $CommonParameter" -interactive -nowait
+			Write-Host -ForegroundColor White  " ==>preparing Domain " -NoNewline
+			if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+				{
+				write-verbose "verbose enabled, Please press any key within VM $Dcname"
+				While ($FileOK = (&$vmrun -gu Administrator -gp Password123! fileExistsInGuest $CloneVMX $IN_Guest_LogDir\2.pass) -ne "The file exists.")
 					{
-					Write-Host -ForegroundColor Yellow "-`b" -NoNewline
-					sleep 1
-					Write-Host -ForegroundColor Yellow "\`b" -NoNewline
-					sleep 1
-					Write-Host -ForegroundColor Yellow "|`b" -NoNewline
-					sleep 1
-					Write-Host -ForegroundColor Yellow "/`b" -NoNewline
-					sleep 1
+					foreach ($i in (1..$sleep))
+						{
+						Write-Host -ForegroundColor Yellow "-`b" -NoNewline
+						sleep 1
+						Write-Host -ForegroundColor Yellow "\`b" -NoNewline
+						sleep 1
+						Write-Host -ForegroundColor Yellow "|`b" -NoNewline
+						sleep 1
+						Write-Host -ForegroundColor Yellow "/`b" -NoNewline
+						sleep 1
+						}
 					}
 				}
-            }
-        else
-            {
-			$Sleep = 1
-		    While (!($Nodeclone | Test-VMXFileInGuest -Guestuser $Adminuser -Guestpassword $Adminpassword -Filename c:\scripts\2.pass))
+			else
 				{
-				foreach ($i in (1..$sleep))
+				$Sleep = 1
+				While (!($Nodeclone | Test-VMXFileInGuest -Guestuser $Adminuser -Guestpassword $Adminpassword -Filename c:\scripts\2.pass))
 					{
-					Write-Host -ForegroundColor Yellow "-`b" -NoNewline
-					sleep 1
-					Write-Host -ForegroundColor Yellow "\`b" -NoNewline
-					sleep 1
-					Write-Host -ForegroundColor Yellow "|`b" -NoNewline
-					sleep 1
-					Write-Host -ForegroundColor Yellow "/`b" -NoNewline
-					sleep 1
+					foreach ($i in (1..$sleep))
+						{
+						Write-Host -ForegroundColor Yellow "-`b" -NoNewline
+						sleep 1
+						Write-Host -ForegroundColor Yellow "\`b" -NoNewline
+						sleep 1
+						Write-Host -ForegroundColor Yellow "|`b" -NoNewline
+						sleep 1
+						Write-Host -ForegroundColor Yellow "/`b" -NoNewline
+						sleep 1
+						}
 					}
 				}
-			}
-        Write-Host -ForegroundColor Green "[success]"
-        test-user -whois Administrator
-        if ($Toolsupdate.IsPresent)
-            {
-            Write-Host -ForegroundColor Gray " ==>preparing VMware Tools Upgrade by injecting tools CD ( update will start before next reboot of VM )"
-            Start-Process $Global:vmrun -ArgumentList  "installTools $CloneVMX" -NoNewWindow
-            }
-		$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script finish-domain.ps1 -Parameter "-domain $BuildDomain -domainsuffix $custom_domainsuffix $CommonParameter" -nowait -interactive 
-		Write-Host -ForegroundColor White  " ==>creating Domain $BuildDomain " -NoNewline
-		While (!($Nodeclone | Test-VMXFileInGuest -Guestuser $Adminuser -Guestpassword $Adminpassword -Filename c:\scripts\3.pass))
-                {
-				foreach ($i in (1..$sleep))
+			Write-Host -ForegroundColor Green "[success]"
+			test-user -whois Administrator
+			if ($Toolsupdate.IsPresent)
+				{
+				Write-Host -ForegroundColor Gray " ==>preparing VMware Tools Upgrade by injecting tools CD ( update will start before next reboot of VM )"
+				Start-Process $Global:vmrun -ArgumentList  "installTools $CloneVMX" -NoNewWindow
+				}
+			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script finish-domain.ps1 -Parameter "-domain $BuildDomain -domainsuffix $custom_domainsuffix $CommonParameter" -nowait -interactive 
+			Write-Host -ForegroundColor White  " ==>creating Domain $BuildDomain " -NoNewline
+			While (!($Nodeclone | Test-VMXFileInGuest -Guestuser $Adminuser -Guestpassword $Adminpassword -Filename c:\scripts\3.pass))
 					{
-					Write-Host -ForegroundColor Yellow "-`b" -NoNewline
-					sleep 1
-					Write-Host -ForegroundColor Yellow "\`b" -NoNewline
-					sleep 1
-					Write-Host -ForegroundColor Yellow "|`b" -NoNewline
-					sleep 1
-					Write-Host -ForegroundColor Yellow "/`b" -NoNewline
-					sleep 1
-					}
-			}
-		write-host -ForegroundColor Green "[finished]"
-		$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script dns.ps1 -Parameter "-IPv4subnet $IPv4Subnet -IPv4Prefixlength $IPV4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily  -IPV6Prefix $IPV6Prefix $AddGateway $CommonParameter"  -interactive
-		$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script add-serviceuser.ps1 -interactive
-	    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script create-labshortcut.ps1 -interactive # -Parameter $CommonParameter
-		$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir  -Script pwpolicy.ps1 -interactive
-        $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script set-winrm.ps1 -interactive
-        if ($NW.IsPresent)
-            {
-		    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter "-nw_ver $nw_ver"
-            }
-        invoke-postsection
-		# run-vmpowershell -Script gpo.ps1 -interactive
-		# GPO on freetype domain ? Exchange Powershell Issues ?
-	} #DC node End
-}#end else createdc
-####################################################################
-### Scenario Deployment Begins .....                           #####
-####################################################################
-}
+					foreach ($i in (1..$sleep))
+						{
+						Write-Host -ForegroundColor Yellow "-`b" -NoNewline
+						sleep 1
+						Write-Host -ForegroundColor Yellow "\`b" -NoNewline
+						sleep 1
+						Write-Host -ForegroundColor Yellow "|`b" -NoNewline
+						sleep 1
+						Write-Host -ForegroundColor Yellow "/`b" -NoNewline
+						sleep 1
+						}
+				}
+			write-host -ForegroundColor Green "[finished]"
+			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script dns.ps1 -Parameter "-IPv4subnet $IPv4Subnet -IPv4Prefixlength $IPV4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily  -IPV6Prefix $IPV6Prefix $AddGateway $CommonParameter"  -interactive
+			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script add-serviceuser.ps1 -interactive
+			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script create-labshortcut.ps1 -interactive # -Parameter $CommonParameter
+			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir  -Script pwpolicy.ps1 -interactive
+			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script set-winrm.ps1 -interactive
+			if ($NW.IsPresent)
+				{
+				$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter "-nw_ver $nw_ver"
+				}
+			invoke-postsection
+			# run-vmpowershell -Script gpo.ps1 -interactive
+			# GPO on freetype domain ? Exchange Powershell Issues ?
+		} #DC node End
+	}#end else createdc
+	####################################################################
+	### Scenario Deployment Begins .....                           #####
+	####################################################################
+	}
+else
+	{
+	$StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
+	}
+	
+
+
+
 #### Is AlwaysOn Needed ?
 If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 {
