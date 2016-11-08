@@ -810,7 +810,7 @@ Write-Verbose "Branch = $branch"
 Write-Verbose "Current Branch = $Current_labbuildr_branch"
 try
     {
-    [datetime]$Latest_labbuildr_git = Get-Content  ($Builddir + "\labbuildr-$branch.gitver") -ErrorAction Stop
+    [datetime]$Latest_labbuildr_git = Get-Content  (join-path $Builddir "labbuildr-$branch.gitver") -ErrorAction Stop
     }
     catch
     {
@@ -818,7 +818,7 @@ try
     }
 try
     {
-    [datetime]$Latest_labbuildr_scripts_git = Get-Content  ($Builddir + "\labbuildr-scripts-$branch.gitver") -ErrorAction Stop
+    [datetime]$Latest_labbuildr_scripts_git = Get-Content  (Join-Path $Builddir "labbuildr-scripts-$branch.gitver") -ErrorAction Stop
     }
     catch
     {
@@ -826,7 +826,7 @@ try
     }
 try
     {
-    [datetime]$Latest_labtools_git = Get-Content  ($Builddir + "\labtools-$branch.gitver") -ErrorAction Stop
+    [datetime]$Latest_labtools_git = Get-Content  (Join-Path $Builddir "labtools-$branch.gitver") -ErrorAction Stop
     }
     catch
     {
@@ -834,7 +834,7 @@ try
     }
 try
     {
-    [datetime]$Latest_vmxtoolkit_git = Get-Content  ($Builddir + "\vmxtoolkit-$branch.gitver") -ErrorAction Stop
+    [datetime]$Latest_vmxtoolkit_git = Get-Content  (Join-Path $Builddir "vmxtoolkit-$branch.gitver") -ErrorAction Stop
     }
 catch
     {
