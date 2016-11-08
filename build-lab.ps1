@@ -770,6 +770,8 @@ $myself = $Myself_ps1.TrimEnd(".ps1")
 #$AddressFamily = 'IPv4'
 $IPv4PrefixLength = '24'
 $Builddir = $PSScriptRoot
+$local_culture = Get-Culture
+$git_Culture = New-Object System.Globalization.CultureInfo 'en-US'
 if (Test-Path $env:SystemRoot\system32\ntdll.dll)
 	{
 	$runonos = "win_x86_64"
@@ -781,7 +783,7 @@ If ($ConfirmPreference -match "none")
     {$Confirm = $true}#>
 try
     {
-    $Current_labbuildr_branch = Get-Content  ($Builddir + "\labbuildr.branch") -ErrorAction Stop
+    $Current_labbuildr_branch = Get-Content  (Join-Path $Builddir "\labbuildr.branch") -ErrorAction Stop
     }
 catch
     {
@@ -810,28 +812,34 @@ Write-Verbose "Branch = $branch"
 Write-Verbose "Current Branch = $Current_labbuildr_branch"
 try
     {
-    [datetime]$Latest_labbuildr_git = Get-Content  (join-path $Builddir "labbuildr-$branch.gitver") -ErrorAction Stop
+    $Latest_labbuildr_git = Get-Content  (join-path $Builddir "labbuildr-$branch.gitver") -ErrorAction Stop
     }
     catch
     {
     [datetime]$Latest_labbuildr_git = "07/11/2015"
     }
+	[datetime]$Latest_labbuildr_git =  [datetime]::parse($Latest_labbuildr_git, $git_Culture)
+
 try
     {
-    [datetime]$Latest_labbuildr_scripts_git = Get-Content  (Join-Path $Builddir "labbuildr-scripts-$branch.gitver") -ErrorAction Stop
-    }
+    $Latest_labbuildr_scripts_git = Get-Content  (Join-Path $Builddir "labbuildr-scripts-$branch.gitver") -ErrorAction Stop
+	}
     catch
     {
     [datetime]$Latest_labbuildr_scripts_git = "07/11/2015"
     }
+    [datetime]$Latest_labbuildr_scripts_git =  [datetime]::parse($Latest_labbuildr_scripts_git, $git_Culture)
+	
 try
     {
     [datetime]$Latest_labtools_git = Get-Content  (Join-Path $Builddir "labtools-$branch.gitver") -ErrorAction Stop
-    }
+	}
     catch
     {
     [datetime]$Latest_labtools_git = "07/11/2015"
     }
+[datetime]$Latest_labtools_git =  [datetime]::parse($Latest_labtools_git, $git_Culture)
+
 try
     {
     [datetime]$Latest_vmxtoolkit_git = Get-Content  (Join-Path $Builddir "vmxtoolkit-$branch.gitver") -ErrorAction Stop
@@ -840,6 +848,7 @@ catch
     {
     [datetime]$Latest_vmxtoolkit_git = "07/11/2015"
     }
+[datetime]$Latest_vmxtoolkit_git =  [datetime]::parse($Latest_vmxtoolkit_git, $git_Culture)
 
 ################## Statics
 $custom_domainsuffix = "local"
@@ -936,7 +945,8 @@ function update-fromGit
 			Write-Verbose "Using update-fromgit function for $repo"
 			$Uri = "https://api.github.com/repos/$RepoLocation/$repo/commits/$branch"
 			$Zip = ("https://github.com/$RepoLocation/$repo/archive/$branch.zip").ToLower()
-
+			$local_culture = Get-Culture
+			$git_Culture = New-Object System.Globalization.CultureInfo 'en-US'
 			if ($Global:vmxtoolkit_type -eq "win_x86_64" )
 				{
 				try
@@ -952,7 +962,8 @@ function update-fromGit
 						}
 					exit
 					}
-				[datetime]$latest_OnGit = $request.Headers.'Last-Modified'
+				
+				[datetime]$latest_OnGit =  [datetime]::parse($request.Headers.'Last-Modified', $git_Culture)
 				#Write-Host $latest_OnGit
 				}
 			##else
@@ -1331,7 +1342,9 @@ switch ($PsCmdlet.ParameterSetName)
         $ReloadProfile = $False
         $Repo = $my_repo
         $RepoLocation = "bottkars"
-        [datetime]$Latest_local_git = $Latest_labbuildr_git
+		[datetime]$latest_local_git =  [datetime]::parse($Latest_labbuildr_git, $local_culture)
+
+        #[datetime]$Latest_local_git = $Latest_labbuildr_git
         $Destination = "$Builddir"
         $Has_update = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination
         if (Test-Path (join-path $Builddir "deletefiles.txt"))
@@ -1356,7 +1369,8 @@ switch ($PsCmdlet.ParameterSetName)
         ####
         $Repo = "labbuildr-scripts"
         $RepoLocation = "bottkars"
-        $Latest_local_git = $Latest_labbuildr_scripts_git
+		[datetime]$latest_local_git =  [datetime]::parse($Latest_labbuildr_scripts_git, $local_culture)
+        #$Latest_local_git = $Latest_labbuildr_scripts_git
         $Destination = "$Default_Host_ScriptDir"
         $Has_update = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -delete
         foreach ($Repo in $labbuildr_modules_required)
@@ -1364,7 +1378,8 @@ switch ($PsCmdlet.ParameterSetName)
         $RepoLocation = "bottkars"
         try
             {
-            [datetime]$Latest_local_git = Get-Content  (Join-Path $Builddir "$($Repo)-$branch.gitver") -ErrorAction SilentlyContinue
+            [datetime]$latest_local_file = Get-Content  (Join-Path $Builddir "$($Repo)-$branch.gitver") -ErrorAction SilentlyContinue
+			[datetime]$latest_local_git =  [datetime]::parse($latest_local_file, $local_culture)
             }
         catch
             {}
@@ -1387,7 +1402,7 @@ switch ($PsCmdlet.ParameterSetName)
             }
         else
             {
-            ./$Myself_ps1
+            ."./$Myself_ps1"
             }
     return
     #$ReloadProfile
