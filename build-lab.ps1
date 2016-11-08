@@ -952,6 +952,7 @@ function update-fromGit
 					exit
 					}
 				[datetime]$latest_OnGit = $request.Headers.'Last-Modified'
+				Write-Host $
 				}
 			else
 				{
@@ -1329,7 +1330,7 @@ switch ($PsCmdlet.ParameterSetName)
         $ReloadProfile = $False
         $Repo = $my_repo
         $RepoLocation = "bottkars"
-        $Latest_local_git = $Latest_labbuildr_git
+        [date]$Latest_local_git = $Latest_labbuildr_git
         $Destination = "$Builddir"
         $Has_update = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination
         if (Test-Path "$Builddir\deletefiles.txt")
