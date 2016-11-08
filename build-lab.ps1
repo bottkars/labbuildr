@@ -1425,19 +1425,19 @@ Write-Host
                     }
                 if ($Latest_labbuildr_git)
                     {
-                    Write-Host -ForegroundColor White "$my_repo Git Release $Latest_labbuildr_git"
+                    Write-Host -ForegroundColor White "$my_repo Git Release "(get-date $Latest_labbuildr_git)
                     }
                 if ($Latest_vmxtoolkit_git)
                     {
-                    Write-Host -ForegroundColor White  "vmxtoolkit Git Release $Latest_vmxtoolkit_git"
+                    Write-Host -ForegroundColor White  "vmxtoolkit Git Release"(get-date $Latest_vmxtoolkit_git)
                     }
                 if ($Latest_labbuildr_scripts_git)
                     {
-                    Write-Host -ForegroundColor White  "scripts Git Release $Latest_labbuildr_scripts_git"
+                    Write-Host -ForegroundColor White  "scripts Git Release "(get-date $Latest_labbuildr_scripts_git)
                     }
                 if ($Latest_labtools_git)
                     {
-                    Write-Host -ForegroundColor White  "labtools Git Release $Latest_labtools_git"
+                    Write-Host -ForegroundColor White  "labtools Git Release "(get-date $Latest_labtools_git)
                     }
                 Write-Host -ForegroundColor Gray '   Copyright 2016 Karsten Bott
    Licensed under the Apache License, Version 2.0 (the "License");
