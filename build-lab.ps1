@@ -968,7 +968,7 @@ function update-fromGit
 	#			$request
 	#			[datetime]$latest_OnGit = $request -replace 'Last-Modified: '
 	#			}
-			Write-Host " ==>we have $repo version $latest_local_Git, $latest_OnGit is online !"
+			Write-Host " ==>we have $repo version "(get-date $latest_local_Git)", "(get-date $latest_OnGit)" is online !"
 	#		$latest_local_Git -lt $latest_OnGit
 			if ($latest_local_Git -lt $latest_OnGit -or $force.IsPresent )
 				{
