@@ -662,7 +662,7 @@ $json = '
             "network": "BRIDGE",
             "portMappings": [{
                 "containerPort": 5432,
-                "hostPort": 3333,
+                "hostPort": 0,
                 "protocol": "tcp"
             }],
             "parameters": [
@@ -673,8 +673,8 @@ $json = '
         }
     },
     "args": ["postgres"],
-    "cpus": 1.5,
-    "mem": 512,
+    "cpus": 0.8,
+    "mem": 256,
     "instances": 1
 }
 '       
