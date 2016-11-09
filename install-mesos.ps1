@@ -411,7 +411,7 @@ if ($rexray.IsPresent)
     $requires = "$Node_requires"
     $Scriptblock = "yum install $requires -y"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile /tmp/yum-requires.log  | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  | Out-Null
 
 
 
@@ -426,20 +426,20 @@ if ($rexray.IsPresent)
     
     $Scriptblock = "curl -sSL https://get.docker.com/ | sh"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile /tmp/yum-requires.log  | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  | Out-Null
 
 
     $Scriptblock =  "rpm -Uvh http://repos.mesosphere.com/el/7/noarch/RPMS/mesosphere-el-repo-7-1.noarch.rpm"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile /tmp/mesos.log  | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  | Out-Null
 
     $Scriptblock =  "yum -y install mesos marathon mesosphere-zookeeper"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile /tmp/mesos.log  | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 
     $Scriptblock = "yum -y install mesosphere-zookeeper"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile /tmp/mesos.log  | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  | Out-Null
 
     $Scriptblock = "echo '$node_num' > /var/lib/zookeeper/myid"
     Write-Verbose $Scriptblock
@@ -485,19 +485,19 @@ if ($rexray.IsPresent)
     $ZK = "$($ZK.Substring(0,$ZK.Length-1))/mesos"
     $Scriptblock = "systemctl enable docker"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile /tmp/mesos.log  | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  | Out-Null
 
     $Scriptblock = "systemctl start docker"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile /tmp/mesos.log  | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  | Out-Null
 
     $Scriptblock = "systemctl enable zookeeper"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile /tmp/mesos.log  | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  | Out-Null
 
     $Scriptblock = "systemctl start zookeeper"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile /tmp/mesos.log  | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  | Out-Null
 
     $Scriptblock = "echo '$ZK' > /etc/mesos/zk"
     Write-Verbose $Scriptblock
@@ -522,7 +522,7 @@ if ($rexray.IsPresent)
         Write-Host -ForegroundColor Magenta " ==>trying rexray Install on $Node"
         $Scriptblock = "$Rexray_script" #;$DVDCLI_script;$Isolator_script"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile /tmp/rexray_inst.log | Out-Null
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
         <#
         $Scriptblock = "echo 'com_emccode_mesos_DockerVolumeDriverIsolator' > /etc/mesos-slave/isolation;echo 'file:///usr/lib/dvdi-mod.json' > /etc/mesos-slave/modules"
         Write-Verbose $Scriptblock
@@ -639,7 +639,7 @@ $json = '{
 		$json | Set-Content -Path $Script_file
         convert-VMXdos2unix -Sourcefile $Script_file -Verbose
         $NodeClone | copy-VMXfile2guest -Sourcefile $Script_file -targetfile "/root/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-        $Scriptblock = "sh /root/$Scriptname &> /tmp/$Scriptname.log"
+        $Scriptblock = "sh /root/$Scriptname &> $Logfile"
         $Scriptblock = "curl -X POST http://$($Masterip):8080/v2/apps -d @/root/$scriptname -H 'Content-type: application/json'"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -nowait | Out-Null
@@ -679,7 +679,7 @@ $json = '
 		$json | Set-Content -Path $Script_file
         convert-VMXdos2unix -Sourcefile $Script_file -Verbose
         $NodeClone | copy-VMXfile2guest -Sourcefile $Script_file -targetfile "/root/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-        $Scriptblock = "sh /root/$Scriptname &> /tmp/$Scriptname.log"
+        $Scriptblock = "sh /root/$Scriptname &> $Logfile"
         $Scriptblock = "curl -X POST http://$($Masterip):8080/v2/apps -d @/root/$scriptname -H 'Content-type: application/json'"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -nowait| Out-Null
