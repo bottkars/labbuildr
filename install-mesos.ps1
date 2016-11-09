@@ -206,7 +206,7 @@ if (!$MasterVMX.Template)
 
 if ($rexray.IsPresent)
     {
-    Write-Host -ForegroundColor Gray " ==>Searching for ScaleIO SDC Binaries in $Sourcedir/Scaleio, this may take a while"
+    Write-Host -ForegroundColor Gray " ==>Searching for ScaleIO SDC Binaries in"(join-path  $Sourcedir Scaleio)", this may take a while"
     if (!($sdc_rpm = Get-ChildItem -Path $Sourcedir -Filter "EMC-ScaleIO-sdc-*el7.x86_64.rpm" -Recurse | Sort-Object -Descending))
 		{
 		Receive-LABScaleIO -Destination $Sourcedir -arch linux -unzip  | Out-Null
@@ -222,7 +222,7 @@ if ($rexray.IsPresent)
         $sdc_rpm = $sdc_rpm -replace "\\","/"
         $linux_source = $Sourcedir -replace "\\","/"
         $sdc_rpm = $sdc_rpm -replace $linux_source
-        $sdc_rpm = "/mnt/hgfs/Sources$sdc_rpm"
+        $sdc_rpm = "/mnt/hgfs/Sources/$sdc_rpm"
 		Write-Host "using $sdc_rpm as install path"
 		pause
         }
