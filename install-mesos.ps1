@@ -65,6 +65,7 @@ $Isolator_file = Split-Path -Leaf $Isolator
 $Isolator_script = "wget $Isolator -O /usr/lib/$Isolator_file"
 $Scriptdir = $PSScriptRoot
 $SIO = Get-LABSIOConfig
+$Logfile = "/tmp/labbuildr.log"
 
 
 If ($Defaults.IsPresent)
@@ -300,10 +301,23 @@ if ($rexray.IsPresent)
             {
             $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $ip -device eno16777984 -Peerdns -DNS1 $DNS1 -DNSDOMAIN "$BuildDomain.$Custom_DomainSuffix" -Hostname $Hostname  -rootuser $rootuser -rootpassword $Guestpassword | Out-Null
             }
-    
-    
-            $Logfile = "/tmp/1_prepare.log"
-					
+
+		$Scriptblock = "rm /etc/resolv.conf;systemctl restart network"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
+		write-verbose "Setting Hostname"
+		$Scriptblock = "nmcli general hostname $Hostname.$BuildDomain.$custom_domainsuffix;systemctl restart systemd-hostnamed"
+		Write-Verbose $Scriptblock
+		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  | Out-Null
+        Write-Host -ForegroundColor Cyan " ==>Testing default Route, make sure that Gateway is reachable ( install and start OpenWRT )
+        if failures occur, open a 2nd labbuildr windows and run start-vmx OpenWRT "
+
+        $Scriptblock = "DEFAULT_ROUTE=`$(ip route show default | awk '/default/ {print `$3}');ping -c 1 `$DEFAULT_ROUTE"
+        Write-Verbose $Scriptblock
+        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+
+<#
+
     $Scriptblock =  "systemctl start NetworkManager"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
@@ -315,7 +329,7 @@ if ($rexray.IsPresent)
     $Scriptblock =  "systemctl stop NetworkManager"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null 
-
+#>
 	write-verbose "disabling kenel oops"
 	$Scriptblock =  "echo 'kernel.panic_on_oops=0' >> /etc/sysctl.conf;sysctl -p"
     Write-Verbose $Scriptblock
@@ -574,7 +588,6 @@ libstorage:
             $Scriptblock = "rexray service start;systemctl enable rexray"
             Write-Verbose $Scriptblock
             $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-
         }
     }
 }
