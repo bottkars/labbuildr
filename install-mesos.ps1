@@ -49,7 +49,7 @@ Param(
 [Parameter(ParameterSetName = "install",Mandatory=$False)]
 [ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain = "labbuildr",
 [Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile="./defaults.xml"
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
@@ -154,7 +154,7 @@ try
 catch
     {
     Write-Warning "Required Master $Required_Master not found
-    please download and extraxt $Required_Master to .\$Required_Master
+    please download and extraxt $Required_Master to ./$Required_Master
     see: 
     ------------------------------------------------
     get-help $($MyInvocation.MyCommand.Name) -online
@@ -178,7 +178,7 @@ if (!$MasterVMX.Template)
 
 try
     {
-    $yumcachedir = join-path -Path $Sourcedir "$OS\cache\yum" -ErrorAction stop
+    $yumcachedir = join-path -Path $Sourcedir "$OS/cache/yum" -ErrorAction stop
     }
 catch [System.Management.Automation.DriveNotFoundException]
     {
@@ -206,7 +206,7 @@ if (!$MasterVMX.Template)
 
 if ($rexray.IsPresent)
     {
-    Write-Host -ForegroundColor Gray " ==>Searching for ScaleIO SDC Binaries in $Sourcedir\Scaleio, this may take a while"
+    Write-Host -ForegroundColor Gray " ==>Searching for ScaleIO SDC Binaries in $Sourcedir/Scaleio, this may take a while"
     if (!($sdc_rpm = Get-ChildItem -Path $Sourcedir -Filter "EMC-ScaleIO-sdc-*el7.x86_64.rpm" -Recurse | Sort-Object -Descending))
 		{
 		Receive-LABScaleIO -Destination $Sourcedir -arch linux -unzip  | Out-Null
@@ -635,9 +635,10 @@ $json = '{
   }
 }
 '       
-        $json | Set-Content -Path $Scriptdir\$scriptname
-        convert-VMXdos2unix -Sourcefile $Scriptdir\$Scriptname -Verbose
-        $NodeClone | copy-VMXfile2guest -Sourcefile $Scriptdir\$Scriptname -targetfile "/root/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+        $Script_file = Join-Path $Scriptdir $scriptname
+		$json | Set-Content -Path $Script_file
+        convert-VMXdos2unix -Sourcefile $Script_file -Verbose
+        $NodeClone | copy-VMXfile2guest -Sourcefile $Script_file -targetfile "/root/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         $Scriptblock = "sh /root/$Scriptname &> /tmp/$Scriptname.log"
         $Scriptblock = "curl -X POST http://$($Masterip):8080/v2/apps -d @/root/$scriptname -H 'Content-type: application/json'"
         Write-Verbose $Scriptblock
@@ -674,9 +675,10 @@ $json = '
     "instances": 1
 }
 '       
-        $json | Set-Content -Path $Scriptdir\$scriptname
-        convert-VMXdos2unix -Sourcefile $Scriptdir\$Scriptname -Verbose
-        $NodeClone | copy-VMXfile2guest -Sourcefile $Scriptdir\$Scriptname -targetfile "/root/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+        $Script_file = Join-Path $Scriptdir $scriptname
+		$json | Set-Content -Path $Script_file
+        convert-VMXdos2unix -Sourcefile $Script_file -Verbose
+        $NodeClone | copy-VMXfile2guest -Sourcefile $Script_file -targetfile "/root/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         $Scriptblock = "sh /root/$Scriptname &> /tmp/$Scriptname.log"
         $Scriptblock = "curl -X POST http://$($Masterip):8080/v2/apps -d @/root/$scriptname -H 'Content-type: application/json'"
         Write-Verbose $Scriptblock
