@@ -1339,8 +1339,6 @@ switch ($PsCmdlet.ParameterSetName)
         $Repo = $my_repo
         $RepoLocation = "bottkars"
 		[datetime]$latest_local_git =  [datetime]::parse($Latest_labbuildr_git, $git_Culture)
-
-        #[datetime]$Latest_local_git = $Latest_labbuildr_git
         $Destination = "$Builddir"
         $Has_update = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination
         if (Test-Path (join-path $Builddir "deletefiles.txt"))
@@ -1365,7 +1363,7 @@ switch ($PsCmdlet.ParameterSetName)
         ####
         $Repo = "labbuildr-scripts"
         $RepoLocation = "bottkars"
-		$latest_local_git =  Get-Date $Latest_labbuildr_git
+		$latest_local_git =  Get-Date $Latest_labbuildr_scripts_git
         #$Latest_local_git = $Latest_labbuildr_scripts_git
         $Destination = "$Default_Host_ScriptDir"
         $Has_update = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -delete
