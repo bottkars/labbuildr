@@ -566,10 +566,11 @@ libstorage:
           ignoreUsedCount: true
 
 "       
-            $yml | Set-Content -Path $Scriptdir\$scriptname
-            convert-VMXdos2unix -Sourcefile $Scriptdir\$Scriptname -Verbose
+			$yml_config_file = Join-Path $Scriptdir $Scriptname
+            $yml | Set-Content -Path $yml_config_file
+            convert-VMXdos2unix -Sourcefile $yml_config_file -Verbose
             Write-Host -ForegroundColor Magenta " ==>Injecting RexRay Config from config.yml"
-            $NodeClone | copy-VMXfile2guest -Sourcefile $Scriptdir\$Scriptname -targetfile "/etc/rexray/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+            $NodeClone | copy-VMXfile2guest -Sourcefile $yml_config_file -targetfile "/etc/rexray/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
             $Scriptblock = "rexray service start;systemctl enable rexray"
             Write-Verbose $Scriptblock
             $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
