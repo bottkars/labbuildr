@@ -673,7 +673,7 @@ $json = '
         }
     },
     "args": ["postgres"],
-    "cpus": 1,5,
+    "cpus": 1.5,
     "mem": 512,
     "instances": 1
 }
