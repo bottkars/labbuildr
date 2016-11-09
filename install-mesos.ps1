@@ -189,7 +189,10 @@ catch [System.Management.Automation.DriveNotFoundException]
 
 [uint64]$Disksize = 100GB
 $Node_requires = "git numactl libaio"
-
+If ($rexray)
+	{
+	$Node_requires = "$Node_requires postgresql"
+	}
 if (!$MasterVMX.Template) 
             {
             write-verbose "Templating Master VMX"
@@ -659,7 +662,7 @@ $json = '
             "network": "BRIDGE",
             "portMappings": [{
                 "containerPort": 5432,
-                "hostPort": 0,
+                "hostPort": 3333,
                 "protocol": "tcp"
             }],
             "parameters": [
@@ -670,8 +673,8 @@ $json = '
         }
     },
     "args": ["postgres"],
-    "cpus": 0.8,
-    "mem": 32.0,
+    "cpus": 2,
+    "mem": 2048,
     "instances": 1
 }
 '       
