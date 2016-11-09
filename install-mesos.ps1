@@ -224,12 +224,10 @@ if ($rexray.IsPresent)
         $sdc_rpm = $sdc_rpm -replace $linux_source
         $sdc_rpm = "/mnt/hgfs/Sources/$sdc_rpm"
 		Write-Host "using $sdc_rpm as install path"
-		pause
         }
     else
         {
         Write-Warning "sdc Binaries not found for $OS, skipping autoinstall of RexRay for ScaleIO"
-		pause
         }
     }
 ####Build Machines#
