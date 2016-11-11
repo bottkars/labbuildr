@@ -62,11 +62,13 @@ param (
     Installs only a Docker host on 2016TP5.
     IP-Addresses: .19
     #>
-	[Parameter(ParameterSetName = "docker")][switch][alias('docker')]$Dockerhost,
+	[Parameter(ParameterSetName = "docker", Mandatory = $true)][switch][alias('dh')]$docker,
 	[Parameter(ParameterSetName = "docker")][ValidateSet(
     '1.12.0','latest'
     )]
     $Docker_VER='latest',
+    [Parameter(ParameterSetName = "docker", Mandatory = $false)][ValidateRange(1, 3)][int]$DockerNodes = "1",
+
 	<#
     Selects the Always On Scenario
     IP-Addresses: .160 - .169
@@ -869,7 +871,7 @@ $latest_e14_sp = 'sp3'
 $latest_e14_ur = 'ur13'
 $latest_sqlver  = 'SQL2016_ISO'
 $latest_master = '2012R2FallUpdate'
-$Latest_2016 = '2016_ISO'
+$Latest_2016 = '2016'
 $latest_sql_2012 = 'SQL2012_ISO'
 $NW85_requiredJava = "jre-7u61-windows-x64"
 $Adminuser = "Administrator"
@@ -2532,7 +2534,7 @@ If ($Java8_required)
         Write-Verbose "Got $LatestJava"
         }
     }
-if ($Dockerhost.IsPresent)
+if ($docker.IsPresent)
 	{
 	if ($Master -lt "2016")
 		{
@@ -3730,14 +3732,16 @@ switch ($PsCmdlet.ParameterSetName)
         $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features, containers, Hyper-V, RSAT-Hyper-V-Tools, Multipath-IO"
         if ($Cluster.IsPresent) {$AddonFeatures = "$AddonFeatures, Failover-Clustering, RSAT-Clustering, RSAT-Clustering-AutomationServer, RSAT-Clustering-CmdInterface, WVR"}
 		test-dcrunning
+		foreach ($node in 1..$DockerNodes)
+		{
 			###################################################
 			# Setup of a DockerHost
 			# Init
-            $Node_range = 18
+            $Node_range = 230
             $Node_byte = $Node_range+$node
             $Nodeip = "$IPv4Subnet.$Node_byte"
-            $Nodeprefix = "WINHost"
-            $NamePrefix = "Docker"
+            $Nodeprefix = "WIN"
+            $NamePrefix = "DockerHost"
 		    $Nodename = "$NamePrefix$NodePrefix$Node"
 			$CloneVMX = Join-Path  $Builddir (Join-path $Nodename "$Nodename.vmx")
 			$Host_ScriptDir = Join-Path $Default_Host_ScriptDir $NamePrefix
@@ -3748,7 +3752,7 @@ switch ($PsCmdlet.ParameterSetName)
             write-verbose $Nodename
             write-verbose $Nodeip
             Write-Verbose "Disks: $Disks"
-            Write-Verbose "dockerhost: $dockerhost"
+            Write-Verbose "dockerhost: $docker"
             if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
                 {
                 Write-verbose "Now Pausing"
@@ -3785,6 +3789,8 @@ switch ($PsCmdlet.ParameterSetName)
                 }
             }
 #>
+	} #end 
+
 	} # End Switchblock Blanknode
 	"Spaces" {
 		foreach ($Node in (1..$SpaceNodes))
