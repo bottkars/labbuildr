@@ -63,10 +63,10 @@ param (
     IP-Addresses: .19
     #>
 	[Parameter(ParameterSetName = "docker", Mandatory = $true)][switch][alias('dh')]$docker,
-	[Parameter(ParameterSetName = "docker")][ValidateSet(
+	<#[Parameter(ParameterSetName = "docker")][ValidateSet(
     '1.12.0','latest'
     )]
-    $Docker_VER='latest',
+    $Docker_VER='latest',#>
     [Parameter(ParameterSetName = "docker", Mandatory = $false)][ValidateRange(1, 3)][int]$DockerNodes = "1",
 
 	<#
@@ -3771,7 +3771,7 @@ switch ($PsCmdlet.ParameterSetName)
 		            $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter "-nw_ver $nw_ver"
                     }
 				invoke-postsection -wait
-				$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-docker.ps1 -interactive -Parameter "-Docker_VER $Docker_VER"
+				$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-docker.ps1 -interactive 
 			}# end Cloneok
 		 # end foreach
 <#
