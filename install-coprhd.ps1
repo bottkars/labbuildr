@@ -330,13 +330,18 @@ if (!(Test-path $Scriptdir ))
 
 			}
 
+		#$Scriptblock = "zypper --non-interactive --no-gpg-checks install --details --no-recommends --force-resolution java-1_8_0-openjdk java-1_8_0-openjdk-devel gcc-c++"
+		#Write-Verbose $Scriptblock
+		#$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
+
+
         Write-Host -ForegroundColor Gray " ==>Running Installation Tasks"
 		$Components = ('installRepositories','installPackages','installJava 8','installStorageOS')
 #        $Components = ('installRepositories','installPackages','installNginx','installJava 8','installStorageOS')
         Foreach ($component in $Components)
             {
             Write-Host -ForegroundColor Gray " ==>Running Task $component"
-            $Scriptblock = "/coprhd-controller/packaging/appliance-images/openSUSE/13.2/CoprHD/configure.sh $component"
+            $Scriptblock = "/coprhd-controller/packaging/appliance-images/openSUSE/13.2/CoprHDDevKit/configure.sh $component"
             Write-Verbose $Scriptblock
             $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null       
             }
