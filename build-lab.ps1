@@ -2542,8 +2542,8 @@ if ($docker.IsPresent)
 		$master = $Latest_2016
 		}
 	# Receive-LABDocker -Destination $Sourcedir -ver 1.12 -arch win -branch beta
-	if ($Size -lt "TXL")
-		{$Size = "XXL" }
+	if ($Size -lt "XL")
+		{$Size = "XL" }
 	}
 ##end Autodownloaders
 ##### Master Downloader
