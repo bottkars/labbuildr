@@ -142,7 +142,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $true)][switch][alias('asc')]$AppSync,
     [Parameter(ParameterSetName = "APPSYNC")]
     [ValidateSet(
-    '3.0.0','3.0.1','3.0.2.0'#
+    '3.0.0','3.0.1','3.0.2.0','3.1.0.0'#
     )]
     $APPSYNC_VER='3.0.2.0',
     <#
