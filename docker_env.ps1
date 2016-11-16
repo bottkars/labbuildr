@@ -1,4 +1,8 @@
-﻿$env:Path="$env:Path;$PSScriptRoot/docker"
+﻿if (($env:Path) -notmatch ("/docker"))
+    {
+    Write-Host "Adjusting Path"
+    $env:Path="$env:Path;$PSScriptRoot/docker"
+    }
 if (!(Test-Path "$PSScriptRoot/docker/docker-machine-driver-vmwareworkstation.exe"))
     {
     Write-Warning "Docker Tools for labbuildr not installed, trying to install"
