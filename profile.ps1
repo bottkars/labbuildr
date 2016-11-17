@@ -10,6 +10,14 @@ $size.width=120
 $size.height=36
 $Userinterface.WindowSize = $size
 #>
+if ($vmxtoolkit_type -eq "win_x86_64")
+	{
+	$labbuildr_home = $env:USERPROFILE
+	}
+else
+	{
+	$labbuildr_home = $home
+	}
 clear-host
 $self  = Get-Location
 import-module (Join-Path $self "vmxtoolkit") -Force -ArgumentList $self
@@ -43,9 +51,9 @@ catch
     {
     Write-Host -ForegroundColor Yellow "no defaults.xml found, using labbuildr default settings"
     Copy-Item .\defaults.xml.example .\defaults.xml
-	$Master_path = Join-Path $HOME "Master.labbuildr"
-    Set-LABMasterpath -Masterpath (Join-Path $HOME "Master.labbuildr").tostring()
-	Set-LABSources -Sourcedir (Join-Path $HOME "Sources.labbuildr").tostring()
+	$Master_path = Join-Path $labbuildr_home "Master.labbuildr"
+    Set-LABMasterpath -Masterpath (Join-Path $labbuildr_home "Master.labbuildr").tostring()
+	Set-LABSources -Sourcedir (Join-Path $labbuildr_home "Sources.labbuildr").tostring()
     }
 if ((Get-LABDefaults).SQLVER -notmatch 'ISO')
 	{
