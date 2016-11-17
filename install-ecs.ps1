@@ -144,8 +144,8 @@ $Rootuser = "root"
 $Rootpassword  = "Password123!"
 $Guestuser = "$($Szenarioname.ToLower())user"
 $Guestpassword  = "Password123!"
-$OS = 'CentOS'
-$centos_ver= '7_1_1511'
+$OS = 'Centos'
+[string]$centos_ver= '7_1_1511'
 #$Master = "$OS$OS_Version"
 switch ($centos_ver)
     {
@@ -158,7 +158,7 @@ switch ($centos_ver)
     default
         {
         $netdev= "eno16777984"
-        $Required_Master = "$OS$centos_ver"
+        [string]$Required_Master = "$OS$centos_ver"
 		$Guestuser = "labbuildr"
         }
     }
