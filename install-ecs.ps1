@@ -164,8 +164,8 @@ switch ($centos_ver)
     }
 # $OS = ($Master.Split(" "))[0]
 ###### checking master Present
-Write-Verbose  $Masterpath
-Write-Verbose $Master
+Write-Verbose "Masterpath $Masterpath"
+Write-Verbose "Master $Master"
 $mastervmx = test-labmaster -Master $Master -MasterPath $MasterPath -verbose
 $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
 $repo  = "https://github.com/EMCECS/ECS-CommunityEdition.git"
