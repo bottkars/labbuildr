@@ -145,29 +145,46 @@ $Rootpassword  = "Password123!"
 $Guestuser = "$($Szenarioname.ToLower())user"
 $Guestpassword  = "Password123!"
 $OS = 'CentOS'
-$OS_Version = '7_1_1511'
-$Master = "$OS$OS_Version"
+$centos_ver= '7_1_1511'
+#$Master = "$OS$OS_Version"
 switch ($centos_ver)
     {
     "7"
         {
         $netdev = "eno16777984"
-        $Required_Master = "$OS Master"
+        $Required_Master = "$OS$centos_ver Master"
 		$Guestuser = "stack"
         }
     default
         {
         $netdev= "eno16777984"
-        $Required_Master = $OS
+        $Required_Master = "$OS$centos_ver"
 		$Guestuser = "labbuildr"
         }
     }
 # $OS = ($Master.Split(" "))[0]
 ###### checking master Present
 Write-Verbose "Masterpath $Masterpath"
-Write-Verbose "Master $Master"
+Write-Verbose "Master $Required_Master"
 Write-Verbose "___________________________________________________________"
-$mastervmx = test-labmaster -Master $Master -MasterPath $MasterPath -verbose
+
+try
+    {
+    $MasterVMX = test-labmaster -Masterpath $MasterPath -Master $Required_Master -ErrorAction Stop # Confirm:$Confirm -erroraction stop
+    }
+catch
+    {
+    Write-Warning "Required Master $Required_Master not found
+    please download and extraxt $Required_Master to .\$Required_Master
+    see:
+    ------------------------------------------------
+    get-help $($MyInvocation.MyCommand.Name) -online
+    ------------------------------------------------"
+    exit
+    }
+
+
+# $mastervmx = test-labmaster -Master $Master -MasterPath $MasterPath -verbose
 $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
 $repo  = "https://github.com/EMCECS/ECS-CommunityEdition.git"
 switch ($Branch)
@@ -223,23 +240,33 @@ switch ($Branch)
         $Git_Branch = "master"
         }
     }
+$Docker_basepath = Join-Path $Sourcedir "docker"
+$Docker_Image_file = Join-Path $Docker_basepath "$($Docker_image)_$Docker_imagetag.tgz"
+Write-Verbose "Docker Imagefile $Docker_Image_file"
+if (!(test-path $Docker_basepath))
+	{
+	New-Item -ItemType Directory $Docker_basepath -Force -Confirm:$false | Out-Null
+	}
 if ($offline.IsPresent)
     {
-    if (!(Test-Path "$Sourcedir\docker\$Docker_image_$Docker_imagetag.tgz"))
+    if (!(Test-Path $Docker_Image_file))
         {
-        Write-Warning "No offline image "$Sourcedir\docker\$($Docker_image)_$Docker_imagetag.tgz" is present, exit now"
+        Write-Warning "No offline image $Docker_Image_file present, exit now"
         exit
         }
     }
 try
     {
-    $yumcachedir = join-path -Path $Sourcedir "$OS\cache\yum" -ErrorAction stop
+	$OS_Sourcedir = Join-Path $Sourcedir $OS
+	$OS_CahcheDir = Join-Path $OS_Sourcedir "cache"
+    $yumcachedir = Join-path -Path $OS_CahcheDir "yum"  -ErrorAction stop
     }
 catch [System.Management.Automation.DriveNotFoundException]
     {
     write-warning "Sourcedir not found. Stick not inserted ?"
     break
     }
+Write-Verbose "yumcachedir $yumcachedir"
 ####Build Machines#
     $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
     $machinesBuilt = @()
@@ -303,7 +330,7 @@ foreach ($Node in $machinesBuilt)
     $ClassC = $NodeNum+$IPOffset
 	if (!$Custom_IP)
 		{
-			$ip="$subnet.$Range$ClassC"
+		$ip="$subnet.$Range$ClassC"
 		}
 	else
 		{
@@ -497,9 +524,13 @@ foreach ($Node in $machinesBuilt)
     $Scriptblock = "/usr/bin/easy_install ecscli"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
-if (!(Test-Path "$Sourcedir\docker\$($Docker_image)_$Docker_imagetag.tgz") -and !($offline.IsPresent))
+	####### docker path´s
+	#Docker_basepath = Join-Path $Sourcedir $Docker
+	#Docker_Image_file = Join-Path $Docker_basepath "$($Docker_image)_$Docker_imagetag.tgz"
+	Write-Verbose $Docker_Image_file
+if (!(Test-Path $Docker_Image_file) -and !($offline.IsPresent))
     {
-    New-Item -ItemType Directory "$Sourcedir\docker" -ErrorAction SilentlyContinue | Out-Null
+    New-Item -ItemType Directory $Docker_basepath -ErrorAction SilentlyContinue | Out-Null
     $Scriptblock = "docker pull $($Docker_imagename):$Docker_imagetag"
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
@@ -509,7 +540,7 @@ if (!(Test-Path "$Sourcedir\docker\$($Docker_image)_$Docker_imagetag.tgz") -and 
     }
 else
     {
-    if (!(Test-Path "$Sourcedir\docker\$($Docker_image)_$Docker_imagetag.tgz"))
+    if (!(Test-Path $Docker_Image_file))
         {
         Write-Warning "no docker Image available, exiting now ..."
         exit
