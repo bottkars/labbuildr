@@ -103,8 +103,8 @@ $Content = $Content | where {$_ -notmatch "numvcpus"}
 $Content = $Content | where {$_ -notmatch "sharedFolder"}
 $Content = $Content | where {$_ -notmatch "svga.autodetecct"}
 $Content = $Content | where {$_ -notmatch "gui.applyHostDisplayScalingToGuest"}
-$Content += 'gui.applyHostDisplayScalingToGuest = "False"'
-$Content += 'svga.autodetect = "TRUE" '
+#$Content += 'gui.applyHostDisplayScalingToGuest = "False"'
+#$Content += 'svga.autodetect = "TRUE" '
 #$Content += 'sharedFolder0.present = "TRUE"'
 #$Content += 'sharedFolder0.enabled = "TRUE"'
 #$Content += 'sharedFolder0.readAccess = "TRUE"'
@@ -114,11 +114,12 @@ $Content += 'svga.autodetect = "TRUE" '
 #$Content += 'sharedFolder0.expiration = "never"'
 #$Content += 'sharedFolder.maxNum = "1"'
 
-if ($HyperV){
-#$Content = $Clone | Get-VMXConfig
-$Content = $Content | where {$_ -notmatch "guestOS"}
-$Content += 'guestOS = "winhyperv"'
-}
+if ($HyperV)
+	{
+	#$Content = $Clone | Get-VMXConfig
+	$Content = $Content | where {$_ -notmatch "guestOS"}
+	$Content += 'guestOS = "winhyperv"'
+	}
 $Content = $Content | where {$_ -notmatch "gui.exitAtPowerOff"}
 $Content += 'gui.exitAtPowerOff = "TRUE"'
 $Content = $Content | where {$_ -notmatch "virtualHW.version"}
@@ -132,7 +133,7 @@ else
 	{
 	$Clone | Set-VMXMainMemory -usefile:$true
 	}
-
+# $Clone | Set-VMXDisplayScaling -enable | out-null
 $Clone | Set-VMXDisplayName -DisplayName $Displayname
 $Clone | Set-VMXAnnotation -builddate -Line1 "This is node $Nodename for domain $Domainname"-Line2 "Adminpasswords: Password123!" -Line3 "Userpasswords: Welcome1"
 $Clone | Set-VMXAnnotation -builddate -Line1 "This is node $Nodename for domain $Domainname"-Line2 "Adminpasswords: Password123!" -Line3 "Userpasswords: Welcome1"
