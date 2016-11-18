@@ -73,4 +73,5 @@ else
     $blog = [xml](new-object System.Net.WebClient).DownloadString($Url)
     $blog.rss.channel.item |  where {$_.title -match "vmxtoolkit" -or $_.title -Match "labbuildr"} |select Link | ft
     }#>
+$global:labdefaults = Get-LABDefaults
 Get-VMX
