@@ -74,8 +74,6 @@ $Guestpassword = "Password123!"
 $Guestuser = 'labbuildr'
 [uint64]$Disksize = 100GB
 $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
-####Build Machines###### cecking for linux binaries
-####Build Machines#
 $machinesBuilt = @()
 foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     {
@@ -99,95 +97,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
 		Set-LABAnsiblePublicKey -AnsiblePublicKey $Public_Key.ROOT_PUBLIC_KEY
         }
 	}	
-	
 $StopWatch.Stop()
 Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
 write-Host -ForegroundColor White "Login to the VM´s with root/Password123!"
 
-			
-<#		
-		
-        $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.CloneName)@$BuildDomain"
-        $Annotation = $NodeClone | Set-VMXAnnotation -Line1 "rootuser:$Rootuser" -Line2 "rootpasswd:$Guestpassword" -Line3 "Guestuser:$Guestuser" -Line4 "Guestpassword:$Guestpassword" -Line5 "labbuildr by @sddc_guy" -builddate
-        $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
-        $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname CentOS -Scenario 7
-        Write-Host -ForegroundColor Gray " ==>setting VM size to $Size"
-        $mysize = $NodeClone |Set-VMXSize -config $NodeClone.Config -Size $Size
-        $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
-        Write-Host -ForegroundColor Gray " ==>Starting CentosNode$Node"
-        start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
-        $machinesBuilt += $($NodeClone.cloneName)
-    }
-    else
-        {
-        write-Warning "Machine $Nodeprefix$node already Exists"
-        }
-    }
-Write-Host -ForegroundColor White "Starting Node Configuration"
-        if ($docker)
-            {
-            Write-Host -ForegroundColor Gray " ==>installing latest docker engine"
-            $Scriptblock="curl -fsSL https://get.docker.com | sh;systemctl enable docker; systemctl start docker;usermod -aG docker $Guestuser"
-            Write-Verbose $Scriptblock
-            $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
-			if ("shipyard" -in $container)
-				{
-				$Scriptblock = "curl -s https://shipyard-project.com/deploy | bash -s"
-				Write-Verbose $Scriptblock
-				$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
-				$installmessage += " ==>you can use shipyard with http://$($ip):8080 with user admin/shipyard`n"
-
-				}
-			if ("uifd" -in $container)
-				{
-				$Scriptblock = "docker run -d -p 9000:9000 --privileged -v /var/run/docker.sock:/var/run/docker.sock uifd/ui-for-docker"
-				Write-Verbose $Scriptblock
-				$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
-				$installmessage += " ==>you can use container uifd with http://$($ip):9000`n"
-				}
-			}
-        if ($Desktop -ne "none")
-            {
-            Write-Host -ForegroundColor Gray " ==>Installing X-Windows environment"
-            $Scriptblock = "yum groupinstall -y `'X Window system'"
-            Write-Verbose $Scriptblock
-            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-            }
-        switch ($Desktop)
-            {
-                'cinnamon'
-                {
-
-
-
-
-                Write-Host -ForegroundColor Gray " ==>Installing Display Manager"
-                $Scriptblock = "yum install -y lightdm cinnamon gnome-desktop3 firefox"
-                Write-Verbose $Scriptblock
-                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-                $Scriptblock = "yum groupinstall gnome -y"
-                Write-Verbose $Scriptblock
-                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-                $Scriptblock = "systemctl set-default graphical.target"
-                Write-Verbose $Scriptblock
-                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-                $Scriptblock = "rm '/etc/systemd/system/default.target'"
-                Write-Verbose $Scriptblock
-                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-                $Scriptblock = "ln -s '/usr/lib/systemd/system/graphical.target' '/etc/systemd/system/default.target'"
-                Write-Verbose $Scriptblock
-                $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-				$Scriptblock = "/usr/bin/vmware-config-tools.pl -d;shutdown -r now"
-				Write-Verbose $Scriptblock
-				$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -nowait| Out-Null
-                }
-            default
-                {
-                }
-        }
-		$ip_startrange_count ++
-		}#end machines
-$StopWatch.Stop()
-Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
-write-Host -ForegroundColor White "Login to the VM´s with root/Password123!"
-#>
