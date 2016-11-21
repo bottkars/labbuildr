@@ -28,122 +28,99 @@ This will install 3 Ubuntu Nodes Ubuntu1 -Ubuntu3 from the Default Ubuntu Master
     SupportsShouldProcess=$true,
     ConfirmImpact="Medium")]
 Param(
-[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $true)]
-[switch]$Defaults,
-[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$False)]
-[ValidateRange(1,3)]
-[int32]$Disks = 1,
-[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateSet('16_4','15_10','14_4')]
-[string]$ubuntu_ver = "16_4",
-[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateSet('cinnamon','cinnamon-desktop-environment','xfce4','lxde','none')]
-[string]$Desktop = "none",
-[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]
-$Sourcedir = 'h:\sources',
-[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateRange(1,9)]
-[int32]$Nodes=1,
-[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[int32]$Startnode = 1,
-[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateScript({$_ -match [IPAddress]$_ })]
-[ipaddress]$subnet = "192.168.2.0",
-[Parameter(ParameterSetName = "install",Mandatory=$False)]
-[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")]
-[string]$BuildDomain = "labbuildr",
-[Parameter(ParameterSetName = "install",Mandatory = $false)]
-[ValidateSet('vmnet1', 'vmnet2','vmnet3')]
-$vmnet = "vmnet2",
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateScript({ Test-Path -Path $_ })]
-$Defaultsfile=".\defaults.xml",
-[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[switch]$forcedownload,
-[Parameter(ParameterSetName = "install", Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "docker", Mandatory = $true)]
-[Switch]$docker,
-[Parameter(ParameterSetName = "docker", Mandatory = $false)][ValidateSet('shipyard','uifd')][string[]]$container,
-[ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL",
-[int]$ip_startrange = 200
-#[Parameter(ParameterSetName = "install",Mandatory = $false)]
-#[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$SIOGateway
+####
+####
+	[ValidateSet('cinnamon','cinnamon-desktop-environment','xfce4','lxde','none')]
+	[string]$Desktop = "none",
+	[Switch]$docker,
+	[ValidateSet('uifd','shipyard')]
+	[string]$Container,
+	[ValidateRange(1,9)]
+	[int32]$Nodes=1,
+	[int32]$Startnode = 1,
+	[switch]$forcedownload,
+#### generic labbuildr7
+	[Parameter(Mandatory = $false)]
+	[ValidateRange(1,1)]
+	[int32]$Disks = 1,
+	[Parameter(Mandatory = $false)]
+	[ValidateSet('16_4','15_10','14_4')]
+	[string]$ubuntu_ver = "16_4",
+	[Parameter(Mandatory=$false)]
+	$Scriptdir = (join-path (Get-Location) "labbuildr-scripts"),
+	[Parameter(Mandatory=$false)]
+	$Sourcedir = $Global:labdefaults.Sourcedir,
+	[Parameter(Mandatory=$false)]
+	$DefaultGateway = $Global:labdefaults.DefaultGateway,
+	[Parameter(Mandatory=$false)]
+	$Masterpath = $Global:labdefaults.Masterpath,
+	$guestpassword = "Password123!",
+	$Rootuser = 'root',
+	$Hostkey = $Global:labdefaults.HostKey,
+	$Default_Guestuser = 'labbuildr',
+	[Parameter(Mandatory=$false)]
+	$Subnet = $Global:labdefaults.MySubnet,
+	[Parameter(Mandatory=$false)]
+	$DNS1 = $Global:labdefaults.DNS1,
+	[Parameter(Mandatory=$false)]
+	$DNS2 = $Global:labdefaults.DNS2,
+	[Parameter(Mandatory=$false)]
+	$Host_Name,
+	[Parameter(Mandatory=$false)]
+	$DNS_DOMAIN_NAME = "$($Global:labdefaults.BuildDomain).$($Global:labdefaults.Custom_DomainSuffix)",
+	#vmx param
+	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+	[ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL",
+	[ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]
+	$vmnet = $Global:labdefaults.vmnet,
+	[int]$ip_startrange = 200,
+	[switch]$use_aptcache = $true,
+	[ipaddress]$non_lab_apt_ip,
+	[switch]$do_not_use_lab_aptcache,
+	[switch]$upgrade,
+	[switch]$Defaults
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
+if ($Defaults.IsPresent)
+	{
+	Deny-LABDefaults
+	Break
+	}
+[System.Version]$subnet = $Subnet.ToString()
+$Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
+[int]$lab_apt_cache_ip = $ip_startrange
+if ($use_aptcache.IsPresent)
+	{
+	if (!$do_not_use_lab_aptcache.IsPresent)
+		{
+		$apt_ip = "$subnet.$lab_apt_cache_ip"
+		if (!($aptvmx = get-vmx aptcache -WarningAction SilentlyContinue))
+			{
+			Write-Host -ForegroundColor Magenta " ==>installing apt cache"
+			.\install-aptcache.ps1 -ip_startrange $lab_apt_cache_ip -Size M -upgrade:$($upgrade.IsPresent)
+			}
+		}
+	else
+		{
+		if (!$apt_ip)
+			{
+			Write-Warning "A apt ip address must be specified if uning do_not_use_labaptcache"
+			}
+		}
+	Set-LABAPT_Cache_IP -APT_Cache_IP $apt_ip
+	#rite-Host -ForegroundColor White " ==>Using cacher at $apt_ip"
+	}
 If ($ConfirmPreference -match "none")
     {$Confirm = $false}
 else
     {$Confirm = $true}
 $Builddir = $PSScriptRoot
-$Scriptdir = Join-Path $Builddir "Scripts"
-If ($Defaults.IsPresent)
-    {
-    $labdefaults = Get-labDefaults
-    $vmnet = $labdefaults.vmnet
-    $subnet = $labdefaults.MySubnet
-    $BuildDomain = $labdefaults.BuildDomain
-    try
-        {
-        $Sourcedir = $labdefaults.Sourcedir
-        }
-    catch [System.Management.Automation.ValidationMetadataException]
-        {
-        Write-Warning "Could not test Sourcedir Found from Defaults, USB stick connected ?"
-        Break
-        }
-    catch [System.Management.Automation.ParameterBindingException]
-        {
-        Write-Warning "No valid Sourcedir Found from Defaults, USB stick connected ?"
-        Break
-        }
-    try
-        {
-        $Masterpath = $LabDefaults.Masterpath
-        }
-    catch
-        {
-        # Write-Host -ForegroundColor Gray " ==>No Masterpath specified, trying default"
-        $Masterpath = $Builddir
-        }
-     $Hostkey = $labdefaults.HostKey
-     $Gateway = $labdefaults.Gateway
-     $DefaultGateway = $labdefaults.Defaultgateway
-     $DNS1 = $labdefaults.DNS1
-     $DNS2 = $labdefaults.DNS2
-    }
-if ($LabDefaults.custom_domainsuffix)
-	{
-	$custom_domainsuffix = $LabDefaults.custom_domainsuffix
-	}
-else
-	{
-	$custom_domainsuffix = "local"
-	}
 
 if (!$DNS2)
     {
     $DNS2 = $DNS1
     }
-if (!$Masterpath) {$Masterpath = $Builddir}
-
 $ip_startrange = $ip_startrange+$Startnode
 $logfile = "/tmp/labbuildr.log"
 switch ($ubuntu_ver)
@@ -161,44 +138,8 @@ switch ($ubuntu_ver)
         $netdev= "eth0"
         }
     }
-[System.Version]$subnet = $Subnet.ToString()
-$Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
-$rootuser = "root"
-$Guestpassword = "Password123!"
-[uint64]$Disksize = 100GB
-$scsi = 0
 $Nodeprefix = "Ubuntu"
 $Required_Master = "Ubuntu$ubuntu_ver"
-$Default_Guestuser = "labbuildr"
-#$mastervmx = test-labmaster -Master $Required_Master -MasterPath $MasterPath -Confirm:$Confirm
-
-###### checking master Present
-try
-    {
-    $MasterVMX = test-labmaster -Masterpath $MasterPath -Master $Required_Master -Confirm:$Confirm -erroraction stop
-    }
-catch
-    {
-    Write-Warning "Required Master $Required_Master not found
-    please download and extraxt $Required_Master to .\$Required_Master
-    see: 
-    ------------------------------------------------
-    get-help $($MyInvocation.MyCommand.Name) -online
-    ------------------------------------------------"
-    exit
-    }
-####
-if (!$MasterVMX.Template) 
-            {
-            write-verbose "Templating Master VMX"
-            $template = $MasterVMX | Set-VMXTemplate
-            }
-        $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
-        if (!$Basesnap) 
-        {
-         Write-verbose "Base snap does not exist, creating now"
-        $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
-        }
 $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
 ####Build Machines#
 $machinesBuilt = @()
@@ -208,38 +149,16 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         {
         try
             {
-            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node # -clonepath $Builddir
-            }
+			$Nodeclone = New-LabVMX -Masterpath $Masterpath -Ubuntu -Ubuntu_ver $ubuntu_ver -VMXname $Nodeprefix$Node -SCSI_DISK_COUNT $Disks -SCSI_Controller 0 -SCSI_Controller_Type lsisas1068 -SCSI_DISK_SIZE 100GB -vmnet $vmnet -Size $Size -ConnectionType custom -AdapterType vmxnet3 -Scenario 8 -Scenarioname "ubuntu" -activationpreference 1 -Displayname "$Nodeprefix$Node@$DNS_DOMAIN_NAME" 
+            } 
         catch
             {
             Write-Warning "Error creating VM"
             return
             }
         If ($Node -eq 1){$Primary = $NodeClone}
-        $Config = Get-VMXConfig -config $NodeClone.config
-        foreach ($LUN in (1..$Disks))
-            {
-            $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-            $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-            $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
-            }
-        $Netadapter = Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config
-        if ($vmnet)
-            {
-            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config -WarningAction SilentlyContinue | Out-Null
-            Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config | Out-Null
-            }
-
-        $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.CloneName)@$BuildDomain"
-        $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
-       <# if ($node -eq 3)
-            {
-            Write-Host -ForegroundColor Gray " ==>Setting Gateway Memory to 3 GB"
-            $NodeClone | Set-VMXmemory -MemoryMB 3072 | Out-Null
-            }#>
+        
         $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname Ubuntu -Scenario 7
-        $mysize = $NodeClone |Set-VMXSize -config $NodeClone.Config -Size $Size
-
         $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
         start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
         $machinesBuilt += $($NodeClone.cloneName).tolower()
@@ -250,154 +169,18 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         }
     }
 Write-Host -ForegroundColor White "Starting Node Configuration"
-
 $installmessage = @()    
 foreach ($Node in $machinesBuilt)
     {
         $ip="$subnet.$ip_startrange"
         $NodeClone = get-vmx $Node
-
-        do {
-            $ToolState = Get-VMXToolsState -config $NodeClone.config
-            Write-Verbose "VMware tools are in $($ToolState.State) state"
-            sleep 5
-            }
-        until ($ToolState.state -match "running")
-		$installmessage += "==>Configuration for $Node`n"
-		$installmessage += " ==>Node $node is reachable vi ssh $ip with root or $Default_Guestuser`n"
-        $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
-        $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
-        If ($ubuntu_ver -match "15")
-            {
-            $Scriptblock = "systemctl disable iptables.service"
-            Write-Verbose $Scriptblock
-            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-    
-            ##### selectiung fastest apt mirror
-            ## sudo netselect -v -s10 -t20 `wget -q -O- https://launchpad.net/ubuntu/+archivemirrors | grep 
-        
-            <#
-            $Scriptblock = "systemctl stop iptables.service"
-            Write-Verbose $Scriptblock
-            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
-            ssh-keygen -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa
-            ssh-keygen -f /etc/ssh/ssh_host_dsa_key -N '' -t dsa
-            #>
-
-            }
-
-        $Scriptblock = "sed -i '/PermitRootLogin without-password/ c\PermitRootLogin yes' /etc/ssh/sshd_config"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
-        
-        $Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa -force"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
-    
-        $Scriptblock = "/usr/bin/ssh-keygen -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
-
-        $Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
-
-        if ($Hostkey)
-            {
-            $Scriptblock = "echo '$Hostkey' >> /root/.ssh/authorized_keys"
-            Write-Verbose $Scriptblock
-            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-            $Scriptblock = "mkdir /home/$Default_Guestuser/.ssh/;echo '$Hostkey' >> /home/$Default_Guestuser/.ssh/authorized_keys;chmod 0600 /home/$Default_Guestuser/.ssh/authorized_keys"
-            Write-Verbose $Scriptblock
-            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-            }
-
-        $Scriptblock = "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys;chmod 0600 /root/.ssh/authorized_keys"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-
-		Write-Verbose "setting sudoers"
-		$Scriptblock = "echo '$Default_Guestuser ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers"
-		Write-Verbose $Scriptblock
-		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword #  -logfile $Logfile  
-
- 		$Scriptblock = "sed -i 's/^.*\bDefaults    requiretty\b.*$/Defaults    !requiretty/' /etc/sudoers"
-		Write-Verbose $Scriptblock
-		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  
-
-        $Scriptblock = "echo 'auto lo' > /etc/network/interfaces"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-
-        $Scriptblock = "echo 'iface lo inet loopback' >> /etc/network/interfaces"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-
-        $Scriptblock = "echo 'auto $netdev' >> /etc/network/interfaces"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-
-        $Scriptblock = "echo 'iface $netdev inet static' >> /etc/network/interfaces"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-
-        $Scriptblock = "echo 'address $ip' >> /etc/network/interfaces"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-
-        $Scriptblock = "echo 'gateway $DefaultGateway' >> /etc/network/interfaces"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-
-        $Scriptblock = "echo 'netmask 255.255.255.0' >> /etc/network/interfaces"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-
-        $Scriptblock = "echo 'network $subnet.0' >> /etc/network/interfaces"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-
-        $Scriptblock = "echo 'broadcast $subnet.255' >> /etc/network/interfaces"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-        
-        $Scriptblock = "echo 'dns-nameservers $DNS1 $DNS2' >> /etc/network/interfaces"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-
-        $Scriptblock = "echo 'dns-search $BuildDomain.$Custom_DomainSuffix' >> /etc/network/interfaces"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-        
-        $Scriptblock = "echo '127.0.0.1       localhost' > /etc/hosts; echo '$ip $Node $Node.$BuildDomain.$Custom_DomainSuffix' >> /etc/hosts; hostname $Node"
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-        $Scriptblock = "hostnamectl set-hostname $Node"
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-
-        switch ($ubuntu_ver)
-            {
-            "14_4"
-                {
-                $Scriptblock = "/sbin/ifdown eth0 && /sbin/ifup eth0"
-                }
-            default
-                {
-                $Scriptblock = "/etc/init.d/networking restart"
-                }
-            }         
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-
-        Write-Host -ForegroundColor Cyan " ==>Testing default Route, make sure that Gateway is reachable ( eg. install and start OpenWRT )
-        if failures occur, you might want to open a 2nd labbuildr windows and run start-vmx OpenWRT "
-        $Scriptblock = "DEFAULT_ROUTE=`$(ip route show default | awk '/default/ {print `$3}');ping -c 1 `$DEFAULT_ROUTE"
-        Write-Verbose $Scriptblock
-        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword     
+		$Nodeclone | Set-LabUbuntuVMX -Ubuntu_ver $ubuntu_ver -Scriptdir $Scriptdir -Sourcedir $Sourcedir -DefaultGateway $DefaultGateway  -guestpassword $Guestpassword -Default_Guestuser $Default_Guestuser -Rootuser $rootuser -Hostkey $Hostkey -ip $ip -DNS1 $DNS1 -DNS2 $DNS2 -subnet $subnet -Host_Name $($Nodeclone.VMXname) -DNS_DOMAIN_NAME $DNS_DOMAIN_NAME
+ 
  ## docker       
 		if ($docker)
             {
             Write-Host -ForegroundColor Gray " ==>installing latest docker engine"
-            $Scriptblock="apt-get install apt-transport-https ca-certificates;sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D"
+            $Scriptblock="apt-get install apt-transport-https ca-certificates;sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D"
             Write-Verbose $Scriptblock
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
             
@@ -405,27 +188,26 @@ foreach ($Node in $machinesBuilt)
 				{
 				'14_4'
 					{
-					$deb = "deb https://apt.dockerproject.org/repo ubuntu-trusty main"
+					$deb = "deb http://apt.dockerproject.org/repo ubuntu-trusty main"
 					}
 				'15_4'
 					{
-					$deb = "deb https://apt.dockerproject.org/repo ubuntu-jessie main"
+					$deb = "deb http://apt.dockerproject.org/repo ubuntu-jessie main"
 					}
 				'15_10'
 					{
-					$deb = "deb https://apt.dockerproject.org/repo ubuntu-wily main"
+					$deb = "deb http://apt.dockerproject.org/repo ubuntu-wily main"
 					}
 				'16_4'
 					{
-					$deb = "deb https://apt.dockerproject.org/repo ubuntu-xenial main"
+					$deb = "deb http://apt.dockerproject.org/repo ubuntu-xenial main"
 					}
 				}
 			
-			$Scriptblock = "echo '$Deb' >> /etc/apt/sources.list.d/docker.list;apt-get update;apt-get purge lxc-docker;apt-cache policy docker-engine"
+			$Scriptblock = "echo '$deb' >> /etc/apt/sources.list.d/docker.list;apt-get update;apt-get purge lxc-docker;apt-cache policy docker-engine"
 			Write-Verbose $Scriptblock
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
-		
 			$Scriptblock = "apt-get install curl linux-image-extra-`$(uname -r) -y"
 			Write-Verbose $Scriptblock
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile

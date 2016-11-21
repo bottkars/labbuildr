@@ -30,7 +30,6 @@ This will install 3 Ubuntu Nodes Ubuntu1 -Ubuntu3 from the Default Ubuntu Master
 Param(
 [Parameter(ParameterSetName = "openstack",Mandatory=$true)]
 [switch]$openstack,
-[Parameter(ParameterSetName = "defaults",Mandatory=$false)]
 [Parameter(ParameterSetName = "openstack",Mandatory=$false)]
 [ValidateSet('liberty','mitaka','newton')]
 [string]$openstack_release = 'liberty',
@@ -39,72 +38,29 @@ Param(
 [string[]]$cinder = "scaleio",
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $true)]
-[switch]$Defaults,
-[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
-[Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [switch]$docker=$false,
-[Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$False)]
-[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
-[ValidateRange(1,3)]
-[int32]$Disks = 1,
 #[Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "openstack", Mandatory = $false)]
-[ValidateSet('16_4','14_4')]
-[string]$ubuntu_ver = "16_4",
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [ValidateSet('cinnamon','cinnamon-desktop-environment','xfce4','lxde','none')]
 [string]$Desktop = "none",
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$true)]
-[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
-[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]
-$Sourcedir,
-[Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [ValidateRange(1,9)]
 [int32]$Nodes=1,
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [int32]$Startnode = 1,
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
-[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
-[ValidateScript({$_ -match [IPAddress]$_ })]
-[ipaddress]$subnet = "192.168.2.0",
-[Parameter(ParameterSetName = "install",Mandatory=$true)]
-[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
-[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")]
-[string]$BuildDomain,
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
-[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
-[ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]
-$vmnet,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateScript({ Test-Path -Path $_ })]
-$Defaultsfile=".\defaults.xml",
-[Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [switch]$forcedownload,
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "scaleio", Mandatory = $true)]
 [Switch]$scaleio,
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Switch]$Openstack_Controller,
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [Switch]$Openstack_Baseconfig = $true,
@@ -114,17 +70,7 @@ $Custom_unity_ip,
 $custom_unity_vpool_name,
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 $Custom_Unity_Target_ip,
-    <#
-    Size for general nodes
-    'XS'  = 1vCPU, 512MB
-    'S'   = 1vCPU, 768MB
-    'M'   = 1vCPU, 1024MB
-    'L'   = 2vCPU, 2048MB
-    'XL'  = 2vCPU, 4096MB
-    'TXL' = 4vCPU, 6144MB
-    'XXL' = 4vCPU, 8192MB
-    #>
-[ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL",
+[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
     <#
     Size for openstack compute nodes
     'XS'  = 1vCPU, 512MB
@@ -136,68 +82,109 @@ $Custom_Unity_Target_ip,
     'XXL' = 4vCPU, 8192MB
     #>
 [ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Compute_Size = "XL",
-
-[int]$ip_startrange = 200,
-#[Parameter(ParameterSetName = "install",Mandatory = $false)]
-#[Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$SIOGateway
-[switch]$use_aptcache = $true,
-[ipaddress]$non_lab_apt_ip,
-[switch]$do_not_use_lab_aptcache,
-[switch]$upgrade
+###### commo parameters
+#### generic labbuildr7
+	[Parameter(Mandatory = $false)]
+	[ValidateRange(1,3)]
+	[int32]$Disks = 1,
+	[Parameter(Mandatory = $false)]
+	[ValidateSet('16_4','15_10','14_4')]
+	[string]$ubuntu_ver = "16_4",
+	[Parameter(Mandatory=$false)]
+	$Scriptdir = (join-path (Get-Location) "labbuildr-scripts"),
+	[Parameter(Mandatory=$false)]
+	$Sourcedir = $Global:labdefaults.Sourcedir,
+	[Parameter(Mandatory=$false)]
+	$DefaultGateway = $Global:labdefaults.DefaultGateway,
+	[Parameter(Mandatory=$false)]
+	[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")]
+	[string]$BuildDomain = $Global:labdefaults.builddomain,
+	[Parameter(Mandatory=$false)]
+	[string]$custom_domainsuffix = $Global:labdefaults.custom_domainsuffix,
+	$Masterpath = $Global:labdefaults.Masterpath,
+	$guestpassword = "Password123!",
+	$Rootuser = 'root',
+	$Hostkey = $Global:labdefaults.HostKey,
+	$Default_Guestuser = 'labbuildr',
+	[Parameter(Mandatory=$false)]
+	$Subnet = $Global:labdefaults.MySubnet,
+	[Parameter(Mandatory=$false)]
+	$DNS1 = $Global:labdefaults.DNS1,
+	[Parameter(Mandatory=$false)]
+	$DNS2 = $Global:labdefaults.DNS2,
+	[Parameter(Mandatory=$false)]
+	$Host_Name,
+	[Parameter(Mandatory=$false)]
+	$DNS_DOMAIN_NAME = "$($Global:labdefaults.BuildDomain).$($Global:labdefaults.Custom_DomainSuffix)",
+	#vmx param
+	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+	[ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL",
+	[ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]
+	$vmnet = $Global:labdefaults.vmnet,
+	[int]$ip_startrange = 200,
+	[switch]$use_aptcache = $true,
+	[ipaddress]$non_lab_apt_ip,
+	[switch]$do_not_use_lab_aptcache,
+	[switch]$upgrade,
+	[switch]$Defaults
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
+if ($Defaults.IsPresent)
+	{
+	Deny-LABDefaults
+	Break
+	}
+if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+    {
+	$builtinParameters = @("ErrorAction","WarningAction","Verbose","ErrorVariable","WarningVariable","OutVariable","OutBuffer","Debug")
+	$totalParameterCount = $($MyInvocation.MyCommand.Parameters.count)
+	$parameterCount = 0 
+	($MyInvocation.MyCommand.Parameters ).Keys | ForEach {
+		if ( $builtinParameters -notcontains $_ ) 
+			{
+			$parameterCount++
+			}
+		}
+		$boundParameters = @()
+		Write-Host -ForegroundColor Yellow "$parameterCount parameters defined param statement"
+		Write-Host -ForegroundColor Yellow "$($MyInvocation.BoundParameters.count) parameters are provided on the cmdline:"
+		$MyInvocation.BoundParameters.keys | ForEach {
+		Write-Host "'$($_)' = '$($PSBoundParameters.Item($_))'"
+		$boundParameters+=$_
+	}
+	Write-Host -ForegroundColor Yellow "These parameters have been configured with default values:"
+	$parametersToIgnore = $builtinParameters + $boundParameters
+
+	($MyInvocation.MyCommand.Parameters ).Keys | ForEach {
+	if ( $boundParameters -notcontains $_ ) 
+		{
+		$val = (Get-Variable -Name $_ -EA SilentlyContinue).Value
+		if( $val.length -gt 0 ) 
+			{
+			"'$($_)' = '$($val)'"
+			}
+		}
+	}
+ 	Write-Host -ForegroundColor Yellow "Parameters with no Value:"
+	($MyInvocation.MyCommand.Parameters ).Keys | ForEach {
+		if ( $parametersToIgnore -notcontains $_ ) {
+		$val = (Get-Variable -Name $_ -EA SilentlyContinue).Value
+		if( $val.length -eq 0 )
+			{
+			"'$($_)'"
+			}
+		}
+	}
+   	pause
+}
+$Scenarioname = "ubuntu"
 [int]$lab_apt_cache_ip = $ip_startrange
 If ($ConfirmPreference -match "none")
     {$Confirm = $false}
 else
     {$Confirm = $true}
 $Builddir = $PSScriptRoot
-$Scriptdir = Join-Path $Builddir "labbuildr-scripts"
-If ($Defaults.IsPresent)
-    {
-    $labdefaults = Get-labDefaults
-    $vmnet = $labdefaults.vmnet
-    $subnet = $labdefaults.MySubnet
-    $BuildDomain = $labdefaults.BuildDomain
-    try
-        {
-        $Sourcedir = $labdefaults.Sourcedir
-        }
-    catch [System.Management.Automation.ValidationMetadataException]
-        {
-        Write-Warning "Could not test Sourcedir Found from Defaults, USB stick connected ?"
-        Break
-        }
-    catch [System.Management.Automation.ParameterBindingException]
-        {
-        Write-Warning "No valid Sourcedir Found from Defaults, USB stick connected ?"
-        Break
-        }
-    try
-        {
-        $Masterpath = $LabDefaults.Masterpath
-        }
-    catch
-        {
-        # Write-Host -ForegroundColor Gray " ==>No Masterpath specified, trying default"
-        $Masterpath = $Builddir
-        }
-     $Hostkey = $labdefaults.HostKey
-     $Gateway = $labdefaults.Gateway
-     $DefaultGateway = $labdefaults.Defaultgateway
-     $DNS1 = $labdefaults.DNS1
-     $DNS2 = $labdefaults.DNS2
-    }
-if ($LabDefaults.custom_domainsuffix)
-	{
-	$custom_domainsuffix = $LabDefaults.custom_domainsuffix
-	}
-else
-	{
-	$custom_domainsuffix = "local"
-	}
-
 if (!$DNS2)
     {
     $DNS2 = $DNS1
@@ -212,7 +199,7 @@ $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 ###
 	$Devicename = "$Location"+"_Disk_$Driveletter"
 	$VolumeName = "Volume_$Location"
-	$ProtectionDomainName = "PD_$BuildDomain"
+	$ProtectionDomainName = "PD_$Builddomain"
 	$StoragePoolName = "SP_$BuildDomain"
 	$SystemName = "ScaleIO@$BuildDomain"
 	$FaultSetName = "Rack_"
@@ -248,6 +235,7 @@ switch ($PsCmdlet.ParameterSetName)
 		{
 			"openstack"
 			{
+			$Scenarioname = 'Openstack'
 			if ($openstack_release -eq 'newton')
 				{
 				$ubuntu_ver = '16_4'
@@ -312,6 +300,11 @@ if (!$Ubuntu -or $ubuntu -notmatch $ubuntu_sio_ver)
 		{
 		Write-Host -ForegroundColor Magenta " ==>looks like we detected ScaleIO 2.0.1"
 		$SIOMajor = "2.0.1"
+		$SIO_FILE_VER = "2.0-10000"
+		}
+	else
+		{
+		$SIO_FILE_VER = "-2.0"
 		}
 	if ((Get-ChildItem -Path $Ubuntudir -Filter "*.deb" -Recurse -Include *Ubuntu*).count -ge 9)
 		{
@@ -328,7 +321,7 @@ if (!$Ubuntu -or $ubuntu -notmatch $ubuntu_sio_ver)
 			}
 		}
 	Write-Host -ForegroundColor Gray " ==>evaluationg base path for Gateway"
-    $SIOGatewayrpm = Get-ChildItem -Path $scaleio_dir -Recurse -Filter "emc-scaleio-gateway*.deb"  -Exclude ".*" -ErrorAction SilentlyContinue
+    $SIOGatewayrpm = Get-ChildItem -Path $scaleio_dir -Recurse -Filter "emc-scaleio-gateway_$SIO_FILE_VER*.deb"  -Exclude ".*" -ErrorAction SilentlyContinue
 
     try
         {
@@ -336,7 +329,7 @@ if (!$Ubuntu -or $ubuntu -notmatch $ubuntu_sio_ver)
         }
     Catch
         {
-        Write-Warning "ScaleIO Gateway RPM not found in $scaleio_dir
+        Write-Warning "ScaleIO Gateway DEB File not found in $scaleio_dir
         if using 2.x, the Zip files are Packed recursively
         manual action required: expand ScaleIO Gateway ZipFile"
         return
@@ -344,9 +337,11 @@ if (!$Ubuntu -or $ubuntu -notmatch $ubuntu_sio_ver)
     $Sourcedir_replace = $Sourcedir.Replace("\","/")
 	$SIOGatewayrpm = $SIOGatewayrpm.Replace("\","/")
     $SIOGatewayrpm = $SIOGatewayrpm -replace  $Sourcedir_replace,"/mnt/hgfs/Sources/"
+	$SIOGatewayrpm = $SIOGatewayrpm -replace "//","/"
 	$Ubuntu_guestdir = $Ubuntudir.Fullname.Replace("\","/")
 	# = $Ubuntudir.fullname.Replace("\","\\")
 	$Ubuntu_guestdir = $Ubuntu_guestdir -replace  $Sourcedir_replace,"/mnt/hgfs/Sources/"
+	$Ubuntu_guestdir = $Ubuntu_guestdir -replace "//","/"
     Write-Host $Ubuntu_guestdir
     Write-Host $SIOGatewayrpm
 	$Percentage = [math]::Round(100/$nodes)+1
@@ -372,15 +367,11 @@ switch ($ubuntu_ver)
         }
     }
 
-$rootuser = "root"
-$Guestpassword = "Password123!"
-[uint64]$Disksize = 100GB
 $scsi = 0
 $Nodeprefix = "Ubuntu"
 $Nodeprefix = $Nodeprefix.ToLower()
 $OS = "Ubuntu"
 $Required_Master = "$OS$ubuntu_ver"
-$Default_Guestuser = "labbuildr"
 if ($use_aptcache.IsPresent)
 	{
 	if (!$do_not_use_lab_aptcache.IsPresent)
@@ -389,7 +380,11 @@ if ($use_aptcache.IsPresent)
 		if (!($aptvmx = get-vmx aptcache -WarningAction SilentlyContinue))
 			{
 			Write-Host -ForegroundColor Magenta " ==>installing apt cache"
-			.\install-aptcache.ps1 -Defaults -ip_startrange $lab_apt_cache_ip -Size M -upgrade:$($upgrade.IsPresent)
+			.\install-aptcache.ps1 -ip_startrange $lab_apt_cache_ip -Size M -upgrade:$($upgrade.IsPresent)
+			}
+		else
+			{
+			$apt_ip = $Global:labdefaults.APT_Cache_IP
 			}
 		}
 	else
@@ -416,69 +411,46 @@ catch
     exit
     }
 ####
-if (!$MasterVMX.Template)
-            {
-            write-verbose "Templating Master VMX"
-            $template = $MasterVMX | Set-VMXTemplate
-            }
-        $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
-        if (!$Basesnap)
-        {
-         Write-verbose "Base snap does not exist, creating now"
-        $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
-        }
 $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
 ####Build Machines#
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     {
-    write-output $PSCmdlet.MyInvocation.BoundParameters
+    #write-output $PSCmdlet.MyInvocation.BoundParameters
 	pause
     }
+$nodenum = 1
 $machinesBuilt = @()
 foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     {
-        If (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue))
+    $MY_Size = $Size
+    if ($nodenum -eq 3 -and $openstack.IsPresent)
+		{
+		$MY_Size = $Size
+		}
+	else
+		{
+		$MY_Size =  $Compute_Size
+		}	
+	If (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue))
         {
         try
             {
-            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node # -clonepath $Builddir
+
+			$Nodeclone = New-LabVMX -Masterpath $Masterpath -Ubuntu -Ubuntu_ver $ubuntu_ver -VMXname $Nodeprefix$Node -SCSI_DISK_COUNT $Disks -SCSI_Controller 0 -SCSI_Controller_Type lsisas1068 -SCSI_DISK_SIZE 100GB -vmnet $vmnet -Size $MY_Size -ConnectionType custom -AdapterType vmxnet3 -Scenario 7 -Scenarioname $Scenarioname -activationpreference 1 -Displayname "$Nodeprefix$Node@$DNS_DOMAIN_NAME" 
+
+            #$NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node # -clonepath $Builddir
             }
         catch
             {
             Write-Warning "Error creating VM"
-            return
+            break
             }
-        If ($Node -eq 1){$Primary = $NodeClone}
-        $Config = Get-VMXConfig -config $NodeClone.config
-        foreach ($LUN in (1..$Disks))
-            {
-            $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-            $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path
-            $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
-            }
-        $Netadapter = Set-VMXNetworkAdapter -Adapter 0 -ConnectionType hostonly -AdapterType vmxnet3 -config $NodeClone.Config
-        if ($vmnet)
-            {
-            Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config -WarningAction SilentlyContinue | Out-Null
-            Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config | Out-Null
-            }
+        If ($Node -eq 1)
+			{
+			$Primary = $NodeClone
+			}
 
-        $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.CloneName)@$BuildDomain"
-        $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
-       <# if ($node -eq 3)
-            {
-            Write-Host -ForegroundColor Gray " ==>Setting Gateway Memory to 3 GB"
-            $NodeClone | Set-VMXmemory -MemoryMB 3072 | Out-Null
-            }#>
-        $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname Ubuntu -Scenario 7
-        if ($nodenum -eq 3)
-			{
-			$mysize = $NodeClone |Set-VMXSize -config $NodeClone.Config -Size $Size
-			}
-		else
-			{
-			$mysize = $NodeClone |Set-VMXSize -config $NodeClone.Config -Size $Compute_Size
-			}
+
 
 		$NodeClone | Set-VMXVTBit -VTBit | Out-Null
         $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
@@ -487,9 +459,18 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         }
     else
         {
-        write-Warning "Machine $Nodeprefix$node already Exists"
+        write-Warning "Machine $Nodeprefix$node already Exists
+Please select an available Startnode with -Startnode Parameter"
+		exit
         }
+    $nodenum++
+	}
+if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+    {
+    write-output $PSCmdlet.MyInvocation.BoundParameters
+	pause
     }
+
 Write-Host -ForegroundColor White "Starting Node Configuration"
 $ip_startrange_count = $ip_startrange
 $installmessage = @()
@@ -501,8 +482,13 @@ foreach ($Node in $machinesBuilt)
 			$controller_ip = $ip
 			}
         $NodeClone = get-vmx $Node
+		########
+		#Default Node Installer
+		$Nodeclone | Set-LabUbuntuVMX -Ubuntu_ver $ubuntu_ver -Scriptdir $Scriptdir -Sourcedir $Sourcedir -DefaultGateway $DefaultGateway  -guestpassword $Guestpassword -Default_Guestuser $Default_Guestuser -Rootuser $rootuser -Hostkey $Hostkey -ip $ip -DNS1 $DNS1 -DNS2 $DNS2 -subnet $subnet -Host_Name $($Nodeclone.VMXname) -DNS_DOMAIN_NAME $DNS_DOMAIN_NAME
 
-        do {
+		########
+
+        <#do {
             $ToolState = Get-VMXToolsState -config $NodeClone.config
             Write-Verbose "VMware tools are in $($ToolState.State) state"
             sleep 5
@@ -536,6 +522,12 @@ foreach ($Node in $machinesBuilt)
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
 
+		if ($labdefaults.AnsiblePublicKey)
+            {
+            $Scriptblock = "echo '$($labdefaults.AnsiblePublicKey)' >> /root/.ssh/authorized_keys"
+            Write-Verbose $Scriptblock
+            $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
+            }
         if ($Hostkey)
             {
             $Scriptblock = "echo '$Hostkey' >> /root/.ssh/authorized_keys"
@@ -627,7 +619,8 @@ foreach ($Node in $machinesBuilt)
         $Scriptblock = "DEFAULT_ROUTE=`$(ip route show default | awk '/default/ {print `$3}');ping -c 1 `$DEFAULT_ROUTE"
         Write-Verbose $Scriptblock
         $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
-		$NodeClone | Set-LabAPTCacheClient -cache_ip $apt_ip
+		$NodeClone | Set-LabAPTCacheClient -cache_ip $apt_ip#>
+		#### end replace labbuildr7 Scema
 		if ($upgrade.ispresent)
 			{
 			$Scriptblock = "apt-get update;DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=`"--force-confdef`" -o Dpkg::Options::=`"--force-confold`" dist-upgrade"
@@ -636,7 +629,7 @@ foreach ($Node in $machinesBuilt)
 		if ($cinder -contains "unity")
 			{
 			Write-Host -ForegroundColor Gray " ==>configuring iscsi $($NodeClone.VMXName)"
-			$ISCSI_IQN = "iqn.2016-10.org.linux:$($NodeClone.VMXname).$BuildDomain.$custom_domainsuffix.c0"
+			$ISCSI_IQN = "iqn.2016-10.org.linux:$($NodeClone.VMXname).$DNS_DOMAIN_NAME.c0"
 			$Scriptblocks = (
 			"apt-get install -y open-iscsi",
 			"echo 'InitiatorName=$ISCSI_IQN' > /etc/iscsi/initiatorname.iscsi",
@@ -764,7 +757,7 @@ if ($scaleio.IsPresent)
 						}
 					Write-Verbose $sed
 					$NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-					$MY_CIPHERS="'ciphers='\`"'TLS_DHE_DSS_WITH_AES_128_CBC_SHA256,TLS_DHE_DSS_WITH_AES_128_GCM_SHA256,TLS_DHE_RSA_WITH_AES_128_CBC_SHA,TLS_DHE_RSA_WITH_AES_128_CBC_SHA256,TLS_DHE_RSA_WITH_AES_128_GCM_SHA256,TLS_DHE_RSA_WITH_AES_256_CBC_SHA,TLS_DHE_RSA_WITH_AES_256_CBC_SHA256,TLS_DHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256,TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_CBC_SHA,TLS_RSA_WITH_AES_128_CBC_SHA256,TLS_RSA_WITH_AES_128_GCM_SHA256,TLS_RSA_WITH_AES_256_CBC_SHA,TLS_RSA_WITH_AES_256_CBC_SHA256,TLS_RSA_WITH_AES_256_GCM_SHA384'\`"''"
+					$MY_CIPHERS="'ciphers='`"'TLS_DHE_DSS_WITH_AES_128_CBC_SHA256,TLS_DHE_DSS_WITH_AES_128_GCM_SHA256,TLS_DHE_RSA_WITH_AES_128_CBC_SHA,TLS_DHE_RSA_WITH_AES_128_CBC_SHA256,TLS_DHE_RSA_WITH_AES_128_GCM_SHA256,TLS_DHE_RSA_WITH_AES_256_CBC_SHA,TLS_DHE_RSA_WITH_AES_256_CBC_SHA256,TLS_DHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256,TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_CBC_SHA,TLS_RSA_WITH_AES_128_CBC_SHA256,TLS_RSA_WITH_AES_128_GCM_SHA256,TLS_RSA_WITH_AES_256_CBC_SHA,TLS_RSA_WITH_AES_256_CBC_SHA256,TLS_RSA_WITH_AES_256_GCM_SHA384'`"''"
 					$Scriptblock = "MYCIPHERS=$MY_CIPHERS;sed -i '/ciphers=/s/.*/'`$MYCIPHERS'/' /opt/emc/scaleio/gateway/conf/server.xml"
 					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 					$NodeClone | Invoke-VMXBash -Scriptblock "/etc/init.d/scaleio-gateway restart" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
