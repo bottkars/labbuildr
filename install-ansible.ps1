@@ -87,7 +87,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
 		$Lab_VMX = New-LabVMX -CentOS -CentOS_ver $centos_ver -Size $Size -SCSI_DISK_COUNT $Disks -SCSI_DISK_SIZE $Disksize -VMXname $Nodeprefix$Node -SCSI_Controller 0
 	    $Global:labdefaults.AnsiblePublicKey = ""
 		$Annotation = $Lab_VMX | Set-VMXAnnotation -Line1 "rootuser:$Rootuser" -Line2 "rootpasswd:$Guestpassword" -Line3 "Guestuser:$Guestuser" -Line4 "Guestpassword:$Guestpassword" -Line5 "labbuildr by @sddc_guy" -builddate
-		$Lab_VMX | Set-LabCentosVMX -ip $IP -CentOS_ver $centos_ver -Aditional_Epel_Packages ansible -Host_Name $Host_Name
+		$Lab_VMX | Set-LabCentosVMX -ip $IP -CentOS_ver $centos_ver -Additional_Epel_Packages ansible -Host_Name $Host_Name
 		#### retrieving guest_rsakey
 		Write-Host -ForegroundColor Gray " ==>retrieving root key for ansible"
 		$Scriptblock = '/usr/sbin/vmtoolsd --cmd="info-set guestinfo.ROOT_PUBLIC_KEY $(cat /root/.ssh/id_rsa.pub)"'
