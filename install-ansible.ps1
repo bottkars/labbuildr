@@ -92,7 +92,7 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
 
 		Write-Host -ForegroundColor Gray " ==>installing ansible"
         $Scriptblock = "yum install ansible python-devel krb5-devel krb5-libs krb5-workstation python-pip build-essential libssl-dev libffi-dev python-dev python-cffi -y"
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+        $LAB_VMX | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 		
 		$Scriptblock = ("cat >> /etc/krb5.conf <<EOF
 [realms]`
@@ -103,10 +103,10 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
 [domain_realm]`
     .$($DNS_DOMAIN_NAME.tolower()) = $($DNS_DOMAIN_NAME.toupper())`
 ")
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+        $LAB_VMX | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
 		$Scriptblock = 'pip install "pywinrm>=0.1.1" kerberos requests_kerberos python-openstackclient'
-		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+		$LAB_VMX | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
 		$Scriptblock = ("mkdir /etc/ansible/group_vars;cat >> /etc/ansible/group_vars/windows.yml <<EOF
 # created by labbuildr `
@@ -116,7 +116,7 @@ ansible_port: 5986`
 ansible_connection: winrm
 ansible_winrm_server_cert_validation: ignore``
 ")
-		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+		$LAB_VMX | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
 		#### retrieving guest_rsakey
 		Write-Host -ForegroundColor Gray " ==>retrieving root key for ansible"
