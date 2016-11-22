@@ -88,6 +88,36 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
 	    $Global:labdefaults.AnsiblePublicKey = ""
 		$Annotation = $Lab_VMX | Set-VMXAnnotation -Line1 "rootuser:$Rootuser" -Line2 "rootpasswd:$Guestpassword" -Line3 "Guestuser:$Guestuser" -Line4 "Guestpassword:$Guestpassword" -Line5 "labbuildr by @sddc_guy" -builddate
 		$Lab_VMX | Set-LabCentosVMX -ip $IP -CentOS_ver $centos_ver -Additional_Epel_Packages ansible -Host_Name $Host_Name
+		##
+
+		Write-Host -ForegroundColor Gray " ==>installing ansible"
+        $Scriptblock = "yum install ansible python-devel krb5-devel krb5-libs krb5-workstation python-pip build-essential libssl-dev libffi-dev python-dev python-cffi -y"
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+		
+		$Scriptblock = ("cat >> /etc/krb5.conf <<EOF
+[realms]`
+ $($DNS_DOMAIN_NAME.ToUpper()) = {`
+    kdc = $($Global:labdefaults.BuildDomain)dc.$DNS_DOMAIN_NAME`
+ }`
+`
+[domain_realm]`
+    .$($DNS_DOMAIN_NAME.tolower()) = $($DNS_DOMAIN_NAME.toupper())`
+")
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+
+		$Scriptblock = 'pip install "pywinrm>=0.1.1" kerberos requests_kerberos python-openstackclient'
+		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+
+		$Scriptblock = ("mkdir /etc/ansible/group_vars;cat >> /etc/ansible/group_vars/windows.yml <<EOF
+# created by labbuildr `
+ansible_user: Administrator@$($DNS_DOMAIN_NAME.toupper())`
+ansible_password: Password123!`
+ansible_port: 5986`
+ansible_connection: winrm
+ansible_winrm_server_cert_validation: ignore``
+")
+		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+
 		#### retrieving guest_rsakey
 		Write-Host -ForegroundColor Gray " ==>retrieving root key for ansible"
 		$Scriptblock = '/usr/sbin/vmtoolsd --cmd="info-set guestinfo.ROOT_PUBLIC_KEY $(cat /root/.ssh/id_rsa.pub)"'
