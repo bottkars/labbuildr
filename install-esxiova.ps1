@@ -39,22 +39,15 @@ Param(
 [Parameter(ParameterSetName = "import",Mandatory=$false)][String]
 [ValidateScript({ Test-Path -Path $_ -Filter *.ova -PathType Leaf -ErrorAction SilentlyContinue })]$ovf,
 [Parameter(ParameterSetName = "Import", Mandatory = $true)]
+[switch]$import,
 [ValidateSet(
-'Nested_ESXi6','Nested_ESXi5'
+'Nested_ESXi6','Nested_ESXi5','Nested_ESXi6.5'
 )]
-[string]$nestedesx_ver = "Nested_ESXi6",
-[Parameter(ParameterSetName = "defaults",Mandatory=$False)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[string]$nestedesx_ver = "Nested_ESXi6.5",
 [String]$Mastername,
-[Parameter(ParameterSetName = "defaults",Mandatory=$False)]
-[Parameter(ParameterSetName = "import",Mandatory=$false)]
-[Parameter(ParameterSetName = "install",Mandatory=$true)]$MasterPath,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install", Mandatory = $false)]
 [ValidateRange(3,14)]
 [int]
 $Disks = 3,
-[Parameter(ParameterSetName = "defaults",Mandatory=$False)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateRange(1,6)][int]
 $Startnode = 1,
@@ -68,27 +61,25 @@ Size for openstack compute nodes
 'TXL' = 4vCPU, 6144MB
 'XXL' = 4vCPU, 8192MB
 #>
-[Parameter(ParameterSetName = "defaults",Mandatory=$False)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]
 $Size = "XL",
-[Parameter(ParameterSetName = "defaults",Mandatory=$False)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateRange(1,6)]
 [int]$Nodes = 1,
-[Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
-<# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
-[Parameter(ParameterSetName = "install",Mandatory=$False)]
-[ValidateLength(1,63)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,63}[a-zA-Z0-9]+$")][string]$BuildDomain = "labbuildr",
+[Parameter(Mandatory = $false)][switch]$Defaults,
+[Parameter(Mandatory=$false)]
+[ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = $Global:labdefaults.MySubnet,
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]
-$VMnet = "vmnet2"
+$VMnet = $Global:labdefaults.vmnet,
+$Sourcedir = $Global:labdefaults.sourcedir,
+$Masterpath = $Global:LabDefaults.Masterpath
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
+if ($Defaults.IsPresent)
+	{
+	Deny-LabDefaults
+	}
 $Builddir = $PSScriptRoot
 $Password = "Password123!"
 $SSO_Domain = "vmware.local"
@@ -97,34 +88,17 @@ switch ($PsCmdlet.ParameterSetName)
     "import"
     {
         
-        if (!$Sourcedir)
-            {
-            $Sourcedir = (get-labdefaults).Sourcedir
-            }
-        
-        if (!$Masterpath)
-            {
-            try
-                {
-                $Masterpath = (get-labdefaults).Masterpath
-                }
-            catch
-                {
-                Write-Host -ForegroundColor Gray " ==>No Masterpath specified, trying default"
-                $Masterpath = $Builddir
-                }
-            }
         if (!($ovf)) 
             {
             #download template
 			Write-Host -ForegroundColor Gray " ==>No OVA Template specified, checking for latest $nestedesx_ver"
-			$OVF = Receive-LABnestedesxtemplate -Destination (Join-Path $Sourcedir "OVA") -nestedesx_ver Nested_ESXi6
+			$OVF = Receive-LABnestedesxtemplate -Destination (Join-Path $Sourcedir "OVA") -nestedesx_ver $nestedesx_ver
 			$OVFfile = Get-Item $ovf
             $mastername = $OVFfile.BaseName
             }
         $OVA = Import-VMXOVATemplate -OVA $ovf -acceptAllEulas -AllowExtraConfig -quiet -destination $MasterPath 
         #   & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $ovf $PSScriptRoot #
-        Write-Host -ForegroundColor White  "Use `".\install-esxova.ps1 -Defaults -Mastername $($OVA.vmname)`" to try defaults"
+        Write-Host -ForegroundColor White  "Use `".\install-esxova.ps1 -nestedesx_ver $nestedesx_ver `" to try defaults"
         }
 
 default
@@ -135,77 +109,21 @@ default
 		{$Confirm = $true}
 	$Builddir = $PSScriptRoot
 	$Scriptdir = Join-Path $Builddir "Scripts"
-	If ($Defaults.IsPresent)
-		{
-		$labdefaults = Get-labDefaults
-		$vmnet = $labdefaults.vmnet
-		$subnet = $labdefaults.MySubnet
-		$BuildDomain = $labdefaults.BuildDomain
-		try
-			{
-			$Sourcedir = $labdefaults.Sourcedir
-			}
-		catch [System.Management.Automation.ValidationMetadataException]
-			{
-			Write-Warning "Could not test Sourcedir Found from Defaults, USB stick connected ?"
-			Break
-			}
-		catch [System.Management.Automation.ParameterBindingException]
-			{
-			Write-Warning "No valid Sourcedir Found from Defaults, USB stick connected ?"
-			Break
-			}
-		try
-			{
-			$Masterpath = $LabDefaults.Masterpath
-			}
-		catch
-			{
-			# Write-Host -ForegroundColor Gray " ==>No Masterpath specified, trying default"
-			$Masterpath = $Builddir
-			}
-		 $Hostkey = $labdefaults.HostKey
-		 $Gateway = $labdefaults.Gateway
-		 $DefaultGateway = $labdefaults.Defaultgateway
-		 $DNS1 = $labdefaults.DNS1
-		 $DNS2 = $labdefaults.DNS2
-		}
-	if (!$DNS2)
-		{
-		$DNS2 = $DNS1
-		}
+	$BuildDomain = $Global:labdefaults.BuildDomain
 
-	if ($LabDefaults.custom_domainsuffix)
-		{
-		$custom_domainsuffix = $LabDefaults.custom_domainsuffix
-		}
-	else
-		{
-		$custom_domainsuffix = "local"
-		}
-
+	$Hostkey = $Global:labdefaults.HostKey
+	$Gateway = $Global:labdefaults.Gateway
+	$DefaultGateway = $Global:labdefaults.Defaultgateway
+	$DNS1 = $Global:labdefaults.DNS1
+	$DNS2 = $Global:labdefaults.DNS2
+	$custom_domainsuffix = $Global:labdefaults.custom_domainsuffix
 	Write-Verbose $MasterPath
     [System.Version]$subnet = $Subnet.ToString()
     $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
-
     $Builddir = $PSScriptRoot
     $Nodeprefix = "NestedESX"
-    if (!$MasterVMX)
-        {
-        $MasterVMX = get-vmx -path $Masterpath -VMXName $Mastername
-        iF ($MasterVMX)
-            {
-            $MasterVMX = $MasterVMX | Sort-Object -Descending
-            $MasterVMX = $MasterVMX[-1]
-            }
-        }
-    else
-        {
-        if ($MasterPath)        
-            {
-            $MasterVMX = get-vmx -path $MasterPath -VMXName $MasterVMX
-            }
-        }
+    $MasterVMX = get-vmx -path $Masterpath | where {$_.VMXName -match "$nestedesx_ver"}
+ 
 
     if (!$MasterVMX)
         {
