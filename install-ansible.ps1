@@ -110,12 +110,12 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
 		$LAB_VMX | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
 		$Scriptblock = ("mkdir /etc/ansible/group_vars;cat >> /etc/ansible/group_vars/windows.yml <<EOF
-# created by labbuildr `
+# created by labbuildr`
 ansible_user: Administrator@$($DNS_DOMAIN_NAME.toupper())`
 ansible_password: Password123!`
 ansible_port: 5986`
-ansible_connection: winrm
-ansible_winrm_server_cert_validation: ignore``
+ansible_connection: winrm`
+ansible_winrm_server_cert_validation: ignore`
 ")
 		$LAB_VMX | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
