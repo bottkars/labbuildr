@@ -49,6 +49,7 @@ Param(
     #>
 	[ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL",
 	$Nodeprefix = "ansible",
+	$DNS_DOMAIN_NAME = "$($Global:labdefaults.BuildDomain).$($Global:labdefaults.Custom_DomainSuffix)",
 	[switch]$Defaults
 )
 #requires -version 3.0
