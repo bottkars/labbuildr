@@ -1,14 +1,13 @@
 ﻿<#
 .Synopsis
-   .\install-esxova.ps1 -ovf C:\Sources\OVA\Nested_ESXi6.x_Appliance_Template_v5.ova
-   .\install-esxova.ps1 -Masterpath c:\SharedMaster -Mastername Nested_ESXi6.x_Appliance_Template_v5
+   
 .Description
-  install-esxova only applies to Testers of the Virtual esxova
-  install-esxova is a 2 Step Process.
-  Once esxova is downloaded via vmware, run 
-   .\install-esxova.ps1 -defaults
-   This creates a esxova Master in your labbuildr directory.
-   This installs a esxova using the defaults file and the just extracted esxova Master
+  install-esxiova only applies to Testers of the Virtual esxiova
+  install-esxiova is a 2 Step Process.
+  Once esxiova is downloaded via vmware, run 
+   .\install-esxiova.ps1 -defaults
+   This creates a esxiova Master in your labbuildr directory.
+   This installs a esxiova using the defaults file and the just extracted esxiova Master
     
       
       Copyright 2016 Karsten Bott
@@ -25,13 +24,13 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://github.com/bottkars/labbuildr/wiki/install-esxova.ps1
+   https://github.com/bottkars/labbuildr/wiki/install-esxiova.ps1
 .EXAMPLE
     Importing the ovf template
-	.\install-esxova.ps1 -ovf C:\Sources\vmware-esxova.ova
+	.\install-esxiova.ps1 -import -nestedesx_ver ['Nested_ESXi6','Nested_ESXi5','Nested_ESXi6.5']
  .EXAMPLE
-    Install a esxovaNode with defaults from defaults.xml
-   .\install-esxova.ps1 -Masterpath c:\SharedMaster -Mastername vmware-esxova
+    Install a esxiovaNode with defaults from defaults.xml
+   .\install-esxiova.ps1 -nestedesx_ver ['Nested_ESXi6','Nested_ESXi5','Nested_ESXi6.5']
 
 #>
 [CmdletBinding(DefaultParametersetName = "default")]
@@ -40,6 +39,7 @@ Param(
 [ValidateScript({ Test-Path -Path $_ -Filter *.ova -PathType Leaf -ErrorAction SilentlyContinue })]$ovf,
 [Parameter(ParameterSetName = "Import", Mandatory = $true)]
 [switch]$import,
+# 'Nested_ESXi6','Nested_ESXi5','Nested_ESXi6.5'
 [ValidateSet(
 'Nested_ESXi6','Nested_ESXi5','Nested_ESXi6.5'
 )]
@@ -98,7 +98,7 @@ switch ($PsCmdlet.ParameterSetName)
             }
         $OVA = Import-VMXOVATemplate -OVA $ovf -acceptAllEulas -AllowExtraConfig -quiet -destination $MasterPath 
         #   & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $ovf $PSScriptRoot #
-        Write-Host -ForegroundColor White  "Use `".\install-esxova.ps1 -nestedesx_ver $nestedesx_ver `" to try defaults"
+        Write-Host -ForegroundColor White  "Use `".\$($MyInvocation.MyCommand) -nestedesx_ver $nestedesx_ver `" to try defaults"
         }
 
 default
@@ -127,7 +127,7 @@ default
 
     if (!$MasterVMX)
         {
-        write-Host -ForegroundColor Magenta "Could not find existing esxovaMaster"
+        write-Host -ForegroundColor Magenta "Could not find existing esxiovaMaster"
         return
         }
     Write-Host -ForegroundColor Gray " ==>Checking Base VM Snapshot"
