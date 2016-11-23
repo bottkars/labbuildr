@@ -87,7 +87,7 @@ switch ($PsCmdlet.ParameterSetName)
     "import"
     {
     #download template
-	Write-Host -ForegroundColor Gray " ==>No OVA Template specified, checking for latest $nestedesx_ver"
+	Write-Host -ForegroundColor Gray " ==>checking for latest $nestedesx_ver"
 	$OVF = Receive-LABnestedesxtemplate -Destination (Join-Path $Sourcedir "OVA") -nestedesx_ver $nestedesx_ver
 	$OVFfile = Get-Item $ovf
     $mastername = $OVFfile.BaseName
