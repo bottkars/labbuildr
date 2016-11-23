@@ -208,6 +208,7 @@ default
 			[string]$ip="$($subnet.ToString()).$($ipoffset.ToString())"
 			$config = Get-VMXConfig -config $NodeClone.config
 			$config += "guestinfo.cis.deployment.node.type = `"embedded`""
+			$config += "guestinfo.cis.deployment.autoconfig = `"true`""
 			$config += "guestinfo.cis.vmdir.domain-name = `"$BuildDomain.$SSO_Domain`""
 			$config += "guestinfo.cis.vmdir.site-name = `"$BuildDomain`""
 			$config += "guestinfo.cis.vmdir.password = `"$Password`""
@@ -217,9 +218,11 @@ default
 			$config += "guestinfo.cis.appliance.net.prefix = `"24`""
 			$config += "guestinfo.cis.appliance.net.mode = `"static`""
 			$config += "guestinfo.cis.appliance.net.dns.servers = `"$DNS1`""
+			$config += "guestinfo.cis.appliance.ntp.servers = `"pool.ntp.org`""
 			$config += "guestinfo.cis.appliance.net.gateway = `"$DefaultGateway`""
 			$config += "guestinfo.cis.appliance.root.passwd = `"$Password`""
 			$config += "guestinfo.cis.appliance.ssh.enabled = `"true`""
+			$config += "guestinfo.cis.ceip.enabled = `"false`""
 			$config | Set-Content -Path $NodeClone.config
             $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
             $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
