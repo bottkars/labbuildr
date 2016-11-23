@@ -35,7 +35,6 @@
 #>
 [CmdletBinding(DefaultParametersetName = "default")]
 Param(
-[Parameter(ParameterSetName = "import",Mandatory=$false)][String]
 [ValidateScript({ Test-Path -Path $_ -Filter *.ova -PathType Leaf -ErrorAction SilentlyContinue })]$ovf,
 [Parameter(ParameterSetName = "Import", Mandatory = $true)]
 [switch]$import,
@@ -87,19 +86,15 @@ switch ($PsCmdlet.ParameterSetName)
 {
     "import"
     {
-        
-        if (!($ovf)) 
-            {
-            #download template
-			Write-Host -ForegroundColor Gray " ==>No OVA Template specified, checking for latest $nestedesx_ver"
-			$OVF = Receive-LABnestedesxtemplate -Destination (Join-Path $Sourcedir "OVA") -nestedesx_ver $nestedesx_ver
-			$OVFfile = Get-Item $ovf
-            $mastername = $OVFfile.BaseName
-            }
-        $OVA = Import-VMXOVATemplate -OVA $ovf -acceptAllEulas -AllowExtraConfig -quiet -destination $MasterPath 
-        #   & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $ovf $PSScriptRoot #
-        Write-Host -ForegroundColor White  "Use `".\$($MyInvocation.MyCommand) -nestedesx_ver $nestedesx_ver `" to try defaults"
-        }
+    #download template
+	Write-Host -ForegroundColor Gray " ==>No OVA Template specified, checking for latest $nestedesx_ver"
+	$OVF = Receive-LABnestedesxtemplate -Destination (Join-Path $Sourcedir "OVA") -nestedesx_ver $nestedesx_ver
+	$OVFfile = Get-Item $ovf
+    $mastername = $OVFfile.BaseName
+    $OVA = Import-VMXOVATemplate -OVA $ovf -acceptAllEulas -AllowExtraConfig -quiet -destination $MasterPath 
+    #   & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $ovf $PSScriptRoot #
+    Write-Host -ForegroundColor White  "Use `".\$($MyInvocation.MyCommand) -nestedesx_ver $nestedesx_ver `" to try defaults"
+    }
 
 default
     {
