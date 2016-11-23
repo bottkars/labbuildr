@@ -155,7 +155,7 @@ default
 
     $Builddir = $PSScriptRoot
     $Nodeprefix = "VCSANode"
-    if (!$MasterVMX)
+    if (!$Mastername)
         {
         $MasterVMX = get-vmx -path $Masterpath -VMXName vmware-vcsa
         iF ($MasterVMX)
@@ -168,7 +168,7 @@ default
         {
         if ($MasterPath)        
             {
-            $MasterVMX = get-vmx -path $MasterPath -VMXName $MasterVMX
+            $MasterVMX = get-vmx -path $MasterPath -VMXName $Mastername
             }
         }
 
