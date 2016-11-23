@@ -83,9 +83,9 @@ switch ($PsCmdlet.ParameterSetName)
             $OVFfile = Get-Item $ovf
             $mastername = $OVFfile.BaseName
             }
-        Import-VMXOVATemplate -OVA $ovf -acceptAllEulas -AllowExtraConfig -destination $MasterPath
+        $Template = Import-VMXOVATemplate -OVA $ovf -acceptAllEulas -AllowExtraConfig -destination $MasterPath
         #   & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $ovf $PSScriptRoot #
-        Write-Host -ForegroundColor Magenta  "Use .\install-VCSA.ps1 -Defaults -Mastername vmware-vcsa to try defaults"
+        Write-Host -ForegroundColor Magenta  "Use .\install-VCSA.ps1 -Defaults -Mastername $($Template.VMname) to try defaults"
         }
 
 default
