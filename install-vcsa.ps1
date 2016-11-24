@@ -195,8 +195,8 @@ allow up to 10 minutes to configure and install.
 once you see the appliance login console,
 login to vCenter at
 https://$ip with Administrator@$BuildDomain.$SSO_Domain / $Password
-to view / change the VCSA configuration, got 
-to https://$ip:5480 and login with root / $Password
+to view / change the VCSA configuration, browse to 
+https://$ip:5480 and login with root / $Password
 "
 
     }# end default
