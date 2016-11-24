@@ -507,8 +507,9 @@ Machine Sizes
     <#
 Version Of Networker Modules
     'nmm90.DA','nmm9001','nmm9002','nmm9003','nmm9004','nmm9005','nmm9006','nmm9007','nmm9008',
+	'nmm8240',
     'nmm8231','nmm8232',
-    'nmm8221','nmm8222','nmm8223','nmm8224','nmm8225',
+    'nmm8221','nmm8222','nmm8223','nmm8224','nmm8225','nmm8226',
     'nmm8218','nmm8217','nmm8216','nmm8214','nmm8212','nmm821'
     will be downloaded by labbuildr if not found in sources
 #>
@@ -522,10 +523,11 @@ Version Of Networker Modules
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
     [ValidateSet(
-    'nmm9010','nmm9011','nmm9012','nmm9013','nmm9100',#
+    'nmm9010','nmm9011','nmm9012','nmm9013','nmm9014','nmm9100',#-#
     'nmm90.DA','nmm9001','nmm9002','nmm9003','nmm9004','nmm9005','nmm9006','nmm9007','nmm9008',
+	'nmm8240',
     'nmm8231','nmm8232',
-    'nmm8221','nmm8222','nmm8223','nmm8224','nmm8225',
+    'nmm8221','nmm8222','nmm8223','nmm8224','nmm8225','nmm8226',
     'nmm8218','nmm8217','nmm8216','nmm8214','nmm8212','nmm821'
     )]
     $nmm_ver,
@@ -549,9 +551,10 @@ Version Of Networker Modules
 	[switch]$NW,
     <#
 Version Of Networker Server / Client to be installed
-    'nw9010','nw9011','nw9012','nw9013','nw9100',#
+	'nw9100',#-#
+    'nw9010','nw9011','nw9012','nw9013','nw9014',
     'nw90.DA','nw9001','nw9002','nw9003','nw9004','nw9005','nw9006','nw9007','nw9008',
-    'nw8232','nw8231',
+    'nw8231','nw8232','nw8233','nw8234','nw8235','nw8236','nw8237','nw8238',
     'nw8226','nw8225','nw8224','nw8223','nw8222','nw8221','nw822',
     'nw8218','nw8217','nw8216','nw8215','nw8214','nw8213','nw8212','nw8211','nw821',
     'nw8206','nw8205','nw8204','nw8203','nw8202','nw82',
@@ -585,9 +588,11 @@ Version Of Networker Server / Client to be installed
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
     [ValidateSet(
-    'nw9010','nw9011','nw9012','nw9013','nw9100',#
+	'nw9100',#-#
+    'nw9010','nw9011','nw9012','nw9013','nw9014',
     'nw90.DA','nw9001','nw9002','nw9003','nw9004','nw9005','nw9006','nw9007','nw9008',
-    'nw8232','nw8231',
+	'nw8240',
+    'nw8231','nw8232','nw8233','nw8234','nw8235','nw8236','nw8237','nw8238',
     'nw8226','nw8225','nw8224','nw8223','nw8222','nw8221','nw822',
     'nw8218','nw8217','nw8216','nw8215','nw8214','nw8213','nw8212','nw8211','nw821',
     'nw8206','nw8205','nw8204','nw8203','nw8202','nw82',
@@ -863,12 +868,12 @@ $Default_AddressFamily = "IPv4"
 $latest_ScaleIOVer = '2.0-7536.0'
 $ScaleIO_OS = "Windows"
 $ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
-$latest_nmm = 'nmm9013'
-$latest_nw = 'nw9013'
+$latest_nmm = 'nmm9014'
+$latest_nw = 'nw9014'
 $latest_e16_cu = 'cu3'
 $latest_e15_cu = 'cu14'
 $latest_e14_sp = 'sp3'
-$latest_e14_ur = 'ur13'
+$latest_e14_ur = 'ur15'
 $latest_sqlver  = 'SQL2016_ISO'
 $latest_master = '2012R2FallUpdate'
 $Latest_2016 = '2016'
@@ -1809,6 +1814,9 @@ if ($savedefaults.IsPresent)
 $defaultsfile = New-Item -ItemType file $Builddir\defaults.xml -Force
 Write-Host -ForegroundColor White  "saving defaults to $Builddir\defaults.xml"
 $config =@()
+		$config += ("<!--
+      Warning ! DO not edit this fill. this may break labbuildr functionality
+-->")
         $config += ("<config>")
         $config += ("<LanguageTag>$($LanguageTag)</LanguageTag>")
         $config += ("<nmm_ver>$($nmm_ver)</nmm_ver>")
@@ -1830,6 +1838,7 @@ $config =@()
         $config += ("<IPv6PrefixLength>$($IPv6PrefixLength)</IPv6PrefixLength>")
         $config += ("<Gateway>$($Gateway.IsPresent)</Gateway>")
         $config += ("<DefaultGateway>$($DefaultGateway)</DefaultGateway>")
+        $config += ("<APT_Cache_IP>$($APT_Cache_IP)</APT_Cache_IP>")
         $config += ("<DNS1>$($DNS1)</DNS1>")
         $config += ("<DNS2>$($DNS2)</DNS2>")
         $config += ("<Sourcedir>$($Sourcedir)</Sourcedir>")
@@ -1838,7 +1847,9 @@ $config =@()
         $config += ("<NoDomainCheck>$($NoDomainCheck)</NoDomainCheck>")
         $config += ("<Puppet>$($Puppet)</Puppet>")
         $config += ("<PuppetMaster>$($PuppetMaster)</PuppetMaster>")
-        $config += ("<Hostkey>$($LabDefaults.HostKey)</Hostkey>")
+		$config += ("<Hostkey>$($LabDefaults.HostKey)</Hostkey>")
+		$config += ("<AnsiblePublicKey>$($LabDefaults.AnsiblePublicKey)</AnsiblePublicKey>")
+        $config += ("<MainMemUseFile>$($LabDefaults.MainMemUseFile)</MainMemUseFile>")
         $config += ("</config>")
 $config | Set-Content $defaultsfile
 }
