@@ -275,7 +275,7 @@ switch ($PsCmdlet.ParameterSetName)
             Set-Content -Path $MasterVMX.config -Value $config
             foreach ($scsi in 0..3)
                 {
-				$Mastervmx | Set-VMXScsiController -SCSIController $scsi -Type pvscsi
+				$Mastervmx | Set-VMXScsiController -SCSIController $scsi -Type pvscsi | Out-Null
                 }
             Write-verbose "Base snap does not exist, creating now"
             $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName Base
