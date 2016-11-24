@@ -35,7 +35,6 @@
 #>
 [CmdletBinding(DefaultParametersetName = "default")]
 Param(
-[ValidateScript({ Test-Path -Path $_ -Filter *.ova -PathType Leaf -ErrorAction SilentlyContinue })]$ovf,
 [Parameter(ParameterSetName = "Import", Mandatory = $true)]
 [switch]$import,
 # 'Nested_ESXi6','Nested_ESXi5','Nested_ESXi6.5'
