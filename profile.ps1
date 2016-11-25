@@ -73,7 +73,7 @@ else
     $blog = [xml](new-object System.Net.WebClient).DownloadString($Url)
     $blog.rss.channel.item |  where {$_.title -match "vmxtoolkit" -or $_.title -Match "labbuildr"} |select Link | ft
     }#>
-if (!($openwrt = get-vmx openwrt* -WarningAction SilentlyContinue))
+if (!($openwrt = get-vmx OpenWRT* -WarningAction SilentlyContinue))
 	{
 	Receive-LABOpenWRT -start  | Out-Null
 	}
