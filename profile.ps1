@@ -74,15 +74,15 @@ else
     $blog.rss.channel.item |  where {$_.title -match "vmxtoolkit" -or $_.title -Match "labbuildr"} |select Link | ft
     }#>
 $global:labdefaults = Get-LABDefaults
-if (!($openwrt = get-vmx OpenWRT* -WarningAction SilentlyContinue))
+if (!($openwrt = get-vmx OpenWRT* -WarningAction SilentlyContinue ))
 	{
 	Receive-LABOpenWRT -start  | Out-Null
 	}
 else
 	{
-	if ($openwrt.status -notmatch "running")
+	if (($openwrt.status) -notmatch "running")
 		{
-		$openwrt | Start-VMX -nowait | Out-Null
+		$openwrt[-1] | Start-VMX -nowait | Out-Null
 		}
 	}
 Get-VMX
