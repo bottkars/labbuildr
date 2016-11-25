@@ -73,5 +73,16 @@ else
     $blog = [xml](new-object System.Net.WebClient).DownloadString($Url)
     $blog.rss.channel.item |  where {$_.title -match "vmxtoolkit" -or $_.title -Match "labbuildr"} |select Link | ft
     }#>
+if (!($openwrt = get-vmx openwrt* -WarningAction SilentlyContinue))
+	{
+	Receive-LABOpenWRT -start  | Out-Null
+	}
+else
+	{
+	if ($openwrt.status -notmatch "running")
+		{
+		$openwrt | Start-VMX -nowait | Out-Null
+		}
+	}
 $global:labdefaults = Get-LABDefaults
 Get-VMX
