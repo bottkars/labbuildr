@@ -156,7 +156,7 @@ Specify if Networker Scenario sould be installed
     [ValidateSet(
     'SC2012_R2',
     'SC2016')]
-    $SC_Version = "SC2012_R2",
+    $SC_Version = "SC2016",
     <#
     Selects the Blank Nodes Scenario
     IP-Addresses: .180 - .189
