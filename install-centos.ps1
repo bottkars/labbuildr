@@ -34,6 +34,8 @@ Param(
 	[Switch]$docker,
 	[Parameter(Mandatory = $false)]
 	[ValidateSet('shipyard','uifd')][string[]]$container,
+	[Parameter(Mandatory = $false)]
+	[ValidateSet('influxdb','grafana')][string[]]$AdditionalPackages,
 	[Parameter(ParameterSetName = "install",Mandatory=$False)]
 	[ValidateRange(0,3)]
 	[int]$SCSI_Controller = 0,
@@ -132,7 +134,7 @@ $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 ####Build Machines###### cecking for linux binaries
 ####Build Machines#
 $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
-[string]$Epel_Packages = ''
+$Epel_Packages = @()
 if ($docker.IsPresent -or $container)
 	{
 	$Epel_Packages += "docker" 
@@ -141,6 +143,16 @@ if ($Desktop -contains 'cinnamon')
 	{
 	$Epel_Packages += "generic" 
 	}
+if ($AdditionalPackages -contains 'influxdb')
+	{
+	$Epel_Packages += "influxdb" 
+	}
+if ($AdditionalPackages -contains 'grafana')
+	{
+	$Epel_Packages += "grafana" 
+	}
+
+#$Epel_Packages = $Epel_Packages -join ","
 $machinesBuilt = @()
 foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
     {
@@ -188,6 +200,13 @@ foreach ($Node in $machinesBuilt)
 			Write-Verbose $Scriptblock
 			$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 			$installmessage += " ==>you can use container uifd with http://$($ip):9000`n"
+			}
+        if ($AdditionalPackages)
+            {
+            Write-Host -ForegroundColor Gray " ==>Installing $($AdditionalPackages -join " ") "
+            $Scriptblock = "yum install -y $($AdditionalPackages -join " ")"
+            Write-Verbose $Scriptblock
+            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 			}
         if ($Desktop)
             {
