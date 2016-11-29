@@ -201,13 +201,15 @@ foreach ($Node in $machinesBuilt)
 			$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 			$installmessage += " ==>you can use container uifd with http://$($ip):9000`n"
 			}
-        if ($AdditionalPackages)
+        <#
+			if ($AdditionalPackages)
             {
             Write-Host -ForegroundColor Gray " ==>Installing $($AdditionalPackages -join " ") "
             $Scriptblock = "yum install -y $($AdditionalPackages -join " ")"
             Write-Verbose $Scriptblock
             $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 			}
+		#>
         if ($Desktop)
             {
             Write-Host -ForegroundColor Gray " ==>Installing X-Windows environment"
