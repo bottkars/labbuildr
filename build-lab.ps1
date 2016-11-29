@@ -2082,9 +2082,14 @@ if ($Exchange2010.IsPresent)
         }
     If ($Master -notin ('2012_Ger','2012'))
         {
-        Write-Warning "You selected $Master as master, but only master up to 2012 are supported in this scenario"
-        return
+        Write-Warning "You selected $Master as master, but only master up to 2012 are supported in this scenario, defaulting to 2012 Master for Exchange Nodes"
+		$E2010_master = '2012'
         }
+	else
+		{
+		$E2010_master = $Master
+		}
+	$E2010_Master_VMX = test-labmaster -Masterpath "$Masterpath" -Master $E2010_master -mastertype vmware -Confirm:$Confirm
     If (!(Receive-LABExchange -Exchange2010 -e14_sp $e14_sp -e14_ur $e14_ur  -e14_lang $e14_lang -Destination $Sourcedir -unzip))
         {
         Write-Host -ForegroundColor Gray " ==>we could not receive Exchange 2010 $e14_sp"
@@ -2863,6 +2868,8 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 switch ($PsCmdlet.ParameterSetName)
 {
 "E14"{
+		$MasterVMX = $E2010_Master_VMX.config
+		Write-Verbose " ==>we got master $MasterVMX"
         $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$EX_Version"
         $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, Server-Media-Foundation"
         $AddonFeatures = "$AddonFeatures, NET-Framework-Features,NET-HTTP-Activation,RPC-over-HTTP-proxy,RSAT-Clustering,Web-Mgmt-Console,WAS-Process-Model,Web-Asp-Net,Web-Basic-Auth,Web-Client-Auth,Web-Digest-Auth,Web-Dir-Browsing,Web-Dyn-Compression,Web-Http-Errors,Web-Http-Logging,Web-Http-Redirect,Web-Http-Tracing,Web-ISAPI-Ext,Web-ISAPI-Filter,Web-Lgcy-Mgmt-Console,Web-Metabase,Web-Net-Ext,Web-Request-Monitor,Web-Server,Web-Static-Content,Web-Windows-Auth,Web-WMI"
