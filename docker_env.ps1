@@ -29,10 +29,10 @@ docker-machine ls
 write-host "
 create a docker 'test' machine:
 docker-machine create test --driver vmwareworkstation
+
 To run a ubuntu container on 'test'
 docker-machine env test | Invoke-Expression
 docker run -t ubuntu
-
 
 To remove all docker machines, run: 
 docker-machine ls -q | foreach { docker-machine rm $_}"
