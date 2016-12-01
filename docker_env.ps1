@@ -32,7 +32,7 @@ docker-machine create test --driver vmwareworkstation
 
 To run a ubuntu container on 'test'
 docker-machine env test | Invoke-Expression
-docker run -t ubuntu
+docker run -it ubuntu
 
 To remove all docker machines, run: 
 docker-machine ls -q | foreach { docker-machine rm $_}"
