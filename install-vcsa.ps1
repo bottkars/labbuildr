@@ -196,7 +196,7 @@ once you see the appliance login console,
 login to vCenter at
 https://$ip with Administrator@$BuildDomain.$SSO_Domain / $Password
 to view / change the VCSA configuration, browse to 
-https://$ip:5480 and login with root / $Password
+https://$($ip):5480 and login with root / $Password
 "
 
     }# end default
