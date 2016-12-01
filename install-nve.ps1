@@ -97,7 +97,7 @@ switch ($PsCmdlet.ParameterSetName)
             Receive-LABNetworker -nve -nve_ver $nve_ver -Destination "$Sourcedir\$Product" -Confirm:$false
             $OVA_File = Get-ChildItem -Path "$Sourcedir\$Product" -Recurse -include "$Product_tag.ova"  -Exclude ".*" | Sort-Object -Descending | Select-Object -First 1
             Write-Host -ForegroundColor Magenta " ==>Extraxting from OVA Package $OVA_File"
-            $Expand = Expand-LAB7Zip -Archive $OVA_file.FullName -destination $nve_dir
+            $Expand = Expand-LABpackage -Archive $OVA_file.FullName -destination $nve_dir
             try
                 {
                 Write-Host -ForegroundColor Gray " ==>Validating OVF from OVA Package"
