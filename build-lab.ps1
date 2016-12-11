@@ -1899,16 +1899,22 @@ if ($runonos  -match "win_x86_64")
 	{
 	write-verbose "Evaluating Machine Type, Please wait ..."
 	#### Eval CPU
-	$Numcores = (gwmi win32_Processor).NumberOfCores
-	$NumLogCPU = (gwmi win32_Processor).NumberOfLogicalProcessors
-	$CPUType = (gwmi win32_Processor).Name
-	$MachineMFCT = (gwmi win32_ComputerSystem).Manufacturer
-	$MachineModel = (gwmi win32_ComputerSystem).Model
+	[array]$cpu = gwmi win32_Processor
+	$numCPU = $cpu.Count
+	$Numcores = $cpu[0].NumberOfCores * $numCPU
+	$NumLogCPU = $cpu[0].NumberOfLogicalProcessors * $numCPU
+	$CPUType = $cpu[0].Name
+	$Machinemodel = gwmi win32_ComputerSystem
+	$MachineMFCT = $Machinemodel.Manufacturer
+	$MachineModel = $Machinemodel.Model
 	##### Eval Memory #####
 	$Totalmemory = 0
 	$Memory = (get-wmiobject -class "win32_physicalmemory" -namespace "root\CIMV2").Capacity
 	foreach ($Dimm in $Memory) { $Totalmemory = $Totalmemory + $Dimm }
 	$Totalmemory = $Totalmemory / 1GB
+			$Computersize = 1
+			$SQLSize = "L"
+			$Exchangesize = "XL"
 	Switch ($Totalmemory)
 	{
 		{ $_ -gt 0 -and $_ -le 8 }
@@ -1938,17 +1944,18 @@ if ($runonos  -match "win_x86_64")
 	}
 	If ($NumLogCPU -le 4 -and $Computersize -le 2)
 	{
-		Write-Host -ForegroundColor White "==>Running $my_repo on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logicalk CPUs and $Totalmemory GB Memory "
 	}
 	If ($NumLogCPU -gt 4 -and $Computersize -le 2)
 	{
-		Write-Host -ForegroundColor White "==>Running $my_repo on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logical CPU and $Totalmemory GB Memory"
 		Write-Host "Consider Adding Memory "
 	}
 	If ($NumLogCPU -gt 4 -and $Computersize -gt 2)
 	{
-		Write-Host -ForegroundColor White  "Excellent, Running $my_repo on a $MachineMFCT $MachineModel with $CPUType with $Numcores Cores and $NumLogCPU Logical CPU and $Totalmemory GB Memory"
+		Write-Host -ForegroundColor White  "Excellent"
 	}
+	
+	Write-Host -ForegroundColor White "==>Running $my_repo on a $MachineMFCT $MachineModel with $numCPU x $CPUType with $Numcores Cores and $NumLogCPU Logical CPUs and $Totalmemory GB Memory "
+
 	}
 else
 	{
