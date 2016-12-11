@@ -1943,19 +1943,17 @@ if ($runonos  -match "win_x86_64")
 		}
 	}
 	If ($NumLogCPU -le 4 -and $Computersize -le 2)
-	{
-	}
+		{
+		}
 	If ($NumLogCPU -gt 4 -and $Computersize -le 2)
-	{
+		{
 		Write-Host "Consider Adding Memory "
-	}
+		}
 	If ($NumLogCPU -gt 4 -and $Computersize -gt 2)
-	{
+		{
 		Write-Host -ForegroundColor White  "Excellent"
-	}
-	
+		}
 	Write-Host -ForegroundColor White "==>Running $my_repo on a $MachineMFCT $MachineModel with $numCPU x $CPUType with $Numcores Cores and $NumLogCPU Logical CPUs and $Totalmemory GB Memory "
-
 	}
 else
 	{
