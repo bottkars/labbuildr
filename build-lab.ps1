@@ -2015,6 +2015,11 @@ if (!($DConly.IsPresent))
 	{
         $Scenarioname = "Sharepoint"
         $Scenario = 4
+		if ($SQLVER -gt "SQL2014SP2_ISO")
+			{
+			Write-Host "SQL $SQLVER is selected Defaulting SQL to SQL2014SP2_ISO"
+			$SQLVER = "SQL2014SP2_ISO"
+			}
 	}
 } # end not dconly
 Write-Host -ForegroundColor White  "Version $($major).$Edition"
