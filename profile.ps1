@@ -74,15 +74,23 @@ else
     $blog.rss.channel.item |  where {$_.title -match "vmxtoolkit" -or $_.title -Match "labbuildr"} |select Link | ft
     }#>
 $global:labdefaults = Get-LABDefaults
-if (!($openwrt = get-vmx OpenWRT* -WarningAction SilentlyContinue ))
+
+if ($global:labdefaults.openwrt -eq "false")
 	{
-	Receive-LABOpenWRT -start  | Out-Null
+	Write-Host -ForegroundColor Yellow "==> Running labbuildr without OpenWRT, know what you do !"
 	}
 else
 	{
-	if (($openwrt.status) -notmatch "running")
+	if (!($openwrt = get-vmx OpenWRT* -WarningAction SilentlyContinue) -and !($global:labdefaults.openwrt -eq "false"))
 		{
-		$openwrt[-1] | Start-VMX -nowait | Out-Null
+		Receive-LABOpenWRT -start  | Out-Null
+		}
+	else
+		{
+		if (($openwrt.status) -notmatch "running")
+			{
+			$openwrt[-1] | Start-VMX -nowait | Out-Null
+			}
 		}
 	}
 Get-VMX
