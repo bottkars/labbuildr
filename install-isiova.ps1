@@ -36,6 +36,7 @@ $Sourcedir = $Global:labdefaults.Sourcedir,
 [Parameter(ParameterSetName = "install", Mandatory=$false)][int32]$Nodes =3,
 [Parameter(ParameterSetName = "install", Mandatory=$false)][int32]$Startnode = 1,
 [Parameter(ParameterSetName = "install", Mandatory=$False)][ValidateRange(3,6)][int32]$Disks = 5,
+[Parameter(ParameterSetName = "install", Mandatory=$False)][ValidateRange(1,3)][int32]$SSD_Disks = 3,
 [Parameter(ParameterSetName = "install", Mandatory=$False)][ValidateSet(36GB,72GB,146GB)][uint64]$Disksize = 36GB,
 [Parameter(ParameterSetName = "install", Mandatory=$false)]$MasterPath = $Global:labdefaults.masterpath,
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
@@ -221,7 +222,8 @@ try to delete $Nodeprefix$Node Directory and try again"
                     }
                 $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
                 }
-            }
+
+        }
     else
         {
         Write-Warning "Using Default Disks on request"
