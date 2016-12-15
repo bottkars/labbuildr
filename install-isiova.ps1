@@ -26,33 +26,66 @@
 Param(
 [Parameter(ParameterSetName = "install", Mandatory=$false)]
 [Parameter(ParameterSetName = "import",Mandatory=$false)][String]
-#[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]
-$Sourcedir,
+[Parameter(Mandatory=$false)]
+$Sourcedir = $Global:labdefaults.Sourcedir,
+
 [Parameter(ParameterSetName = "import",Mandatory=$false)][switch]$forcedownload,
 [Parameter(ParameterSetName = "import",Mandatory=$false)][switch]$noextract,
 [Parameter(ParameterSetName = "import",Mandatory=$true)][switch]$import,
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install", Mandatory=$false)][int32]$Nodes =3,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install", Mandatory=$false)][int32]$Startnode = 1,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install", Mandatory=$False)][ValidateRange(3,6)][int32]$Disks = 5,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install", Mandatory=$False)][ValidateSet(36GB,72GB,146GB)][uint64]$Disksize = 36GB,
-[Parameter(ParameterSetName = "install", Mandatory=$False)]$Subnet = "192.168.2",
-[Parameter(ParameterSetName = "install", Mandatory=$False)][ValidateLength(3,16)][ValidatePattern("^[a-zA-Z\s]+$")][string]$BuildDomain = "labbuildr",
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install", Mandatory=$false)]$MasterPath,
-[Parameter(ParameterSetName = "install", Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
+[Parameter(ParameterSetName = "install", Mandatory=$false)]$MasterPath = $Global:labdefaults.masterpath,
+[Parameter(ParameterSetName = "install", Mandatory = $false)]
+[ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]
+$vmnet = $Global:labdefaults.vmnet,
+[ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]
+$ext2,
+[ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]
+$ext3,
+[ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]
+$ext4,
+[ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]
+$ext5,
+[ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]
+$ext6,
 #[Parameter(ParameterSetName = "install", Mandatory=$false)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir
-[switch]$Use_default_disks
+[switch]$Use_default_disks,
+####
+
+	[Parameter(Mandatory=$false)]
+	$Scriptdir = (join-path (Get-Location) "labbuildr-scripts"),
+	[Parameter(Mandatory=$false)]
+	$DefaultGateway = $Global:labdefaults.DefaultGateway,
+	[Parameter(Mandatory=$false)]
+	$guestpassword = "Password123!",
+	$Rootuser = 'root',
+	$Hostkey = $Global:labdefaults.HostKey,
+	$Default_Guestuser = 'labbuildr',
+	[Parameter(Mandatory=$false)]
+	$Subnet = $Global:labdefaults.MySubnet,
+	[Parameter(Mandatory=$false)]
+	$DNS1 = $Global:labdefaults.DNS1,
+	[Parameter(Mandatory=$false)]
+	$DNS2 = $Global:labdefaults.DNS2,
+	[Parameter(Mandatory=$false)]
+	$Host_Name = $VMXName,
+	$DNS_DOMAIN_NAME = "$($Global:labdefaults.BuildDomain).$($Global:labdefaults.Custom_DomainSuffix)",
+    $mastername 
+
+####
 )
 #requires -version 3.0
 #requires -module vmxtoolkit 
 $Product = "ISILON"
 $Product_tag = "8.*"
-
+if ($Defaults.IsPresent)
+	{
+	Deny-LABDefaults
+	Break
+	}
 switch ($PsCmdlet.ParameterSetName)
 {
     "import"
@@ -81,39 +114,23 @@ switch ($PsCmdlet.ParameterSetName)
             Write-Warning "no sources directory found named $Sourcedir"
             return
             }
-if ($Use_default_disks.IsPresent)
-    {
-    Write-Warning "use_defazlt_diskparameter is experimental, and thus it has to be used for IMPORT and CREATION"
-    pause
-    }
-<#
-        Try 
-            {
-            test-Path $Sourcedir
-            } 
-        Catch 
-            { 
-            Write-Verbose $_ 
-            Write-Warning "We need a Valid Sourcedir, trying Defaults"
-            if (!($Sourcedir = (Get-labDefaults).Sourcedir))
-                {
-                exit
-                }
-            }
-        #>
-        if (!($OVAPath = Get-ChildItem -Path "$Sourcedir\$Product" -recurse -Include "$Product_tag.ova" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
-            {
-                    write-warning "No $Product OVA found, Checking for Downloaded Package"
-                    Receive-LABISIlon -Destination $Sourcedir -unzip
-
+    if ($Use_default_disks.IsPresent)
+        {
+        Write-Warning "use_default_diskparameter is experimental, and thus it has to be used for IMPORT and CREATION"
+        pause
+        }
+    if (!($OVAPath = Get-ChildItem -Path "$Sourcedir\$Product" -recurse -Include "$Product_tag.ova" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
+        {
+                write-warning "No $Product OVA found, Checking for Downloaded Package"
+                Receive-LABISIlon -Destination $Sourcedir -unzip
         }
            
-        $OVAPath = Get-ChildItem -Path "$Sourcedir\$Product" -Recurse -include "$Product_tag.ova"  -Exclude ".*" | Sort-Object -Descending
-        $OVAPath = $OVApath[0]
-        Write-Warning "Creating $Product Master for $($ovaPath.Basename), may take a while"
-        
-        & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --name=$($ovaPath.Basename) $ovaPath.FullName $PSScriptRoot  #
-        $MasterVMX = get-vmx -path ".\$($ovaPath.Basename)"
+    $OVAPath = Get-ChildItem -Path "$Sourcedir\$Product" -Recurse -include "$Product_tag.ova"  -Exclude ".*" | Sort-Object -Descending
+    $OVAPath = $OVApath[0]
+    Write-Warning "Creating $Product Master for $($ovaPath.Basename), may take a while"
+    Import-VMXOVATemplate -OVA $ovaPath.FullName -Name $($ovaPath.Basename) -destination $Global:labdefaults.Masterpath -acceptAllEulas
+    #& $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --name=$($ovaPath.Basename) $ovaPath.FullName $PSScriptRoot  #
+    $MasterVMX = get-vmx -path (join-path $Global:labdefaults.Masterpath ($ovaPath.Basename))
     if (!$Use_default_disks.IsPresent)
         {
         foreach ($lun in 2..6)
@@ -127,38 +144,18 @@ if ($Use_default_disks.IsPresent)
             write-verbose "Templating Master VMX"
             $MasterVMX | Set-VMXTemplate
             }
-        Write-Host -ForegroundColor White "Please run .\$($MyInvocation.MyCommand) -MasterPath .\$($ovaPath.Basename) -Defaults"
+        Write-Host -ForegroundColor White "Please run .\$($MyInvocation.MyCommand) to install default 3-node setup"
         }
     default
 {
 $Nodeprefix = "ISINode"
-If ($Defaults.IsPresent)
-    {
-     $labdefaults = Get-labDefaults
-     $vmnet = $labdefaults.vmnet
-     $subnet = $labdefaults.MySubnet
-     $BuildDomain = $labdefaults.BuildDomain
-     $Sourcedir = $labdefaults.Sourcedir
-     $Gateway = $labdefaults.Gateway
-     $DefaultGateway = $labdefaults.Defaultgateway
-     $DNS1 = $labdefaults.DNS1
-     }
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
-if ($LabDefaults.custom_domainsuffix)
-	{
-	$custom_domainsuffix = $LabDefaults.custom_domainsuffix
-	}
-else
-	{
-	$custom_domainsuffix = "local"
-	}
-
-               
-If (!$MasterPath)
+              
+If (!$Mastername)
     {
-    Write-Host -Foregroundcolor Magenta "No master Specified, rule is Pic Any available Isilon Master now"
-    $MasterVMXs = get-vmx -vmxname "$Product_tag" -WarningAction SilentlyContinue
+    Write-Host -Foregroundcolor Magenta "No mastername Specified, rule is Pic Any available Isilon Master now"
+    $MasterVMXs = get-vmx -Path $Global:labdefaults.Masterpath -VMXName $Product_tag -WarningAction SilentlyContinue
     if ($Mastervmxs)
             {
             $Mastervmxs = $MasterVMXs | Sort-Object -Descending
@@ -174,9 +171,9 @@ Please check if a master was imported with $($MyInvocation.InvocationName) -impo
     }
     else
             {
-            If (!($MasterVMX = get-vmx -path $MasterPath))
+            If (!($MasterVMX = get-vmx -path $MasterPath -VMXName $mastername))
                 {
-                Write-Verbose "$MasterPath IS NOT A VALID $Product Master"
+                Write-Verbose "$mastername is not foun in $MasterPath"
                 return
                 }
             }
@@ -230,16 +227,48 @@ try to delete $Nodeprefix$Node Directory and try again"
         Write-Warning "Using Default Disks on request"
         }
     write-verbose "Setting int-b"
-    Set-VMXNetworkAdapter -Adapter 2 -ConnectionType hostonly -AdapterType e1000 -config $NodeClone.Config | out-null
+    $NodeClone | Set-VMXNetworkAdapter -Adapter 2 -ConnectionType hostonly -AdapterType e1000 | out-null
     # Disconnect-VMXNetworkAdapter -Adapter 1 -config $NodeClone.Config
     write-verbose "Setting ext-1"
-    Set-VMXNetworkAdapter -Adapter 1 -ConnectionType custom -AdapterType e1000 -config $NodeClone.Config -WarningAction SilentlyContinue | out-null
-    Set-VMXVnet -Adapter 1 -vnet $vmnet -config $NodeClone.Config | out-null
+    $NodeClone | Set-VMXNetworkAdapter -Adapter 1 -ConnectionType custom -AdapterType e1000 -WarningAction SilentlyContinue | out-null
+    $NodeClone | Set-VMXVnet -Adapter 1 -vnet $vmnet  | out-null
+    
+    if ($ext2)
+        {
+        write-verbose "Setting ext-2"
+        $NodeClone | Set-VMXNetworkAdapter -Adapter 3 -ConnectionType custom -AdapterType e1000 -WarningAction SilentlyContinue | out-null
+        $NodeClone | Set-VMXVnet -Adapter 3 -vnet $ext2 | out-null
+        }
+    
+     if ($ext3)
+        {
+        write-verbose "Setting ext-2"
+        $NodeClone | Set-VMXNetworkAdapter -Adapter 4 -ConnectionType custom -AdapterType e1000 -WarningAction SilentlyContinue | out-null
+        $NodeClone | Set-VMXVnet -Adapter 4 -vnet $ext3 | out-null
+        }
+    if ($ext4)
+        {
+        write-verbose "Setting ext-2"
+        $NodeClone | Set-VMXNetworkAdapter -Adapter 5 -ConnectionType custom -AdapterType e1000 -WarningAction SilentlyContinue | out-null
+        $NodeClone | Set-VMXVnet -Adapter 5 -vnet $ext4 | out-null
+        }
+    if ($ext5)
+        {
+        write-verbose "Setting ext-2"
+        $NodeClone | Set-VMXNetworkAdapter -Adapter 6 -ConnectionType custom -AdapterType e1000 -WarningAction SilentlyContinue | out-null
+        $NodeClone | Set-VMXVnet -Adapter 6 -vnet $ext5 | out-null
+        }
+    if ($ext6)
+        {
+        write-verbose "Setting ext-2"
+        $NodeClone | Set-VMXNetworkAdapter -Adapter 7 -ConnectionType custom -AdapterType e1000 -WarningAction SilentlyContinue | out-null
+        $NodeClone | Set-VMXVnet -Adapter 7 -vnet $ext6 | out-null
+        }
     $Scenario = Set-VMXscenario -config $NodeClone.Config -Scenarioname $Nodeprefix -Scenario 6
     $ActivationPrefrence = Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node 
     # Set-VMXVnet -Adapter 0 -vnet vmnet2
     write-verbose "Setting Display Name $($NodeClone.CloneName)@$Builddomain"
-    Set-VMXDisplayName -config $NodeClone.Config -Displayname "$($NodeClone.CloneName)@$Builddomain" | out-null
+    Set-VMXDisplayName -config $NodeClone.Config -Displayname "$($NodeClone.CloneName)@$($Global:labdefaults.BuildDomain)" | out-null
     Write-Verbose "Starting $Nodeprefix$node"
     start-vmx -Path $NodeClone.config -VMXName $NodeClone.CloneName | out-null
     } # end check vm
@@ -266,10 +295,10 @@ Assign internal Addresses from .41 to .56 according to your Subnet
         External High IP ........: $Subnet.56
         Default Gateway..........: $DefaultGateway
         Configure Smartconnect
-        smartconnect Zone Name...:  onefs.$BuildDomain.$Custom_DomainSuffix
+        smartconnect Zone Name...:  onefs.$DNS_DOMAIN_NAME
         smartconnect Service IP :  $Subnet.40
         Configure DNS Settings
-        DNS Server...............: $DNS1,$Subnet.10
-        Search Domain............: $BuildDomain.$Custom_DomainSuffix"
+        DNS Server...............: $DNS1,$DNS2
+        Search Domain............: $DNS_DOMAIN_NAME"
 }
 }
