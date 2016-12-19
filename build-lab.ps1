@@ -193,7 +193,7 @@ Specify if Networker Scenario sould be installed
     CU Location is [Driveletter]:\sources\e2016[cuver], e.g. c:\sources\e2016Preview1
     #>
 	[Parameter(ParameterSetName = "E16", Mandatory = $false)]
-    [ValidateSet('cu3','cu2','cu1','final')]
+    [ValidateSet('final','cu1','cu2','cu3','cu4')]
     $e16_cu,
 <#
     Determines Exchange CU Version to be Installed
