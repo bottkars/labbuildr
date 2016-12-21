@@ -379,7 +379,7 @@ Specify if Networker Scenario sould be installed
     '2012R2_Ger','2012_R2',
     '2012R2FallUpdate','2012R2Fall_Ger',
     '2012_Ger','2012'
-    )]$Master,
+    )][string]$Master,
     <#do we want a special path to the Masters ? #>
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
@@ -1967,6 +1967,7 @@ else
 	$Exchangesize = "TXL"
 	$SQLSize = "XL"
 	}####### Building required Software Versions Tabs
+
 $NW_Sourcedir = Join-Path $Sourcedir "Networker"
 $Sourcever = @()
 if (!($DConly.IsPresent))
@@ -2072,6 +2073,8 @@ if ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG" -or $SPdbtyp
 #################################################
 ## Download Sewction       ######################
 #################################################
+$Download_StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
+
 $Work_Items = $()
 Write-Host -ForegroundColor Magenta " ==>Entering Download Section"
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
@@ -2185,11 +2188,33 @@ if ($Exchange2016.IsPresent)
         {
         $e16_cu = $Latest_e16_cu
         }
-    If ($Master -gt '2012Z')
+	If ($e16_cu -lt "cu3")
+		{
+		$NET_VER = "452"
+		}
+	else
+		{
+		switch ($e16_cu)
+			{
+			default
+				{
+				$NET_VER = "462"
+				$E16_REQUIRED_KB = "KB3206632"
+				}
+			}
+		
+		}
+    If ($Master -gt '2012Z' -and $e16_cu -lt "cu3")
         {
         Write-Warning "Only master up 2012R2Fallupdate supported in this scenario"
         exit
         }
+	if ($Master -eq "2016")
+		{
+		Write-Host "We need to check KB $E16_REQUIRED_KB"
+		Receive-LABWindows2016Update -Destination (Join-Path $Sourcedir "WindowsUpdate") -KB $E16_REQUIRED_KB
+		}
+	Write-Verbose "Using Master $Master with Exchange 2016 $e16_cu and .Net $NET_VER"
     If (!(Receive-LABExchange -Exchange2016 -e16_cu $e16_cu -Destination $Sourcedir -unzip))
         {
         Write-Warning " ==>we could not receive Exchange 2016 $e16_cu"
@@ -2579,10 +2604,14 @@ if ($docker.IsPresent)
 		{$Size = "XL" }
 	}
 ##end Autodownloaders
+$Download_StopWatch.Stop()
 ##### Master Downloader
+$Master_StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
+
 $MyMaster = test-labmaster -Masterpath "$Masterpath" -Master $Master -mastertype vmware -Confirm:$Confirm
 $MasterVMX = $mymaster.config
 Write-Verbose " ==>we got master $MasterVMX"
+$Master_StopWatch.Stop()
 
 ##########################################
 Write-Host -ForegroundColor Magenta " ==>leaving download section"
@@ -3174,6 +3203,9 @@ switch ($PsCmdlet.ParameterSetName)
             Write-Verbose "IPv6PrefixLength = $IPv6PrefixLength"
             Write-Verbose "Addressfamily = $AddressFamily"
             Write-Verbose "EXAddressFamiliy = $EXAddressFamiliy"
+			Write-Verbose "Echxnge CU = $e16_cu"
+			Write-Verbose "Net Framework $NET_VER"
+			Write-Verbose "Master $Master"
             if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
                 {
                 Write-verbose "Now Pausing"
@@ -3202,7 +3234,7 @@ switch ($PsCmdlet.ParameterSetName)
 				#	{
 				#	$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script enable-labiscsi.ps1 -Parameter "-Target_IP $IPv4Subnet.$iSCSI_TARGET" -interactive
 				#	}
-			    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchangeprereqs.ps1 -interactive
+			    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchangeprereqs.ps1 -interactive -Parameter "-NET_VER $NET_VER -KB $E16_REQUIRED_KB"
                 checkpoint-progress -step exprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
 			    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script powerconf.ps1 -interactive
 				$Possible_Error_Fix = " 1.) Host has no iSCSI Luns `n 2.) Unity not configured for Host ==> Use Unisphere to configure `n 3.) Unity VM is not running ==> start unity ( get-vmx UnityNode1 | start-vmx ), you may need to re-run enable-labiscsi.ps1 in vm"
@@ -4179,6 +4211,8 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
 } #Networker End
 $StopWatch.Stop()
 Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
+Write-host -ForegroundColor White "Software Section took $($Download_StopWatch.Elapsed.ToString())"
+Write-host -ForegroundColor White "Master Section took $($Master_StopWatch.Elapsed.ToString())"
 Write-Host -ForegroundColor White  "Deployed VM´s in Scenario $Scenarioname"
 get-vmx | where scenario -match $Scenarioname | ft vmxname,state,activationpreference
 return
