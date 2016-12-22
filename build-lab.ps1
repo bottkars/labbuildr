@@ -3144,10 +3144,11 @@ switch ($PsCmdlet.ParameterSetName)
                 } #end creatuser
         }# end if last server
     }
+	Write-Host -ForegroundColor Magenta "==> running Post Config"
     foreach ($EXNODE in ($EXStartNode..($EXNodes+$EXStartNode-1)))
         {
         $Nodename = "$EX_Version"+"N"+"$EXNODE"
-		$NodeClone = Get-VMX -Path $CloneVMX        
+		$NodeClone = Get-VMX $Nodename       
 		$CloneVMX = $Nodeclone.config
 		$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script create-security.ps1 -interactive
 		########### Entering networker Section ##############
