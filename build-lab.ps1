@@ -506,7 +506,7 @@ Machine Sizes
 	[switch]$NMM,
     <#
 Version Of Networker Modules
-    'nmm9100',#-#
+    'nmm9100','nmm9102',#-#
     'nmm9010','nmm9011','nmm9012','nmm9013','nmm9014',
     'nmm90.DA','nmm9001','nmm9002','nmm9003','nmm9004','nmm9005','nmm9006','nmm9007','nmm9008',
 	'nmm8240',
@@ -524,7 +524,7 @@ Version Of Networker Modules
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
-    [ValidateSet('nmm9100',#-#
+    [ValidateSet('nmm9100','nmm9102',#-#
     'nmm9010','nmm9011','nmm9012','nmm9013','nmm9014',
     'nmm90.DA','nmm9001','nmm9002','nmm9003','nmm9004','nmm9005','nmm9006','nmm9007','nmm9008',
 	'nmm8240',
@@ -553,7 +553,7 @@ Version Of Networker Modules
 	[switch]$NW,
     <#
 Version Of Networker Server / Client to be installed
-	'nw9100',#-#
+	'nw9100','nw9102',#-#
     'nw9010','nw9011','nw9012','nw9013','nw9014',
     'nw90.DA','nw9001','nw9002','nw9003','nw9004','nw9005','nw9006','nw9007','nw9008',
 	'nw8240',
@@ -591,7 +591,7 @@ Version Of Networker Server / Client to be installed
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
     [ValidateSet(
-	'nw9100',#-#
+	'nw9100','nw9102',#-#
     'nw9010','nw9011','nw9012','nw9013','nw9014',
     'nw90.DA','nw9001','nw9002','nw9003','nw9004','nw9005','nw9006','nw9007','nw9008',
 	'nw8240',
@@ -871,12 +871,12 @@ $Default_AddressFamily = "IPv4"
 $latest_ScaleIOVer = '2.0-7536.0'
 $ScaleIO_OS = "Windows"
 $ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
-$latest_nmm = 'nmm9014'
-$latest_nw = 'nw9014'
-$latest_e16_cu = 'cu3'
-$latest_e15_cu = 'cu14'
+$latest_nmm = 'nmm9102'
+$latest_nw = 'nw9102'
+$latest_e16_cu = 'cu4'
+$latest_e15_cu = 'cu15'
 $latest_e14_sp = 'sp3'
-$latest_e14_ur = 'ur15'
+$latest_e14_ur = 'ur16'
 $latest_sqlver  = 'SQL2016_ISO'
 $latest_master = '2012R2FallUpdate'
 $Latest_2016 = '2016'
