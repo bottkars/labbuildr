@@ -247,11 +247,26 @@ switch ($PsCmdlet.ParameterSetName)
 		$Scriptblock = "echo '"+$targetname+"."+$BuildDomain+"."+$Custom_DomainSuffix+"'  > /etc/HOSTNAME"
 		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $rootpassword  | Out-Null
 		$NodeClone | Invoke-VMXBash -Scriptblock "/etc/init.d/network restart" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
+		Write-Host -ForegroundColor Gray " ==>Tweaking Configuration"
+		$Scriptblock = "sed -i '/PermitRootLogin/ c\PermitRootLogin yes' /etc/ssh/sshd_config"
+		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
+		if ($Hostkey)
+            {
+            $Scriptblock = "echo '$Hostkey' >> /root/.ssh/authorized_keys"
+            Write-Verbose $Scriptblock
+            $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $rootpassword
+            }
+		$Scriptblock = "insserv sshd;rcsshd restart"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $rootpassword | Out-Null
+
 	Write-Host -ForegroundColor Yellow "
 	Successfully Deployed $targetname
 
 	point your browser to https://$($ip)
 	Login with $rootuser/$rootpassword and follow the wizard steps
+	to monitor / install an update, browse to https://$($ip)/avi/avigui.html
+	NVE updates can be downloaded with Receive-LABNetworker -nveupdate -nve_ver [nve_ver] -Destination [destination]
 	"
 	}
 }
