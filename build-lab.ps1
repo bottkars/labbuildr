@@ -242,7 +242,7 @@ Specify if Networker Scenario sould be installed
 	<# ScaleIO on hyper-v #>
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch][alias('sc')]$ScaleIO,
 	<# ScaleIOVersion
-	'2.0-10000.2075',
+	'2.0-10000.2075','2.0-12000.122',
 	'2.0-7536.0','2.0-7120.0','2.0-6035.0','2.0-5014.0',
 	'1.32-277.0','1.32-402.1','1.32-403.2','1.32-2451.4','1.32-3455.5','1.32-4503.5',
 	'1.31-258.2','1.31-1277.3','1.31-2333.2',
@@ -250,7 +250,7 @@ Specify if Networker Scenario sould be installed
 	#>
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][string]
     [ValidateSet(
-	'2.0-10000.2075',
+	'2.0-10000.2075','2.0-12000.122',
 	'2.0-7536.0','2.0-7536.0','2.0-7120.0','2.0-6035.0','2.0-5014.0',
 	'1.32-277.0','1.32-402.1','1.32-403.2','1.32-2451.4','1.32-3455.5','1.32-4503.5',
 	'1.31-258.2','1.31-1277.3','1.31-2333.2',
@@ -868,7 +868,7 @@ $Default_Subnet = "192.168.2.0"
 $Default_IPv6Prefix = "FD00::"
 $Default_IPv6PrefixLength = '8'
 $Default_AddressFamily = "IPv4"
-$latest_ScaleIOVer = '2.0-7536.0'
+$latest_ScaleIOVer = '2.0-12000.122'
 $ScaleIO_OS = "Windows"
 $ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
 $latest_nmm = 'nmm9102'
@@ -2476,10 +2476,11 @@ if ($ScaleIO.IsPresent)
     # ScaleIO_1.32_Complete_Windows_SW_Download\ScaleIO_1.32_Windows_Download #
     Write-Verbose "Now Checking for ScaleIO $ScaleIOVer"
     $ScaleIO_Major = $ScaleIOVer[0]
-	if ($ScaleIOVer -match "2.0.1000")
+	if ($ScaleIOVer -match "2.0-1")
 		{
 		$ScaleIO_Major = "2.0.1"
 		}
+	Write-Verbose "ScaleIO_Major = $ScaleIO_Major"
     $ScaleIORoot = join-path $Sourcedir "Scaleio\"
     $ScaleIOPath = (Get-ChildItem -Path $ScaleIORoot -Recurse -Filter "*mdm-$ScaleIOVer.msi" -ErrorAction SilentlyContinue ).Directory.FullName
     try
@@ -2489,7 +2490,23 @@ if ($ScaleIO.IsPresent)
     catch
         {
         Write-Host -ForegroundColor Gray " ==>we did not find ScaleIO $ScaleIOVer, we will check local zip/try to download latest version!"
-        Receive-LABScaleIO -Destination $Sourcedir -arch Windows -unzip -Confirm:$false -force
+        $SIO_Download_ver = Receive-LABScaleIO -Destination $Sourcedir -arch Windows -unzip -Confirm:$false -force
+		If ($SIO_Download_ver)
+			{
+			if ($SIO_Download_ver -ne $ScaleIOVer)
+				{
+				Write-Host "Requested do Install ScaleIO $ScaleIOVer, but found $SIO_Download_ver online, will try to use this version"
+				try
+					{
+					$ScaleIOVer = $SIO_Download_ver
+					}
+				catch
+					{
+					Write-Host "$SIO_Download_ver is not Supported, please open issue on github"
+					break
+					}
+				}
+			}
         }
         if ($ScaleIO_Major -ge 2)
             {

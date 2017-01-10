@@ -216,7 +216,7 @@ switch ($PsCmdlet.ParameterSetName)
             Write-Warning "Configure Present, setting nodes to 3"
             $Nodes = 3
             }
-		if ($MasterVMX.VMXname -match '2.0.1000')
+		if ($MasterVMX.VMXname -match '2.0.1')
 			{
 			$SIO_Major = '2.0.1'
 			Write-Host -ForegroundColor Magenta " ==> installing ScaleIO Branch 2.0.1 "
