@@ -300,7 +300,7 @@ if (!$Ubuntu -or $ubuntu -notmatch $ubuntu_sio_ver)
 		{
 		Write-Host -ForegroundColor Magenta " ==>looks like we detected ScaleIO 2.0.1"
 		$SIOMajor = "2.0.1"
-		$SIO_FILE_VER = "2.0-10000"
+		$SIO_FILE_VER = "2.0-1"
 		}
 	else
 		{
@@ -320,7 +320,7 @@ if (!$Ubuntu -or $ubuntu -notmatch $ubuntu_sio_ver)
 			#$siobfiles.count
 			}
 		}
-	Write-Host -ForegroundColor Gray " ==>evaluationg base path for Gateway"
+	Write-Host -ForegroundColor Gray " ==>evaluationg base path for Gateway in $scaleio_dir for emc-scaleio-gateway_$SIO_FILE_VER*.deb"
     $SIOGatewayrpm = Get-ChildItem -Path $scaleio_dir -Recurse -Filter "emc-scaleio-gateway_$SIO_FILE_VER*.deb"  -Exclude ".*" -ErrorAction SilentlyContinue
 
     try
