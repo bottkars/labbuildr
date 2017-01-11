@@ -2873,6 +2873,10 @@ else
 						}
 				}
 			write-host -ForegroundColor Green "[finished]"
+			if  ($USE_SOURCES_ON_SMB.IsPresent)
+				{
+				$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script enable-uncsources.ps1 -Parameter "-SMBuser $($labdefaults.SMBUsername) -SMBPassword $($labdefaults.SMBPassword) -Sources $($labdefaults.SMBSourcedir)" -interactive # -Parameter $CommonParameter		
+				}
 			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script dns.ps1 -Parameter "-IPv4subnet $IPv4Subnet -IPv4Prefixlength $IPV4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily  -IPV6Prefix $IPV6Prefix $AddGateway $CommonParameter"  -interactive
 			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script add-serviceuser.ps1 -interactive
 			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script disable-hardening.ps1 -Parameter "-UpdateType never" -interactive
