@@ -1315,6 +1315,10 @@ function checkpoint-progress
 				}
 			}
 		write-host -ForegroundColor Green "[reached]"
+		if  ($USE_SOURCES_ON_SMB.IsPresent)
+			{
+			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script enable-uncsources.ps1 -Parameter "-SMBuser $($labdefaults.SMBUsername) -SMBPassword $($labdefaults.SMBPassword) -Sources $($labdefaults.SMBSourcedir)" -interactive # -Parameter $CommonParameter		
+			}
         }
     else
         {
@@ -3097,6 +3101,10 @@ switch ($PsCmdlet.ParameterSetName)
                 Write-Verbose $ToolState.State
                 }
             until ($ToolState.state -match "running")
+			if  ($USE_SOURCES_ON_SMB.IsPresent)
+				{
+				$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script enable-uncsources.ps1 -Parameter "-SMBuser $($labdefaults.SMBUsername) -SMBPassword $($labdefaults.SMBPassword) -Sources $($labdefaults.SMBSourcedir)" -interactive # -Parameter $CommonParameter		
+				}
     		$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script configure-exchange.ps1 -interactive -Parameter "-e14_sp $e14_sp -e14_ur $e14_ur -ex_lang $e14_lang -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter"
             if ($EXNode -eq ($EXNodes+$EXStartNode-1)) #are we last sever in Setup ?!
                 {
@@ -3220,6 +3228,11 @@ switch ($PsCmdlet.ParameterSetName)
                         Write-Verbose $ToolState.State
                     }
                 until ($ToolState.state -match "running")
+				if  ($USE_SOURCES_ON_SMB.IsPresent)
+					{
+					$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script enable-uncsources.ps1 -Parameter "-SMBuser $($labdefaults.SMBUsername) -SMBPassword $($labdefaults.SMBPassword) -Sources $($labdefaults.SMBSourcedir)" -interactive # -Parameter $CommonParameter		
+					}
+
      	$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script configure-exchange.ps1 -interactive -Parameter "-SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter"
 #  -nowait
         if ($EXNode -eq ($EXNodes+$EXStartNode-1)) #are we last sever in Setup ?!
@@ -3394,6 +3407,11 @@ switch ($PsCmdlet.ParameterSetName)
                 Write-Verbose $ToolState.State
                 }
             until ($ToolState.state -match "running")
+		if  ($USE_SOURCES_ON_SMB.IsPresent)
+			{
+			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script enable-uncsources.ps1 -Parameter "-SMBuser $($labdefaults.SMBUsername) -SMBPassword $($labdefaults.SMBPassword) -Sources $($labdefaults.SMBSourcedir)" -interactive # -Parameter $CommonParameter		
+			}
+
     	$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script configure-exchange.ps1 -interactive -Parameter "-SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter"
         if ($EXNode -eq ($EXNodes+$EXStartNode-1)) #are we last sever in Setup ?!
             {
