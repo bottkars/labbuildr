@@ -507,7 +507,7 @@ Machine Sizes
     <#
 Version Of Networker Modules
     'nmm9100','nmm9102',#-#
-    'nmm9010','nmm9011','nmm9012','nmm9013','nmm9014',
+    'nmm9010','nmm9011','nmm9012','nmm9013','nmm9014','nmm9015','nmm9016',#
     'nmm90.DA','nmm9001','nmm9002','nmm9003','nmm9004','nmm9005','nmm9006','nmm9007','nmm9008',
 	'nmm8240',
 	'nmm230','nmm8231','nmm8232','nmm8233','nmm8235','nmm8236','nmm8237','nmm8238',
@@ -525,7 +525,7 @@ Version Of Networker Modules
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
     [ValidateSet('nmm9100','nmm9102',#-#
-    'nmm9010','nmm9011','nmm9012','nmm9013','nmm9014',
+    'nmm9010','nmm9011','nmm9012','nmm9013','nmm9014','nmm9015','nmm9016',#
     'nmm90.DA','nmm9001','nmm9002','nmm9003','nmm9004','nmm9005','nmm9006','nmm9007','nmm9008',
 	'nmm8240',
 	'nmm230','nmm8231','nmm8232','nmm8233','nmm8235','nmm8236','nmm8237','nmm8238',
@@ -554,7 +554,7 @@ Version Of Networker Modules
     <#
 Version Of Networker Server / Client to be installed
 	'nw9100','nw9102',#-#
-    'nw9010','nw9011','nw9012','nw9013','nw9014',
+    'nw9010','nw9011','nw9012','nw9013','nw9014','nw9015','nw9016',#
     'nw90.DA','nw9001','nw9002','nw9003','nw9004','nw9005','nw9006','nw9007','nw9008',
 	'nw8240',
     'nw8230','nw8231','nw8232','nw8233','nw8234','nw8235','nw8236','nw8237','nw8238',
@@ -592,7 +592,7 @@ Version Of Networker Server / Client to be installed
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
     [ValidateSet(
 	'nw9100','nw9102',#-#
-    'nw9010','nw9011','nw9012','nw9013','nw9014',
+    'nw9010','nw9011','nw9012','nw9013','nw9014','nw9015','nw9016',#
     'nw90.DA','nw9001','nw9002','nw9003','nw9004','nw9005','nw9006','nw9007','nw9008',
 	'nw8240',
     'nw8230','nw8231','nw8232','nw8233','nw8234','nw8235','nw8236','nw8237','nw8238',
@@ -1807,6 +1807,7 @@ else
 $DCMaster = $Master
 write-verbose "After defaults !!!! "
 Write-Verbose "Sourcedir : $Sourcedir"
+Write-Verbose "SMBSourcedir : $($LabDefaults.SMBSourcedir)"
 Write-Verbose "NWVER : $nw_ver"
 Write-Verbose "Gateway : $($Gateway.IsPresent)"
 Write-Verbose "NMM : $($nmm.IsPresent)"
@@ -1910,6 +1911,7 @@ else
 			break
 			}
 		$IN_Guest_UNC_Sourcepath = $LabDefaults.SMBSourcedir
+		$labbuildr_sourcedir = $LabDefaults.SMBSourcedir
 		}
 	else	
 		{
@@ -1944,6 +1946,7 @@ else
 			return
 			}
 		$IN_Guest_UNC_Sourcepath = "'\\vmware-host\Shared Folders\Sources'"
+		$labbuildr_sourcedir = $LabDefaults.Sourcedir
 		}
 	}	   
 if (!$Master)
@@ -2028,7 +2031,7 @@ else
 	$SQLSize = "XL"
 	}####### Building required Software Versions Tabs
 
-$NW_Sourcedir = Join-Path $Sourcedir "Networker"
+$NW_Sourcedir = Join-Path $labbuildr_sourcedir "Networker"
 $Sourcever = @()
 if (!($DConly.IsPresent))
 {
@@ -2163,7 +2166,7 @@ if ($Exchange2010.IsPresent)
 		$E2010_master = $Master
 		}
 	$E2010_Master_VMX = test-labmaster -Masterpath "$Masterpath" -Master $E2010_master -mastertype vmware -Confirm:$Confirm
-    If (!(Receive-LABExchange -Exchange2010 -e14_sp $e14_sp -e14_ur $e14_ur  -e14_lang $e14_lang -Destination $Sourcedir -unzip))
+    If (!(Receive-LABExchange -Exchange2010 -e14_sp $e14_sp -e14_ur $e14_ur  -e14_lang $e14_lang -Destination $labbuildr_sourcedir -unzip))
         {
         Write-Host -ForegroundColor Gray " ==>we could not receive Exchange 2010 $e14_sp"
         return
@@ -2174,7 +2177,7 @@ if ($Exchange2010.IsPresent)
     $attachments = (
     "http://www.cisco.com/c/dam/en/us/solutions/collateral/data-center-virtualization/unified-computing/fle_vmware.pdf"
     )
-    $Destination = Join-Path $Sourcedir $Prereqdir
+    $Destination = Join-Path $labbuildr_sourcedir $Prereqdir
     if (!(Test-Path $Destination)){New-Item -ItemType Directory -Path $Destination | Out-Null }
      foreach ($URL in $attachments)
         {
@@ -2221,7 +2224,7 @@ if ($Exchange2013.IsPresent)
 		$E2013_master = $Master
 		}
 	$E2013_Master_VMX = test-labmaster -Masterpath "$Masterpath" -Master $E2013_master -mastertype vmware -Confirm:$Confirm
-    If (!(Receive-LABExchange -Exchange2013 -e15_cu $e15_cu -Destination $Sourcedir -unzip))
+    If (!(Receive-LABExchange -Exchange2013 -e15_cu $e15_cu -Destination $labbuildr_sourcedir -unzip))
         {
         Write-Host -ForegroundColor Gray " ==>we could not receive Exchange 2013 $e15_cu"
         return
@@ -2232,7 +2235,7 @@ if ($Exchange2013.IsPresent)
     $attachments = (
     "http://www.cisco.com/c/dam/en/us/solutions/collateral/data-center-virtualization/unified-computing/fle_vmware.pdf"
     )
-    $Destination = Join-Path $Sourcedir $Prereqdir
+    $Destination = Join-Path $labbuildr_sourcedir $Prereqdir
     if (!(Test-Path $Destination)){New-Item -ItemType Directory -Path $Destination | Out-Null }
      foreach ($URL in $attachments)
         {
@@ -2290,10 +2293,10 @@ if ($Exchange2016.IsPresent)
 	if ($E2016_Master -eq "2016")
 		{
 		Write-Host "We need to check KB $E16_REQUIRED_KB"
-		Receive-LABWindows2016Update -Destination (Join-Path $Sourcedir "WindowsUpdate") -KB $E16_REQUIRED_KB
+		Receive-LABWindows2016Update -Destination (Join-Path $labbuildr_sourcedir "WindowsUpdate") -KB $E16_REQUIRED_KB
 		}
 	Write-Verbose "Using Master $E2016_Master with Exchange 2016 $e16_cu and .Net $NET_VER"
-    If (!(Receive-LABExchange -Exchange2016 -e16_cu $e16_cu -Destination $Sourcedir -unzip))
+    If (!(Receive-LABExchange -Exchange2016 -e16_cu $e16_cu -Destination $labbuildr_sourcedir -unzip))
         {
         Write-Warning " ==>we could not receive Exchange 2016 $e16_cu"
         return
@@ -2302,7 +2305,7 @@ if ($Exchange2016.IsPresent)
     $Scenarioname = "Exchange"
     $Prereqdir = "Attachments"
     $attachments = ($Default_attachement)
-    $Destination = Join-Path $Sourcedir $Prereqdir
+    $Destination = Join-Path $labbuildr_sourcedir $Prereqdir
     if (!(Test-Path $Destination)){New-Item -ItemType Directory -Path $Destination | Out-Null }
      foreach ($URL in $attachments)
         {
@@ -2342,23 +2345,23 @@ if ($Sharepoint.IsPresent)
 		    "http://download.microsoft.com/download/9/1/D/91DA8796-BE1D-46AF-8489-663AB7811517/setup_msipc_x64.msi", # Microsoft Information Protection and Control Client
 		    "http://download.microsoft.com/download/8/F/9/8F93DBBD-896B-4760-AC81-646F61363A6D/WcfDataServices.exe" # Microsoft WCF Data Services 5.0
                 )
-    if (Test-Path $Sourcedir/$Prereqdir)
+    if (Test-Path $labbuildr_sourcedir/$Prereqdir)
         {
         Write-Verbose "Sharepoint Prereq Sourcedir Found"
         }
         else
         {
         Write-Verbose "==>creating Prereq Sourcedir for Sharepoint"
-        New-Item -ItemType Directory -Path $Sourcedir\$Prereqdir | Out-Null
+        New-Item -ItemType Directory -Path $labbuildr_sourcedir/$Prereqdir | Out-Null
         }
     foreach ($URL in $DownloadUrls)
         {
         $FileName = Split-Path -Leaf -Path $Url
         Write-Verbose "...checking for $FileName"
-        if (!(test-path  $Sourcedir\$Prereqdir\$FileName))
+        if (!(test-path  $labbuildr_sourcedir/$Prereqdir/$FileName))
             {
             Write-Verbose "$FileName not found, trying Download"
-            if (!(get-prereq -DownLoadUrl $URL -destination $Sourcedir\$Prereqdir\$FileName))
+            if (!(get-prereq -DownLoadUrl $URL -destination $labbuildr_sourcedir\$Prereqdir\$FileName))
                 {
                 Write-Warning "Error Downloading file $Url, Please check connectivity"
                 exit
@@ -2368,28 +2371,28 @@ if ($Sharepoint.IsPresent)
         $URL = "http://download.microsoft.com/download/1/C/A/1CAA41C7-88B9-42D6-9E11-3C655656DAB1/WcfDataServices.exe"
         $FileName = "WcfDataServices56.exe"
         Write-Verbose "...checking for $FileName"
-        if (!(test-path  $Sourcedir\$Prereqdir\$FileName))
+        if (!(test-path  $labbuildr_sourcedir/$Prereqdir/$FileName))
             {
             Write-Verbose "$FileName not found, trying Download"
-            if (!(get-prereq -DownLoadUrl $URL -destination $Sourcedir\$Prereqdir\$FileName))
+            if (!(get-prereq -DownLoadUrl $URL -destination $labbuildr_sourcedir/$Prereqdir/$FileName))
                 {
                 Write-Warning "Error Downloading file $Url, Please check connectivity"
                 exit
                 }
             }
         $Url = "http://download.microsoft.com/download/6/E/3/6E3A0B03-F782-4493-950B-B106A1854DE1/sharepoint.exe"
-        Write-Verbose "Testing Sharepoint SP1 Foundation exists in $Sourcedir"
-        if (!(test-path  "$Sourcedir\$SPver"))
+        Write-Verbose "Testing Sharepoint SP1 Foundation exists in $labbuildr_sourcedir"
+        if (!(test-path  "$labbuildr_sourcedir/$SPver"))
             {
             $FileName = Split-Path -Leaf -Path $Url
             Write-Verbose "Trying Download"
-            if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir\$FileName"))
+            if (!(get-prereq -DownLoadUrl $URL -destination  "$labbuildr_sourcedir/$FileName"))
                 {
                 Write-Warning "Error Downloading file $Url, Please check connectivity"
                 exit
                 }
             Write-Verbose "Extracting $FileName"
-            Start-Process -FilePath "$Sourcedir\$FileName" -ArgumentList "/extract:$Sourcedir\$SPver /quiet /passive" -Wait
+            Start-Process -FilePath "$labbuildr_sourcedir/$FileName" -ArgumentList "/extract:$labbuildr_sourcedir/$SPver /quiet /passive" -Wait
             }
     $Work_Items +=  " ==>we are going to Install Sharepoint 2013 in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet and SQL"
     }# end SPPREREQ
@@ -2415,7 +2418,7 @@ if ($SCVMM.IsPresent)
 			$Master ="2016"
 			}
         }
-    If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCVMM -Destination $Sourcedir -unzip -WarningAction SilentlyContinue))
+    If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCVMM -Destination $labbuildr_sourcedir -unzip -WarningAction SilentlyContinue))
         {
         Write-Warning " ==>we could not receive scvmm"
         return
@@ -2439,7 +2442,7 @@ if ($SCOM.IsPresent)
 
 			}
         }
-    If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCOM -Destination $Sourcedir -unzip -WarningAction SilentlyContinue))
+    If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCOM -Destination $labbuildr_sourcedir -unzip -WarningAction SilentlyContinue))
         {
         Write-Warning " ==>we could not receive scom"
         return
@@ -2457,7 +2460,7 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
     $AAGURL = "https://labbuildrmaster.blob.core.windows.net/addons/AdventureWorks2012.7z"
     $URL = $AAGURL
     $FileName = Split-Path -Leaf -Path $Url
-	$Aworks_Dir = Join-Path $Sourcedir $AAGDB
+	$Aworks_Dir = Join-Path $labbuildr_sourcedir $AAGDB
 	$Aworks_File = Join-Path $Aworks_Dir $FileName
 	$Aworks_BAK = Join-Path $Aworks_Dir "AdventureWorks2012.bak"
 	If (Test-Path $Aworks_Dir)
@@ -2481,15 +2484,15 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
         #New-Item -ItemType Directory -Path "$Aworks_Dir" -Force
         Expand-LABpackage -Archive $Aworks_File -destination $Aworks_Dir
         }
-    if (!($SQL_OK = receive-labsql -SQLVER $SQLVER -Destination $Sourcedir -Product_Dir "SQL" -extract -WarningAction SilentlyContinue))
+    if (!($SQL_OK = receive-labsql -SQLVER $SQLVER -Destination $labbuildr_sourcedir -Product_Dir "SQL" -extract -WarningAction SilentlyContinue))
         {
         break
         }
 }
 if ($Panorama.IsPresent)
     {
-    $Targetir = "$Sourcedir/panorama"
-    if (Test-Path "$Sourcedir/panorama/Syncplicity Panorama.msi")
+    $Targetir = "$labbuildr_sourcedir/panorama"
+    if (Test-Path "$labbuildr_sourcedir/panorama/Syncplicity Panorama.msi")
         {
         Write-Host -ForegroundColor Gray " ==>Syncplicity found"
         }
@@ -2500,7 +2503,7 @@ if ($Panorama.IsPresent)
         if ($url)
             {
             $FileName = Split-Path -Leaf -Path $Url
-            get-prereq -DownLoadUrl $url -destination "$Sourcedir/panorama/$FileName"
+            get-prereq -DownLoadUrl $url -destination "$labbuildr_sourcedir/panorama/$FileName"
             }
         }
      }
@@ -2545,7 +2548,7 @@ if ($ScaleIO.IsPresent)
     ##
     # ScaleIO_1.32_Complete_Windows_SW_Download\ScaleIO_1.32_Windows_Download #
     Write-Verbose "Now Checking for ScaleIO $ScaleIOVer"
-    $ScaleIORoot = join-path $Sourcedir "Scaleio\"
+    $ScaleIORoot = join-path $labbuildr_sourcedir "Scaleio"
     $ScaleIOPath = (Get-ChildItem -Path $ScaleIORoot -Recurse -Filter "*mdm-$ScaleIOVer.msi" -ErrorAction SilentlyContinue ).Directory.FullName
     try
         {
@@ -2554,7 +2557,7 @@ if ($ScaleIO.IsPresent)
     catch
         {
         Write-Host -ForegroundColor Gray " ==>we did not find ScaleIO $ScaleIOVer, we will check local zip/try to download latest version!"
-        $SIO_Download_ver = Receive-LABScaleIO -Destination $Sourcedir -arch Windows -unzip -Confirm:$false -force
+        $SIO_Download_ver = Receive-LABScaleIO -Destination $labbuildr_sourcedir -arch Windows -unzip -Confirm:$false -force
 		If ($SIO_Download_ver)
 			{
 			if ($SIO_Download_ver -ne $ScaleIOVer)
@@ -2583,7 +2586,7 @@ if ($ScaleIO.IsPresent)
         Write-Host -ForegroundColor Magenta "Checking for OpenSSL"
 		try
 			{
-			$OpenSSL = Receive-LABOpenSSL -Destination $Sourcedir -OpenSSL_Ver 1_0_1 -ErrorAction Stop
+			$OpenSSL = Receive-LABOpenSSL -Destination $labbuildr_sourcedir -OpenSSL_Ver 1_0_1 -ErrorAction Stop
 			}
 		catch
 			{
@@ -2594,16 +2597,16 @@ if ($ScaleIO.IsPresent)
     Write-Verbose "Checking Diskspeed"
     $URL = "https://gallery.technet.microsoft.com/DiskSpd-a-robust-storage-6cd2f223/file/132882/1/Diskspd-v2.0.15.zip"
     $FileName = Split-Path -Leaf -Path $Url
-    $Zipfilename = Join-Path $Sourcedir $FileName
-    $Destinationdir = Join-Path "$Sourcedir" "diskspd"
+    $Zipfilename = Join-Path $labbuildr_sourcedir $FileName
+    $Destinationdir = Join-Path "$labbuildr_sourcedir" "diskspd"
     # $Directory = Split-Path
-    if (!(test-path  (join-path "$Sourcedir" "\diskspd\amd64fre\diskspd.exe")))
+    if (!(test-path  (join-path "$labbuildr_sourcedir" "/diskspd/amd64fre/diskspd.exe")))
     {
     ## Test if we already have the ZIP
     if (!(test-path  "$Zipfilename"))
         {
         Write-Verbose "Trying Download DiskSpeed"
-        if (!(get-prereq -DownLoadUrl $URL -destination  "$Sourcedir"))
+        if (!(get-prereq -DownLoadUrl $URL -destination  "$labbuildr_sourcedir"))
             {
                 Write-Warning "Error Downloading file $Url, Please check connectivity"
                     exit
@@ -2635,7 +2638,7 @@ if ($NW.IsPresent -or $NWServer.IsPresent)
         $Scenarioname = "nwserver"
         $Scenario = 8
         }
-	Receive-LABAcrobat -Destination $Sourcedir
+	Receive-LABAcrobat -Destination $labbuildr_sourcedir
     $Java7_required = $True
     #####
 If ($nw_ver -gt "nw85.BR1")
@@ -2656,13 +2659,13 @@ If ($nw_ver -gt "nw85.BR1")
 if ($Java7_required)
     {
     Write-Verbose "Checking for Java 7"
-    if (!($Java7 = Get-ChildItem -Path $Sourcedir -Filter 'jre-7*x64*'))
+    if (!($Java7 = Get-ChildItem -Path $labbuildr_sourcedir -Filter 'jre-7*x64*'))
 	    {
 		Write-Host -ForegroundColor Yellow "Java7 not found, downloading from $my_repo repo"
         $FileName = Split-Path -Leaf $Java7_Url
-        $Destination = Join-Path $Sourcedir $FileName
+        $Destination = Join-Path $labbuildr_sourcedir $FileName
         Receive-LABBitsFile -DownLoadUrl $Java7_Url -destination $Destination
-        $Java7 = Get-ChildItem -Path $Sourcedir -Filter 'jre-7*x64*'
+        $Java7 = Get-ChildItem -Path $labbuildr_sourcedir -Filter 'jre-7*x64*'
         }
     $Java7 = $Java7 | Sort-Object -Property Name -Descending
     $LatestJava = $Java7[0].Name
@@ -2670,11 +2673,11 @@ if ($Java7_required)
 If ($Java8_required)
     {
     Write-Verbose "Checking for Java 8"
-    if (!($Java8 = Get-ChildItem -Path $Sourcedir -Filter 'jre-8*x64*'))
+    if (!($Java8 = Get-ChildItem -Path $labbuildr_sourcedir -Filter 'jre-8*x64*'))
         {
 	    Write-Host -ForegroundColor Gray " ==>Java8 not found, trying download"
         Write-Verbose "Asking for latest Java8"
-        $LatestJava = (receive-labjava64 -DownloadDir $Sourcedir).LatestJava8
+        $LatestJava = (receive-labjava64 -DownloadDir $labbuildr_sourcedir).LatestJava8
         if (!$LatestJava)
             {
             break
@@ -2694,7 +2697,7 @@ if ($docker.IsPresent)
 		Write-Host " ==>setting Docker Master to $Latest_2016"
 		$master = $Latest_2016
 		}
-	# Receive-LABDocker -Destination $Sourcedir -ver 1.12 -arch win -branch beta
+	# Receive-LABDocker -Destination $labbuildr_sourcedir -ver 1.12 -arch win -branch beta
 	if ($Size -lt "XL")
 		{$Size = "XL" }
 	}
@@ -2714,7 +2717,7 @@ if ($Work_Items)
 	{ 
 	Write-Host -ForegroundColor Magenta $Work_Items
 	}
-if (!($SourceOK = test-source -SourceVer $Sourcever -SourceDir $Sourcedir))
+if (!($SourceOK = test-source -SourceVer $Sourcever -SourceDir $labbuildr_sourcedir))
 {
 	Write-Verbose "Sourcecomplete: $SourceOK"
 	break
