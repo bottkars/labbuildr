@@ -215,8 +215,14 @@ if (!$Isilon.IsPresent)
     {
 	$Scripts_Folder = join-path $Builddir $Scripts
     $Clone | Set-VMXSharedFolderState -enabled
-    $Clone | Set-VMXSharedFolder -add -Sharename Scripts -Folder $Scripts_Folder
-    $Clone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir
+	if ($Scripts_Folder -notmatch "\\\\")
+		{
+		$Clone | Set-VMXSharedFolder -add -Sharename Scripts -Folder $Scripts_Folder
+		}
+	if ($Sourcedir -notmatch "\\\\")
+		{
+		$Clone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir
+		}
     Write-verbose "waiting for Pass 1 (sysprep Finished)"
     Write-Host -ForegroundColor Gray " ==>waiting for Sysprep finished " -NoNewline
 	test-user -whois Administrator
