@@ -2293,7 +2293,7 @@ if ($Exchange2016.IsPresent)
 		{
 		$E2016_Master = $Master
 		}
-	$E2016_Master_VMX = test-labmaster -Masterpath "$Masterpath" -Master $E2013_master -mastertype vmware -Confirm:$Confirm
+	$E2016_Master_VMX = test-labmaster -Masterpath "$Masterpath" -Master $E2016_Master -mastertype vmware -Confirm:$Confirm
 	if ($E2016_Master -eq "2016")
 		{
 		Write-Host "We need to check KB $E16_REQUIRED_KB"
