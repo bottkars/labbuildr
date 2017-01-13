@@ -81,6 +81,26 @@ switch ($PsCmdlet.ParameterSetName)
             $OVFfile = Get-Item $ovf
             $mastername = $OVFfile.BaseName
             }
+			Write-Host -ForegroundColor Gray " ==>Adjusting OVF file for VMwARE Workstation"
+			$content = Get-Content -Path $OVFfile.FullName
+			$Out_Line = $true
+			$OutContent = @()
+			ForEach ($Line In $content)
+				{
+				If ($Line -match '<ProductSection')
+					{
+					$Out_Line = $false
+					}
+				If ($Out_Line -eq $True)
+					{
+					$OutContent += $Line
+					}
+				If ($Line -match '</ProductSection')
+					{
+					$Out_Line = $True
+					}
+				}
+			$OutContent | Set-Content -Path $OVFfile.FullName
         & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $ovf $PSScriptRoot #
         Write-Host -ForegroundColor Magenta  "Use install-ddmc.ps1 -Masterpath .\$Mastername -Defaults"
         }
@@ -132,7 +152,7 @@ switch ($PsCmdlet.ParameterSetName)
         $Nodeprefix = "DDMCNode"
         if (!$MasterVMX)
             {
-            $MasterVMX = get-vmx ddmc-1.4*
+            $MasterVMX = get-vmx ddmc-*
             iF ($MasterVMX)
                 {
                 $MasterVMX = $MasterVMX | Sort-Object -Descending
@@ -174,6 +194,26 @@ switch ($PsCmdlet.ParameterSetName)
                         Write-Host -ForegroundColor Magenta "testing OVA File"
                         $OVFfile = $OVFfile[0]
                         $mastername = $OVFfile.BaseName
+						Write-Host -ForegroundColor Gray " ==>Adjusting OVF file for VMwARE Workstation"
+								$content = Get-Content -Path $OVFfile.FullName
+								$Out_Line = $true
+								$OutContent = @()
+								ForEach ($Line In $content)
+									{
+									If ($Line -match '<ProductSection')
+										{
+										$Out_Line = $false
+										}
+									If ($Out_Line -eq $True)
+										{
+										$OutContent += $Line
+										}
+									If ($Line -match '</ProductSection')
+										{
+										$Out_Line = $True
+										}
+									}
+								$OutContent | Set-Content -Path $OVFfile.FullName
                         & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $OVFfile.FullName $PSScriptRoot #
                         if ($LASTEXITCODE -ne 0)
                             {
