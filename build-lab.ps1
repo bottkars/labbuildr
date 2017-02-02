@@ -2279,7 +2279,7 @@ if ($Exchange2016.IsPresent)
 			default
 				{
 				$NET_VER = "462"
-				$E16_REQUIRED_KB = "KB3206632"
+				$E16_REQUIRED_KB = 'KB4010672' #"KB3206632"
 				}
 			}
 		
@@ -3356,6 +3356,11 @@ switch ($PsCmdlet.ParameterSetName)
 			#	}
 			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchangeprereqs.ps1 -interactive -Parameter "-NET_VER $NET_VER -KB $E16_REQUIRED_KB -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter"
             checkpoint-progress -step exprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
+            If ($E16_REQUIRED_KB -ge 'KB4010672')
+                {
+                Write-Host -ForegroundColor Yellow "==> Doing Second Rebbot for E16 KB $E16_REQUIRED_KB"
+                checkpoint-progress -step exprereq_kb -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
+                }
 			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script powerconf.ps1 -interactive
 			$Possible_Error_Fix = " 1.) Host has no iSCSI Luns `n 2.) Unity not configured for Host ==> Use Unisphere to configure `n 3.) Unity VM is not running ==> start unity ( get-vmx UnityNode1 | start-vmx ), you may need to re-run enable-labiscsi.ps1 in vm"
 			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script test-disks.ps1 -Parameter "-DiskCount 3" -interactive -Possible_Error_Fix $Possible_Error_Fix
