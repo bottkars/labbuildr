@@ -2590,7 +2590,7 @@ if ($ScaleIO.IsPresent)
         Write-Host -ForegroundColor Magenta "Checking for OpenSSL"
 		try
 			{
-			$OpenSSL = Receive-LABOpenSSL -Destination $labbuildr_sourcedir -OpenSSL_Ver 1_0_1 -ErrorAction Stop
+			$OpenSSL = Receive-LABOpenSSL -Destination $labbuildr_sourcedir -OpenSSL_Ver 1_0_2 -ErrorAction Stop
 			}
 		catch
 			{
