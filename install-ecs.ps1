@@ -37,7 +37,7 @@ $Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet('8192','12288','16384','20480','30720','51200','65536')]$Memory = "12288",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateSet("release-2.1","Develop",'master','latest','2.2.0.1','2.2.0.2','2.2.0.3','2.2.1.0','2.2.1.0-a','2.2.1.1','3.0.0')]$Branch = '3.0.0',
+[ValidateSet("release-2.1","Develop",'master','latest','2.2.0.1','2.2.0.2','2.2.0.3','2.2.1.0','2.2.1.0-a','2.2.1.1','3.0.0','3.0.0.1')]$Branch = '3.0.0.1',
 <#Adjusts some Timeouts#>
 [switch]$AdjustTimeouts,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
@@ -70,7 +70,7 @@ $Custom_IP
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
-$latest_ecs = "2.2.1.1"
+$latest_ecs = "3.0.0.1"
 $Range = "24"
 $Start = "1"
 $IPOffset = 5
@@ -225,11 +225,11 @@ switch ($Branch)
         $Docker_imagetag = $Branch
         $Git_Branch = "master"
         }
-    "3.0.0"
+    "3.0.0.1"
         {
         $Docker_image = "ecs-software-3.0.0"
         $Docker_imagename = "emccorp/ecs-software-3.0.0"
-        $Docker_imagetag = "latest"
+        $Docker_imagetag = "3.0.0.1"
         $Git_Branch = "master"
         }
     default
