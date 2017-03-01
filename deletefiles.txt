@@ -18,4 +18,4 @@
 .\install-dockerhost.ps1
 .\deletefiles.txt
 .\SIOToolkit
-.\install-esxova.ps1
+.\install-openstack.ps1
