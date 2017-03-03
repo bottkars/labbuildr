@@ -385,6 +385,11 @@ if ($use_aptcache.IsPresent)
 		else
 			{
 			$apt_ip = $Global:labdefaults.APT_Cache_IP
+			if ($aptvmx.state -ne "running")
+				{
+				$aptvmx | start-vmx
+				$aptvmx | Set-VMXSharedFolderState -enabled
+				}
 			}
 		}
 	else
