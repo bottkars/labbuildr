@@ -230,11 +230,27 @@ switch ($PsCmdlet.ParameterSetName)
     if (!$Basesnap)
         {
         Write-Host -ForegroundColor Gray "Tweaking Base VMX"
-        $config = Get-VMXConfig -config $MasterVMX.config
-        foreach ($scsi in 0..3)
+        $Vitualdev0 = "pvscsi"
+        If ($MasterVMX.VMXName -match "UnityVSA-4.1")
             {
+            write-host "Got Falcon Release, currently not supported on Workstation ... stay tuned"
+            return
+            $Vitualdev0 = "lsilogic"
+            }
+        $config = Get-VMXConfig -config $MasterVMX.config
+        foreach ($scsi in 0)
+            {
+            Write-Host -ForegroundColor Gray " ==>Setting SCSI$scsi to $Vitualdev0"
             $config = $config -notmatch "scsi$scsi.virtualDev"
-            $config += 'scsi'+$scsi+'.virtualDev = "pvscsi"'
+            $config += 'scsi'+$scsi+'.virtualDev = "'+$Vitualdev0+'"'
+            $config = $config -notmatch "scsi$scsi.present"
+            $config += 'scsi'+$scsi+'.present = "true"'
+            }#>
+        foreach ($scsi in 1..3)
+            {
+            Write-Host -ForegroundColor Gray " ==>Setting SCSI$scsi to $Vitualdev0"
+            $config = $config -notmatch "scsi$scsi.virtualDev"
+            $config += 'scsi'+$scsi+'.virtualDev = "'+$Vitualdev0+'"'
             $config = $config -notmatch "scsi$scsi.present"
             $config += 'scsi'+$scsi+'.present = "true"'
             }
