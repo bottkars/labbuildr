@@ -212,7 +212,7 @@ switch ($PsCmdlet.ParameterSetName)
         {
         if ($MasterPath)
             {
-            $MasterVMX = get-vmx -path $MasterPath -VMXName $MasterVMX
+            $MasterVMX = get-vmx -path $MasterPath -VMXName $Mastername
             }
         }
     if (!$MasterVMX)

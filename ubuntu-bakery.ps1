@@ -296,7 +296,7 @@ if (!$Ubuntu -or $ubuntu -notmatch $ubuntu_sio_ver)
 	$Ubuntu = Get-ChildItem *$ubuntu_sio_ver* -Path $scaleio_dir -Include *UBUNTU* -Exclude "*.zip" -Recurse -Directory
 	$Ubuntudir = $Ubuntu | Sort-Object -Descending | Select-Object -First 1
 	Write-Host -ForegroundColor Gray " ==>Using Ubuntu Dir $Ubuntudir"
-	If ($Ubuntudir -match 2.0.1.0)
+	If ($Ubuntudir -match 2.0.1.)
 		{
 		Write-Host -ForegroundColor Magenta " ==>looks like we detected ScaleIO 2.0.1"
 		$SIOMajor = "2.0.1"
