@@ -90,11 +90,11 @@ switch ($nve_ver)
 	{
 		'9.1.0.4'
 		{
-		$Product_tag = '9.1.0.166'
+		$Product_tag = 'NVE-9.1.0.166'
 		}
 		'9.1.0.3'
 		{
-		$Product_tag = '9.1.0.132'
+		$Product_tag = 'NVE-9.1.0.132'
 		}
 	}
 
@@ -114,7 +114,7 @@ switch ($PsCmdlet.ParameterSetName)
             Write-host -ForegroundColor Gray " ==> OVF does not exist, we need to extract from OVA" 
             Write-Host -ForegroundColor Gray " ==> Checking for $Product OVA package"
             Receive-LABNetworker -nve -nve_ver $nve_ver -Destination "$Sourcedir\$Product" -Confirm:$false
-            $OVA_File = Get-ChildItem -Path "$Sourcedir\$Product" -Recurse -include "NVE-$Product_tag.ova" -Exclude ".*" | Sort-Object -Descending | Select-Object -First 1
+            $OVA_File = Get-ChildItem -Path "$Sourcedir\$Product" -Recurse -include "$Product_tag.ova" -Exclude ".*" | Sort-Object -Descending | Select-Object -First 1
             if (!$OVA_File)
 				{
 				Write-Host "Could not find ova with pattern NVE-$Product_tag.ova in $Sourcedir\$Product"
