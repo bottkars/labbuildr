@@ -86,7 +86,17 @@ else
 	$custom_domainsuffix = "local"
 	}
 
-
+switch ($nve_ver)
+	{
+		'9.1.0.4'
+		{
+		$Product_tag = '9.1.0.166'
+		}
+		'9.1.0.3'
+		{
+		$Product_tag = '9.1.0.132'
+		}
+	}
 switch ($PsCmdlet.ParameterSetName)
 {
     "import"
@@ -97,6 +107,7 @@ switch ($PsCmdlet.ParameterSetName)
         $nve_dir = Join-Path $Networker_dir $Product_tag
         Write-Verbose "NVE Dir : $nve_dir"
         Write-Verbose "Masterpath : $masterpath" 
+		Write-Verbose "Product Tag : $Product_tag"
         if (!($Importfile = Get-ChildItem -Path $nve_dir -Filter "$Product_tag.ovf" -ErrorAction SilentlyContinue))
             {
             Write-host -ForegroundColor Gray " ==> OVF does not exist, we need to extract from OVA" 
