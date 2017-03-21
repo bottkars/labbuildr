@@ -300,7 +300,7 @@ switch ($PsCmdlet.ParameterSetName)
 		NVE updates can be downloaded with Receive-LABNetworker -nveupdate -nve_ver [nve_ver] -Destination [destination]
 		"
 		}#end nodes
-	Write-Host -ForegroundColor Yellow $OutContent
+	Write-Host -ForegroundColor Yellow $Outmessage
 	}
 	
 }
