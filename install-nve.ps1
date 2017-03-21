@@ -27,7 +27,14 @@ Param(
 [Parameter(ParameterSetName = "import", Mandatory = $true)][switch]$import,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$Defaults = $true,
 [Parameter(ParameterSetName = "defaults",Mandatory = $true)]
-[Parameter(ParameterSetName = "import",Mandatory = $false)][ValidateSet('9.0.1-72','9.1.0.91')]$nve_ver = '9.0.1-72',
+[Parameter(ParameterSetName = "import",Mandatory = $false)]
+[ValidateSet(
+    '9.0.1-72',
+	'9.1.0.3','9.1.0.4',#-#
+	'9.0.1.1','9.0.1.2','9.0.1.3','9.0.1.4','9.0.1.5','9.0.1.6' #-#
+)]
+
+$nve_ver = '9.1.0.4',
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
 )
 
