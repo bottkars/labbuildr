@@ -35,10 +35,13 @@ Param(
 )]
 
 $nve_ver = '9.1.0.4',
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+[Parameter(ParameterSetName = "defaults",Mandatory = $false)]
+[ValidateRange(1,2)]
+[int32]$Nodes=1
 )
 
-$targetname = "nvenode1"
+$basename = "nvenode"
 $rootuser = "root"
 $rootpassword = "changeme"
 $Product = "Networker"
@@ -200,97 +203,104 @@ switch ($PsCmdlet.ParameterSetName)
 	"defaults"
 
 	{
-
-	[System.Version]$subnet = $Subnet.ToString()
-	$Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
-	if (!$Defaultgateway)
+	foreach ($node in 1..$Nodes)
 		{
-		$Defaultgateway = "$subnet.12"
-		}
-	Write-Host -ForegroundColor Gray " ==>Checking if node $targetname already exists"
-	if (get-vmx $targetname -WarningAction SilentlyContinue)
-		{
-		Write-Warning " the Virtual Machine already exists"
-		Break
-		}
-	$ip="$subnet.12"
-	if (!($MasterVMX = Get-VMX -Path $masterpath\$Product_tag))
-		{
-		Write-Host -ForegroundColor White "No Master exists for $Product_tag"
-		return
-		}
-
-	$Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
-	if (!$Basesnap) 
-		{
-		$Content = Get-Content -Path $MasterVMX.config 
-		$content = $content -replace "independent_",""
-		$content | Set-Content -Path $MasterVMX.config
-		Write-Host -ForegroundColor Gray " ==>Base snap does not exist, creating now"
-		$Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
-		}
-
-	If (!($Basesnap))
-		{
-		Write-Error "Error creating/finding Basesnap"
-		exit
-		}
-
-
-	Write-Host -ForegroundColor Magenta " ==>Creating Machine $targetname"
-	$NodeClone = $Basesnap | New-VMXLinkedClone -CloneName $targetname -Path $Builddir
-	Write-Host -ForegroundColor Gray " ==>Configuring VM Network for vmnet $vmnet"
-	$NodeClone | Set-VMXNetworkAdapter -Adapter 0 -AdapterType e1000 -ConnectionType custom -WarningAction SilentlyContinue | Out-Null
-	$NodeClone | Set-VMXVnet -Adapter 0 -vnet $vmnet -WarningAction SilentlyContinue | Out-Null
-	$NodeClone | Set-VMXDisplayName -DisplayName $targetname | Out-Null
-	$Annotation = $NodeClone | Set-VMXAnnotation -Line1 "https://$ip" -Line2 "user:$rootuser" -Line3 "password:$rootpassword" -Line4 "add license from $masterpath" -Line5 "labbuildr by @sddc_guy" -builddate
-	$NodeClone | Start-VMX | Out-Null
-		 do {
-			$ToolState = Get-VMXToolsState -config $NodeClone.config
-			Write-Verbose "VMware tools are in $($ToolState.State) state"
-			sleep 10
+		$targetname = "$basename$node"
+		[System.Version]$subnet = $Subnet.ToString()
+		$Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
+		$ip_byte = 22 + $node
+		$ip="$subnet.$ip_byte"
+		
+		if (!$Defaultgateway)
+			{
+			$Defaultgateway = "$subnet.$ip_byte"
 			}
-		until ($ToolState.state -match "running")
-		 do {
-			Write-Host -ForegroundColor Gray " ==> Waiting for $targetname to come up"
-			$Process = Get-VMXProcessesInGuest -config $NodeClone.config -Guestuser $rootuser -Guestpassword $rootpassword
-			sleep 10
+		Write-Host -ForegroundColor Gray " ==>Checking if node $targetname already exists"
+		if (get-vmx $targetname -WarningAction SilentlyContinue)
+			{
+			Write-Warning " the Virtual Machine already exists"
+			Break
 			}
-		until ($process -match "mingetty")
-		Write-Host -ForegroundColor Gray " ==>Configuring Base OS"
-		Write-Host -ForegroundColor Gray " ==> Setting Network"
-		$NodeClone | Invoke-VMXBash -Scriptblock "yast2 lan edit id=0 ip=$IP netmask=255.255.255.0 prefix=24 verbose" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
-		$NodeClone | Invoke-VMXBash -Scriptblock "hostname $($NodeClone.CloneName)" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
-		$Scriptblock = "echo 'default "+$DefaultGateway+" - -' > /etc/sysconfig/network/routes"
-		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock  -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
-		$sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SEARCHLIST=`"`"/NETCONFIG_DNS_STATIC_SEARCHLIST=`""+$BuildDomain+"."+$Custom_DomainSuffix+"`"/g' /etc/sysconfig/network/config" 
-		$NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
-		$sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SERVERS=`"`"/NETCONFIG_DNS_STATIC_SERVERS=`""+$DNS1+"`"/g' /etc/sysconfig/network/config"
-		$NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
-		$NodeClone | Invoke-VMXBash -Scriptblock "/sbin/netconfig -f update" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
-		$Scriptblock = "echo '"+$targetname+"."+$BuildDomain+"."+$Custom_DomainSuffix+"'  > /etc/HOSTNAME"
-		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $rootpassword  | Out-Null
-		$NodeClone | Invoke-VMXBash -Scriptblock "/etc/init.d/network restart" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
-		Write-Host -ForegroundColor Gray " ==>Tweaking Configuration"
-		$Scriptblock = "sed -i '/PermitRootLogin/ c\PermitRootLogin yes' /etc/ssh/sshd_config"
-		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
-		if ($Hostkey)
-            {
-            $Scriptblock = "echo '$Hostkey' >> /root/.ssh/authorized_keys"
-            Write-Verbose $Scriptblock
-            $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $rootpassword
-            }
-		$Scriptblock = "insserv sshd;rcsshd restart"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $rootpassword | Out-Null
 
-	Write-Host -ForegroundColor Yellow "
-	Successfully Deployed $targetname
+		if (!($MasterVMX = Get-VMX -Path $masterpath\$Product_tag))
+			{
+			Write-Host -ForegroundColor White "No Master exists for $Product_tag"
+			return
+			}
 
-	point your browser to https://$($ip)
-	Login with $rootuser/$rootpassword and follow the wizard steps
-	to monitor / install an update, browse to https://$($ip)/avi/avigui.html
-	NVE updates can be downloaded with Receive-LABNetworker -nveupdate -nve_ver [nve_ver] -Destination [destination]
-	"
+		$Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
+		if (!$Basesnap) 
+			{
+			$Content = Get-Content -Path $MasterVMX.config 
+			$content = $content -replace "independent_",""
+			$content | Set-Content -Path $MasterVMX.config
+			Write-Host -ForegroundColor Gray " ==>Base snap does not exist, creating now"
+			$Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
+			}
+
+		If (!($Basesnap))
+			{
+			Write-Error "Error creating/finding Basesnap"
+			exit
+			}
+
+
+		Write-Host -ForegroundColor Magenta " ==>Creating Machine $targetname"
+		$NodeClone = $Basesnap | New-VMXLinkedClone -CloneName $targetname -Path $Builddir
+		Write-Host -ForegroundColor Gray " ==>Configuring VM Network for vmnet $vmnet"
+		$NodeClone | Set-VMXNetworkAdapter -Adapter 0 -AdapterType e1000 -ConnectionType custom -WarningAction SilentlyContinue | Out-Null
+		$NodeClone | Set-VMXVnet -Adapter 0 -vnet $vmnet -WarningAction SilentlyContinue | Out-Null
+		$NodeClone | Set-VMXDisplayName -DisplayName $targetname | Out-Null
+		$Annotation = $NodeClone | Set-VMXAnnotation -Line1 "https://$ip" -Line2 "user:$rootuser" -Line3 "password:$rootpassword" -Line4 "add license from $masterpath" -Line5 "labbuildr by @sddc_guy" -builddate
+		$NodeClone | Start-VMX | Out-Null
+			 do {
+				$ToolState = Get-VMXToolsState -config $NodeClone.config
+				Write-Verbose "VMware tools are in $($ToolState.State) state"
+				sleep 10
+				}
+			until ($ToolState.state -match "running")
+			 do {
+				Write-Host -ForegroundColor Gray " ==> Waiting for $targetname to come up"
+				$Process = Get-VMXProcessesInGuest -config $NodeClone.config -Guestuser $rootuser -Guestpassword $rootpassword
+				sleep 10
+				}
+			until ($process -match "mingetty")
+			Write-Host -ForegroundColor Gray " ==>Configuring Base OS"
+			Write-Host -ForegroundColor Gray " ==> Setting Network"
+			$NodeClone | Invoke-VMXBash -Scriptblock "yast2 lan edit id=0 ip=$IP netmask=255.255.255.0 prefix=24 verbose" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
+			$NodeClone | Invoke-VMXBash -Scriptblock "hostname $($NodeClone.CloneName)" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
+			$Scriptblock = "echo 'default "+$DefaultGateway+" - -' > /etc/sysconfig/network/routes"
+			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock  -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
+			$sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SEARCHLIST=`"`"/NETCONFIG_DNS_STATIC_SEARCHLIST=`""+$BuildDomain+"."+$Custom_DomainSuffix+"`"/g' /etc/sysconfig/network/config" 
+			$NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
+			$sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SERVERS=`"`"/NETCONFIG_DNS_STATIC_SERVERS=`""+$DNS1+"`"/g' /etc/sysconfig/network/config"
+			$NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
+			$NodeClone | Invoke-VMXBash -Scriptblock "/sbin/netconfig -f update" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
+			$Scriptblock = "echo '"+$targetname+"."+$BuildDomain+"."+$Custom_DomainSuffix+"'  > /etc/HOSTNAME"
+			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $rootpassword  | Out-Null
+			$NodeClone | Invoke-VMXBash -Scriptblock "/etc/init.d/network restart" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
+			Write-Host -ForegroundColor Gray " ==>Tweaking Configuration"
+			$Scriptblock = "sed -i '/PermitRootLogin/ c\PermitRootLogin yes' /etc/ssh/sshd_config"
+			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
+			if ($Hostkey)
+				{
+				$Scriptblock = "echo '$Hostkey' >> /root/.ssh/authorized_keys"
+				Write-Verbose $Scriptblock
+				$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $rootpassword
+				}
+			$Scriptblock = "insserv sshd;rcsshd restart"
+			Write-Verbose $Scriptblock
+			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $rootpassword | Out-Null
+			$Outmessage += "
+		Successfully Deployed $targetname
+
+		point your browser to https://$($ip)
+		Login with $rootuser/$rootpassword and follow the wizard steps
+		to monitor / install an update, browse to https://$($ip)/avi/avigui.html
+		NVE updates can be downloaded with Receive-LABNetworker -nveupdate -nve_ver [nve_ver] -Destination [destination]
+		"
+		}#end nodes
+	Write-Host -ForegroundColor Yellow $OutContent
 	}
+	
 }
