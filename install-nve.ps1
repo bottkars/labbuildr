@@ -265,7 +265,7 @@ switch ($PsCmdlet.ParameterSetName)
 		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock  -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
 		$sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SEARCHLIST=`"`"/NETCONFIG_DNS_STATIC_SEARCHLIST=`""+$BuildDomain+"."+$Custom_DomainSuffix+"`"/g' /etc/sysconfig/network/config" 
 		$NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
-		$sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SERVERS=`"`"/NETCONFIG_DNS_STATIC_SERVERS=`""+$subnet+".10`"/g' /etc/sysconfig/network/config"
+		$sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SERVERS=`"`"/NETCONFIG_DNS_STATIC_SERVERS=`""+$DNS1+"`"/g' /etc/sysconfig/network/config"
 		$NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
 		$NodeClone | Invoke-VMXBash -Scriptblock "/sbin/netconfig -f update" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
 		$Scriptblock = "echo '"+$targetname+"."+$BuildDomain+"."+$Custom_DomainSuffix+"'  > /etc/HOSTNAME"
