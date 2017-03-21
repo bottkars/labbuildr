@@ -114,8 +114,13 @@ switch ($PsCmdlet.ParameterSetName)
             Write-host -ForegroundColor Gray " ==> OVF does not exist, we need to extract from OVA" 
             Write-Host -ForegroundColor Gray " ==> Checking for $Product OVA package"
             Receive-LABNetworker -nve -nve_ver $nve_ver -Destination "$Sourcedir\$Product" -Confirm:$false
-            $OVA_File = Get-ChildItem -Path "$Sourcedir\$Product" -Recurse -include "$Product_tag.ova"  -Exclude ".*" | Sort-Object -Descending | Select-Object -First 1
-            Write-Host -ForegroundColor Magenta " ==>Extraxting from OVA Package $OVA_File"
+            $OVA_File = Get-ChildItem -Path "$Sourcedir\$Product" -Recurse -include "NVE-$Product_tag.ova" -Exclude ".*" | Sort-Object -Descending | Select-Object -First 1
+            if (!$OVA_File)
+				{
+				Write-Host "Could not find ova with pattern NVE-$Product_tag.ova in $Sourcedir\$Product"
+				Return
+				}
+			Write-Host -ForegroundColor Magenta " ==>Extraxting from OVA Package $OVA_File"
             $Expand = Expand-LABpackage -Archive $OVA_file.FullName -destination $nve_dir
             try
                 {
