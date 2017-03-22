@@ -53,10 +53,10 @@ Param(
 [Parameter(ParameterSetName = "import",Mandatory=$true)][String]
 [ValidateScript({ Test-Path -Path $_ -Filter *.ova -PathType Leaf -ErrorAction SilentlyContinue })]
 $ovf,
-[Parameter(ParameterSetName = "generateuuid",Mandatory=$true)]
-[switch]
-$generate_uuid_and_exit,
-[Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
+#[Parameter(ParameterSetName = "generateuuid",Mandatory=$true)]
+#[switch]
+#$generate_uuid_and_exit,
+#[Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]
 $Defaults,
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
@@ -77,7 +77,7 @@ $configure,
 $iscsi_hosts,
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateScript({ Test-Path -Path $_ })]$Lic_file,
+[ValidateScript({ Test-Path -Path $_ })]$lic_dir,
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [ValidateSet('iscsi','cifs','nfs')]
@@ -85,21 +85,21 @@ $iscsi_hosts,
 $Protocols,
 [Parameter(ParameterSetName = "defaults",Mandatory=$False)]
 [Parameter(ParameterSetName = "install",Mandatory=$true)]
-[Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
+#[Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
 [Parameter(ParameterSetName = "import",Mandatory=$false)][String]
 $Mastername,
 [Parameter(ParameterSetName = "defaults",Mandatory=$False)]
-[Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
+#[Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
 [Parameter(ParameterSetName = "import",Mandatory=$false)]
 [Parameter(ParameterSetName = "install",Mandatory=$true)]
 $MasterPath,
-[Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
+#[Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [ValidateRange(1,2)]
 [int]
 $Nodes = 1,
-[Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
+#[Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]
 $Defaultsfile=".\defaults.xml",
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
@@ -109,7 +109,7 @@ $subnet = "192.168.2.0",
 [Parameter(ParameterSetName = "install",Mandatory=$False)]
 [ValidateLength(1,63)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,63}[a-zA-Z0-9]+$")][string]
 $BuildDomain = "labbuildr",
-[Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
+#[Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [ValidateRange(1,2)]
@@ -152,7 +152,7 @@ switch ($PsCmdlet.ParameterSetName)
 
     default
     {
-	If ($Lic_file -or $Protocols -or $iscsi_hosts)
+	If ($lic_dir -or $Protocols -or $iscsi_hosts)
 		{
 		$configure = $True
 		}
@@ -262,7 +262,7 @@ switch ($PsCmdlet.ParameterSetName)
 				Write-Host -ForegroundColor Gray "to activate your license at https://www.emc.com/auth/elmeval.htm
 You can redeploy you Unity Node with the licensefile retrieved
 Example:
-.\$($MyInvocation.MyCommand) -Defaults -Masterpath $($MasterVMX.path) -Lic_file [lic_file_path] -configure -Disks 6 -protocols [iSCSI,NFS,CIFS] -configure_iscsi_hosts [E2016,DCNODE]"
+.\$($MyInvocation.MyCommand) -Defaults -Masterpath $($MasterVMX.path) -Lic_dir [lic_dir_path] -configure -Disks 6 -protocols [iSCSI,NFS,CIFS] -configure_iscsi_hosts [E2016,DCNODE]"
 				}
 			else
 				{
@@ -314,6 +314,15 @@ Example:
 					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/uemcli -u admin -p $oldpasswd /user/account -id user_admin set -passwd $Password -oldpasswd $oldpasswd" -Guestuser $guestuser -Guestpassword $guestpassword
 					$uemcli = "/usr/bin/uemcli -u admin -p $Password"
 					$uemcli_service = "/usr/bin/uemcli -u service -p service"
+					$Scriptblock = 'vmtoolsd --cmd="info-set guestinfo.SYSUUID $('+$uemcli+' /sys/general show | grep UUID)"'
+					$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $guestuser -Guestpassword $guestpassword
+					$SYSUUID = $nodeclone | Get-VMXVariable -GuestVariable SYSUUID | Select-Object SYSUUID
+					$License_UUID = ($SYSUUID.SYSUUID -split " = ")[-1]
+					Write-Host -ForegroundColor White "
+*************************************************************************************					
+Please use UUID 
+$License_UUID 
+to register Unity at https://www.emc.com/auth/elmeval.htm" 
 					$stop = $nodeclone | Stop-VMX -Mode Hard
 					sleep 5
 					$SCSI = 3
@@ -359,13 +368,32 @@ Example:
 						$vdisks += "vdisk_$Disk"
 						}
 					$Vdisks = $Vdisks -join ","
-					if ($Lic_file)
+					if ($lic_dir)
 						{
+						Write-Host -ForegroundColor Yellow "
+		Please license the UnityVSA at https://www.emc.com/auth/elmeval.htm with $License_UUID
+		Place the Licensefile in $lic_dir
+						"
+						Write-Host -ForegroundColor White "****Waiting for License*****"
+						while (!($lic_file = Get-ChildItem -path $lic_dir -filter $License_UUID*.lic))
+							{
+							foreach ($i in (1..$sleep))
+								{
+								Write-Host -ForegroundColor Yellow "-`b" -NoNewline
+								sleep 1
+								Write-Host -ForegroundColor Yellow "\`b" -NoNewline
+								sleep 1
+								Write-Host -ForegroundColor Yellow "|`b" -NoNewline
+								sleep 1
+								Write-Host -ForegroundColor Yellow "/`b" -NoNewline
+								sleep 1
+								}
+							}
 						$NAS_SERVER = "$($BuildDomain)_NAS_"+($ipoffset+3+$Node)
 						Write-Host -ForegroundColor Gray " ==>Trying to license with provided licfile"
-						$Target_lic = Split-Path -Leaf $Lic_file
+						$Target_lic = Split-Path -Leaf $Lic_file.Name
 						$Target_lic = "/home/service/$Target_lic"
-						$FileCopy = $NodeClone | Copy-VMXFile2Guest -Sourcefile $Lic_file -targetfile $Target_lic -Guestuser $guestuser -Guestpassword $guestpassword
+						$FileCopy = $NodeClone | Copy-VMXFile2Guest -Sourcefile $Lic_file.FullName -targetfile $Target_lic -Guestuser $guestuser -Guestpassword $guestpassword
 						$cmdline = $Nodeclone | Invoke-VMXBash -Scriptblock "$uemcli -upload -f $Target_lic license" -Guestuser $guestuser -Guestpassword $guestpassword
 						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli_service /service/ssh set -enabled yes" -Guestuser $guestuser -Guestpassword $guestpassword
 						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/config/pool create -name vPool -descr '$BuildDomain pool' -disk $Vdisks" -Guestuser $guestuser -Guestpassword $guestpassword
