@@ -22,7 +22,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://github.com/bottkars/labbuildr/wiki/SolutionPacks#install-Unity
+   https://github.com/bottkars/labbuildr/wiki/SolutionPacks#install-Unity-falcon.ps1
 .EXAMPLE
     Importing the ovf template
  .\install-Unity.ps1 -ovf E:\EMC_VAs\Unity-1.4.5.2-535679\Unity-1.4.5.2-535679.ovf
@@ -146,8 +146,10 @@ switch ($PsCmdlet.ParameterSetName)
             }
         Import-VMXOVATemplate -OVA $ovf -acceptAllEulas -AllowExtraConfig -destination $MasterPath
         #   & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $ovf $PSScriptRoot #
-        Write-Host -ForegroundColor Gray  "Use .\install-Unity.ps1 -Masterpath $Masterpath -Mastername $Mastername
-        .\install-Unity.ps1 -Defaults to try defaults"
+        Write-Host -ForegroundColor Gray  "Use 
+.\$($MyInvocation.MyCommand) -Masterpath $Masterpath -Mastername $Mastername -defaults -configure
+to deploy unity. for other options, see get-help .\$($MyInvocation.MyCommand) -online
+"
         }
 
     default
