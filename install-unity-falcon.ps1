@@ -397,7 +397,7 @@ to register Unity at https://www.emc.com/auth/elmeval.htm"
 						$Target_lic = "/home/service/$Target_lic"
 						$FileCopy = $NodeClone | Copy-VMXFile2Guest -Sourcefile $Lic_file.FullName -targetfile $Target_lic -Guestuser $guestuser -Guestpassword $guestpassword
 						$cmdline = $Nodeclone | Invoke-VMXBash -Scriptblock "$uemcli -upload -f $Target_lic license" -Guestuser $guestuser -Guestpassword $guestpassword
-						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/if/mgmt set -ipv4 static -addr $ip_if0 -netmask 255.255.255.0 -gateway $DefaultGateway" -Guestuser $guestuser -Guestpassword $guestpassword
+						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/if/mgmt set -ipv4 static -addr $ip -netmask 255.255.255.0 -gateway $DefaultGateway" -Guestuser $guestuser -Guestpassword $guestpassword
 						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli_service /service/ssh set -enabled yes" -Guestuser $guestuser -Guestpassword $guestpassword
 						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/config/pool create -name vPool -descr '$BuildDomain pool' -disk $Vdisks" -Guestuser $guestuser -Guestpassword $guestpassword
 						If ($Protocols -contains 'iscsi')
