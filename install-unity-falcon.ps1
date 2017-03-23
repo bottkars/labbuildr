@@ -1,10 +1,10 @@
 ﻿<#
 .Synopsis
-   .\install-Unity.ps1 -Masterpath .\Unity-1.4.5.2-535679 -Defaults
+   .\install-Unity-Falcon.ps1 -Masterpath .\Unity-1.4.5.2-535679 -Defaults
   install-Unity only applies to Testers of the Virtual Unity
   install-Unity is a 1 Step Process.
   Once Unity is downloaded via feedbckcentral, run
-   .\install-Unity.ps1 -defaults
+   .\install-Unity-Falcon.ps1 -defaults
    This creates a Unity Master in your labbuildr directory.
    This installs a Unity using the defaults file and the just extracted Unity Master
 
@@ -22,10 +22,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://github.com/bottkars/labbuildr/wiki/SolutionPacks#install-Unity-falcon.ps1
+   https://github.com/bottkars/labbuildr/wiki/install-unity-falcon.ps1
 .EXAMPLE
     Importing the ovf template
- .\install-Unity.ps1 -ovf E:\EMC_VAs\Unity-1.4.5.2-535679\Unity-1.4.5.2-535679.ovf
+ .\install-Unity-Falcon.ps1 -ovf E:\EMC_VAs\Unity-1.4.5.2-535679\Unity-1.4.5.2-535679.ovf
     Opening OVF source: E:\EMC_VAs\Unity-1.4.5.2-535679\Unity-1.4.5.2-535679.ovf
     The manifest does not validate
     Opening VMX target: F:\labbuildr_beta
@@ -40,7 +40,7 @@
     Completed successfully
 .EXAMPLE
     Install a UnityNode with defaults from defaults.xml
-   .\install-Unity.ps1 -Masterpath .\Unity-1.4.5.2-535679 -Defaults
+   .\install-Unity-Falcon.ps1 -Masterpath .\Unity-1.4.5.2-535679 -Defaults
     WARNING: VM Path does currently not exist
     WARNING: Get-VMX : VM does currently not exist
 
@@ -397,6 +397,7 @@ to register Unity at https://www.emc.com/auth/elmeval.htm"
 						$Target_lic = "/home/service/$Target_lic"
 						$FileCopy = $NodeClone | Copy-VMXFile2Guest -Sourcefile $Lic_file.FullName -targetfile $Target_lic -Guestuser $guestuser -Guestpassword $guestpassword
 						$cmdline = $Nodeclone | Invoke-VMXBash -Scriptblock "$uemcli -upload -f $Target_lic license" -Guestuser $guestuser -Guestpassword $guestpassword
+						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/if/mgmt set -ipv4 static -addr $ip_if0 -netmask 255.255.255.0 -gateway $DefaultGateway" -Guestuser $guestuser -Guestpassword $guestpassword
 						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli_service /service/ssh set -enabled yes" -Guestuser $guestuser -Guestpassword $guestpassword
 						$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /stor/config/pool create -name vPool -descr '$BuildDomain pool' -disk $Vdisks" -Guestuser $guestuser -Guestpassword $guestpassword
 						If ($Protocols -contains 'iscsi')
