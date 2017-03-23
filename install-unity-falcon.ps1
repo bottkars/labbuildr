@@ -620,7 +620,7 @@ to register Unity at https://www.emc.com/auth/elmeval.htm"
 						If ($Protocols -match "fs")
 							{
 							$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/server create -name $NAS_SERVER -sp spa -pool pool_1" -Guestuser $guestuser -Guestpassword $guestpassword
-							$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/if create -server nas_1 -port spa_eth0 -addr $ip_if1 -netmask 255.255.255.0" -Guestuser $guestuser -Guestpassword $guestpassword
+							$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/if create -server nas_1 -port spa_eth0 -addr $ip_if1 -netmask 255.255.255.0 -gateway $DefaultGateway" -Guestuser $guestuser -Guestpassword $guestpassword
 							$cmdline = $NodeClone | Invoke-VMXBash -Scriptblock "$uemcli /net/nas/dns -server nas_1 set -name $($BuildDomain).$($custom_domainsuffix) -nameServer 192.168.2.10” -Guestuser $guestuser -Guestpassword $guestpassword
 							}
 						if ($Protocols -contains 'cifs')
