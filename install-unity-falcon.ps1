@@ -273,6 +273,10 @@ Example:
 					$Netadater0 = $NodeClone | Set-VMXVnet -Adapter $nic -vnet $VMnet -WarningAction SilentlyContinue
 					}
 				[string]$ip="$($subnet.ToString()).$($ipoffset.ToString())"
+				if (!$DefaultGateway)
+					{
+					$DefaultGateway = $ip
+					}
 				[string]$ip_if0="$($subnet.ToString())."+($ipoffset+1+$Node)
 				[string]$ip_if1="$($subnet.ToString())."+($ipoffset+3+$Node)
 				[string]$ip_if2="$($subnet.ToString())."+($ipoffset+5+$Node)
