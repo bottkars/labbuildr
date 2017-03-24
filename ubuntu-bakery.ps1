@@ -236,7 +236,7 @@ switch ($PsCmdlet.ParameterSetName)
 			"openstack"
 			{
 			$Scenarioname = 'Openstack'
-			if ($openstack_release -in ('newton','otaca'))
+			if ($openstack_release -in ('newton','ocata'))
 				{
 				$ubuntu_ver = '16_4'
 				}
