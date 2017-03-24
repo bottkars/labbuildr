@@ -496,11 +496,13 @@ foreach ($Node in $machinesBuilt)
 			Write-Host -ForegroundColor Gray " ==>configuring iscsi $($NodeClone.VMXName)"
 			$ISCSI_IQN = "iqn.2016-10.org.linux:$($NodeClone.VMXname).$DNS_DOMAIN_NAME.c0"
 			$Scriptblocks = (
-			"apt-get install -y open-iscsi",
 			"echo 'InitiatorName=$ISCSI_IQN' > /etc/iscsi/initiatorname.iscsi",
-			"/etc/init.d/open-iscsi restart",
+			"apt-get install -y open-iscsi",
+			#"/etc/init.d/open-iscsi stop",
 			"iscsiadm -m discovery -t sendtargets -p $Unity_Target_IP",
-			"iscsiadm -m node --login")
+			"iscsiadm -m node --login"
+			#"/etc/init.d/open-iscsi restart"
+			)
 			foreach ($Scriptblock in $Scriptblocks)
 				{
 				Write-Verbose $Scriptblock
