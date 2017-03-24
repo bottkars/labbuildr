@@ -126,7 +126,8 @@ $Custom_Unity_Target_ip,
 	[ipaddress]$non_lab_apt_ip,
 	[switch]$do_not_use_lab_aptcache,
 	[switch]$upgrade,
-	[switch]$Defaults
+	[switch]$Defaults,
+	[string[]]$additional_packages
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
@@ -239,6 +240,7 @@ switch ($PsCmdlet.ParameterSetName)
 			if ($openstack_release -in ('newton','ocata'))
 				{
 				$ubuntu_ver = '16_4'
+				$additional_packages += ('software-properties-common', 'python-software-properties','vim')
 				}
 			else
 				{
@@ -482,7 +484,7 @@ foreach ($Node in $machinesBuilt)
         $NodeClone = get-vmx $Node
 		########
 		#Default Node Installer
-		$Nodeclone | Set-LabUbuntuVMX -Ubuntu_ver $ubuntu_ver -additional_packages software-properties-common, python-software-properties -Scriptdir $Scriptdir -Sourcedir $Sourcedir -DefaultGateway $DefaultGateway  -guestpassword $Guestpassword -Default_Guestuser $Default_Guestuser -Rootuser $rootuser -Hostkey $Hostkey -ip $ip -DNS1 $DNS1 -DNS2 $DNS2 -subnet $subnet -Host_Name $($Nodeclone.VMXname) -DNS_DOMAIN_NAME $DNS_DOMAIN_NAME
+		$Nodeclone | Set-LabUbuntuVMX -Ubuntu_ver $ubuntu_ver -additional_packages $additional_packages -Scriptdir $Scriptdir -Sourcedir $Sourcedir -DefaultGateway $DefaultGateway  -guestpassword $Guestpassword -Default_Guestuser $Default_Guestuser -Rootuser $rootuser -Hostkey $Hostkey -ip $ip -DNS1 $DNS1 -DNS2 $DNS2 -subnet $subnet -Host_Name $($Nodeclone.VMXname) -DNS_DOMAIN_NAME $DNS_DOMAIN_NAME
 
 		########
 		#### end replace labbuildr7 Scema
