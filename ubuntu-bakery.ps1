@@ -31,7 +31,7 @@ Param(
 [Parameter(ParameterSetName = "openstack",Mandatory=$true)]
 [switch]$openstack,
 [Parameter(ParameterSetName = "openstack",Mandatory=$false)]
-[ValidateSet('liberty','mitaka','newton')]
+[ValidateSet('liberty','mitaka','newton','ocata')]
 [string]$openstack_release = 'liberty',
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [ValidateSet('unity','scaleio')]
@@ -236,7 +236,7 @@ switch ($PsCmdlet.ParameterSetName)
 			"openstack"
 			{
 			$Scenarioname = 'Openstack'
-			if ($openstack_release -eq 'newton')
+			if ($openstack_release -in ('newton','otaca'))
 				{
 				$ubuntu_ver = '16_4'
 				}
