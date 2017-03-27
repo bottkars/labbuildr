@@ -2279,7 +2279,7 @@ if ($Exchange2016.IsPresent)
 			default
 				{
 				$NET_VER = "462"
-				$E16_REQUIRED_KB = 'KB4010672' #"KB3206632"
+				$E16_REQUIRED_KB = 'KB4015438' #'KB4010672' #"KB3206632" 
 				}
 			}
 		
