@@ -36,7 +36,8 @@ Param(
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [ValidateSet('unity','scaleio')]
 [string[]]$cinder = "scaleio",
-[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
+#[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
+[Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [switch]$docker=$false,
 #[Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
@@ -771,6 +772,72 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 			}
 		}
 
+	if ($docker)
+        {
+        Write-Host -ForegroundColor Gray " ==>installing latest docker engine"
+        $Scriptblock="apt-get install apt-transport-https ca-certificates;sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D"
+        Write-Verbose $Scriptblock
+        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+            
+		switch ($ubuntu_ver)
+			{
+			'14_4'
+				{
+				$deb = "deb http://apt.dockerproject.org/repo ubuntu-trusty main"
+				}
+			'15_4'
+				{
+				$deb = "deb http://apt.dockerproject.org/repo ubuntu-jessie main"
+				}
+			'15_10'
+				{
+				$deb = "deb http://apt.dockerproject.org/repo ubuntu-wily main"
+				}
+			'16_4'
+				{
+				$deb = "deb http://apt.dockerproject.org/repo ubuntu-xenial main"
+				}
+			}
+			
+		$Scriptblock = "echo '$deb' >> /etc/apt/sources.list.d/docker.list;apt-get update;apt-get purge lxc-docker;apt-cache policy docker-engine"
+		Write-Verbose $Scriptblock
+        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+
+		$Scriptblock = "apt-get install curl linux-image-extra-`$(uname -r) -y"
+		Write-Verbose $Scriptblock
+        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+			
+		$Scriptblock = "apt-get install docker-engine -y;service docker start;service docker status"
+		Write-Verbose $Scriptblock
+        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+
+		$Scriptblock = "curl -L https://github.com/docker/compose/releases/download/1.8.0/docker-compose-``uname -s``-``uname -m`` > /usr/local/bin/docker-compose;chmod +x /usr/local/bin/docker-compose"
+		Write-Verbose $Scriptblock
+        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+			
+		$Scriptblock = "groupadd docker;usermod -aG docker $Default_Guestuser"
+		Write-Verbose $Scriptblock
+        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+			
+		if ("shipyard" -in $container)
+			{
+			$Scriptblock = "curl -s https://shipyard-project.com/deploy | bash -s"
+			Write-Verbose $Scriptblock
+			$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+			$installmessage += " ==>you can use shipyard with http://$($ip):8080 with user admin/shipyard`n"
+
+			}
+		if ("uifd" -in $container)
+			{
+			$Scriptblock = "docker run -d -p 9000:9000 --privileged -v /var/run/docker.sock:/var/run/docker.sock uifd/ui-for-docker"
+			Write-Verbose $Scriptblock
+			$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+			$installmessage += " ==>you can use container uifd with http://$($ip):9000`n"
+			}
+
+		}
+		## docker end
+		###
 		## scaleio end
 		###
 $StopWatch.Stop()
