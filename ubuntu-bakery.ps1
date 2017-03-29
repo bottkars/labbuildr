@@ -30,13 +30,16 @@ This will install 3 Ubuntu Nodes Ubuntu1 -Ubuntu3 from the Default Ubuntu Master
 Param(
 [Parameter(ParameterSetName = "openstack",Mandatory=$true)]
 [switch]$openstack,
+[Parameter(ParameterSetName = "install",Mandatory=$true)]
+[switch]$kubernetes,
+
 [Parameter(ParameterSetName = "openstack",Mandatory=$false)]
 [ValidateSet('liberty','mitaka','newton','ocata')]
 [string]$openstack_release = 'liberty',
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [ValidateSet('unity','scaleio')]
 [string[]]$cinder = "scaleio",
-#[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
+[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [Parameter(ParameterSetName = "install",Mandatory=$true)]
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [switch]$docker=$false,
