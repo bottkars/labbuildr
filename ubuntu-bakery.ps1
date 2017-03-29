@@ -37,7 +37,7 @@ Param(
 [ValidateSet('unity','scaleio')]
 [string[]]$cinder = "scaleio",
 #[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[Parameter(ParameterSetName = "install",Mandatory=$true)]
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [switch]$docker=$false,
 #[Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
