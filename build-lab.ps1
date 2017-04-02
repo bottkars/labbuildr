@@ -2301,6 +2301,7 @@ if ($Exchange2016.IsPresent)
 		if (!$E16_REQUIRED_KB)
 			{
 			Receive-LABWindows2016Update -Destination (Join-Path $labbuildr_sourcedir "WindowsUpdate")
+			$E16_REQUIRED_KB = $LabDefaults.Server2016KB
 			}
 		else
 			{
