@@ -2298,10 +2298,10 @@ if ($Exchange2016.IsPresent)
 	if ($E2016_Master -eq "2016")
 		{
 		Write-Host "We need to check KB $E16_REQUIRED_KB"
-		if (!$E16_REQUIRED_KB)
+		if ($E16_REQUIRED_KB -lt 'KB3206632')
 			{
 			Receive-LABWindows2016Update -Destination (Join-Path $labbuildr_sourcedir "WindowsUpdate")
-			$E16_REQUIRED_KB = $LabDefaults.Server2016KB
+			$E16_REQUIRED_KB = "$($LabDefaults.Server2016KB)"
 			}
 		else
 			{
