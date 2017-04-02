@@ -2279,7 +2279,7 @@ if ($Exchange2016.IsPresent)
 			default
 				{
 				$NET_VER = "462"
-				$E16_REQUIRED_KB = 'KB4015438' #'KB4010672' #"KB3206632" 
+				$E16_REQUIRED_KB = $LabDefaults.Server2016KB
 				}
 			}
 		
@@ -2297,7 +2297,14 @@ if ($Exchange2016.IsPresent)
 	if ($E2016_Master -eq "2016")
 		{
 		Write-Host "We need to check KB $E16_REQUIRED_KB"
-		Receive-LABWindows2016Update -Destination (Join-Path $labbuildr_sourcedir "WindowsUpdate") -KB $E16_REQUIRED_KB
+		if (!$E16_REQUIRED_KB)
+			{
+			Receive-LABWindows2016Update -Destination (Join-Path $labbuildr_sourcedir "WindowsUpdate")
+			}
+		else
+			{
+			Receive-LABWindows2016Update -Destination (Join-Path $labbuildr_sourcedir "WindowsUpdate") -KB $E16_REQUIRED_KB
+			}
 		}
 	Write-Verbose "Using Master $E2016_Master with Exchange 2016 $e16_cu and .Net $NET_VER"
     If (!(Receive-LABExchange -Exchange2016 -e16_cu $e16_cu -Destination $labbuildr_sourcedir -unzip))
