@@ -877,7 +877,7 @@ catch
 $custom_domainsuffix = "local"
 $AAGDB = "AWORKS"
 $major = "2017"
-$Edition = "Snowflake"
+$Edition = "Springdance"
 $Default_attachement = "https://www.emc.com/collateral/solution-overview/h12476-so-hybrid-cloud.pdf"
 $Default_vmnet = "vmnet2"
 $Default_BuildDomain = "labbuildr"
