@@ -193,7 +193,7 @@ Specify if Networker Scenario sould be installed
     CU Location is [Driveletter]:\sources\e2016[cuver], e.g. c:\sources\e2016Preview1
     #>
 	[Parameter(ParameterSetName = "E16", Mandatory = $false)]
-    [ValidateSet('final','cu1','cu2','cu3','cu4')]
+    [ValidateSet('final','cu1','cu2','cu3','cu4','cu5')]
     $e16_cu,
 <#
     Determines Exchange CU Version to be Installed
@@ -203,7 +203,7 @@ Specify if Networker Scenario sould be installed
     CU Location is [Driveletter]:\sources\e2013[cuver], e.g. c:\sources\e2013cu7
     #>
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
-    [ValidateSet('cu1','cu2','cu3','sp1','cu5','cu6','cu7','cu8','cu9','cu10','cu11','cu12','cu13','cu14','cu15')]
+    [ValidateSet('cu1','cu2','cu3','sp1','cu5','cu6','cu7','cu8','cu9','cu10','cu11','cu12','cu13','cu14','cu15','cu16')]
     [alias('ex_cu')]$e15_cu,
 <#
     Determines Exchange UR Version to be Installed
@@ -890,8 +890,8 @@ $ScaleIO_OS = "Windows"
 $ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
 $latest_nmm = 'nmm9104'
 $latest_nw = 'nw9104'
-$latest_e16_cu = 'cu4'
-$latest_e15_cu = 'cu15'
+$latest_e16_cu = 'cu5'
+$latest_e15_cu = 'cu16'
 $latest_e14_sp = 'sp3'
 $latest_e14_ur = 'ur16'
 $latest_sqlver  = 'SQL2016_ISO'
@@ -1858,6 +1858,7 @@ $config =@()
         $config += ("<e14_sp>$($e14_sp)</e14_sp>")
         $config += ("<e15_cu>$($e15_cu)</e15_cu>")
         $config += ("<e16_cu>$($e16_cu)</e16_cu>")
+        $config += ("<Server2016KB>$($LabDefaults.Server2016KB)</Server2016KB>")
         $config += ("<vmnet>$($VMnet)</vmnet>")
         $config += ("<vlanID>$($vlanID)</vlanID>")
         $config += ("<Custom_DomainSuffix>$($Custom_DomainSuffix)</Custom_DomainSuffix>")
