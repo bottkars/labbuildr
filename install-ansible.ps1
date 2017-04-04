@@ -29,8 +29,8 @@ Param(
 	[ValidateRange(1,3)]
 	[int32]$Disks = 1,
 	[Parameter(ParameterSetName = "install",Mandatory = $false)]
-	[ValidateSet('Centos7_1_1511','Centos7_1_1503')]
-	[string]$centos_ver = "Centos7_1_1511",
+	[ValidateSet('Centos7_3_1611','Centos7_1_1511','Centos7_1_1503')]
+	[string]$centos_ver = 'Centos7_3_1611',
 	[Parameter(ParameterSetName = "install",Mandatory=$false)]
 	[ValidateRange(1,1)]
 	[int32]$Nodes=1,

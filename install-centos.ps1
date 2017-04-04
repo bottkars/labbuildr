@@ -42,8 +42,8 @@ Param(
 	[ValidateRange(0,5)]
 	[int]$SCSI_DISK_COUNT = 0,
 	[Parameter(ParameterSetName = "install",Mandatory = $false)]
-	[ValidateSet('Centos7_1_1511','Centos7_1_1503')]
-	[string]$centos_ver = "Centos7_1_1511",
+	[ValidateSet('Centos7_3_1611','Centos7_1_1511','Centos7_1_1503')]
+	[string]$centos_ver = 'Centos7_3_1611',
 	[Parameter(ParameterSetName = "install",Mandatory=$false)]
 	[ValidateRange(1,4)]
 	[int32]$Nodes=1,
