@@ -30,13 +30,12 @@ This will install 3 Ubuntu Nodes Ubuntu1 -Ubuntu3 from the Default Ubuntu Master
 Param(
 [Parameter(ParameterSetName = "openstack",Mandatory=$true)]
 [switch]$openstack,
-[Parameter(ParameterSetName = "install",Mandatory=$true)]
+[Parameter(ParameterSetName = "kubernetes",Mandatory=$true)]
 [switch]$kubernetes,
-
 [Parameter(ParameterSetName = "openstack",Mandatory=$false)]
 [ValidateSet('liberty','mitaka','newton','ocata')]
 [string]$openstack_release = 'liberty',
-[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
+[Parameter(ParameterSetName = "openstack",Mandatory=$False)] 
 [ValidateSet('unity','scaleio')]
 [string[]]$cinder = "scaleio",
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)]
@@ -44,6 +43,7 @@ Param(
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [switch]$docker=$false,
 #[Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
+[Parameter(ParameterSetName = "kubernetes",Mandatory=$false)]
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [ValidateSet('cinnamon','cinnamon-desktop-environment','xfce4','lxde','none')]
@@ -51,16 +51,20 @@ Param(
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)]
+[Parameter(ParameterSetName = "kubernetes",Mandatory=$False)]
 [ValidateRange(1,9)]
 [int32]$Nodes=1,
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)]
+[Parameter(ParameterSetName = "kubernetes",Mandatory=$False)]
 [int32]$Startnode = 1,
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory = $false)]
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)]
+[Parameter(ParameterSetName = "kubernetes",Mandatory=$False)]
 [switch]$forcedownload,
+[Parameter(ParameterSetName = "kubernetes",Mandatory=$false)]
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [Parameter(ParameterSetName = "scaleio", Mandatory = $true)]
 [Switch]$scaleio,
@@ -121,7 +125,6 @@ $Custom_Unity_Target_ip,
 	[Parameter(Mandatory=$false)]
 	$DNS_DOMAIN_NAME = "$($Global:labdefaults.BuildDomain).$($Global:labdefaults.Custom_DomainSuffix)",
 	#vmx param
-	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 	[ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL",
 	[ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]
 	$vmnet = $Global:labdefaults.vmnet,
@@ -240,11 +243,11 @@ switch ($PsCmdlet.ParameterSetName)
 		{
 			"openstack"
 			{
+			$additional_packages += ('software-properties-common', 'python-software-properties','vim','curl')
 			$Scenarioname = 'Openstack'
 			if ($openstack_release -in ('newton','ocata'))
 				{
 				$ubuntu_ver = '16_4'
-				$additional_packages += ('software-properties-common', 'python-software-properties','vim')
 				}
 			else
 				{
@@ -265,6 +268,18 @@ switch ($PsCmdlet.ParameterSetName)
 				}
 			[switch]$Openstack_Controller = $true
 			}
+			"Kubernetes"
+			{
+			$Scenarioname = 'Kubernetes'
+			$ubuntu_ver = '16_4'
+			$additional_packages += ('software-properties-common', 'python-software-properties','vim','curl')
+			If ($Nodes -lt 2 -and !$scaleio.IsPresent)
+				{
+				Write-Host -ForegroundColor White "--> incrementing Nodecount to 2 for Kubernetes"
+				$Nodes = 2
+				}
+			}
+		
 		}
 if ($scaleio.IsPresent -and $Nodes -lt 3)
 	{
@@ -819,7 +834,7 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
         $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 			
 		$Scriptblock = "groupadd docker;usermod -aG docker $Default_Guestuser"
-		Write-Verbose $Scriptblock
+
         $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 			
 		if ("shipyard" -in $container)
@@ -843,6 +858,77 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 		###
 		## scaleio end
 		###
+if ($kubernetes.IsPresent)
+    {
+	$k8s_Master = $machinesBuilt[0]
+	foreach ($Node in $machinesBuilt)
+		{
+		$NodeClone = get-vmx $Node
+		$Scriptlets = (  "apt-get update && apt-get install -y apt-transport-https",
+				"curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -",
+				"cat > /etc/apt/sources.list.d/kubernetes.list <<EOF
+deb http://apt.kubernetes.io/ kubernetes-xenial main`
+",
+				"apt-get update",
+				"apt-get install -y docker.io",
+				"apt-get install -y kubelet kubeadm kubectl kubernetes-cni")
+		foreach ($Scriptblock in $Scriptlets)
+			{
+			Write-Verbose $Scriptblock
+			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+			}
+		if ($Node -eq $k8s_Master)
+			{
+			$Scriptlets = (   'kubeadm init --pod-network-cidr 10.244.0.0/16',
+								'cp /etc/kubernetes/admin.conf $HOME',
+								'vmtoolsd --cmd="info-set guestinfo.JOINTOKEN $(kubeadm token list)"',
+								'kubectl create -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel-rbac.yml --kubeconfig /etc/kubernetes/admin.conf' ,
+								'kubectl create -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml --kubeconfig /etc/kubernetes/admin.conf'
+							)
+		    foreach ($Scriptblock in $Scriptlets)
+				{
+				Write-Verbose $Scriptblock
+				$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+				}
+			$Jointoken = $nodeclone | Get-VMXVariable -GuestVariable JOINTOKEN
+			$Jointoken = ($Jointoken.JOINTOKEN[1] -split " ")[0]
+			}
+		else
+			{
+			$Scriptblock = "kubeadm join --token=$Jointoken $Subnet.$($ip_startrange):6443"
+			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+			}
+		}
+	$Nodeclone = Get-VMX $k8s_Master
+	$Scriptlets = ("cat > /root/kube-dashboard-rbac.yml <<EOF
+kind: ClusterRoleBinding`
+apiVersion: rbac.authorization.k8s.io/v1beta1`
+metadata:`
+  name: dashboard-admin`
+roleRef:`
+  apiGroup: rbac.authorization.k8s.io`
+  kind: ClusterRole`
+  name: cluster-admin`
+subjects:`
+- kind: ServiceAccount`
+  name: default`
+  namespace: kube-system`
+",
+				"kubectl create -f /root/kube-dashboard-rbac.yml --kubeconfig /etc/kubernetes/admin.conf",
+				"kubectl create -f https://rawgit.com/kubernetes/dashboard/master/src/deploy/kubernetes-dashboard.yaml --kubeconfig /etc/kubernetes/admin.conf"
+
+)
+	foreach ($Scriptblock in $Scriptlets)
+		{
+		Write-Verbose $Scriptblock
+		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+		}
+	$Scriptblock = 'vmtoolsd --cmd="info-set guestinfo.K8SSTATE=$(kubectl get pods --all-namespaces --kubeconfig /etc/kubernetes/admin.conf)"'
+	$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+	Write-Host -ForegroundColor White "K8S State"
+	write-host (($nodeclone | Get-VMXVariable -GuestVariable K8SSTATE).k8sstate -join "`n")  -ForegroundColor Green
+	Write-Host "you may start your kubectl proxy on your localhost ( see  https://github.com/bottkars/labbuildr/wiki/ubuntu-bakery.ps1#k8s )"
+	}
 $StopWatch.Stop()
 Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
 Write-Host -ForegroundColor White $installmessage
