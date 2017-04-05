@@ -187,7 +187,7 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
    	pause
 }
 $Scenarioname = "ubuntu"
-$SIO_Userame = "admin"
+$SIO_Username = "admin"
 $SIO_Password = "Password123!"
 [int]$lab_apt_cache_ip = $ip_startrange
 If ($ConfirmPreference -match "none")
@@ -925,17 +925,12 @@ subjects:`
 		Write-Verbose $Scriptblock
 		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 		}
-	$Scriptblock = 'vmtoolsd --cmd="info-set guestinfo.K8SSTATE=$(kubectl get pods --all-namespaces --kubeconfig /etc/kubernetes/admin.conf)"'
-	$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-	Write-Host -ForegroundColor White "K8S State"
-	write-host (($nodeclone | Get-VMXVariable -GuestVariable K8SSTATE).k8sstate -join "`n")  -ForegroundColor Green
-	Write-Host "you may start your kubectl proxy on your localhost ( see  https://github.com/bottkars/labbuildr/wiki/ubuntu-bakery.ps1#k8s )"
 	if ($scaleio.IsPresent)
 		{
 		$byte_SIO_Password  = [System.Text.Encoding]::UTF8.GetBytes($SIO_Password)
 		$Base64_Password = [System.Convert]::ToBase64String($byte_SIO_Password)
 
-		$byte_SIO_Username = [System.Text.Encoding]::UTF8.GetBytes($SIO_Userame)
+		$byte_SIO_Username = [System.Text.Encoding]::UTF8.GetBytes($SIO_Username)
 		$Base64_Username = [System.Convert]::ToBase64String($byte_SIO_Username)
 
 		$Scriptlets = ("cat > /root/sio-secret.yml <<EOF
@@ -948,7 +943,7 @@ data:`
   username: $Base64_Username`
   password: $Base64_Password`
 ",
-						"cat > /root/sio-svc.yml <<EOF
+						"cat > /root/sio-pvc.yml <<EOF
 kind: PersistentVolumeClaim`
 apiVersion: v1`
 metadata:`
@@ -964,8 +959,8 @@ spec:`
 ",
 
 				"cat > /root/sio-sc.yml <<EOF
-kind: StorageClass
-apiVersion: storage.k8s.io/v1``
+kind: StorageClass`
+apiVersion: storage.k8s.io/v1`
 metadata:`
   name: sio-small`
 provisioner: kubernetes.io/scaleio`
@@ -977,22 +972,22 @@ parameters:`
   secretRef: sio-secret`
   fsType: xfs`
 ",
-			"cat > /root/sio-pod.yml
-kind: Pod
-apiVersion: v1
-metadata:
-  name: pod-sio-small
-spec:
-  containers:
-    - name: pod-sio-small-container
-      image: gcr.io/google_containers/test-webserver
-      volumeMounts:
-      - mountPath: /test
-        name: test-data
-  volumes:
-    - name: test-data
-      persistentVolumeClaim:
-        claimName: pvc-sio-small
+			"cat > /root/sio-pod.yml <<EOF
+kind: Pod`
+apiVersion: v1`
+metadata:`
+  name: pod-sio-small`
+spec:`
+  containers:`
+    - name: pod-sio-small-container`
+      image: gcr.io/google_containers/test-webserver`
+      volumeMounts:`
+      - mountPath: /test`
+        name: test-data`
+  volumes:`
+    - name: test-data`
+      persistentVolumeClaim:`
+        claimName: pvc-sio-small`
 ",
 		"kubectl create -f /root/sio-secret.yml --kubeconfig /etc/kubernetes/admin.conf",
 		"kubectl create -f /root/sio-sc.yml --kubeconfig /etc/kubernetes/admin.conf",
@@ -1005,6 +1000,12 @@ spec:
 			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 			}
 		}
+	$Scriptblock = 'vmtoolsd --cmd="info-set guestinfo.K8SSTATE=$(kubectl get pods --all-namespaces --kubeconfig /etc/kubernetes/admin.conf)"'
+	$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+	Write-Host -ForegroundColor White "K8S State"
+	write-host (($nodeclone | Get-VMXVariable -GuestVariable K8SSTATE).k8sstate -join "`n")  -ForegroundColor Green
+	Write-Host "you may start your kubectl proxy on your localhost ( see  https://github.com/bottkars/labbuildr/wiki/ubuntu-bakery.ps1#k8s )"
+
 	}
 $StopWatch.Stop()
 Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
