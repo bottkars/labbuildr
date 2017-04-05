@@ -187,6 +187,8 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
    	pause
 }
 $Scenarioname = "ubuntu"
+$SIO_Userame = "admin"
+$SIO_Password = "Password123!"
 [int]$lab_apt_cache_ip = $ip_startrange
 If ($ConfirmPreference -match "none")
     {$Confirm = $false}
@@ -606,7 +608,7 @@ if ($scaleio.IsPresent)
 					Write-Host $Scriptblock
 					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 
-					$Scriptblock = "GATEWAY_ADMIN_PASSWORD='Password123!' /usr/bin/dpkg -i $SIOGatewayrpm"
+					$Scriptblock = "GATEWAY_ADMIN_PASSWORD='$SIO_Password' /usr/bin/dpkg -i $SIOGatewayrpm"
 					#$NodeClone | Invoke-VMXBash -Scriptblock "export SIO_GW_KEYTOOL=/usr/bin/;export GATEWAY_ADMIN_PASSWORD='Password123!';dpkg -i $SIOGatewayrpm;dpkg -l emc-scaleio-gateway" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 					Write-Host $Scriptblock
 					$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword   -nowait| Out-Null #-logfile $Logfile
@@ -681,7 +683,7 @@ repo_public_rsa_key = /bin/emc/scaleio/scini_sync/scini_repo_key.pub`
 		$Nodecounter++
 		}##end nodes
 	Write-Host -ForegroundColor Magenta " ==> Now configuring ScaleIO"
-	$mdmconnect = "scli --login --username admin --password $MDMPassword --mdm_ip $mdm_ip"
+	$mdmconnect = "scli --login --username $SIO_Username --password $MDMPassword --mdm_ip $mdm_ip"
 	if ($Primary)
 		{
 		Write-Host -ForegroundColor Magenta "We are now creating the ScaleIO Cluster"
@@ -690,7 +692,7 @@ repo_public_rsa_key = /bin/emc/scaleio/scini_sync/scini_repo_key.pub`
 		Write-Verbose $sclicmd
 		$Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 		Write-Host -ForegroundColor Gray " ==>Setting password"
-		$sclicmd =  "scli --login --username admin --password admin --mdm_ip $mdm_ipa;scli --set_password --old_password admin --new_password $MDMPassword --mdm_ip $mdm_ipa"
+		$sclicmd =  "scli --login --username $SIO_Username --password $SIO_Username --mdm_ip $mdm_ipa;scli --set_password --old_password $SIO_Username --new_password $MDMPassword --mdm_ip $mdm_ipa"
 		Write-Verbose $sclicmd
 		$Primary | Invoke-VMXBash -Scriptblock $sclicmd -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 		if (!$singlemdm.IsPresent)
@@ -748,7 +750,7 @@ repo_public_rsa_key = /bin/emc/scaleio/scini_sync/scini_repo_key.pub`
 	$sclicmd = "scli --modify_spare_policy --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --spare_percentage $Percentage --i_am_sure --mdm_ip $mdm_ip"
 	Write-Verbose $sclicmd
 	$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-	write-host "Connect with ScaleIO UI to $mdm_ipa admin/Password123!"
+	write-host "Connect with ScaleIO UI to $mdm_ipa admin/$SIO_Password"
 	## gw tasks start
 	Write-Host -ForegroundColor Gray " ==> approving mdm Certificates for gateway"
 $scriptblock = "export TOKEN=`$(curl --silent --insecure --user 'admin:$($Guestpassword)' 'https://localhost/api/gatewayLogin' | sed 's:^.\(.*\).`$:\1:') \n`
@@ -928,6 +930,81 @@ subjects:`
 	Write-Host -ForegroundColor White "K8S State"
 	write-host (($nodeclone | Get-VMXVariable -GuestVariable K8SSTATE).k8sstate -join "`n")  -ForegroundColor Green
 	Write-Host "you may start your kubectl proxy on your localhost ( see  https://github.com/bottkars/labbuildr/wiki/ubuntu-bakery.ps1#k8s )"
+	if ($scaleio.IsPresent)
+		{
+		$byte_SIO_Password  = [System.Text.Encoding]::UTF8.GetBytes($SIO_Password)
+		$Base64_Password = [System.Convert]::ToBase64String($byte_SIO_Password)
+
+		$byte_SIO_Username = [System.Text.Encoding]::UTF8.GetBytes($SIO_Userame)
+		$Base64_Username = [System.Convert]::ToBase64String($byte_SIO_Username)
+
+		$Scriptlets = ("cat > /root/sio-secret.yml <<EOF
+apiVersion: v1`
+kind: Secret`
+metadata:`
+  name: sio-secret`
+type: kubernetes.io/scaleio`
+data:`
+  username: $Base64_Username`
+  password: $Base64_Password`
+",
+						"cat > /root/sio-svc.yml <<EOF
+kind: PersistentVolumeClaim`
+apiVersion: v1`
+metadata:`
+  name: pvc-sio-small`
+  annotations:`
+      volume.beta.kubernetes.io/storage-class: sio-small`
+spec:`
+  accessModes:`
+    - ReadWriteOnce`
+  resources:`
+    requests:`
+      storage: 16Gi`
+",
+
+				"cat > /root/sio-sc.yml <<EOF
+kind: StorageClass
+apiVersion: storage.k8s.io/v1``
+metadata:`
+  name: sio-small`
+provisioner: kubernetes.io/scaleio`
+parameters:`
+  gateway: https://$($tb_ip):443/api`
+  system: ScaleIO@$BuildDomain`
+  protectionDomain: PD_$BuildDomain`
+  storagePool: SP_$BuildDomain`
+  secretRef: sio-secret`
+  fsType: xfs`
+",
+			"cat > /root/sio-pod.yml
+kind: Pod
+apiVersion: v1
+metadata:
+  name: pod-sio-small
+spec:
+  containers:
+    - name: pod-sio-small-container
+      image: gcr.io/google_containers/test-webserver
+      volumeMounts:
+      - mountPath: /test
+        name: test-data
+  volumes:
+    - name: test-data
+      persistentVolumeClaim:
+        claimName: pvc-sio-small
+",
+		"kubectl create -f /root/sio-secret.yml --kubeconfig /etc/kubernetes/admin.conf",
+		"kubectl create -f /root/sio-sc.yml --kubeconfig /etc/kubernetes/admin.conf",
+		"kubectl create -f /root/sio-pvc.yml --kubeconfig /etc/kubernetes/admin.conf",
+		"kubectl create -f /root/sio-pod.yml --kubeconfig /etc/kubernetes/admin.conf"
+)
+		foreach ($Scriptblock in $Scriptlets)
+			{
+			Write-Verbose $Scriptblock
+			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+			}
+		}
 	}
 $StopWatch.Stop()
 Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
