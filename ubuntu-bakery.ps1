@@ -200,7 +200,7 @@ if (!$DNS2)
     $DNS2 = $DNS1
     }
 if (!$Masterpath) {$Masterpath = $Builddir}
-
+$additional_packages += ('git')
 $ip_startrange = $ip_startrange+$Startnode
 $logfile = "/tmp/labbuildr.log"
 
@@ -274,7 +274,7 @@ switch ($PsCmdlet.ParameterSetName)
 			{
 			$Scenarioname = 'Kubernetes'
 			$ubuntu_ver = '16_4'
-			$additional_packages += ('software-properties-common', 'python-software-properties','vim','curl')
+			$additional_packages += ('software-properties-common', 'python-software-properties','vim','curl','xfsprogs')
 			If ($Nodes -lt 2 -and !$scaleio.IsPresent)
 				{
 				Write-Host -ForegroundColor White "--> incrementing Nodecount to 2 for Kubernetes"
@@ -495,6 +495,7 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
 Write-Host -ForegroundColor White "Starting Node Configuration"
 $ip_startrange_count = $ip_startrange
 $installmessage = @()
+$iplist = @()
 foreach ($Node in $machinesBuilt)
     {
         $ip="$subnet.$ip_startrange_count"
@@ -502,6 +503,7 @@ foreach ($Node in $machinesBuilt)
 			{
 			$controller_ip = $ip
 			}
+		$iplist += $ip
         $NodeClone = get-vmx $Node
 		########
 		#Default Node Installer
@@ -579,7 +581,7 @@ if ($scaleio.IsPresent)
 			{
 			$NodeClone = get-vmx $Node
 			$Primary = get-vmx $machinesBuilt[0]
-			$scriptblock = "apt-get update;apt-get install -y libaio1 libnuma1 openssl dos2unix git curl software-properties-common"
+			$scriptblock = "apt-get update;apt-get install -y libaio1 libnuma1 openssl dos2unix"
 			$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 			if ($Nodecounter -eq 1 -and !$debfiles)
 				{
@@ -759,6 +761,23 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 curl --silent --show-error --insecure --user :`$TOKEN -X GET 'https://localhost/api/getHostCertificate/Mdm?host=$($mdm_ipb)' > '/tmp/mdm_b.cer' \n`
 curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: multipart/form-data' -F 'file=@/tmp/mdm_b.cer' 'https://localhost/api/trustHostCertificate/Mdm' "
 	$GatewayNode | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword | Out-Null
+	if ($kubernetes.IsPresent)
+	{
+	$Volumename = "k8sGateKeeper"
+	$sclicmd = "scli --add_volume --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --size_gb 8 --thin_provisioned --volume_name $VolumeName --mdm_ip $mdm_ip"
+	Write-Verbose $sclicmd
+	$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+
+	foreach ($sdc_ip in $iplist)
+        {
+        Write-Host -ForegroundColor Magenta "Mapping $VolumeName to node $sdc_ip"
+        $sclicmd  ="scli --map_volume_to_sdc --volume_name $VolumeName --sdc_ip $sdc_ip --allow_multi_map --mdm_ip $mdm_iP"
+		Write-Verbose $sclicmd
+		$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+        }
+	}
+	
+	
 	}
 
 	if ($Openstack_Controller.IsPresent)
@@ -885,8 +904,9 @@ deb http://apt.kubernetes.io/ kubernetes-xenial main`
 								'cp /etc/kubernetes/admin.conf $HOME',
 								'vmtoolsd --cmd="info-set guestinfo.JOINTOKEN $(kubeadm token list)"',
 								'kubectl create -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel-rbac.yml --kubeconfig /etc/kubernetes/admin.conf' ,
-								'kubectl create -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml --kubeconfig /etc/kubernetes/admin.conf'
-							)
+								'kubectl create -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml --kubeconfig /etc/kubernetes/admin.conf',
+								'cp /etc/kubernetes/admin.conf /root/.kube/config'
+								)
 		    foreach ($Scriptblock in $Scriptlets)
 				{
 				Write-Verbose $Scriptblock
@@ -917,8 +937,9 @@ subjects:`
   namespace: kube-system`
 ",
 				"kubectl create -f /root/kube-dashboard-rbac.yml --kubeconfig /etc/kubernetes/admin.conf",
-				"kubectl create -f https://rawgit.com/kubernetes/dashboard/master/src/deploy/kubernetes-dashboard.yaml --kubeconfig /etc/kubernetes/admin.conf"
-
+				"kubectl create -f https://rawgit.com/kubernetes/dashboard/master/src/deploy/kubernetes-dashboard.yaml --kubeconfig /etc/kubernetes/admin.conf",
+				"kubectl create -f https://raw.githubusercontent.com/kubernetes/heapster/master/deploy/kube-config/standalone/heapster-controller.yaml --kubeconfig /etc/kubernetes/admin.conf",
+				"kubectl create -f https://raw.githubusercontent.com/kubernetes/heapster/master/deploy/kube-config/standalone/heapster-service.yaml --kubeconfig /etc/kubernetes/admin.conf"
 )
 	foreach ($Scriptblock in $Scriptlets)
 		{
