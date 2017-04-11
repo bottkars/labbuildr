@@ -166,7 +166,8 @@ if ($AddDisks.IsPresent)
         }
     else
         {
-        $SCSI = "0"
+        $SCSI = "1"
+        $Clone | Set-VMXScsiController -SCSIController $SCSI -Type lsisas1068
         }
     foreach ($LUN in (1..$Disks))
         {
@@ -176,11 +177,11 @@ if ($AddDisks.IsPresent)
         Write-Verbose "Adding Disk $Diskname to $($Clone.VMXname)"
         if ($SharedDisk.ispresent)
             {
-            $AddDisk = $Clone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI -Shared
+            $AddDisk = $Clone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI -Shared -VirtualSSD
             }
         else
             {
-            $AddDisk = $Clone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
+            $AddDisk = $Clone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI -VirtualSSD
             }
         }
     }

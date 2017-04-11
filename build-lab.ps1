@@ -506,7 +506,7 @@ Machine Sizes
 	[switch]$NMM,
     <#
 Version Of Networker Modules
-    'nmm9100','nmm9102','nmm9103','nmm9104',#-#
+    'nmm9100','nmm9102','nmm9103','nmm9104','nmm9105',#-#
     'nmm9010','nmm9011','nmm9012','nmm9013','nmm9014','nmm9015','nmm9016',#
     'nmm90.DA','nmm9001','nmm9002','nmm9003','nmm9004','nmm9005','nmm9006','nmm9007','nmm9008',
 	'nmm8240','nmm8241','nmm8242','nmm8243','nmm8244',#-#
@@ -524,7 +524,7 @@ Version Of Networker Modules
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
-    [ValidateSet('nmm9100','nmm9102','nmm9103','nmm9104',#-#
+    [ValidateSet('nmm9100','nmm9102','nmm9103','nmm9104','nmm9105',#-#
     'nmm9010','nmm9011','nmm9012','nmm9013','nmm9014','nmm9015','nmm9016',#
     'nmm90.DA','nmm9001','nmm9002','nmm9003','nmm9004','nmm9005','nmm9006','nmm9007','nmm9008',
 	'nmm8240','nmm8241','nmm8242','nmm8243','nmm8244',#-#
@@ -553,7 +553,7 @@ Version Of Networker Modules
 	[switch]$NW,
     <#
 Version Of Networker Server / Client to be installed
-	'nw9100','nw9102','nw9103','nw9104',#-#
+	'nw9100','nw9102','nw9103','nw9104','nw9105',#-#
     'nw9010','nw9011','nw9012','nw9013','nw9014','nw9015','nw9016',#
     'nw90.DA','nw9001','nw9002','nw9003','nw9004','nw9005','nw9006','nw9007','nw9008',
 	'nw8240','nw8241','nw8242','nw8243','nw8244',#-#
@@ -591,7 +591,7 @@ Version Of Networker Server / Client to be installed
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
     [ValidateSet(
-	'nw9100','nw9102','nw9103','nw9104',#-#
+	'nw9100','nw9102','nw9103','nw9104','nw9105',#-#
     'nw9010','nw9011','nw9012','nw9013','nw9014','nw9015','nw9016',#
     'nw90.DA','nw9001','nw9002','nw9003','nw9004','nw9005','nw9006','nw9007','nw9008',
 	'nw8240','nw8241','nw8242','nw8243','nw8244',#-#
@@ -2108,6 +2108,20 @@ if ($Blanknode.IsPresent)
 	$Work_Items +=  " ==>we are going to Install $BlankNodes Blank Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
     Write-Host -ForegroundColor Magenta " ==>The Gateway will be $DefaultGateway"
 	if ($VTbit) { write-verbose "Virtualization will be enabled in the Nodes" }
+	if ($SpacesDirect.IsPresent)
+			{
+			[switch]$Cluster = $true
+			if ($Size -le 'M')
+				{
+				$Size = 'XL'
+				$ClusterName = "S2DCluster"
+				}
+			if ($Master -lt "2016")
+				{
+				Write-Host " ==>setting S2D Master to $Latest_2016"
+				$master = $Latest_2016
+				}
+			}
 	if ($Cluster.IsPresent) { write-verbose "The Nodes will be Clustered" }
 }
 if ($SOFS.IsPresent)
@@ -3842,15 +3856,17 @@ switch ($PsCmdlet.ParameterSetName)
                 Write-Host -ForegroundColor Gray " ==>Master 2016TP3 or Later is required for Spaces Direct"
                 exit
                 }
-            if ($Disks -lt 2)
+            if ($Disks -lt 4)
                 {
-                $Disks = 2
+                $Disks = 4
                 }
-            if ($BlankNodes -lt 4)
+            if ($BlankNodes -lt 2)
                 {
-                $BlankNodes = 4
+                $BlankNodes = 2
                 }
             $Cluster = $true
+			$ClusterName = "S2DCluster"
+			$Cluster_Node_Prefix = "GennodeCN"
             $BlankHV = $true
             }
         If ($BlankHV.IsPresent)
@@ -3875,7 +3891,14 @@ switch ($PsCmdlet.ParameterSetName)
             $Node_byte = $Node_range+$node
             $Nodeip = "$IPv4Subnet.$Node_byte"
             $Nodeprefix = "Node"
-            $NamePrefix = "GEN"
+            If ($SpacesDirect.IsPresent)
+				{
+				$NamePrefix = "S2D"
+				}
+			else
+				{
+				$NamePrefix = "GEN"
+				}
 		    $Nodename = "$NamePrefix$NodePrefix$Node"
 			$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
             $ClusterIP = "$IPv4Subnet.180"
@@ -3896,7 +3919,7 @@ switch ($PsCmdlet.ParameterSetName)
 			# Clone Base Machine
 			if ($VTbit)
 			{
-				$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir -SharedDisk $cloneparm -MainMemUseFile:$($lab_MainMemUseFile)"
+				$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Hyperv -size $size -Sourcedir $Sourcedir $cloneparm -MainMemUseFile:$($lab_MainMemUseFile)"
 			}
 			else
 			{
@@ -3921,11 +3944,11 @@ switch ($PsCmdlet.ParameterSetName)
 			Write-Host -ForegroundColor Gray " ==>Forming Blanknode Cluster"
             If ($ClusterName)
                 {
-			    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix '$NodePrefix' -ClusterName $ClusterName -IPAddress '$IPv4Subnet.$ClusterIP' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive -Verbose
+			    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix '$NamePrefix$NodePrefix' -ClusterName $ClusterName -IPAddress '$ClusterIP' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive 
                 }
             else
                 {
-			    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix '$NodePrefix' -IPAddress '$IPv4Subnet.$ClusterIP' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive -Verbose
+			    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix '$NamePrefix$NodePrefix' -IPAddress '$ClusterIP' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive 
                 }
             }
 	} # End Switchblock Blanknode

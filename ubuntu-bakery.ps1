@@ -763,6 +763,7 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 	$GatewayNode | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword | Out-Null
 	if ($kubernetes.IsPresent)
 	{
+
 	$Volumename = "k8sGateKeeper"
 	$sclicmd = "scli --add_volume --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --size_gb 8 --thin_provisioned --volume_name $VolumeName --mdm_ip $mdm_ip"
 	Write-Verbose $sclicmd
@@ -775,9 +776,15 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 		Write-Verbose $sclicmd
 		$Primary | Invoke-VMXBash -Scriptblock "$mdmconnect;$sclicmd" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
         }
-	}
-	
-	
+	}#>
+	$MDM_QUERY = @()
+	foreach ($Node in $machinesBuilt)
+			{
+			$NodeClone = get-vmx $Node
+			$Scriptblock = 'vmtoolsd --cmd="info-set guestinfo.MDM $(/opt/emc/scaleio/sdc/bin/drv_cfg --query_mdms)"'
+			$Nodeclone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword | Out-Null
+			$MDM_QUERY += $nodeclone | Get-VMXVariable -GuestVariable MDM
+			}
 	}
 
 	if ($Openstack_Controller.IsPresent)
