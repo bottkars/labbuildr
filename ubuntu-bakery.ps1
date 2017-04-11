@@ -38,6 +38,8 @@ Param(
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)] 
 [ValidateSet('unity','scaleio')]
 [string[]]$cinder = "scaleio",
+[Parameter(ParameterSetName = "openstack",Mandatory=$False)] 
+[switch]$swift=$true,
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [Parameter(ParameterSetName = "install",Mandatory=$true)]
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
@@ -245,6 +247,11 @@ switch ($PsCmdlet.ParameterSetName)
 		{
 			"openstack"
 			{
+			if ($swift.IsPresent)
+				{
+				$Disks = 3
+				$openstack_release = 'ocata'
+				}
 			$additional_packages += ('software-properties-common', 'python-software-properties','vim','curl')
 			$Scenarioname = 'Openstack'
 			if ($openstack_release -in ('newton','ocata'))
@@ -267,6 +274,7 @@ switch ($PsCmdlet.ParameterSetName)
 					{
 					$cinder_parm = "$cinder_parm -up $Unity_vPool_name -uip $Unity_IP"
 					}
+
 				}
 			[switch]$Openstack_Controller = $true
 			}
@@ -496,14 +504,22 @@ Write-Host -ForegroundColor White "Starting Node Configuration"
 $ip_startrange_count = $ip_startrange
 $installmessage = @()
 $iplist = @()
+$openstack_cfg = @()
 foreach ($Node in $machinesBuilt)
     {
-        $ip="$subnet.$ip_startrange_count"
+        $swift_disks = @('/dev/sdc';'/dev/sdd')
+		$node_type = 'compute'
+		$ip="$subnet.$ip_startrange_count"
 		if ($node -eq $machinesBuilt[-1])
 			{
+			$swift_disks = " "
 			$controller_ip = $ip
+			$node_type = 'controller'
 			}
+		$openstack_cfg += @{'NODE_TYPE' = $node_type; 'NODE_NAME' = $node;'NODE_IP' = $ip; 'swiftdisks' = $swift_disks}
+
 		$iplist += $ip
+		
         $NodeClone = get-vmx $Node
 		########
 		#Default Node Installer
@@ -798,9 +814,16 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 			{
 			$Controller_node = get-vmx $machinesBuilt[-1]
 			}
+		if ($swift.IsPresent)
+			{	
+			$openstack_json = $openstack_cfg | ConvertTo-Json -Compress
+			#$openstack_json = $openstack_json -replace "`"","'"			
+			$swift_parm = " -sl '$openstack_json'"
+			# $cinder_parm = " -cb "+($cinder -join ",")
+			}
 		$ip_startrange_count = $ip_startrange
 		Write-Host -ForegroundColor Gray " ==>starting OpenStack controller setup on $($machinesBuilt[-1])"
-		$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Controller; bash ./install_base.sh $cinder_parm --domain $BuildDomain --suffix $custom_domainsuffix -c $($Openstack_Baseconfig.ispresent.ToString().tolower())"
+		$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Controller; bash ./install_base.sh $cinder_parm $swift_parm --domain $BuildDomain --suffix $custom_domainsuffix -c $($Openstack_Baseconfig.ispresent.ToString().tolower())"
 		$controller_node | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
 		$installmessage += "OpenStack Horizon can be reached via http://$($controller_node.vmxname):88/horizon with admin:$($Guestpassword)`n"
 		foreach ($Node in $machinesBuilt)
@@ -809,7 +832,7 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 				{
 				$NodeClone = Get-VMX $Node
 				Write-Host -ForegroundColor Gray " ==>starting nova-compute setup on $($NodeClone.vmxname)"
-				$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Compute; bash ./install_base.sh -cip $controller_ip --docker $($docker.IsPresent.ToString().tolower()) -cname $($controller_node.vmxname.tolower())"
+				$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Compute; bash ./install_base.sh $swift_parm -cip $controller_ip --docker $($docker.IsPresent.ToString().tolower()) -cname $($controller_node.vmxname.tolower())"
 				Write-Verbose $Scriptblock
 				$NodeClone| Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 				$installmessage += "OpenStack Nova-Compute is running on $($NodeClone.vmxname)`n"
