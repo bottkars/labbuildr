@@ -99,6 +99,7 @@ param (
     IP-Addresses: .140
     #>
 	[Parameter(ParameterSetName = "Sharepoint")][switch]$Sharepoint,
+	[Parameter(ParameterSetName = "Sharepoint")][ValidateSet('SP2016','SP2013')]$SP_Ver = 'SP2016',
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $true)][ValidateSet('BuiltIn','AlwaysOn')]$SPdbtype = "BuiltIn",
     <#
     Selects the SQL Scenario
@@ -905,7 +906,6 @@ $WAIKVER = "WAIK_10_1607"
 $DCNODE = "DCNODE"
 $NWNODE = "NWSERVER"
 $SPver = "SP2013SP1fndtn"
-$SPPrefix = "SP2013"
 $Sleep = 10
 [string]$Sources = "Sources"
 $Sourcedirdefault = "c:\$Sources"
@@ -2084,11 +2084,29 @@ if (!($DConly.IsPresent))
 	{
         $Scenarioname = "Sharepoint"
         $Scenario = 4
-		if ($SQLVER -gt "SQL2014SP2_ISO")
+		if ($SP_Ver -ge 'SP2016')
 			{
-			Write-Host "SQL $SQLVER is selected Defaulting SQL to SQL2014SP2_ISO"
-			$SQLVER = "SQL2014SP2_ISO"
+			if ($SPdbtype -match 'BuiltIn')
+				{
+				Write-Host -ForegroundColor Yellow "==> $SP_Ver does not support $SPdbtype, defaulting to AlwaysOn"
+				$SPdbtype = "AlwaysOn"
+				$SP_master = $Master
+				}
 			}
+		else
+			{
+			if ($SQLVER -gt "SQL2014SP2_ISO")
+				{
+				Write-Host "SQL $SQLVER is selected Defaulting SQL to SQL2014SP2_ISO"
+				$SQLVER = "SQL2014SP2_ISO"
+			}	
+			If ($Master -gt '2012Z')
+				{
+				$SP_master = '2012R2FallUpdate'
+				Write-Host " ==> selected $Master $SP_master for $SP_Ver Nodes"
+				}
+			}
+	$SP_Master_VMX = test-labmaster -Masterpath "$Masterpath" -Master $SP_master -mastertype vmware -Confirm:$Confirm
 	}
 } # end not dconly
 Write-Host -ForegroundColor White  "Version $($major).$Edition"
@@ -2358,7 +2376,19 @@ if ($NMM.IsPresent)
     Write-Host -ForegroundColor Magenta " ==>Networker Modules $nmm_ver will be intalled by User selection" }
 if ($Sharepoint.IsPresent)
     {
-    $Prereqdir = "$spver"+"prereq"
+	switch ($SP_Ver)
+		{
+		'SP2013'
+			{
+			Receive-LABSharepoint -Sharepoint2013 -Destination $labdefaults.Sourcedir
+			}
+		'SP2016'
+			{
+			Receive-LABSharepoint -Sharepoint2016 -Destination $labdefaults.Sourcedir
+			}
+		}
+
+<#    $Prereqdir = "$spver"+"prereq"
     Write-Verbose " ==>we are now going to Test Sharepoint Prereqs"
     $DownloadUrls = (
 		    "http://download.microsoft.com/download/9/1/3/9138773A-505D-43E2-AC08-9A77E1E0490B/1033/x64/sqlncli.msi", # Microsoft SQL Server 2008 R2 SP1 Native Client
@@ -2419,8 +2449,8 @@ if ($Sharepoint.IsPresent)
                 }
             Write-Verbose "Extracting $FileName"
             Start-Process -FilePath "$labbuildr_sourcedir/$FileName" -ArgumentList "/extract:$labbuildr_sourcedir/$SPver /quiet /passive" -Wait
-            }
-    $Work_Items +=  " ==>we are going to Install Sharepoint 2013 in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet and SQL"
+            } #>
+    $Work_Items +=  " ==>we are going to Install $SP_Ver in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet and SQL"
     }# end SPPREREQ
 if ($ConfigureVMM.IsPresent)
     {
@@ -3782,7 +3812,10 @@ switch ($PsCmdlet.ParameterSetName)
 		# }
 	} # End Switchblock SOFS
 ###### end SOFS Block
-	"Sharepoint" {
+	"Sharepoint" 
+	{
+		$MasterVMX = $SP_Master_VMX.config
+
         if ($Disks)
             {
 		    $cloneparm = " -AddDisks -disks $Disks"
@@ -3795,7 +3828,7 @@ switch ($PsCmdlet.ParameterSetName)
             $AddonFeatures = "$AddonFeatures, Web-Dyn-Compression, Web-Mgmt-Tools, Web-Mgmt-Console, Web-Mgmt-Compat, Web-Metabase, Application-Server, AS-Web-Support, AS-TCP-Port-Sharing"
             $AddonFeatures = "$AddonFeatures, AS-WAS-Support, AS-HTTP-Activation, AS-TCP-Activation, AS-Named-Pipes, AS-Net-Framework, WAS, WAS-Process-Model, WAS-NET-Environment"
             $AddonFeatures = "$AddonFeatures, WAS-Config-APIs, Web-Lgcy-Scripting, Windows-Identity-Foundation, Server-Media-Foundation, Xps-Viewer"
-            $Prefix= $SPPrefix
+            $Prefix= $SP_Ver
             $SPSize = "TXL"
 			###################################################
 			# Setup of a Sharepoint Node
@@ -3830,7 +3863,7 @@ switch ($PsCmdlet.ParameterSetName)
                 Write-Host -ForegroundColor Gray " ==>Installing Sharepoint"
                 If ($AlwaysOn.IsPresent)
                     {
-                    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-sp.ps1 -Parameter "-DBtype AAG -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter" -interactive
+					$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-sp.ps1 -Parameter "-DBtype AAG -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter" -interactive
                     $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script configure-sp.ps1 -Parameter "-DBtype AAG -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter" -interactive
                     }
                 else
