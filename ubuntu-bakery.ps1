@@ -36,7 +36,7 @@ Param(
 [ValidateSet('liberty','mitaka','newton','ocata')]
 [string]$openstack_release = 'liberty',
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)] 
-[ValidateSet('unity','scaleio')]
+[ValidateSet('unity','scaleio','none')]
 [string[]]$cinder = "scaleio",
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)] 
 [switch]$swift=$true,
