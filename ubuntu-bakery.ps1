@@ -512,7 +512,7 @@ foreach ($Node in $machinesBuilt)
 		$ip="$subnet.$ip_startrange_count"
 		if ($node -eq $machinesBuilt[-1])
 			{
-			$swift_disks = " "
+			$swift_disks = $null
 			$controller_ip = $ip
 			$node_type = 'controller'
 			}
