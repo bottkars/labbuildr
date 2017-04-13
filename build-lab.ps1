@@ -3864,7 +3864,7 @@ switch ($PsCmdlet.ParameterSetName)
                 If ($AlwaysOn.IsPresent)
                     {
 					$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-sp.ps1 -Parameter "-DBtype AAG -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter" -interactive
-                    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script configure-sp.ps1 -Parameter "-DBtype AAG -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter" -interactive
+                    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script configure-sp.ps1 -Parameter "-DBtype AAG $CommonParameter" -interactive
                     }
                 else
                     {
