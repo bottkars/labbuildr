@@ -2694,7 +2694,10 @@ if ($NW.IsPresent -or $NWServer.IsPresent)
         $Scenarioname = "nwserver"
         $Scenario = 8
         }
-	Receive-LABAcrobat -Destination $labbuildr_sourcedir
+	if ($Master -notmatch 'core')
+		{
+		Receive-LABAcrobat -Destination $labbuildr_sourcedir
+		}
     $Java7_required = $True
     #####
 If ($nw_ver -gt "nw85.BR1")
