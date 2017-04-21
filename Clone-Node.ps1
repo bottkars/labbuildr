@@ -92,13 +92,13 @@ return $false
 }
 else
 {
-$host.ui.RawUI.WindowTitle = "$($labdefaults.BuildDomain)  $($labdefaults.MySubnet) building $Nodename"
+Set-LabUI -Title "building $Nodename"
 
 $Displayname = "$Nodename@$Domainname"
-Write-verbose "Creating linked $Nodename of $MasterVMX"
+Set-LabUI -Title "Creating linked $Nodename of $MasterVMX"
 
 $Clone = $Snapshot | New-VMXLinkedClone -CloneName $Nodename -clonepath $Builddir
-write-verbose "starting customization of $($Clone.config)"
+Set-LabUI -Title "starting customization of $($Clone.config)"
 $Content = $Clone | Get-VMXConfig
 $Content = $Content | where {$_ -notmatch "memsize"}
 $Content = $Content | where {$_ -notmatch "numvcpus"}
@@ -226,10 +226,11 @@ if (!$Isilon.IsPresent)
 		{
 		$Clone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir
 		}
-    Write-verbose "waiting for Pass 1 (sysprep Finished)"
+    Set-LabUI -Title "waiting for Pass 1 (sysprep Finished)"
     Write-Host -ForegroundColor Gray " ==>waiting for Sysprep finished " -NoNewline
 	test-user -whois Administrator
 	Write-Host -ForegroundColor Green "[sysprep finished]"
     } #end not isilon
+Set-LabUI -Title "Running Cutomization of $Nodename"
 return,[bool]$True
 }  
