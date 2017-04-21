@@ -92,6 +92,8 @@ return $false
 }
 else
 {
+$host.ui.RawUI.WindowTitle = "$($labdefaults.BuildDomain)  $($labdefaults.MySubnet) building $Nodename"
+
 $Displayname = "$Nodename@$Domainname"
 Write-verbose "Creating linked $Nodename of $MasterVMX"
 

@@ -93,4 +93,5 @@ else
 			}
 		}
 	}
+$host.ui.RawUI.WindowTitle = "$($labdefaults.BuildDomain)  $($labdefaults.MySubnet)"
 Get-VMX

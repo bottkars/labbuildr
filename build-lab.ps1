@@ -4415,4 +4415,5 @@ Write-host -ForegroundColor White "Software Section took $($Download_StopWatch.E
 Write-host -ForegroundColor White "Master Section took $($Master_StopWatch.Elapsed.ToString())"
 Write-Host -ForegroundColor White  "Deployed VM´s in Scenario $Scenarioname"
 get-vmx | where scenario -match $Scenarioname | ft vmxname,state,activationpreference
+$host.ui.RawUI.WindowTitle = "$($labdefaults.BuildDomain)  $($labdefaults.MySubnet)"
 return
