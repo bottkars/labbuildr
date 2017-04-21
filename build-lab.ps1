@@ -931,7 +931,6 @@ $labbuildr_modules_required = ('labtools','vmxtoolkit')
 ##################
 ### VMrun Error Condition help to tune the Bug wher the VMRUN Command can not communicate with the Host !
 $VMrunErrorCondition = @("Waiting for Command execution Available", "Error", "Unable to connect to host.", "Error: The operation is not supported for the specified parameters", "Unable to connect to host. Error: The operation is not supported for the specified parameters", "Error: vmrun was unable to start. Please make sure that vmrun is installed correctly and that you have enough resources available on your system.", "Error: The specified guest user must be logged in interactively to perform this operation")
-$Host.UI.RawUI.WindowTitle = "$Buildname"
 ###################################################
 # main function go here
 ###################################################
@@ -4415,5 +4414,5 @@ Write-host -ForegroundColor White "Software Section took $($Download_StopWatch.E
 Write-host -ForegroundColor White "Master Section took $($Master_StopWatch.Elapsed.ToString())"
 Write-Host -ForegroundColor White  "Deployed VM´s in Scenario $Scenarioname"
 get-vmx | where scenario -match $Scenarioname | ft vmxname,state,activationpreference
-$host.ui.RawUI.WindowTitle = "$($labdefaults.BuildDomain)  $($labdefaults.MySubnet)"
+Set-LabUI
 return
