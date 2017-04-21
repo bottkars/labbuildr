@@ -410,8 +410,9 @@ if ($use_aptcache.IsPresent)
 		$apt_ip = "$subnet.$lab_apt_cache_ip"
 		if (!($aptvmx = get-vmx aptcache -WarningAction SilentlyContinue))
 			{
-			Write-Host -ForegroundColor Magenta " ==>installing apt cache"
+			Set-LABUi -title " ==>installing apt cache"
 			.\install-aptcache.ps1 -ip_startrange $lab_apt_cache_ip -Size M -upgrade:$($upgrade.IsPresent)
+			Set-LABUi
 			}
 		else
 			{
@@ -500,7 +501,7 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
 	pause
     }
 
-Write-Host -ForegroundColor White "Starting Node Configuration"
+Set-LABUi -title "Starting Node Configuration"
 $ip_startrange_count = $ip_startrange
 $installmessage = @()
 $iplist = @()
@@ -523,8 +524,9 @@ foreach ($Node in $machinesBuilt)
         $NodeClone = get-vmx $Node
 		########
 		#Default Node Installer
+		Set-LABUi -title "Set-LabUbuntuVMX -Ubuntu_ver $ubuntu_ver -additional_packages $additional_packages" -short
 		$Nodeclone | Set-LabUbuntuVMX -Ubuntu_ver $ubuntu_ver -additional_packages $additional_packages -Scriptdir $Scriptdir -Sourcedir $Sourcedir -DefaultGateway $DefaultGateway  -guestpassword $Guestpassword -Default_Guestuser $Default_Guestuser -Rootuser $rootuser -Hostkey $Hostkey -ip $ip -DNS1 $DNS1 -DNS2 $DNS2 -subnet $subnet -Host_Name $($Nodeclone.VMXname) -DNS_DOMAIN_NAME $DNS_DOMAIN_NAME
-
+		Set-LABUi
 		########
 		#### end replace labbuildr7 Scema
 		if ($upgrade.ispresent)
@@ -824,17 +826,20 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 		$ip_startrange_count = $ip_startrange
 		Write-Host -ForegroundColor Gray " ==>starting OpenStack controller setup on $($machinesBuilt[-1])"
 		$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Controller; bash ./install_base.sh $cinder_parm $swift_parm --domain $BuildDomain --suffix $custom_domainsuffix -c $($Openstack_Baseconfig.ispresent.ToString().tolower())"
+		Set-LABUi -short -title "==>running ./install_base.sh $cinder_parm $swift_parm --domain $BuildDomain --suffix $custom_domainsuffix -c $($Openstack_Baseconfig.ispresent.ToString().tolower())"
 		$controller_node | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
+		Set-Labui
 		$installmessage += "OpenStack Horizon can be reached via http://$($controller_node.vmxname):88/horizon with admin:$($Guestpassword)`n"
 		foreach ($Node in $machinesBuilt)
 			{
 			if ($Node -ne $controller_node.vmxname)
 				{
 				$NodeClone = Get-VMX $Node
-				Write-Host -ForegroundColor Gray " ==>starting nova-compute setup on $($NodeClone.vmxname)"
+				Set-LABUi -title " ==>starting nova-compute setup on $($NodeClone.vmxname)"
 				$Scriptblock = "cd /mnt/hgfs/Scripts/openstack/$openstack_release/Compute; bash ./install_base.sh $swift_parm -cip $controller_ip --docker $($docker.IsPresent.ToString().tolower()) -cname $($controller_node.vmxname.tolower())"
 				Write-Verbose $Scriptblock
 				$NodeClone| Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
+				Set-LabUI
 				$installmessage += "OpenStack Nova-Compute is running on $($NodeClone.vmxname)`n"
 				$ip_startrange_count++
 				}
@@ -1061,3 +1066,4 @@ spec:`
 $StopWatch.Stop()
 Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
 Write-Host -ForegroundColor White $installmessage
+Set-LabUI
