@@ -10,11 +10,7 @@ Receive-LabOpenWRT -start
 ```Powershell
 .\build-lab.ps1 -Defaults -DConly
 ```
-### Bakery Flours
-[Openstack](https://github.com/bottkars/labbuildr/wiki/ubuntu-bakery.ps1#openstack)  
-[kubernetes](https://github.com/bottkars/labbuildr/wiki/ubuntu-bakery.ps1#kubernetes)  
-
-<h2 id="Openstack">openstack</h2>
+# Openstack
 
 ## example
 ```Powershell
@@ -55,7 +51,7 @@ you can Switch / add a backend / multi-backend with
 ##troubleshooting
 for the bakery process of scaleio tail into /tmp/labbuildr.log on the Controller node:
 ![image](https://cloud.githubusercontent.com/assets/8255007/18591724/0ec59ff8-7c34-11e6-9068-44e1653a6d22.png)
-<h2 id="Kubernetes">kubernetes</h2>
+# Kubernetes
 
 you can start a basic Kubernetes setup by simply typing
 
