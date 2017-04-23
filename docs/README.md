@@ -1,42 +1,27 @@
-﻿
-![logo](https://cloud.githubusercontent.com/assets/8255007/17669992/3d3a18ba-6310-11e6-829a-2d8fc7995712.jpg)  
-:new: **NEW BETA ARRIVED FOR OSX and LINUX [wiki for details](https://github.com/bottkars/labbuildr/wiki/NEW-BETA-LABBUILDR-LINUX-OSX)**   
-labbuildr 2016-3 3rd Anniversary   
-=======
 
-labbuildr is a Framework based upon vmxtookit.
-labbuildr allows on demand creation of lab environments
-labbuildr deploys the folowing scenarios:
-  - Exchange / Exchange DAG 2010,2013,2016
-  - SQL / SQL Always on 2012,2014,2016
-  - Hyper-V
-  - Standalone VMÂ´s
-  - Mastering ESXi Installs
+![logo](https://cloud.githubusercontent.com/assets/8255007/17669992/3d3a18ba-6310-11e6-829a-2d8fc7995712.jpg)  
+ 
+==
+## About
+labbuildr is a Framework based upon vmxtookit.  
+labbuildr allows on demand creation of lab environments  
+labbuildr deploys the folowing scenarios:  
+  - Exchange / Exchange DAG 2010,2013,2016  
+  - SQL / SQL Always on 2012,2014,2016  
+  - Hyper-V  
+  - Standalone VM´s  
+  - Sharepoint
+  - Mastering ESXi Installs 
   - Automating EMC ScaleIO Installs
+  - DELL|EMC Isilon
+  - Networker
+  - Avamar
+  - System Center  
+  .....
  
 
-  
-Labbuildr requires dowload of a prebuilt sources.vhd and prebuilt os masters.
-See https://github.com/bottkars/labbuildr/wiki/Master for details
 
-For the 2016 release, the following changes applied to labbuildr:
-
-- seperation of scripts to labbuildr-scripts
-- this allows scripts to be used independant  
-- new scenarios
-- new 2016 Support
-- Support for Syctr TP4 ( SCOM and SCVMM )
-- Support for Spaces Direct ( currently with Blank Nods Scenario )
-Currently Prared for testing:
-- Hyper-V
-- SCOM
-- SQL
-- Exchange 2016
-- Networker   
-Currently not tested / ported
-A SOFS   
-
-Update    
+## Update    
 ========
 to update from labbuildr harmony release, run update for 3 times:   
 build-lab.ps1 -updatefromgit   
