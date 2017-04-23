@@ -1,0 +1,14 @@
+site_name: labbuildr Documentation
+repo_url: https://github.com/bottkars/labbuildr
+site_author: Karsten Bott
+theme: readthedocs
+
+copyright: "labbuildr
+is licensed under the <a href='https://https://github.com/bottkars/iDRAC4Redfish/blob/master/LICENSE'>MIT license</a>"
+pages:
+  - Home: index.md
+  - Installation: installation.md
+    - about: README.md
+    - Examples: Examples.md
+  - Solutionpacks:
+  - Scenarios:
