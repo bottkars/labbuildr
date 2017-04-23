@@ -8,8 +8,8 @@ if (git)
 		Write-Host -ForegroundColor Gray " ==>Checking for Update on $Repo"
 		git -C $Git_Dir/$Repo pull
 		}
-	ipmo $Git_Dir/labbuildr/vmxtoolkit -ArgumentList "$HOME/labbuildr/" -Force
-	ipmo $Git_Dir/labbuildr/labtools -Force 
+	Import-Module $Git_Dir/labbuildr/vmxtoolkit -ArgumentList "$HOME/labbuildr/" -Force
+	Import-Module $Git_Dir/labbuildr/labtools -Force 
 	Invoke-Expression "./profile.ps1"
 	}
 else
