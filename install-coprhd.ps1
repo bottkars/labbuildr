@@ -258,12 +258,13 @@ if (!(Test-path $Scriptdir ))
             sleep 5
             }
         until ($ToolState.state -match "running")
-        $NodeClone | Set-VMXSharedFolderState -enabled |Out-Null
+        $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
         if ($OPENSUSE_VER -match '13.2')
         {
         $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | out-null 
         }
-        $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir |Out-Null        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -suse -device eth0 -Peerdns -DNS1 "$DNS1" -DNSDOMAIN "$BuildDomain.$custom_domainsuffix" -Hostname "$Nodename"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
+        $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir |Out-Null        
+        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -suse -device eth0 -Peerdns -DNS1 "$DNS1" -DNSDOMAIN "$BuildDomain.$custom_domainsuffix" -Hostname "$Nodename"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
 
 #        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -suse -device eno16777984 -Peerdns -DNS1 "$DNS1" -DNSDOMAIN "$BuildDomain.$custom_domainsuffix" -Hostname "$Nodename"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
         # $NodeClone | Invoke-VMXBash -Scriptblock "/sbin/rcnetwork restart" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
