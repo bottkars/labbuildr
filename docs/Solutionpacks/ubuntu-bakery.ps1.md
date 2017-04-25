@@ -10,9 +10,11 @@ Receive-LabOpenWRT -start
 ```Powershell
 .\build-lab.ps1 -Defaults -DConly
 ```
-[Openstack](#openstack) 
-[Kubernetes](#kubernetes) 
+Currently, Bakery is able to deploy the following Scenraios:  
+* [Openstack](#openstack)  
+* [Kubernetes](#kubernetes) 
 <h2 id="Openstack">openstack</h2>
+
 ## example
 ```Powershell
 \ubuntu-bakery.ps1 -openstack
@@ -49,6 +51,13 @@ this will configure the  compute nodes with 6GB of Memory and will aslo install 
 ## Options
 the Default configuration uses ScaleIO as a cinder Backend.
 you can Switch / add a backend / multi-backend with 
+```Powershell
+./ubuntu-bakery.ps1 -openstack -cinder scaleio,unity    
+``` 
+the unity Backend expects a default labbuildr unity configuration, however, if you wand to specify a different Unity system, you need to pass along Custom_unity_ip  
+custom_unity_vpool_name  
+Custom_Unity_Target_ip
+where Targe_IP is the iSCSI Portal Address and Unity_IP is the Management IP
 ##troubleshooting
 for the bakery process of scaleio tail into /tmp/labbuildr.log on the Controller node:
 ![image](https://cloud.githubusercontent.com/assets/8255007/18591724/0ec59ff8-7c34-11e6-9068-44e1653a6d22.png)
