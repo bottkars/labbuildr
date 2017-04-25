@@ -137,18 +137,19 @@ if ($branch -match 'feature-COP-26740-openSUSE-42.2')
 else 
     {
         $OPENSUSE_VER = '13.2'
-    }
-
-$Scenarioname = "Coprhd"
 try
     {
     $MasterPath = Join-Path $MasterPath $OS
     }        
-catch [System.Management.Automation.MetadataException]
+    catch [System.Management.Automation.MetadataException]
         {
         write-warning "no valid Path for $OS Specified, or $OS Master not in $MasterPath"
         exit
-        }
+        }        
+    }
+
+$Scenarioname = "Coprhd"
+
 
 $Nodeprefix = "$($Scenarioname)Node"
 # $release = $release.tolower()
