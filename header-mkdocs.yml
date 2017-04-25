@@ -6,9 +6,8 @@ theme: readthedocs
 copyright: "labbuildr
 is licensed under the <a href='https://https://github.com/bottkars/iDRAC4Redfish/blob/master/LICENSE'>MIT license</a>"
 pages:
-  - Home: index.md
+  - Home: README.md
   - Installation: installation.md
-    - about: README.md
     - Examples: Examples.md
   - Solutionpacks:
   - Scenarios:
