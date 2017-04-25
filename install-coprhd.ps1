@@ -331,7 +331,7 @@ if (!(Test-path $Scriptdir ))
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
 
-        $Scriptblock = "zypper --non-interactive install --no-recommends git make gcc48 gcc-c++ ; echo $?"
+        $Scriptblock = "zypper --non-interactive install --no-recommends git make gcc48 gcc-c++ acl ; echo $?"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
            
