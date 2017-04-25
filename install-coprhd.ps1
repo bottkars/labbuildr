@@ -361,12 +361,12 @@ if (!(Test-path $Scriptdir ))
 
 
         Write-Host -ForegroundColor Gray " ==>Running Installation Tasks"
-		$Components = ('installRepositories','installPackages','installJava 8','installStorageOS')
-#        $Components = ('installRepositories','installPackages','installNginx','installJava 8','installStorageOS')
+		$Components = ('installRepositories','installPackages','installJava 8','installStorageOS')# ,'enableStorageOS')
+#        $Components = ('installRepositories','installPackages','installNginx','installJava 8','installStorageOS','enableStorageOS')
         Foreach ($component in $Components)
             {
             Write-Host -ForegroundColor Gray " ==>Running Task $component"
-            $Scriptblock = "/coprhd-controller/packaging/appliance-images/openSUSE/$OPENSUSE_VER/CoprHDDevKit/configure.sh $component"
+            $Scriptblock = "/coprhd-controller/packaging/appliance-images/openSUSE/$OPENSUSE_VER/CoprHD/configure.sh $component"
             Write-Verbose $Scriptblock
             $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null       
             }
@@ -394,11 +394,12 @@ node_id=vipr1"
     $Content | Set-Content -Path $Scriptname_fullpath
     convert-VMXdos2unix -Sourcefile $Scriptname_fullpath -Verbose
     $NodeClone | copy-VMXfile2guest -Sourcefile $Scriptname_fullpath -targetfile "/etc/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+    
     Write-Host -ForegroundColor Magenta " ==>Building CoprHD RPM"
-
     $Scriptblock = "cd /coprhd-controller;make clobber BUILD_TYPE=oss rpm"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
+    
     Write-Host -ForegroundColor Magenta " ==>Installing CoprHD RPM"
     $Scriptblock = "/bin/rpm -Uhv /coprhd-controller/build/RPMS/x86_64/storageos*.x86_64.rpm;/sbin/shutdown -r now"
     Write-Verbose $Scriptblock
