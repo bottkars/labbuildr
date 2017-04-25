@@ -61,7 +61,8 @@ $Node = 1,
 'http://mirror.aarnet.edu.au/pub/opensuse/opensuse/',
 'http://mirror.rackspace.co.uk/openSUSE/'
 )]
-$Static_mirror
+$Static_mirror,
+[switch]$cache_repo
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
@@ -127,26 +128,26 @@ $ip_startrange = $ip_startrange+$Startnode
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 $logfile = "/tmp/labbuildr.log"
-$OS = "OpenSUSE"
-$Required_Master = $OS
-if ($branch -match 'feature-COP-26740-openSUSE-42.2')
-    {
+#$OS = "OpenSUSE"
+#$Required_Master = $OS
+#if ($branch -match 'feature-COP-26740-openSUSE-42.2')
+ #   {
         $Required_Master = 'openSUSE42_2'
         $OPENSUSE_VER = '42.2'
-    }
-else 
-    {
-        $OPENSUSE_VER = '13.2'
-try
-    {
-    $MasterPath = Join-Path $MasterPath $OS
-    }        
-    catch [System.Management.Automation.MetadataException]
-        {
-        write-warning "no valid Path for $OS Specified, or $OS Master not in $MasterPath"
-        exit
-        }        
-    }
+  #  }
+#else 
+#    {
+#        $OPENSUSE_VER = '13.2'
+#try
+#    {
+#    $MasterPath = Join-Path $MasterPath $OS
+#    }        
+#    catch [System.Management.Automation.MetadataException]
+#        {
+#        write-warning "no valid Path for $OS Specified, or $OS Master not in $MasterPath"
+#        exit
+#        }        
+#    }
 
 $Scenarioname = "Coprhd"
 
@@ -291,10 +292,12 @@ if (!(Test-path $Scriptdir ))
 		$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword    -logfile $Logfile
 		Write-Host -ForegroundColor Gray " ==>ssh configuration finished"     
 		#### end ssh  
-	
-        $Scriptblock = "sed '\|# cachedir = /var/cache/zypp|icachedir = /mnt/hgfs/Sources/$OS/zypp/\n' /etc/zypp/zypp.conf -i"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
+	    if ($cache_repo.ispresent)
+            {
+            $Scriptblock = "sed '\|# cachedir = /var/cache/zypp|icachedir = /mnt/hgfs/Sources/$OS/zypp/\n' /etc/zypp/zypp.conf -i"
+            Write-Verbose $Scriptblock
+            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
+            }
 		if ($Static_mirror)
 			{
 
@@ -328,7 +331,7 @@ if (!(Test-path $Scriptdir ))
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
 
-        $Scriptblock = "zypper --non-interactive install --no-recommends git make; echo $?"
+        $Scriptblock = "zypper --non-interactive install --no-recommends git make gcc48 gcc-c++ ; echo $?"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
            
@@ -336,6 +339,12 @@ if (!(Test-path $Scriptdir ))
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
 		
+        $Leap_Dir = '/coprhd-controller/packaging/appliance-images/openSUSE/42.2/'
+        $Scriptblock = "rm -rf $Leap_Dir; git clone https://github.com/bottkars/coprHD_leap $Leap_Dir"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
+
+
 		if ($Static_mirror -match "halifax")
 			{
 			$Scriptblock = "sed 's\http://download.opensuse.org/\http://ftp.halifax.rwth-aachen.de/opensuse/\g' /coprhd-controller/packaging/appliance-images/openSUSE/13.2/CoprHD/configure.sh -i"
