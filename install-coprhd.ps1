@@ -41,7 +41,7 @@ $MasterPath,
 'release-2.4.1','release-2.4',
 'release-3.0','release-3.0.0.1-sc',
 'release-3.5',
-'VIPR-3.5-GA','VIPR-3.1-GA','VIPR-3.0-GA','VIPR-3.0.0.2-GA'
+'VIPR-3.5-GA','VIPR-3.1-GA','VIPR-3.0-GA','VIPR-3.0.0.2-GA','feature-COP-26740-openSUSE-42.2',
 )]$branch = "master",
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 
@@ -129,6 +129,16 @@ $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 $logfile = "/tmp/labbuildr.log"
 $OS = "OpenSUSE"
 $Required_Master = $OS
+if ($branch -match 'feature-COP-26740-openSUSE-42.2')
+    {
+        $Required_Master = 'openSUSE42_2'
+        $OPENSUSE_VER = '42.2'
+    }
+else 
+    {
+        $OPENSUSE_VER = '13.2'
+    }
+        
 $Scenarioname = "Coprhd"
 try
     {
@@ -341,7 +351,7 @@ if (!(Test-path $Scriptdir ))
         Foreach ($component in $Components)
             {
             Write-Host -ForegroundColor Gray " ==>Running Task $component"
-            $Scriptblock = "/coprhd-controller/packaging/appliance-images/openSUSE/13.2/CoprHDDevKit/configure.sh $component"
+            $Scriptblock = "/coprhd-controller/packaging/appliance-images/openSUSE/$OPENSUSE_VER/CoprHDDevKit/configure.sh $component"
             Write-Verbose $Scriptblock
             $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null       
             }
