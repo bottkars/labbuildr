@@ -41,7 +41,7 @@ Invoke-WebRequest -Uri $Uri -OutFile $OutFile
 Unblock-File -Path $Outfile
 Invoke-Expression $OutFile
 ````
-
+fo detailed installation instructions, see [Student Guide](student_guide.md)
 
 ## Directory Structure   
 
