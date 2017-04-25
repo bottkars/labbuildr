@@ -41,7 +41,7 @@ $MasterPath,
 'release-2.4.1','release-2.4',
 'release-3.0','release-3.0.0.1-sc',
 'release-3.5',
-'VIPR-3.5-GA','VIPR-3.1-GA','VIPR-3.0-GA','VIPR-3.0.0.2-GA','feature-COP-26740-openSUSE-42.2',
+'VIPR-3.5-GA','VIPR-3.1-GA','VIPR-3.0-GA','VIPR-3.0.0.2-GA','feature-COP-26740-openSUSE-42.2'
 )]$branch = "master",
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 
@@ -138,7 +138,7 @@ else
     {
         $OPENSUSE_VER = '13.2'
     }
-        
+
 $Scenarioname = "Coprhd"
 try
     {
