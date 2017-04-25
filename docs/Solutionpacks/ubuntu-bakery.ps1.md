@@ -1,17 +1,18 @@
 ## ubuntu-bakery.ps1
 
-ubuntu bakery is a Joint work from Project dodo to provide a simple, streamlined, basic configuration of Openstack running on ubuntu including components like EMC SaleIO with Cinder Support.
+ubuntu bakery is a Joint work from Project DoDo (@stephan_kuehne and @azurestack_guy) with the goal to provide a simple, streamlined, basic configuration of Openstack, Kubernetes and /or Docker running on ubuntu including components like EMC SaleIO or EMC Unity with Cinder/Kubernetes Volume Support.
 ## requirements
 * Internet Gateway, most probably labbuildr´s openwrt
 ```Powershell
 Receive-LabOpenWRT -start
 ```
-* DNS Service, labbuild dcnode recommended 
+* DNS Service, labbuildr dcnode recommended 
 ```Powershell
 .\build-lab.ps1 -Defaults -DConly
 ```
-# Openstack
-
+[Openstack](#openstack) 
+[Kubernetes](#kubernetes) 
+<h2 id="Openstack">openstack</h2>
 ## example
 ```Powershell
 \ubuntu-bakery.ps1 -openstack
@@ -51,6 +52,8 @@ you can Switch / add a backend / multi-backend with
 ##troubleshooting
 for the bakery process of scaleio tail into /tmp/labbuildr.log on the Controller node:
 ![image](https://cloud.githubusercontent.com/assets/8255007/18591724/0ec59ff8-7c34-11e6-9068-44e1653a6d22.png)
+
+<h2 id="Kubernetes">kubernetes</h2>
 # Kubernetes
 
 you can start a basic Kubernetes setup by simply typing
