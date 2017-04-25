@@ -2,7 +2,7 @@
 
 install-unity-falcon.ps1 deploys a DELL|EMC Unity VSA on VMware Workstation.  
 it is a fully automated process.  
-other than pre-falcon release, some tweaks have to be made.
+the process changed from a pre-falocn release, as the ova deployment has some changes. to iplement theese changes, som teaks have to be made by the installer:    
 
 * unity needs to run pvscsi devices
 * only system disks are allowed at system boot time
