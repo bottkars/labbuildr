@@ -366,7 +366,7 @@ if (!(Test-path $Scriptdir ))
         Foreach ($component in $Components)
             {
             Write-Host -ForegroundColor Gray " ==>Running Task $component"
-            $Scriptblock = "/coprhd-controller/packaging/appliance-images/openSUSE/$OPENSUSE_VER/CoprHD/configure.sh $component"
+            $Scriptblock = "/coprhd-controller/packaging/appliance-images/openSUSE/$OPENSUSE_VER/CoprHDDevKit/configure.sh $component"
             Write-Verbose $Scriptblock
             $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null       
             }
