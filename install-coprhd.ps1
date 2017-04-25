@@ -379,10 +379,10 @@ network_vip6=::0
 network_vip=$ip
 node_count=1
 node_id=vipr1"
-
-    $Content | Set-Content -Path $Scriptdir\$Scriptname
-    convert-VMXdos2unix -Sourcefile $Scriptdir\$Scriptname -Verbose
-    $NodeClone | copy-VMXfile2guest -Sourcefile $Scriptdir\$Scriptname -targetfile "/etc/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+    $Scriptname_fullpath = Join-Path $Scriptdir $Scriptname
+    $Content | Set-Content -Path $Scriptname_fullpath
+    convert-VMXdos2unix -Sourcefile $Scriptname_fullpath -Verbose
+    $NodeClone | copy-VMXfile2guest -Sourcefile $Scriptname_fullpath -targetfile "/etc/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
     Write-Host -ForegroundColor Magenta " ==>Building CoprHD RPM"
 
     $Scriptblock = "cd /coprhd-controller;make clobber BUILD_TYPE=oss rpm"
