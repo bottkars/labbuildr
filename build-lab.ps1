@@ -2593,7 +2593,7 @@ if ($NMM.IsPresent)
     else
         {
         Write-Host -ForegroundColor Gray " ==>we need to get $NMM_ver, trying Automated Download"
-        $Nmm_download_ok  =  receive-LABnmm -nmm_ver $nmm_ver -Destination $NW_Sourcedir -unzip # $CommonParameterReceive-LABnmm -
+        $Nmm_download_ok  =  receive-LABnmm -nmm_ver $nmm_ver -Destination $Sourcedir -unzip # $CommonParameterReceive-LABnmm -
       }
     }
 ####SACELIO Downloader #####
