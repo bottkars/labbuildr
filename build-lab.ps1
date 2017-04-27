@@ -2572,7 +2572,7 @@ if ($NWServer.IsPresent -or $NMM.IsPresent -or $NW.IsPresent)
     else #if ($nw_ver -lt "nw84")
         {
         Write-Host -ForegroundColor Gray " ==>we need to get $NW_ver, trying Automated Download"
-        $NW_download_ok  =  receive-LABNetworker -nw_ver $nw_ver -arch win_x64 -Destination $NW_Sourcedir -unzip # $CommonParameter
+        $NW_download_ok  =  receive-LABNetworker -nw_ver $nw_ver -arch win_x64 -Destination $Sourcedir -unzip # $CommonParameter
         if ($NW_download_ok)
             {
             Write-Host -ForegroundColor Magenta "Received $nw_ver"
