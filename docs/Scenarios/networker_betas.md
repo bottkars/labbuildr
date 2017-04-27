@@ -1,7 +1,7 @@
 # how to run networker beta software 
 
-labbuildr allows for unknown Networker Versions
-Therefore, simply extract your binaries to the nwunknown folder:
+labbuildr allows for unknown Networker Versions  
+Therefore, simply extract your binaries to the _nwunknown_ folder:
 ## This Example will install a Beta Version of Networker on a 2016core:
 ( replace Destination with your sourcedir /Networker/nwunknown)
 
