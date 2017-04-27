@@ -15,7 +15,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-    https://labbuildr.readthedocs.io/latest
+    https://labbuildr.readthedocs.io/en/latest
 .EXAMPLE
     build-lab.ps1 -createshortcut
     Creates a Desktop Shortcut for labbuildr
