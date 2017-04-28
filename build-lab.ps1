@@ -2541,7 +2541,11 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
         #New-Item -ItemType Directory -Path "$Aworks_Dir" -Force
         Expand-LABpackage -Archive $Aworks_File -destination $Aworks_Dir
         }
-    if (!($SQL_OK = receive-labsql -SQLVER $SQLVER -Destination $labbuildr_sourcedir -Product_Dir "SQL" -extract -WarningAction SilentlyContinue))
+    if ($Master -match 'Core')
+        {
+        $SQL_SWITCH = "-no_ssms"    
+        }
+    if (!($SQL_OK = receive-labsql -SQLVER $SQLVER -Destination $labbuildr_sourcedir -Product_Dir "SQL" -extract -WarningAction SilentlyContinue $SQL_SWITCH))
         {
         break
         }
