@@ -4020,7 +4020,7 @@ switch ($PsCmdlet.ParameterSetName)
 		    $Nodename = "$NamePrefix$NodePrefix$Node"
 			$CloneVMX = Join-Path  $Builddir (Join-path $Nodename "$Nodename.vmx")
 			$Host_ScriptDir = Join-Path $Default_Host_ScriptDir $NamePrefix
-			$IN_Guest_UNC_ScenarioScriptDir = Join-Path $IN_Guest_UNC_Scriptroot "docker"
+			$IN_Guest_UNC_ScenarioScriptDir = Join-Path "$IN_Guest_UNC_Scriptroot\docker"
             #$ClusterIP = "$IPv4Subnet.180"
 			###################################################
 		    Write-Verbose $IPv4Subnet
