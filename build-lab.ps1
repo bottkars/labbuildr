@@ -2973,8 +2973,8 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 		# we need a DC, so check it is running
 		test-dcrunning
         $ListenerIP = "$IPv4Subnet.169"
-        $IN_Guest_UNC_ScenarioScriptDir = Join-Path $IN_Guest_UNC_Scriptroot "AAG"
-        $In_Guest_UNC_SQLScriptDir = Join-Path $IN_Guest_UNC_Scriptroot "SQL"
+        $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\AAG"
+        $In_Guest_UNC_SQLScriptDir = "$IN_Guest_UNC_Scriptroot\SQL"
         $AAGName = $BuildDomain+"AAG"
         If ($AddressFamily -match 'IPv6')
             {
