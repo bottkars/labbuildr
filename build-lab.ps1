@@ -2990,6 +2990,10 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 			$Nodename = "AAGNODE" + $AAGNODE
 			$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
 			$AAGLIST += $CloneVMX
+            if ($Master -match "core")
+                {
+                $SQLParameter = "$Commonparameter -sqlcore"    
+                }
             #$In_Guest_UNC_SQLScriptDir = "$Default_Host_ScriptDir\sql\"
             $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features, Failover-Clustering, RSAT-Clustering, WVR"
             if ($iSCSI.IsPresent)
@@ -3001,6 +3005,8 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
             write-verbose $Nodeip
             Write-Verbose $Nodename
             Write-Verbose $ListenerIP
+            Write-Verbose $CommonParameter
+            Write-Verbose $SQLParameter
             if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
             {
             Write-verbose "Now Pausing"
@@ -3024,7 +3030,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 				invoke-postsection -wait
 				$Possible_Error_Fix = " 1.) Host has no iSCSI Luns `n 2.) Unity not configured for Host ==> Use Unisphere to configure `n 3.) Unity VM is not running ==> start unity ( get-vmx UnityNode1 | start-vmx ), you may need to re-run enable-labiscsi.ps1 in vm"
 				$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script test-disks.ps1 -Parameter "-DiskCount 4" -interactive -Possible_Error_Fix $Possible_Error_Fix
-				$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $In_Guest_UNC_SQLScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -reboot -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter" -interactive -nowait
+				$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $In_Guest_UNC_SQLScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -reboot -SourcePath $IN_Guest_UNC_Sourcepath $SQLparameter" -interactive -nowait
                 $SQLSetupStart = Get-Date
 			}
 		} ## end foreach AAGNODE
