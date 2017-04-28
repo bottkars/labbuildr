@@ -2541,14 +2541,20 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
         #New-Item -ItemType Directory -Path "$Aworks_Dir" -Force
         Expand-LABpackage -Archive $Aworks_File -destination $Aworks_Dir
         }
-    if ($Master -match 'Core')
+    if ($Master -match 'core')
         {
-        $SQL_SWITCH = "-no_ssms"    
+        if (!($SQL_OK = receive-labsql -SQLVER $SQLVER -Destination $labbuildr_sourcedir -Product_Dir "SQL" -no_ssms -extract -WarningAction SilentlyContinue))
+            {
+            break
+            }   
         }
-    if (!($SQL_OK = receive-labsql -SQLVER $SQLVER -Destination $labbuildr_sourcedir -Product_Dir "SQL" -extract -WarningAction SilentlyContinue $SQL_SWITCH))
+    else 
         {
-        break
-        }
+        if (!($SQL_OK = receive-labsql -SQLVER $SQLVER -Destination $labbuildr_sourcedir -Product_Dir "SQL" -extract -WarningAction SilentlyContinue))
+            {
+            break
+            }   
+    }
 }
 if ($Panorama.IsPresent)
     {
