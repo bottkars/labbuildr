@@ -2992,7 +2992,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 			$AAGLIST += $CloneVMX
             if ($Master -match "core")
                 {
-                $SQLParameter = "$Commonparameter -sqlcore"    
+                $SQLParameter = "$Commonparameter -servercore"    
                 }
             #$In_Guest_UNC_SQLScriptDir = "$Default_Host_ScriptDir\sql\"
             $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features, Failover-Clustering, RSAT-Clustering, WVR"
