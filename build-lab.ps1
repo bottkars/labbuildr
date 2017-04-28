@@ -3005,7 +3005,10 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
             write-verbose $Nodeip
             Write-Verbose $Nodename
             Write-Verbose $ListenerIP
-            Write-Verbose $CommonParameter
+            if ($CommonParameter)
+                {
+                Write-Verbose $CommonParameter
+                }
             Write-Verbose $SQLParameter
             if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
             {
