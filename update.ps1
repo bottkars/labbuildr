@@ -1,3 +1,12 @@
+[CmdletBinding(
+    SupportsShouldProcess=$true,
+    ConfirmImpact="Medium")]
+Param(
+	[Parameter(Mandatory = $false)]
+	[ValidateSet('master','develop')]
+	$branch = 'master'
+)
+
 if (git)
 	{
 	$Git_Dir = Split-Path (Get-Location)
@@ -7,6 +16,8 @@ if (git)
 		{
 		Write-Host -ForegroundColor Gray " ==>Checking for Update on $Repo"
 		git -C $Git_Dir/$Repo pull
+		Write-Host -ForegroundColor Gray " ==>Checking out $btanch for $Repo"
+		git -C $Git_Dir/$Repo chechout $branch
 		}
 	Import-Module $Git_Dir/labbuildr/vmxtoolkit -ArgumentList "$HOME/labbuildr/" -Force
 	Import-Module $Git_Dir/labbuildr/labtools -Force 
