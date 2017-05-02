@@ -2327,7 +2327,7 @@ if ($Exchange2016.IsPresent)
 		{
         If ($master -match 'core')
             {
-            Write-Warning "Core Editions are not Supported for Exchange" 
+            Write-Warning "Core Editions are not Supported for Exchange, defaulting to Server 2016" 
             $E2016_Master = '2016'   
             }
         else 
