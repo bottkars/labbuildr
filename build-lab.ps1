@@ -2325,7 +2325,15 @@ if ($Exchange2016.IsPresent)
         }
 	else
 		{
-		$E2016_Master = $Master
+        If ($master -match 'core')
+            {
+            Write-Warning "Core Editions are not Supported for Exchange" 
+            $E2016_Master = '2016'   
+            }
+        else 
+            {
+            $E2016_Master = $Master          
+            }	
 		}
 	$E2016_Master_VMX = test-labmaster -Masterpath "$Masterpath" -Master $E2016_Master -mastertype vmware -Confirm:$Confirm
 	if ($E2016_Master -eq "2016")
