@@ -2827,7 +2827,7 @@ else
 			$NodeClone = Get-VMX -Path $CloneVMX
 			test-user -whois Administrator
 			Write-Verbose $IN_Guest_UNC_ScenarioScriptDir
-			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script new-dc.ps1 -Parameter "-dcname $DCName -Domain $BuildDomain -IPv4subnet $IPv4subnet -IPv4Prefixlength $IPv4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -IPv6Prefix $IPv6Prefix  -AddressFamily $AddressFamily $AddGateway $CommonParameter" -interactive -nowait
+			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script new-dc.ps1 -Parameter "-dcname $DCName -Domain $BuildDomain -IPv4subnet $IPv4subnet -IPv4Prefixlength $IPv4PrefixLength -IPv6PrefixLength $IPv6PrefixLength -IPv6Prefix $IPv6Prefix  -AddressFamily $AddressFamily -TimeZone '$($labdefaults.timezone)' $AddGateway $CommonParameter" -interactive -nowait
 			Write-Host -ForegroundColor White  " ==>preparing Domain " -NoNewline
 			if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
 				{
