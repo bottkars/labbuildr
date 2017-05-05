@@ -5,10 +5,10 @@ the use of vlan´s is required.
 a standard, distributed labs use 802.1Q VLANS.  
 I recommend TPLink or Netgear SoHo switches ( EG, TP-Link TL-SG108, Netgear GS-108GE, TP-Link Archer C7 w. OpenWRTR )  
 Therefore, some requirements ion the hosts must be met:  
-For Windows Hosts, it is best using Intel ANS Drivers with VLAN SUpport ( Attention, on Windows 10 only Anniversary Update currently ! )   
-For Linux, use default VLAN SUpport ( Ubuntu witr Netrwork Manager )   
+* For Windows Hosts, it is best using Intel ANS Drivers with VLAN SUpport ( Attention, on Windows 10 only Anniversary Update currently ! )   
+* For Linux, use default VLAN SUpport ( Ubuntu witr Netrwork Manager )   
 ![image](https://cloud.githubusercontent.com/assets/8255007/25733949/823da6ee-315e-11e7-90dd-79f6a9f8fd10.png)
-For OSX, Default VLAN COnfig.  
+* For OSX, Default VLAN COnfig.  
 
 
 Internet Connection is done Via OpenWRT ( Physically or VM )
