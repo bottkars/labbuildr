@@ -58,7 +58,8 @@ catch
 if ((Get-LABDefaults).SQLVER -notmatch 'ISO')
 	{
 	Set-LABSQLver -SQLVER SQL2014SP2_ISO
-	}
+    }
+
 $buildlab = (join-path $self "build-lab.ps1")
 .$buildlab
 <#write-host -ForegroundColor Yellow "Running VMware $vmwareversion"
@@ -74,7 +75,10 @@ else
     $blog.rss.channel.item |  where {$_.title -match "vmxtoolkit" -or $_.title -Match "labbuildr"} |select Link | ft
     }#>
 $global:labdefaults = Get-LABDefaults
-
+if (!$global:labdefaults.timezone)
+    {
+    Set-Labtimezone
+    }
 if ($global:labdefaults.openwrt -eq "false")
 	{
 	Write-Host -ForegroundColor Yellow "==> Running labbuildr without OpenWRT, know what you do !"
