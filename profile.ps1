@@ -75,6 +75,10 @@ else
     $blog.rss.channel.item |  where {$_.title -match "vmxtoolkit" -or $_.title -Match "labbuildr"} |select Link | ft
     }#>
 $global:labdefaults = Get-LABDefaults
+if ($global:labdefaults.Languagetag -match "_")
+    {
+    $global:labdefaults.Languagetag = $global:labdefaults.Languagetag -replace "_","-"        
+    }
 if (!$global:labdefaults.timezone)
     {
     Set-Labtimezone

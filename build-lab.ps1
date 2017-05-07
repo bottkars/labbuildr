@@ -1810,7 +1810,7 @@ if ($LabDefaults.LanguageTag)
 	}
 else
 	{
-	$LanguageTag = "en_US"
+	$LanguageTag = "en-US"
 	}
 $DCMaster = $Master
 write-verbose "After defaults !!!! "
