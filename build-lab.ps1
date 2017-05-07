@@ -243,8 +243,8 @@ Specify if Networker Scenario sould be installed
 	<# ScaleIO on hyper-v #>
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch][alias('sc')]$ScaleIO,
 	<# ScaleIOVersion
-	'2.0-10000.2075','2.0-12000.122',
-	'2.0-7536.0','2.0-7120.0','2.0-6035.0','2.0-5014.0',
+	'2.0-13000.211','2.0-10000.2075','2.0-12000.122',
+	'2.0-7536.0','2.0-7536.0','2.0-7120.0','2.0-6035.0','2.0-5014.0',
 	'1.32-277.0','1.32-402.1','1.32-403.2','1.32-2451.4','1.32-3455.5','1.32-4503.5',
 	'1.31-258.2','1.31-1277.3','1.31-2333.2',
 	'1.30-426.0'
@@ -257,7 +257,7 @@ Specify if Networker Scenario sould be installed
 	'1.31-258.2','1.31-1277.3','1.31-2333.2',
 	'1.30-426.0'
 	)]
-    [alias('siover')]$ScaleIOVer,
+    [alias('siover','Scaleio_Ver')]$ScaleIOVer,
     <# single mode with mdm only on first node ( no secondary, no tb ) #>
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$singlemdm,
     # <# Cluster modemdm automatically#>
