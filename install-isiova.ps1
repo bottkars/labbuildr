@@ -119,13 +119,13 @@ switch ($PsCmdlet.ParameterSetName)
         Write-Warning "use_default_diskparameter is experimental, and thus it has to be used for IMPORT and CREATION"
         pause
         }
-    if (!($OVAPath = Get-ChildItem -Path "$Sourcedir\$Product" -recurse -Include "$Product_tag.ova" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
+    if (!($OVAPath = Get-ChildItem -Path (join-path $Sourcedir $Product) -recurse -Include "$Product_tag.ova" -ErrorAction SilentlyContinue) -or $forcedownload.IsPresent)
         {
                 write-warning "No $Product OVA found, Checking for Downloaded Package"
                 Receive-LABISIlon -Destination $Sourcedir -unzip
         }
            
-    $OVAPath = Get-ChildItem -Path "$Sourcedir\$Product" -Recurse -include "$Product_tag.ova"  -Exclude ".*" | Sort-Object -Descending
+    $OVAPath = Get-ChildItem -Path (join-path $Sourcedir $Product) -Recurse -include "$Product_tag.ova"  -Exclude ".*" | Sort-Object -Descending
     $OVAPath = $OVApath[0]
     Write-Warning "Creating $Product Master for $($ovaPath.Basename), may take a while"
     Import-VMXOVATemplate -OVA $ovaPath.FullName -Name $($ovaPath.Basename) -destination $Global:labdefaults.Masterpath -acceptAllEulas
