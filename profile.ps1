@@ -77,7 +77,8 @@ else
 $global:labdefaults = Get-LABDefaults
 if ($global:labdefaults.Languagetag -match "_")
     {
-    $global:labdefaults.Languagetag = $global:labdefaults.Languagetag -replace "_","-"        
+    $global:labdefaults.Languagetag = $global:labdefaults.Languagetag -replace "_","-"
+    save-labdefaults -defaults $global:labdefaults | Out-Null        
     }
 if (!$global:labdefaults.timezone)
     {
