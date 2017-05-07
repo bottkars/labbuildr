@@ -2948,7 +2948,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 			$AAGLIST += $CloneVMX
             if ($Master -match "core")
                 {
-                $SQLParameter = "$Commonparameter -servercore"    
+                $Coreparameter = " -servercore"    
                 }
             #$In_Guest_UNC_SQLScriptDir = "$Default_Host_ScriptDir\sql\"
             $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features, Failover-Clustering, RSAT-Clustering, WVR"
@@ -2965,7 +2965,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
                 {
                 Write-Verbose $CommonParameter
                 }
-            Write-Verbose $SQLParameter
+            Write-Verbose $Coreparameter
             if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
             {
             Write-verbose "Now Pausing"
@@ -2989,7 +2989,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 				invoke-postsection -wait
 				$Possible_Error_Fix = " 1.) Host has no iSCSI Luns `n 2.) Unity not configured for Host ==> Use Unisphere to configure `n 3.) Unity VM is not running ==> start unity ( get-vmx UnityNode1 | start-vmx ), you may need to re-run enable-labiscsi.ps1 in vm"
 				$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script test-disks.ps1 -Parameter "-DiskCount 4" -interactive -Possible_Error_Fix $Possible_Error_Fix
-				$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $In_Guest_UNC_SQLScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -reboot -SourcePath $IN_Guest_UNC_Sourcepath $SQLparameter" -interactive -nowait
+				$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $In_Guest_UNC_SQLScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -reboot -SourcePath $IN_Guest_UNC_Sourcepath $Coreparameter" -interactive -nowait
                 $SQLSetupStart = Get-Date
 			}
 		} ## end foreach AAGNODE
@@ -3497,6 +3497,10 @@ switch ($PsCmdlet.ParameterSetName)
                 $ClusterIP = "$IPv4Subnet.$IPNum"
                 }
             }
+        if ($Master -match "core")
+            {
+            $Coreparameter = " -servercore"    
+            }            
         Write-Verbose "Clusterip = $ClusterIP"
         #$Firstnode = "1" #for later use
         #$Clusternum = "1" # for later use
@@ -3560,6 +3564,10 @@ switch ($PsCmdlet.ParameterSetName)
 			$IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\HyperV\"
             $In_Guest_UNC_SQLScriptDir = "$IN_Guest_UNC_Scriptroot\sql\"
             $In_Guest_UNC_SCVMMScriptDir = "$IN_Guest_UNC_Scriptroot\scvmm\"
+            if ($Master -match "core")
+                {
+                $Coreparameter = " -servercore"    
+                }            
             Write-Verbose "IPv4 Subnet = $IPv4Subnet"
             Write-Verbose $Nodename
             Write-Verbose $AddonFeatures
@@ -3714,7 +3722,7 @@ switch ($PsCmdlet.ParameterSetName)
             }
 		if ($SCVMM.IsPresent)
 		    {
-			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $In_Guest_UNC_SQLScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -DefaultDBpath -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter" -interactive
+			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $In_Guest_UNC_SQLScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER $Coreparameter -DefaultDBpath -SourcePath $IN_Guest_UNC_Sourcepath $Coreparameter $CommonParameter" -interactive
 			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $In_Guest_UNC_SCVMMScriptDir -Script install-vmmprereq.ps1 -Parameter "-sc_version $SC_Version -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter"  -interactive
             checkpoint-progress -step vmmprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
 			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $In_Guest_UNC_SCVMMScriptDir -Script install-vmm.ps1 -Parameter "-sc_version $SC_Version -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter" -interactive
@@ -4236,6 +4244,10 @@ switch ($PsCmdlet.ParameterSetName)
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\SCOM"
     $In_Guest_UNC_SQLScriptDir = "$IN_Guest_UNC_Scriptroot\sql\"
 	###################################################
+    if ($Master -match "core")
+        {
+        $Coreparameter = " -servercore"    
+        }
   	Write-Verbose $IPv4Subnet
     write-verbose $Nodename
     write-verbose $Nodeip
@@ -4258,8 +4270,8 @@ switch ($PsCmdlet.ParameterSetName)
 		    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter "-nw_ver $nw_ver -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter"
             }
         invoke-postsection -wait
-	    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $In_Guest_UNC_SQLScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -DefaultDBpath -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter" -interactive
-        $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script INSTALL-Scom.ps1 -interactive -parameter "-SC_Version $SC_Version -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter"
+	    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $In_Guest_UNC_SQLScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -DefaultDBpath -SourcePath $IN_Guest_UNC_Sourcepath $Coreparameter $CommonParameter" -interactive
+        $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script INSTALL-Scom.ps1 -interactive -parameter "-SC_Version $SC_Version -SourcePath $IN_Guest_UNC_Sourcepath $Coreparameter $CommonParameter"
 }
 } #APPSYNC End
     "Isilon" {
