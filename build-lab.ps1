@@ -1762,7 +1762,10 @@ if ($defaults.IsPresent)
             if ($LabDefaults.NMM -eq "true")
                 {
                 $nmm = $true
-                $nw = $true
+                if (!$NoDomainCheck.IsPresent)
+                    {
+                     $nw = $true
+                    }
                 }
             }
 		if ($LabDefaults.MainMemUseFile -eq 'true')
