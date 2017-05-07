@@ -2418,7 +2418,10 @@ if ($SCVMM.IsPresent)
 			}
 		"SC2016"
 	        {
-			$Master ="2016"
+            if ($master -lt '2016')
+                {
+                $Master ="2016"
+                }            
 			}
         }
     If (!(Receive-LABSysCtrInstallers -SC_Version $SC_Version -Component SCVMM -Destination $labbuildr_sourcedir -unzip -WarningAction SilentlyContinue))
