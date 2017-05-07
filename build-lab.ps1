@@ -3728,7 +3728,7 @@ switch ($PsCmdlet.ParameterSetName)
             }
 		if ($SCVMM.IsPresent)
 		    {
-			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $In_Guest_UNC_SQLScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER $Coreparameter -DefaultDBpath -SourcePath $IN_Guest_UNC_Sourcepath $Coreparameter $CommonParameter" -interactive
+			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $In_Guest_UNC_SQLScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -DefaultDBpath -SourcePath $IN_Guest_UNC_Sourcepath $Coreparameter $CommonParameter" -interactive
 			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $In_Guest_UNC_SCVMMScriptDir -Script install-vmmprereq.ps1 -Parameter "-sc_version $SC_Version -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter"  -interactive
             checkpoint-progress -step vmmprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
 			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword  -ScriptPath $In_Guest_UNC_SCVMMScriptDir -Script install-vmm.ps1 -Parameter "-sc_version $SC_Version -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter" -interactive
