@@ -52,12 +52,12 @@ catch
     Write-Host -ForegroundColor Yellow "no defaults.xml found, using labbuildr default settings"
     Copy-Item .\defaults.xml.example .\defaults.xml
 	$Master_path = Join-Path $labbuildr_home "Master.labbuildr"
-    Set-LABMasterpath -Masterpath (Join-Path $labbuildr_home "Master.labbuildr").tostring()
-	Set-LABSources -Sourcedir (Join-Path $labbuildr_home "Sources.labbuildr").tostring()
+    Set-LABMasterpath -Masterpath (Join-Path $labbuildr_home "Master.labbuildr").tostring() | Out-Null
+	Set-LABSources -Sourcedir (Join-Path $labbuildr_home "Sources.labbuildr").tostring() | Out-Null
     }
 if ((Get-LABDefaults).SQLVER -notmatch 'ISO')
 	{
-	Set-LABSQLver -SQLVER SQL2014SP2_ISO
+	Set-LABSQLver -SQLVER SQL2014SP2_ISO | Out-Null
     }
 If (!$global:labdefaults.$Masterpath)
     {	
@@ -65,7 +65,7 @@ If (!$global:labdefaults.$Masterpath)
     }
 If (!$global:labdefaults.$Sourcedir)
     {	
-	Set-LABSources -Sourcedir (Join-Path $labbuildr_home "Sources.labbuildr").tostring()
+	Set-LABSources -Sourcedir (Join-Path $labbuildr_home "Sources.labbuildr").tostring()  | out-null
     }
 
 
@@ -91,7 +91,7 @@ if ($global:labdefaults.Languagetag -match "_")
     }
 if (!$global:labdefaults.timezone)
     {
-    Set-Labtimezone
+    Set-Labtimezone  | out-null
     }
 if ($global:labdefaults.openwrt -eq "false")
 	{
