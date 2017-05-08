@@ -348,13 +348,13 @@ if (!$Ubuntu -or $ubuntu -notmatch $ubuntu_sio_ver)
 		if ($siobfiles = Get-ChildItem -Path $SIO_Ubuntu_Dir -Filter "*.siob" -Recurse -Include *Ubuntu* -Exclude "*.sig")
 			{
 			Write-Host -ForegroundColor Gray " ==>found $($siobfiles.count) siob files  in $SIO_Ubuntu_Dir"
-			if (!$siobfiles)
-				{
-				Write-Host " ==> No Siob FIles found. Fun. do we use tar for whatever reason ?"	
-				$sio_tar_files = Get-ChildItem -Path $SIO_Ubuntu_Dir -Filter "*.tar" -Recurse -Include *Ubuntu* -Exclude "*.sig"
-				Write-Host $sio_tar_files.count
-				}
 			#$siobfiles.count
+			}
+		else
+			{
+			Write-Host " ==> No Siob FIles found. Fun. Somebody Thinks it its coll zo zip and dar and siob pack for whatever reason :-( "	
+			$sio_tar_files = Get-ChildItem -Path $SIO_Ubuntu_Dir -Filter "*.tar" -Recurse -Include *Ubuntu* -Exclude "*.sig"
+			Write-Host $sio_tar_files.count
 			}
 		}
 	Write-Host -ForegroundColor Gray " ==>evaluationg base path for Gateway in $scaleio_dir for emc-scaleio-gateway_$SIO_FILE_VER*.deb"
