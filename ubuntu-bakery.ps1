@@ -345,7 +345,8 @@ if (!$Ubuntu -or $ubuntu -notmatch $ubuntu_sio_ver)
 	else
 		{
 		Write-Host -ForegroundColor Gray " ==>need to get deb´s from SIOB files in $SIO_Ubuntu_Dir"
-		if ($siobfiles = Get-ChildItem -Path $SIO_Ubuntu_Dir -Filter "*.siob" -Recurse -Include *Ubuntu* -Exclude "*.sig")
+		$siobfiles = Get-ChildItem -Path $SIO_Ubuntu_Dir -Filter "*.siob" -Recurse -Include *Ubuntu* -Exclude "*.sig"
+		if ($siobfiles.count -lt 9)
 			{
 			Write-Host -ForegroundColor Gray " ==>found $($siobfiles.count) siob files  in $SIO_Ubuntu_Dir"
 			#$siobfiles.count
@@ -357,7 +358,7 @@ if (!$Ubuntu -or $ubuntu -notmatch $ubuntu_sio_ver)
 			Write-Host " ==> got $($sio_tar_files.count) Tar Files"
 			foreach ($sio_tar_file in $sio_tar_files)
 				{
-				Expand-LABpackage -Archive $sio_tar_file -Destination $SIO_Ubuntu_Dir
+				Expand-LABpackage -Archive $sio_tar_file -Destination $SIO_Ubuntu_Dir -force
 				}
 				if ($siobfiles = Get-ChildItem -Path $SIO_Ubuntu_Dir -Filter "*.siob" -Recurse -Include *Ubuntu* -Exclude "*.sig")
 					{
