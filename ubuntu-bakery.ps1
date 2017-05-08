@@ -344,10 +344,10 @@ if (!$Ubuntu -or $ubuntu -notmatch $ubuntu_sio_ver)
 		}
 	else
 		{
-		Write-Host -ForegroundColor Gray " ==>need to get deb´s from SIOB files"
+		Write-Host -ForegroundColor Gray " ==>need to get deb´s from SIOB files in $ubuntudir"
 		if ($siobfiles = Get-ChildItem -Path $Ubuntudir -Filter "*.siob" -Recurse -Include *Ubuntu* -Exclude "*.sig")
 			{
-			Write-Host -ForegroundColor Gray " ==>found siob files  in $Ubuntudir"
+			Write-Host -ForegroundColor Gray " ==>found $($siobfiles.count) siob files  in $Ubuntudir"
 			#$siobfiles.count
 			}
 		}
