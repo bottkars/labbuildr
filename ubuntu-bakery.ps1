@@ -401,6 +401,7 @@ switch ($ubuntu_ver)
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     {
 		Write-Verbose $ubuntu_sio_ver
+		Write-Verbose $ubuntu_ver
 		Write-Verbose $Ubuntudir
 		Pause
 	}	
