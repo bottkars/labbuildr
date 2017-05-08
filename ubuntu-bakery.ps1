@@ -39,7 +39,7 @@ Param(
 [ValidateSet('unity','scaleio','none')]
 [string[]]$cinder = "scaleio",
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)] 
-[switch]$swift=$true,
+[switch]$swift,
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [Parameter(ParameterSetName = "install",Mandatory=$true)]
 [Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
