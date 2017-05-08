@@ -59,6 +59,15 @@ if ((Get-LABDefaults).SQLVER -notmatch 'ISO')
 	{
 	Set-LABSQLver -SQLVER SQL2014SP2_ISO
     }
+If ($global:labdefaults.$Masterpath)
+    {	
+    Set-LABMasterpath -Masterpath (Join-Path $labbuildr_home "Master.labbuildr").tostring() | out-null
+    }
+If ($global:labdefaults.$Sourcedir)
+    {	
+	Set-LABSources -Sourcedir (Join-Path $labbuildr_home "Sources.labbuildr").tostring()
+    }
+
 
 $buildlab = (join-path $self "build-lab.ps1")
 .$buildlab

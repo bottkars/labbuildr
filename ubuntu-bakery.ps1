@@ -171,7 +171,7 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
 		{
 		$val = (Get-Variable -Name $_ -EA SilentlyContinue).Value
 		if( $val.length -gt 0 ) 
-			{
+	
 			"'$($_)' = '$($val)'"
 			}
 		}
