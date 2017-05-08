@@ -346,14 +346,14 @@ if (!$Ubuntu -or $ubuntu -notmatch $ubuntu_sio_ver)
 		{
 		Write-Host -ForegroundColor Gray " ==>need to get deb´s from SIOB files in $SIO_Ubuntu_Dir"
 		$siobfiles = Get-ChildItem -Path $SIO_Ubuntu_Dir -Filter "*.siob" -Recurse -Include *Ubuntu* -Exclude "*.sig"
-		if ($siobfiles.count -lt 9)
+		if ($siobfiles.count -ge 9)
 			{
 			Write-Host -ForegroundColor Gray " ==>found $($siobfiles.count) siob files  in $SIO_Ubuntu_Dir"
 			#$siobfiles.count
 			}
 		else
 			{
-			Write-Host " ==> No Siob FIles found. Fun. Somebody Thinks it its cool to zip and tar and siob pack for whatever reason :-( "	
+			Write-Host " ==> Not or not all Siob FIles found. Fun. Somebody Thinks it its cool to zip and tar and siob pack for whatever reason :-( "	
 			$sio_tar_files = Get-ChildItem -Path $SIO_Ubuntu_Dir -Filter "*.tar" -Recurse -Include *Ubuntu* -Exclude "*.sig"
 			Write-Host " ==> got $($sio_tar_files.count) Tar Files"
 			foreach ($sio_tar_file in $sio_tar_files)
