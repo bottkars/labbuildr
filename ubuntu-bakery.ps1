@@ -325,9 +325,9 @@ if (!$Ubuntu -or $ubuntu -notmatch $ubuntu_sio_ver)
 	Write-Host " ==>got Ubuntu files"
 	Write-Host -ForegroundColor Gray " ==>evaluating ubuntu files"
 	$Ubuntu = Get-ChildItem *$ubuntu_sio_ver* -Path $scaleio_dir -Include *UBUNTU* -Exclude "*.zip" -Recurse -Directory
-	$Ubuntudir = $Ubuntu | Sort-Object -Descending | Select-Object -First 1
-	Write-Host -ForegroundColor Gray " ==>Using Ubuntu Dir $Ubuntudir"
-	If ($Ubuntudir -match 2.0.1.)
+	$SIO_Ubuntu_Dir = $Ubuntu | Sort-Object -Descending | Select-Object -First 1
+	Write-Host -ForegroundColor Gray " ==>Using Ubuntu Dir $SIO_Ubuntu_Dir"
+	If ($SIO_Ubuntu_Dir -match 2.0.1.)
 		{
 		Write-Host -ForegroundColor Magenta " ==>looks like we detected ScaleIO 2.0.1"
 		$SIOMajor = "2.0.1"
@@ -337,17 +337,17 @@ if (!$Ubuntu -or $ubuntu -notmatch $ubuntu_sio_ver)
 		{
 		$SIO_FILE_VER = "-2.0"
 		}
-	if ((Get-ChildItem -Path $Ubuntudir -Filter "*.deb" -Recurse -Include *Ubuntu*).count -ge 9)
+	if ((Get-ChildItem -Path $SIO_Ubuntu_Dir -Filter "*.deb" -Recurse -Include *Ubuntu*).count -ge 9)
 		{
 		Write-Host -ForegroundColor Gray " ==>found deb files, no siob_extraxt required"
 		$debfiles = $true
 		}
 	else
 		{
-		Write-Host -ForegroundColor Gray " ==>need to get deb´s from SIOB files in $ubuntudir"
-		if ($siobfiles = Get-ChildItem -Path $Ubuntudir -Filter "*.siob" -Recurse -Include *Ubuntu* -Exclude "*.sig")
+		Write-Host -ForegroundColor Gray " ==>need to get deb´s from SIOB files in $SIO_Ubuntu_Dir"
+		if ($siobfiles = Get-ChildItem -Path $SIO_Ubuntu_Dir -Filter "*.siob" -Recurse -Include *Ubuntu* -Exclude "*.sig")
 			{
-			Write-Host -ForegroundColor Gray " ==>found $($siobfiles.count) siob files  in $Ubuntudir"
+			Write-Host -ForegroundColor Gray " ==>found $($siobfiles.count) siob files  in $SIO_Ubuntu_Dir"
 			#$siobfiles.count
 			}
 		}
@@ -369,8 +369,8 @@ if (!$Ubuntu -or $ubuntu -notmatch $ubuntu_sio_ver)
 	$SIOGatewayrpm = $SIOGatewayrpm.Replace("\","/")
     $SIOGatewayrpm = $SIOGatewayrpm -replace  $Sourcedir_replace,"/mnt/hgfs/Sources/"
 	$SIOGatewayrpm = $SIOGatewayrpm -replace "//","/"
-	$Ubuntu_guestdir = $Ubuntudir.Fullname.Replace("\","/")
-	# = $Ubuntudir.fullname.Replace("\","\\")
+	$Ubuntu_guestdir = $SIO_Ubuntu_Dir.Fullname.Replace("\","/")
+	# = $SIO_Ubuntu_Dir.fullname.Replace("\","\\")
 	$Ubuntu_guestdir = $Ubuntu_guestdir -replace  $Sourcedir_replace,"/mnt/hgfs/Sources/"
 	$Ubuntu_guestdir = $Ubuntu_guestdir -replace "//","/"
     Write-Host $Ubuntu_guestdir
@@ -380,6 +380,13 @@ if (!$Ubuntu -or $ubuntu -notmatch $ubuntu_sio_ver)
 		{
 		$Percentage = 10
 		}
+	if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+    {
+		Write-Verbose "got Ubuntu_sio_ver  $ubuntu_sio_ver"
+		Write-Verbose "ubuntu_ver $ubuntu_ver"
+		Write-Verbose "SIO_Ubuntu_Dir $SIO_Ubuntu_Dir"
+		Pause
+	}
 	}
 
 switch ($ubuntu_ver)
@@ -398,13 +405,7 @@ switch ($ubuntu_ver)
         }
     }
 
-if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
-    {
-		Write-Verbose $ubuntu_sio_ver
-		Write-Verbose $ubuntu_ver
-		Write-Verbose $Ubuntudir
-		Pause
-	}	
+	
 $scsi = 0
 $Nodeprefix = "Ubuntu"
 $Nodeprefix = $Nodeprefix.ToLower()
