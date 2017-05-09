@@ -115,7 +115,7 @@ switch ($PsCmdlet.ParameterSetName)
             }
 
         
-        Write-Host -ForegroundColor Yellow " ==>Now run .\install-cloudboost.ps1 -Master $(join-path $masterpath $mastername) -Defaults "
+        Write-Host -ForegroundColor Yellow " ==>Now run .\install-cloudboost.ps1 -Master $(join-path $masterpath $mastername)"
         }
 default
     {
