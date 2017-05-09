@@ -107,7 +107,7 @@ switch ($PsCmdlet.ParameterSetName)
         $Content | Set-Content $masterpath\$mastername\$mastername.vmx
         $Mastervmx = get-vmx -path $masterpath\$mastername\$mastername.vmx
         $Mastervmx | Set-VMXHWversion -HWversion 7
-        $Mastervmx Get-VMXScsiDisk | where lun -Match 1 | Expand-VMXDiskfile -NewSize $Meta_Data_Disk_Size 
+        $Mastervmx | Get-VMXScsiDisk | where lun -Match 1 | Expand-VMXDiskfile -NewSize $Meta_Data_Disk_Size 
         foreach ($lun in 2..2)
             {
             Write-Host -ForegroundColor Gray " ==> removing disk SCSI$LUN"
