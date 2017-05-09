@@ -115,7 +115,7 @@ switch ($PsCmdlet.ParameterSetName)
             }
 
         
-        Write-Host -ForegroundColor Yellow " ==>Now run .\install-cloudboost.ps1 -Master $masterpath\$mastername -Defaults "
+        Write-Host -ForegroundColor Yellow " ==>Now run .\install-cloudboost.ps1 -Master $(join-path $masterpath $mastername) -Defaults "
         }
 default
     {
@@ -227,7 +227,7 @@ try to delete $Nodeprefix$Node Directory and try again"
             }
         }#end foreach
     Write-Host -ForegroundColor White "change the default password on admin console
-    for CloudBoost 2.1 run
+    for CloudBoost >= 2.1 run
 
 net config eth0 $subnet.7$Node netmask 255.255.255.0
 route add 0.0.0.0 netmask 0.0.0.0 gw $DefaultGateway
