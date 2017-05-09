@@ -180,7 +180,7 @@ default
         {
         If (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue))
             {
-            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$node -Clonepath $Builddir
+            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$node -Clonepath $Builddir
             Write-Host -ForegroundColor Gray " ==> tweaking $Nodeprefix to run on Workstation"
             $NodeClone | Set-VMXmemory -MemoryMB 8192 | Out-Null
             Write-Host -ForegroundColor Gray " ==> Setting eth0 to e1000/slot32"
