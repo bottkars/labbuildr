@@ -31,30 +31,51 @@ Param(
 ### import parameters
 [Parameter(ParameterSetName = "import",Mandatory=$true)][String]
 [ValidateScript({ Test-Path -Path $_ -Filter *.ov* -PathType Leaf})]$ovf,
-<### install param
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateRange(1,3)][int32]$Cachevols = 1,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateSet(36GB,72GB,146GB)][uint64]$Cachevolsize = 146GB,
-#>
-[Parameter(ParameterSetName = "defaults", Mandatory = $true)]
 [Parameter(ParameterSetName = "install",Mandatory=$true)][ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Master,
-
-[Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
-
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][int32]$Nodes=1,
-
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][int32]$Startnode = 1,
+[Parameter(ParameterSetName = "install", Mandatory=$False)][ValidateSet(1,2,4)][int32]$Site_Cache_Disks = 2,
+[Parameter(ParameterSetName = "install", Mandatory=$False)][ValidateSet(100GB,200GB)][uint64]$Meta_Data_Disk_Size = 100GB,
+[Parameter(ParameterSetName = "install", Mandatory=$False)][ValidateSet(100GB,200GB)][uint64]$Site_Cache_Disk_Size = 200GB,
 
-[Parameter(ParameterSetName = "install", Mandatory = $true)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = "vmnet2"
+#### generic labbuildr7
+	[Parameter(Mandatory=$false)]
+	$DefaultGateway = $Global:labdefaults.DefaultGateway,
+	[Parameter(Mandatory=$false)]
+	[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")]
+	[string]$BuildDomain = $Global:labdefaults.builddomain,
+	[Parameter(Mandatory=$false)]
+	[string]$custom_domainsuffix = $Global:labdefaults.custom_domainsuffix,
+	$Masterpath = $Global:labdefaults.Masterpath,
+	$guestpassword = "Password123!",
+	$Rootuser = 'root',
+	$Hostkey = $Global:labdefaults.HostKey,
+	$Default_Guestuser = 'labbuildr',
+	[Parameter(Mandatory=$false)]
+	$Subnet = $Global:labdefaults.MySubnet,
+	[Parameter(Mandatory=$false)]
+	$DNS1 = $Global:labdefaults.DNS1,
+	[Parameter(Mandatory=$false)]
+	$DNS2 = $Global:labdefaults.DNS2,
+	[Parameter(Mandatory=$false)]
+	$Host_Name,
+	[Parameter(Mandatory=$false)]
+	$DNS_DOMAIN_NAME = "$($Global:labdefaults.BuildDomain).$($Global:labdefaults.Custom_DomainSuffix)",
+	#vmx param
+#	[ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL",
+	[ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]
+	$vmnet = $Global:labdefaults.vmnet,
+	[switch]$Defaults
+
 
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
-$labdefaults = Get-labDefaults
+if ($Defaults.IsPresent)
+	{
+	Deny-LABDefaults
+	Break
+	}
 $Builddir = $PSScriptRoot
 switch ($PsCmdlet.ParameterSetName)
 {
@@ -86,12 +107,18 @@ switch ($PsCmdlet.ParameterSetName)
         $Content | Set-Content $masterpath\$mastername\$mastername.vmx
         $Mastervmx = get-vmx -path $masterpath\$mastername\$mastername.vmx
         $Mastervmx | Set-VMXHWversion -HWversion 7
+        $Mastervmx Get-VMXScsiDisk | where lun -Match 1 | Expand-VMXDiskfile -NewSize $Meta_Data_Disk_Size 
+        foreach ($lun in 2..2)
+            {
+            Write-Host -ForegroundColor Gray " ==> removing disk SCSI$LUN"
+            $MasterVMX | Remove-VMXScsiDisk -LUN $lun -Controller 0 | Out-Null
+            }
+
+        
         Write-Host -ForegroundColor Yellow " ==>Now run .\install-cloudboost.ps1 -Master $masterpath\$mastername -Defaults "
         }
 default
     {
-    If ($Defaults.IsPresent)
-        {
 		$vmnet = $labdefaults.vmnet
 		$subnet = $labdefaults.MySubnet
 		$BuildDomain = $labdefaults.BuildDomain
@@ -118,12 +145,6 @@ default
 			# Write-Host -ForegroundColor Gray " ==> No Masterpath specified, trying default"
 			$Masterpath = $Builddir
 			}
-		 $Hostkey = $labdefaults.HostKey
-		 $Gateway = $labdefaults.Gateway
-		 $DefaultGateway = $labdefaults.Defaultgateway
-		 $DNS1 = $labdefaults.DNS1
-		 $DNS2 = $labdefaults.DNS2
-		}
 	if ($LabDefaults.custom_domainsuffix)
 		{
 		$custom_domainsuffix = $LabDefaults.custom_domainsuffix
@@ -159,7 +180,7 @@ default
         {
         If (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue))
             {
-            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXClone -CloneName $Nodeprefix$node -Clonepath $Builddir
+            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$node -Clonepath $Builddir
             Write-Host -ForegroundColor Gray " ==> tweaking $Nodeprefix to run on Workstation"
             $NodeClone | Set-VMXmemory -MemoryMB 8192 | Out-Null
             Write-Host -ForegroundColor Gray " ==> Setting eth0 to e1000/slot32"
@@ -168,6 +189,36 @@ default
             $Scenario = Set-VMXscenario -config $NodeClone.Config -Scenarioname $Nodeprefix -Scenario 6
             $ActivationPrefrence = Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
             Set-VMXDisplayName -config $NodeClone.Config -Displayname "$($NodeClone.CloneName)@$Builddomain" | Out-Null
+
+            $SCSI = 0
+           # $Diskname = "MetaDisk"
+           # try
+           #     {
+           #     $Newdisk = $NodeClone | New-VMXScsiDisk -NewDiskSize $Meta_Data_Disk_Size -NewDiskname $Diskname -ErrorAction Stop
+           #     }
+           # catch
+           #     {
+           #     Write-Warning "Error Creating new disk, maybe orpahn node or disk files with name $Diskname exists ?
+#try to delete $Nodeprefix$Node Directory and try again"
+            #    exit
+           #     }            
+            # $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN 1 -Controller $SCSI
+            
+            foreach ($LUN in (2..($Site_Cache_Disks+1)))
+                {
+                $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
+                try
+                    {
+                    $Newdisk = $NodeClone | New-VMXScsiDisk -NewDiskSize $Site_Cache_Disk_Size -NewDiskname $Diskname -ErrorAction Stop #-Debug
+                    }
+                catch
+                    {
+                    Write-Warning "Error Creating new disk, maybe orpahn node or disk files with name $Diskname exists ?
+try to delete $Nodeprefix$Node Directory and try again"
+                    exit
+                    }
+                $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
+                }
             start-vmx -Path $NodeClone.config -VMXName $NodeClone.CloneName
             } # end check vm
         else
