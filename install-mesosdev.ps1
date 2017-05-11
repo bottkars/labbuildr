@@ -164,12 +164,12 @@ $Guestpassword  = "Password123!"
 ######
 
 [uint64]$Disksize = 100GB
-$Node_requires = "git numactl libaio"
+$Node_requires = @()
+$Node_requires = ('git','numactl','libaio')
 If ($rexray)
 	{
-	$Node_requires = "$Node_requires postgresql"
+	$Node_requires += "postgresql"
 	}
-
 ####Build Machines#
 
 
@@ -234,7 +234,7 @@ Write-Host -ForegroundColor White "Starting Node Configuration"
         break
         }
 
-
+# $Node_requires = $Node_requires -join ","
 foreach ($Node in $machinesBuilt)
     {
 		$ip_byte = ($ip_startrange+$Node.Number)
@@ -246,7 +246,7 @@ foreach ($Node in $machinesBuilt)
             }
 		Write-Verbose "Configuring Node $($Node.Number) $($Node.Name) with $IP"
         $Hostname = $Nodeclone.vmxname.ToLower()
-		$Nodeclone | Set-LabCentosVMX -ip $IP -CentOS_ver $centos_ver -Additional_Epel_Packages $Epel_Packages -Host_Name $Hostname -DNS1 $DNS1 -DNS2 $DNS2 -VMXName $Nodeclone.vmxname
+		$Nodeclone | Set-LabCentosVMX -ip $IP -CentOS_ver $centos_ver -Additional_Packages $Node_requires -Additional_Epel_Packages $Epel_Packages -Host_Name $Hostname -DNS1 $DNS1 -DNS2 $DNS2 -VMXName $Nodeclone.vmxname
 
 	write-verbose "disabling kenel oops"
 	$Scriptblock =  "echo 'kernel.panic_on_oops=0' >> /etc/sysctl.conf;sysctl -p"
