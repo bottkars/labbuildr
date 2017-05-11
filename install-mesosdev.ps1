@@ -297,10 +297,10 @@ foreach ($Node in $machinesBuilt)
     $ZK = "zk://"
     foreach ($mesos_Node in $machinesBuilt)
         {
-		$ip_byte = ($ip_startrange+$MesosNode.Number)
+		$ip_byte = ($ip_startrange+$mesos_Node.Number)
 		$ip="$subnet.$ip_byte"
 
-        $Scriptblock = "echo 'server.$(Mesos_Node.Number)=$($IP):2888:3888' >> /etc/zookeeper/conf/zoo.cfg"
+        $Scriptblock = "echo 'server.$($Mesos_Node.Number)=$($IP):2888:3888' >> /etc/zookeeper/conf/zoo.cfg"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
         $zk = "$Zk$($IP):2181,"
@@ -513,8 +513,4 @@ Write-Host -ForegroundColor Magenta "Login to the VM´s with root/Password123! o
 go to http://$($Masterip):5050 for mesos admin
 go to http://$($Masterip):8080 for marathon admin"
     
-
-
-
-
 #>
