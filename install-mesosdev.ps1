@@ -240,6 +240,10 @@ foreach ($Node in $machinesBuilt)
 		$ip_byte = ($ip_startrange+$Node.Number)
 		$ip="$subnet.$ip_byte"
         $Nodeclone = Get-VMX $Node.Name
+        if ($Node.number -eq 1)
+            {
+            $Masterip = $ip    
+            }
 		Write-Verbose "Configuring Node $($Node.Number) $($Node.Name) with $IP"
         $Hostname = $Nodeclone.vmxname.ToLower()
 		$Nodeclone | Set-LabCentosVMX -ip $IP -CentOS_ver $centos_ver -Additional_Epel_Packages $Epel_Packages -Host_Name $Hostname -DNS1 $DNS1 -DNS2 $DNS2 -VMXName $Nodeclone.vmxname
