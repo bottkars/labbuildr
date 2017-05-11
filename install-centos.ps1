@@ -84,12 +84,6 @@ Param(
 	$DNS_DOMAIN_NAME = "$($Global:labdefaults.BuildDomain).$($Global:labdefaults.Custom_DomainSuffix)",
 	[switch]$Defaults,
 	[switch]$vtbit = $false
-
-#######
-
-
-
-
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
