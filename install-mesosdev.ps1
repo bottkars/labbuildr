@@ -265,7 +265,7 @@ foreach ($Node in $machinesBuilt)
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  | Out-Null
 
-    $Scriptblock = "echo '$node_num' > /var/lib/zookeeper/myid"
+    $Scriptblock = "echo '$($node.number)' > /var/lib/zookeeper/myid"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  | Out-Null
     if ($rexray.IsPresent)
