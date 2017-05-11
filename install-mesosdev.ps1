@@ -22,7 +22,8 @@
 .EXAMPLE
 #>
 [CmdletBinding(DefaultParametersetName = "install")]
-[Parameter(ParameterSetName = "install",Mandatory = $false)]
+Param (
+    [Parameter(ParameterSetName = "install",Mandatory = $false)]
 	[ValidateSet('Centos7_3_1611','Centos7_1_1511','Centos7_1_1503')]
 	[string]$centos_ver = 'Centos7_3_1611',
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
