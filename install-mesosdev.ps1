@@ -341,7 +341,7 @@ if ($rexray.IsPresent)
     {
     foreach ($Node in $machinesBuilt)
         {
-        $NodeClone = get-vmx $Node
+        $NodeClone = get-vmx $Node.Name
         Write-Host -ForegroundColor Magenta " ==>trying rexray Install on $Node"
         $Scriptblock = "$Rexray_script" #;$DVDCLI_script;$Isolator_script"
         Write-Verbose $Scriptblock
@@ -417,21 +417,21 @@ libstorage:
 
     foreach ($Node in $machinesBuilt)
         {
-        $NodeClone = get-vmx $Node
+        $NodeClone = get-vmx $Node.Name
         $Scriptblock = "systemctl restart mesos-master"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         }
     foreach ($Node in $machinesBuilt)
         {
-        $NodeClone = get-vmx $Node
+        $NodeClone = get-vmx $Node.Name
         $Scriptblock = "systemctl restart marathon"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         }
     foreach ($Node in $machinesBuilt)
         {
-        $NodeClone = get-vmx $Node
+        $NodeClone = get-vmx $Node.Name
         $Scriptblock = "echo 'docker,mesos' > /etc/mesos-slave/containerizers;echo '5mins' > /etc/mesos-slave/executor_registration_timeout;systemctl restart mesos-slave"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
