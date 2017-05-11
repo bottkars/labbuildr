@@ -31,8 +31,6 @@ Param (
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateRange(2,3)][int32]$Nodes=3,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[int32]$Startnode = 1,
 [switch]$rexray,
 
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
