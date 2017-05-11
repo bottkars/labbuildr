@@ -134,17 +134,13 @@ if (!$DNS2)
 $OS = "Centos"
 switch ($centos_ver)
     {
-    "7"
+    'Centos7_3_1611'
         {
-        $netdev = "eno16777984"
-        $Required_Master = "$OS$centos_ver Master"
-		$Guestuser = "stack"
+        $Mesos_repo = "http://repos.mesosphere.com/el-testing/7/noarch/RPMS/mesosphere-el-repo-7-3.noarch.rpm"
         }
     default
         {
-        $netdev= "eno16777984"
-        $Required_Master = "$OS$centos_ver"
-		$Guestuser = "labbuildr"
+        $mesos_repo = "http://repos.mesosphere.com/el/7/noarch/RPMS/mesosphere-el-repo-7-1.noarch.rpm"
         }
     }
 [System.Version]$subnet = $Subnet.ToString()
@@ -253,7 +249,7 @@ foreach ($Node in $machinesBuilt)
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-    $Scriptblock =  "rpm -Uvh http://repos.mesosphere.com/el/7/noarch/RPMS/mesosphere-el-repo-7-1.noarch.rpm"
+    $Scriptblock =  "rpm -Uvh $mesos_repo"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  | Out-Null
 
