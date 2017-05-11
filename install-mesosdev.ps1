@@ -418,7 +418,7 @@ libstorage:
             Write-Verbose $Scriptblock
             $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-            $Scriptblock = "vmtoolsd --cmd="info-set guestinfo.REXRAY $(cat /var/log/rexray/rexray.log)
+            $Scriptblock = 'vmtoolsd --cmd="info-set guestinfo.REXRAY $(cat /var/log/rexray/rexray.log)"'
             Write-Verbose $Scriptblock
             $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
             ($Nodeclone |Get-VMXVariable -GuestVariable REXRAY).REXRAY
