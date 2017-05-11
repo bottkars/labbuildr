@@ -84,7 +84,7 @@ $Isolator_script = "wget $Isolator -O /usr/lib/$Isolator_file"
 $Scriptdir = $PSScriptRoot
 $SIO = Get-LABSIOConfig
 $Logfile = "/tmp/labbuildr.log"
-
+$Szenarioname = "Mesos"
 
 if ($LabDefaults.custom_domainsuffix)
 	{
