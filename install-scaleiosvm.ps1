@@ -318,15 +318,19 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         If (!$DefaultGateway) {$DefaultGateway = $Ip}
         $Scriptblock = "echo -e '$Guestpassword\n$Guestpassword' | (passwd --stdin root)"
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $old_rootpassword -logfile $Logfile | Out-Null
-
+        $Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa"
+        
+        Write-Verbose $Scriptblock
+        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+        if ($labdefaults.Hostkey)
+            {
+            $Scriptblock = "echo '$($Labdefaults.Hostkey)' >> /root/.ssh/authorized_keys"
+            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+            }
         $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device eth0 -Peerdns -DNS1 "$subnet.10" -DNSDOMAIN "$BuildDomain.$Custom_DomainSuffix" -Hostname "$Nodeprefix$Node" -suse -rootuser $rootuser -rootpassword $Guestpassword | Out-Null
         $NodeClone | Invoke-VMXBash -Scriptblock "rpm --import /root/install/RPM-GPG-KEY-ScaleIO" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
         $NodeClone | Invoke-VMXBash -Scriptblock "rpm -Uhv /root/install/EMC-ScaleIO-openssl*.rpm" -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-        if ($labdefaults.Hostkey)
-        {
-            $Scriptblock = "echo '$($Labdefaults.Hostkey)' >> /root/.ssh/authorized_keys"
-            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-        }
+     
         if (!($PsCmdlet.ParameterSetName -eq "sdsonly"))
             {
             if (($Node -in 1..2 -and (!$singlemdm)) -or ($Node -eq 1))
