@@ -318,10 +318,11 @@ foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
         If (!$DefaultGateway) {$DefaultGateway = $Ip}
         $Scriptblock = "echo -e '$Guestpassword\n$Guestpassword' | (passwd --stdin root)"
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $old_rootpassword -logfile $Logfile | Out-Null
-        $Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa"
         
+        $Scriptblock = "/usr/bin/ssh-keygen -t rsa -N '' -f /root/.ssh/id_rsa"
         Write-Verbose $Scriptblock
         $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+        
         if ($labdefaults.Hostkey)
             {
             $Scriptblock = "echo '$($Labdefaults.Hostkey)' >> /root/.ssh/authorized_keys"
