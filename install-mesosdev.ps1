@@ -348,42 +348,10 @@ if ($rexray.IsPresent)
     foreach ($Node in $machinesBuilt)
         {
         $NodeClone = get-vmx $Node.Name
-        Write-Host -ForegroundColor Magenta " ==>trying rexray Install on $Node"
+        Write-Host -ForegroundColor Magenta " ==>trying rexray Install on $($Node.Name)"
         $Scriptblock = "$Rexray_script" #;$DVDCLI_script;$Isolator_script"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-        <#
-        $Scriptblock = "echo 'com_emccode_mesos_DockerVolumeDriverIsolator' > /etc/mesos-slave/isolation;echo 'file:///usr/lib/dvdi-mod.json' > /etc/mesos-slave/modules"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 5
-        
-       
-        $Scriptname = "dvdi-mod.json" 
-        $dvdi_mod_json="{
-   `"libraries`": [
-     {
-       `"file`": `"/usr/lib/$Isolator_file`",
-       `"modules`": [
-         {
-           `"name`": `"com_emccode_mesos_DockerVolumeDriverIsolator`"
-         }
-       ]
-     }
-   ]
- }
-"
-            $dvdi_mod_json | Set-Content -Path "$Scriptdir\$Scriptname" 
-            convert-VMXdos2unix -Sourcefile $Scriptdir\$Scriptname -Verbose
-            $NodeClone | copy-VMXfile2guest -Sourcefile $Scriptdir\$Scriptname -targetfile "/usr/lib/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword
-
-
-volume:
- mount:
-  preempt: true
- unmount:
-  ignoreUsedCount: true
- #>
-
         if ($SIO = Get-LABSIOConfig)
             {
             $scriptname = "config.yml"
