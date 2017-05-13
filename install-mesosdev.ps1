@@ -355,34 +355,49 @@ if ($rexray.IsPresent)
         if ($SIO = Get-LABSIOConfig)
             {
             $scriptname = "config.yml"
-            $yml = "rexray:
- loglevel: error
- storageDrivers:
-  - ScaleIO
-ScaleIO:
-  endpoint: https://$($SIO.gateway_ip):443/api
-  insecure: true
-  userName: admin
-  password: Password123!
-  systemName: $($SIO.system_name)
-  protectionDomainName: $($SIO.pd_name)
-  storagePoolName: $($SIO.pool_name)
-libstorage:
-  integration:
+            $yml = "libstorage:
+ host: unix:///var/run/libstorage/localhost.sock
+# host: tcp://127.0.0.1:7979
+ embedded: true
+ client:
+  tls: true
+ service: scaleio
+ integration:
     volume:
       operations:
         mount:
           preempt: true
         unmount:
           ignoreUsedCount: true
-
+ server:
+    endpoints:
+      sock:
+        address: unix:///var/run/libstorage/localhost.sock
+      private:
+        address: tcp://127.0.0.1:7979
+      public:
+        address: tcp://:7980
+        tls:
+         certFile: /etc/libstorage/tls/libstorage.crt
+         keyFile: /etc/libstorage/tls/libstorage.key
+    services:
+      scaleio:
+        driver: scaleio
+        scaleio:
+          endpoint: https://10.10.3.193:443/api
+          insecure: true
+          userName: admin
+          password: Password123!
+          systemName: ScaleIO@labbuildr
+          protectionDomainName: PD_labbuildr
+          storagePoolName: SP_labbuildr
 "       
 			$yml_config_file = Join-Path $Scriptdir $Scriptname
             $yml | Set-Content -Path $yml_config_file
             convert-VMXdos2unix -Sourcefile $yml_config_file -Verbose
             Write-Host -ForegroundColor Magenta " ==>Injecting RexRay Config from config.yml"
             $NodeClone | copy-VMXfile2guest -Sourcefile $yml_config_file -targetfile "/etc/rexray/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-            $Scriptblock = "rexray service start;systemctl enable rexray"
+            $Scriptblock = "echo 'LIBSTORAGE_DEBUG=true' >> /etc/rexray/rexray.env;rexray service start;systemctl enable rexray"
             Write-Verbose $Scriptblock
             $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
@@ -454,6 +469,10 @@ if ($rexray.IsPresent -and $SIO)
     $scriptname = "postgres-demo.json"
 $json = '
 {
+    "args": ["postgres"],
+    "cpus": 0.8,
+    "mem": 256,
+    "instances": 1,       
     "id": "postgres-demo",
     "container": {
         "docker": {
@@ -464,17 +483,22 @@ $json = '
                 "hostPort": 0,
                 "protocol": "tcp"
             }],
-            "parameters": [
-                {"key": "volume-driver","value": "rexray" },
-                {"key": "volume","value": "pg-data:/var/lib/postgresql/data" },
+    "volumes": [
+         {
+        "containerPath": "/var/lib/postgresql/data",
+        "external": {
+          "name": "postgres",
+          "provider": "dvdi",
+          "options": { "dvdi/driver": "rexray" }
+        },
+        "mode": "RW"
+       }
+      ]            
+    "parameters": [
                 {"key": "env","value": "PGDATA:/var/lib/postgresql/data/pg-data" },
                 {"key": "env","value": "POSTGRES_PASSWORD=Password123!" }]
         }
-    },
-    "args": ["postgres"],
-    "cpus": 0.8,
-    "mem": 256,
-    "instances": 1
+    }
 }
 '       
         $Script_file = Join-Path $Scriptdir $scriptname
