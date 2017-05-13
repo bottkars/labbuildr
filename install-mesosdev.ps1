@@ -165,7 +165,7 @@ $Guestpassword  = "Password123!"
 
 [uint64]$Disksize = 100GB
 $Node_requires = @()
-$Node_requires = ('git','numactl','libaio')
+$Node_requires = ('git','numactl','libaio','vim')
 If ($rexray)
 	{
 	$Node_requires += "postgresql"
@@ -263,7 +263,7 @@ foreach ($Node in $machinesBuilt)
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  | Out-Null
 
-    $Scriptblock =  "yum -y install mesos marathon mesosphere-zookeeper"
+    $Scriptblock =  "echo 'MARATHON_ENABLE_FEATURES=external_volumes' >> /etc/sysconfig/marathon;yum -y install mesos marathon mesosphere-zookeeper"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 
@@ -467,8 +467,7 @@ if ($rexray.IsPresent -and $SIO)
     {
     Write-Host -ForegroundColor Magenta "We are now trying to start a Postgres Container with Rex-Ray/ScaleIO  an Marathon" 
     $scriptname = "postgres-demo.json"
-$json = '
-{
+$json = '{
     "args": ["postgres"],
     "cpus": 0.8,
     "mem": 256,
@@ -482,7 +481,8 @@ $json = '
                 "containerPort": 5432,
                 "hostPort": 0,
                 "protocol": "tcp"
-            }],
+            }]
+	},
     "volumes": [
          {
         "containerPath": "/var/lib/postgresql/data",
@@ -493,13 +493,13 @@ $json = '
         },
         "mode": "RW"
        }
-      ]            
+      ],            
     "parameters": [
                 {"key": "env","value": "PGDATA:/var/lib/postgresql/data/pg-data" },
                 {"key": "env","value": "POSTGRES_PASSWORD=Password123!" }]
         }
     }
-}
+
 '       
         $Script_file = Join-Path $Scriptdir $scriptname
 		$json | Set-Content -Path $Script_file
