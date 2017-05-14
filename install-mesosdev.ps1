@@ -1,4 +1,4 @@
-﻿<#
+<#
 .Synopsis
    .\install-scaleio.ps1 
 .DESCRIPTION
@@ -6,7 +6,7 @@
       
       Copyright 2014 Karsten Bott
 
-   Licensed under the Apache License, Version 2.0 (the "License");
+   Licensed under the Apache License, Verion 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
@@ -98,7 +98,14 @@ else
 	$custom_domainsuffix = "local"
 }
 $DNS_DOMAIN_NAME = "$($Global:labdefaults.BuildDomain).$($Global:labdefaults.Custom_DomainSuffix)"
-
+if ($SIO.mdm_ipa -eq $SIO.mdm_ipb)
+	{
+	$mdm_ips = $SIO.mdm_ipa
+	}
+else
+	{
+	$mdm_ips = "$($SIO.mdm_ipa),$($SIO.mdm_ipa)"
+	}
 If (!$DNS1)
     {
     Write-Warning "DNS Server not Set, exiting now"
@@ -282,7 +289,7 @@ foreach ($Node in $machinesBuilt)
             if ($SIO)
                 {
                 Write-Host -ForegroundColor Magenta "Found ScaleIO Config, using Values to autoconfigure RexRay and SDC"
-                $Scriptblock = "export MDM_IP=$($SIO.mdm_ipa),$($SIO.mdm_ipb);yum install $sdc_rpm -y"
+                $Scriptblock = "export MDM_IP=$mdm_ips;yum install $sdc_rpm -y"
                 }
             else
                 {
