@@ -332,10 +332,13 @@ foreach ($Node in $machinesBuilt)
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
     ### should be calced soon node/2+1
-    $Scriptblock = "echo 2 > /etc/mesos-master/quorum"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-
+    if ($Nodes -gt 1)
+        {
+        $quorum = $Nodes/2
+        $Scriptblock = "echo $([system.math]::FLOOR($quorum))  > /etc/mesos-master/quorum"
+        Write-Verbose $Scriptblock
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+        }
 	if ($Update.IsPresent)
 		{
         $Scriptblock = "shutdown -r now"
