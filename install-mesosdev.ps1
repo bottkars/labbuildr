@@ -97,7 +97,7 @@ else
 	{
 	$custom_domainsuffix = "local"
 }
-$DNS_DOMAIN_NAME = "$($Global:labdefaults.BuildDomain).$($Global:labdefaults.Custom_DomainSuffix)",
+$DNS_DOMAIN_NAME = "$($Global:labdefaults.BuildDomain).$($Global:labdefaults.Custom_DomainSuffix)"
 
 If (!$DNS1)
     {
