@@ -384,13 +384,13 @@ if ($rexray.IsPresent)
       scaleio:
         driver: scaleio
         scaleio:
-          endpoint: https://10.10.3.193:443/api
-          insecure: true
-          userName: admin
-          password: Password123!
-          systemName: ScaleIO@labbuildr
-          protectionDomainName: PD_labbuildr
-          storagePoolName: SP_labbuildr
+         endpoint: https://$($SIO.gateway_ip):443/api
+         insecure: true
+         userName: admin
+         password: Password123!
+         systemName: $($SIO.system_name)
+         protectionDomainName: $($SIO.pd_name)
+         storagePoolName: $($SIO.pool_name)
 "       
 			$yml_config_file = Join-Path $Scriptdir $Scriptname
             $yml | Set-Content -Path $yml_config_file
