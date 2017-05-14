@@ -29,7 +29,7 @@ Param (
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$Update,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateRange(2,3)][int32]$Nodes=3,
+[ValidateRange(1,3)][int32]$Nodes=2,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [switch]$rexray,
 [ValidateRange(0,3)]
