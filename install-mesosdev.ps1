@@ -335,7 +335,7 @@ foreach ($Node in $machinesBuilt)
     if ($Nodes -gt 1)
         {
         $quorum = $Nodes/2
-        $Scriptblock = "echo $([system.math]::FLOOR($quorum))  > /etc/mesos-master/quorum"
+        $Scriptblock = "echo $([system.math]::CEILING($quorum))  > /etc/mesos-master/quorum"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         }
