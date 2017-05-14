@@ -72,7 +72,6 @@ Param (
 	$DNS2 = $Global:labdefaults.DNS2,
 	[Parameter(Mandatory=$false)]
 	$Host_Name = $VMXName,
-	$DNS_DOMAIN_NAME = "$($Global:labdefaults.BuildDomain).$($Global:labdefaults.Custom_DomainSuffix)",
 	[switch]$Defaults,
 	[switch]$vtbit = $false
 )
@@ -97,7 +96,8 @@ if ($LabDefaults.custom_domainsuffix)
 else
 	{
 	$custom_domainsuffix = "local"
-	}
+}
+$DNS_DOMAIN_NAME = "$($Global:labdefaults.BuildDomain).$($Global:labdefaults.Custom_DomainSuffix)",
 
 If (!$DNS1)
     {
@@ -267,9 +267,9 @@ foreach ($Node in $machinesBuilt)
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
 
-    $Scriptblock = "yum -y install mesosphere-zookeeper"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  | Out-Null
+    #$Scriptblock = "yum -y install mesosphere-zookeeper"
+    #Write-Verbose $Scriptblock
+    #$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile  | Out-Null
 
     $Scriptblock = "echo '$($node.number)' > /var/lib/zookeeper/myid"
     Write-Verbose $Scriptblock
