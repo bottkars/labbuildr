@@ -332,19 +332,18 @@ foreach ($Node in $machinesBuilt)
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
     ### should be calced soon node/2+1
-    if ($Nodes -gt 1)
-        {
-        $quorum = $Nodes/2
-        $Scriptblock = "echo $([system.math]::CEILING($quorum))  > /etc/mesos-master/quorum"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-        }
-	if ($Update.IsPresent)
-		{
+
+    $quorum = $Nodes/2
+    $Scriptblock = "echo $([system.math]::CEILING($quorum))  > /etc/mesos-master/quorum"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+
+if ($Update.IsPresent)
+	{
         $Scriptblock = "shutdown -r now"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -Confirm:$false -nowait | Out-Null
-		}
+	}
     }
 if ($rexray.IsPresent)
     {
