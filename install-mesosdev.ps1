@@ -465,7 +465,7 @@ $json = '{
         #$Scriptblock = "sh /root/$Scriptname &> $Logfile"
 	
 	Write-Host -ForegroundColor Magenta " ==>waiting for Marathon to accept API Requests"
-        $Scriptblock =  "until [  `"`$(curl -X GET http://$($Masterip):8080/v2/apps)`" == `"{`"apps`":[]}`" ]; do sleep 5 ;done"
+        $Scriptblock =  "until [[  `"`$(curl -X GET http://$($Masterip):8080/v2/apps)`" == *`"apps`"* ]]; do sleep 5 ;done"
 	$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -nowait | Out-Null
 
         $Scriptblock = "curl -X POST http://$($Masterip):8080/v2/apps -d @/root/$scriptname -H 'Content-type: application/json'"
