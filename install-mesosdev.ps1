@@ -440,9 +440,6 @@ if ($rexray.IsPresent)
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         }
 
-
-
-
 $scriptname = "labbuildr-demo.json"
 $json = '{
   "id": "labbuildr-demo",
@@ -462,10 +459,15 @@ $json = '{
 }
 '       
         $Script_file = Join-Path $Scriptdir $scriptname
-		$json | Set-Content -Path $Script_file
+	$json | Set-Content -Path $Script_file
         convert-VMXdos2unix -Sourcefile $Script_file -Verbose
         $NodeClone | copy-VMXfile2guest -Sourcefile $Script_file -targetfile "/root/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-        $Scriptblock = "sh /root/$Scriptname &> $Logfile"
+        #$Scriptblock = "sh /root/$Scriptname &> $Logfile"
+	
+	Write-Host -ForegroundColor Magenta " ==>waiting for Marathon to accept API Requests"
+        $Scriptblock =  "until [  `"$(curl -X GET http://$($Masterip):8080/ping)`" == `"pong`" ]; do sleep 5 ;done"
+	$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -nowait | Out-Null
+
         $Scriptblock = "curl -X POST http://$($Masterip):8080/v2/apps -d @/root/$scriptname -H 'Content-type: application/json'"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -nowait | Out-Null
@@ -514,7 +516,7 @@ $json = '{
 		$json | Set-Content -Path $Script_file
         convert-VMXdos2unix -Sourcefile $Script_file -Verbose
         $NodeClone | copy-VMXfile2guest -Sourcefile $Script_file -targetfile "/root/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-        $Scriptblock = "sh /root/$Scriptname &> $Logfile"
+        #$Scriptblock = "sh /root/$Scriptname &> $Logfile"
         $Scriptblock = "curl -X POST http://$($Masterip):8080/v2/apps -d @/root/$scriptname -H 'Content-type: application/json'"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -nowait| Out-Null
