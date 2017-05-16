@@ -408,11 +408,11 @@ if ($rexray.IsPresent)
             $NodeClone | copy-VMXfile2guest -Sourcefile $yml_config_file -targetfile "/etc/rexray/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
             $Scriptblock = "echo 'LIBSTORAGE_DEBUG=true' >> /etc/rexray/rexray.env;rexray service start;systemctl enable rexray"
             Write-Verbose $Scriptblock
-            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
 
             $Scriptblock = 'vmtoolsd --cmd="info-set guestinfo.REXRAY $(cat /var/log/rexray/rexray.log)"'
             Write-Verbose $Scriptblock
-            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+            $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
             ($Nodeclone |Get-VMXVariable -GuestVariable REXRAY).REXRAY
         }
     }
@@ -423,21 +423,21 @@ if ($rexray.IsPresent)
         $NodeClone = get-vmx $Node.Name
         $Scriptblock = "systemctl restart mesos-master"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
         }
     foreach ($Node in $machinesBuilt)
         {
         $NodeClone = get-vmx $Node.Name
         $Scriptblock = "systemctl restart marathon"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
         }
     foreach ($Node in $machinesBuilt)
         {
         $NodeClone = get-vmx $Node.Name
         $Scriptblock = "echo 'docker,mesos' > /etc/mesos-slave/containerizers;echo '5mins' > /etc/mesos-slave/executor_registration_timeout;systemctl restart mesos-slave"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
         }
 
 $scriptname = "labbuildr-demo.json"
@@ -461,16 +461,16 @@ $json = '{
         $Script_file = Join-Path $Scriptdir $scriptname
 	$json | Set-Content -Path $Script_file
         convert-VMXdos2unix -Sourcefile $Script_file -Verbose
-        $NodeClone | copy-VMXfile2guest -Sourcefile $Script_file -targetfile "/root/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile | Out-Null
+        $NodeClone | copy-VMXfile2guest -Sourcefile $Script_file -targetfile "/root/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
         #$Scriptblock = "sh /root/$Scriptname &> $Logfile"
 	
 	Write-Host -ForegroundColor Magenta " ==>waiting for Marathon to accept API Requests"
         $Scriptblock =  "until [[  `"`$(curl -X GET http://$($Masterip):8080/v2/apps)`" == *`"apps`"* ]]; do sleep 5 ;done"
-	$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -nowait | Out-Null
+	$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile| Out-Null
 
         $Scriptblock = "curl -X POST http://$($Masterip):8080/v2/apps -d @/root/$scriptname -H 'Content-type: application/json'"
         Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -nowait | Out-Null
+        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
 
 #>
 
