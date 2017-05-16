@@ -18,7 +18,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://github.com/bottkars/labbuildr/wiki/install-mesos.ps1-%5Bwith-rexray%5D
+   http://labbuildr.readthedocs.io/en/latest/Solutionpacks/install-mesos.ps1
 .EXAMPLE
 #>
 [CmdletBinding(DefaultParametersetName = "install")]
