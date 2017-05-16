@@ -104,7 +104,7 @@ if ($SIO.mdm_ipa -eq $SIO.mdm_ipb)
 	}
 else
 	{
-	$mdm_ips = "$($SIO.mdm_ipa),$($SIO.mdm_ipa)"
+	$mdm_ips = "$($SIO.mdm_ipa),$($SIO.mdm_ipb)"
 	}
 If (!$DNS1)
     {
@@ -526,5 +526,3 @@ Write-host -ForegroundColor White "Mesos Deployment took $($StopWatch.Elapsed.To
 Write-Host -ForegroundColor Magenta "Login to the VM´s with root/Password123! or with Pagent Auth
 go to http://$($Masterip):5050 for mesos admin
 go to http://$($Masterip):8080 for marathon admin"
-    
-#>
