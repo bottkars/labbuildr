@@ -461,7 +461,7 @@ $json = '{
         $Script_file = Join-Path $Scriptdir $scriptname
 	$json | Set-Content -Path $Script_file
         convert-VMXdos2unix -Sourcefile $Script_file -Verbose
-        $NodeClone | copy-VMXfile2guest -Sourcefile $Script_file -targetfile "/root/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+        $NodeClone | copy-VMXfile2guest -Sourcefile $Script_file -targetfile "/root/$Scriptname" -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile | Out-Null
         #$Scriptblock = "sh /root/$Scriptname &> $Logfile"
 	
 	Write-Host -ForegroundColor Magenta " ==>waiting for Marathon to accept API Requests"
