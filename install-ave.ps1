@@ -20,10 +20,10 @@
 .LINK
    https://community.emc.com/blogs/bottk/2015/01/27/labbuildrnew-solution-pack-install-ave-to-autodeploy-avamar-nodes
 .EXAMPLE
-    .\install-ave.ps1 -ovf D:\Sources\AVE-7.2.0.390.ovf\OVF\AVE-7.2.0.390.ovf 
+    .\install-ave73.ps1 -ovf  D:\EMC_VAs\AVE-7.3.0.233.ova 
     This extracts the AVE OVF into a template Ready Source
 .EXAMPLE
-    .\install-ave.ps1 -Defaults -MasterPath .\AVE-7.2.0.390 
+    .\install-ave73.ps1 -MasterPath c:\SharedMaster\AVE-7.3.0.233
     installs a AVE with labbuildrdefaults
 
 #>
@@ -79,7 +79,7 @@ _______|_________|_____|_________
 #requires -module vmxtoolkit
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
-
+$sleep = 5
 $Builddir = $PSScriptRoot
 $Nodeprefix = "AVENode"
 $rootuser = "root"
@@ -90,9 +90,105 @@ switch ($PsCmdlet.ParameterSetName)
 {
     "import"
         {
-        if (!($mastername)) {$mastername = (Split-Path -Leaf $ovf).Replace(".ovf","")}
-        & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $ovf $PSScriptRoot #
-        Write-Output "Use install-ave -Master"
+		$labdefaults = Get-LABDefaults
+		try
+			{
+			$Sourcedir = $labdefaults.Sourcedir
+			}
+		catch [System.Management.Automation.ValidationMetadataException]
+			{
+			Write-Warning "Could not test Sourcedir Found from Defaults, USB stick connected ?"
+			Break
+			}
+		catch [System.Management.Automation.ParameterBindingException]
+			{
+			Write-Warning "No valid Sourcedir Found from Defaults, USB stick connected ?"
+			Break
+			}
+		try
+			{
+			$Masterpath = $LabDefaults.Masterpath
+			}
+		catch
+			{
+			Write-Host -ForegroundColor Gray " ==> No Masterpath specified, trying default"
+			$Masterpath = $Builddir
+			}
+
+        Write-Host -ForegroundColor Gray " ==>Validating OVF"
+        try
+            {
+            $Importfile = Get-ChildItem $ovf -ErrorAction SilentlyContinue
+            }
+        catch
+            {
+            Write-Warning "$ovf is no valid ovf / ova location"
+            exit
+            }
+
+        if ($Importfile.extension -eq ".ova")
+            {
+            $OVA_Destination = join-path $Importfile.DirectoryName $Importfile.BaseName
+			### if already exíst !?!?!?
+            Write-Host -ForegroundColor Gray " ==>Extraxting from OVA Package $Importfile"
+            $Expand = Expand-LABPackage -Archive $Importfile.FullName -destination $OVA_Destination -Force
+            $Importfile = Get-ChildItem -Path $OVA_Destination -Filter "*.ovf" 
+            }
+        try
+            {
+            Write-Host -ForegroundColor Gray " ==>Validating OVF from OVA Package"
+            $Importfile = Get-ChildItem -Filter "*.ovf" -Path $Importfile.DirectoryName -ErrorAction SilentlyContinue
+            }
+        catch
+            {
+            Write-Warning "we could not find a ovf file at $($Importfile.Directoryname)"
+            exit
+            }
+        if (!($mastername)) 
+            {
+            $mastername = $Importfile.BaseName
+            }
+        ## tweak ovf
+        Write-Host -ForegroundColor Gray " ==>Adjusting OVF file for VMwARE Workstation"
+        $content = Get-Content -Path $Importfile.FullName
+        $Out_Line = $true
+        $OutContent = @()
+        ForEach ($Line In $content)
+            {
+            If ($Line -match '<ProductSection')
+                {
+                $Out_Line = $false
+                }
+            If ($Out_Line -eq $True)
+                {
+                $OutContent += $Line
+                }
+            If ($Line -match '</ProductSection')
+                {
+                $Out_Line = $True
+                }
+            }
+        $OutContent | Set-Content -Path $Importfile.FullName
+        Write-Host -ForegroundColor Gray " ==>Checkin for VM $mastername"
+
+        if (Get-VMX -path $MasterPath\$mastername -WarningAction SilentlyContinue)
+            {
+            Write-Warning "Base VM $mastername already exists, please delete first"
+            exit
+            }
+        else
+            {
+            Write-Host -ForegroundColor Magenta " ==>Importing Base VM"
+            if ((import-VMXOVATemplate -OVA $Importfile.FullName -Name $mastername -destination $MasterPath  -acceptAllEulas).success -eq $true)
+                {
+                Write-Host -ForegroundColor Gray "[Preparation of Template done, please run .\$($MyInvocation.MyCommand) -MasterPath $MasterPath\$mastername]"
+                }
+            else
+                {
+                Write-Host "Error importing Base VM. Already Exists ?"
+                exit
+                }
+            }
         }
 
      default
@@ -110,6 +206,7 @@ switch ($PsCmdlet.ParameterSetName)
             $DNS1 = $labdefaults.DNS1
             $DNS2 = $labdefaults.DNS2
             $configure = $true
+			#$MasterPath = $labdefaults.Masterpath
             }
 		if ($LabDefaults.custom_domainsuffix)
 			{
@@ -120,83 +217,52 @@ switch ($PsCmdlet.ParameterSetName)
 			$custom_domainsuffix = "local"
 			}
 
-
-        if (!($MasterVMX=get-vmx AVEmaster))
-            {
-            $MasterVMX = get-vmx -name AVE-7*
-            iF ($MasterVMX)
-                {
-                $MasterVMX = $MasterVMX | Sort-Object -Descending
-                $MasterVMX = $MasterVMX[-1]
-                }
-            }
-        else
-            {
-            if ($MasterPath)        
+       if ($MasterPath)        
                 {
                 $MasterVMX = get-vmx -path $MasterPath
                 }
+        else
+            {
+			$MasterPath = (Get-LABDefaults).Masterpath
+            if (!($MasterVMX=get-vmx -Path "$Masterpath\AVEmaster"))
+                {
+                $MasterVMX = get-vmx -Path  "$MasterPath\AVE-7*"
+                iF ($MasterVMX)
+                    {
+                    $MasterVMX = $MasterVMX | Sort-Object -Descending
+                    $MasterVMX = $MasterVMX[-1]
+                    }
+                }
+
             }
 
         if (!$MasterVMX)
             {
             write-warning "Could not find AVEMaster"
-            if ($Defaults.IsPresent)
-                {
-                Write-Warning "Trying Latest OVF fom $Sourcedir"
-                try
-                    {
-                    $OVFpath =Join-Path $Sourcedir "AVE-7*\" -ErrorAction Stop
-                    }
-                catch [System.Management.Automation.DriveNotFoundException] 
-                    {
-                    Write-Warning "Drive not found, make sure to have your Source Stick connected"
-                    exit
-                    }
-                
-                    $OVFfile = Get-ChildItem -Path $OVFpath -Filter "*.ovf" -Recurse | Sort-Object -Descending -Property Name
-                    If (!$OVFfile)
-                        {
-                        Write-Warning "No OVF for AVE found"
-                        exit
-                        }
-                    else 
-                        {
-                        Write-Warning "testing OVF"
-                        $OVFfile = $OVFfile[0]
-                        $mastername = (Split-Path -Leaf $OVFfile).Replace(".ovf","")
-                        $mastername
-                        $OVFfile.FullName
-                        & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $OVFfile.FullName $PSScriptRoot #
-                        if ($LASTEXITCODE -ne 0)
-                            {
-                            Write-Warning "Error Extraxting OVF"
-                            exit
-                            }
-                        $MasterVMX = get-vmx $mastername
-                        }
-                }
-            else
-                {
-                Write-Warning "Please import with -ovf or use -Defaults"
-                exit
-                }
-
+            Write-Warning "Please import with -ovf [path to ova or ovf file]"
+            exit
             }
+            
+            #}
 
 
         if (!$MasterVMX.Template) 
           {
-          write-verbose "Templating Master VMX"
+          Write-Host -ForegroundColor Gray " ==>Templating Master VMX"
           $template = $MasterVMX | Set-VMXTemplate
           }
-        $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
 
+        $Basesnap = $MasterVMX | Get-VMXSnapshot -WarningAction SilentlyContinue | where Snapshot -Match "Base"
         if (!$Basesnap) 
-          {
-           Write-verbose "Base snap does not exist, creating now"
-           $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
-          }
+            {
+            Write-Host -ForegroundColor Gray " ==>Tweaking baseconfig"
+            $content = Get-Content $MasterVMX.config
+            $content = $content -notmatch "independent_persistent"
+            $content | Set-Content $MasterVMX.config
+            $MasterVMX | Get-VMXScsiDisk | where lun -ne 0 | Remove-VMXScsiDisk | Out-Null
+            Write-Host -ForegroundColor Gray " ==>Base snap does not exist, creating now"
+            $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
+            }
 
         If (!($Basesnap))
             {
@@ -207,10 +273,10 @@ switch ($PsCmdlet.ParameterSetName)
 
         foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
          {
-          Write-Verbose "Checking VM $Nodeprefix$node already Exists"
-          If (!(get-vmx $Nodeprefix$node))
+          Write-Host -ForegroundColor Gray " ==>Checking VM $Nodeprefix$node already Exists"
+          If (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue))
                 {
-                write-verbose "Creating clone $Nodeprefix$node"
+                Write-Host -ForegroundColor Magenta " ==>Creating Machine $Nodeprefix$node"
                $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXlinkedClone -CloneName $Nodeprefix$node -Clonepath "$Builddir"
               # Write-Output $NodeClone
                $SCSI= 0
@@ -218,7 +284,7 @@ switch ($PsCmdlet.ParameterSetName)
                    {
                       "0.5TB"
                            {
-                         Write-Verbose "SMALL AVE Selected"
+                         Write-Host -ForegroundColor Gray " ==>SMALL AVE Selected"
                          $NumDisks = 3
                          [uint64]$Disksize = 250GB
                          $memsize = 6144
@@ -226,7 +292,7 @@ switch ($PsCmdlet.ParameterSetName)
                             }
                         "1TB"
                             {
-                            Write-Verbose "Medium AVE Selected"
+                            Write-Host -ForegroundColor Gray " ==>Medium AVE Selected"
                             $NumDisks = 6
                             [uint64]$Disksize = 250GB
                           $memsize = 8192
@@ -234,7 +300,7 @@ switch ($PsCmdlet.ParameterSetName)
                            }
                        "2TB"
                            {
-                           Write-Verbose "Large AVE Selected"
+                           Write-Host -ForegroundColor Gray " ==>Large AVE Selected"
                            $NumDisks = 3
                            [uint64]$Disksize = 1000GB
                             $memsize = 16384
@@ -242,7 +308,7 @@ switch ($PsCmdlet.ParameterSetName)
                            }
                        "4TB"
                            {
-                           Write-Verbose "XtraLarge AVE Selected"
+                           Write-Host -ForegroundColor Gray " ==>XtraLarge AVE Selected"
                           $NumDisks = 6
                           [uint64]$Disksize = 1000GB
                           $memsize = 36864
@@ -252,21 +318,21 @@ switch ($PsCmdlet.ParameterSetName)
                  }
             
                  foreach ($LUN in (1..$NumDisks))
-                  {
-                   $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-                   Write-Verbose "Building new Disk $Diskname"
+                    {
+                    $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
+                    Write-Host -ForegroundColor Gray " ==>Building new Disk $Diskname"
                     $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-                 Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
-                   $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
+                    Write-Host -ForegroundColor Gray " ==>Adding Disk $Diskname to $($NodeClone.clonename)"
+                    $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
                    }
         
-    Write-Verbose "Configuring NIC"
+    Write-Host -ForegroundColor Gray " ==>Configuring NIC"
     $Netadater = $NodeClone | Set-VMXVnet -Adapter 0 -vnet $vmnet
-    Write-Verbose "Disabling IDE0"
+    Write-Host -ForegroundColor Gray " ==>Disabling IDE0"
     $NodeClone | Set-VMXDisconnectIDE | Out-Null
     $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName $NodeClone.CloneName
     $MainMem = $NodeClone | Set-VMXMainMemory -usefile:$false
-    if ($mastervmx.VMXName -match "AVE-7.2")
+    if ($mastervmx.VMXName -ge "AVE-7.2")
         {
         $Annotation = $NodeClone | Set-VMXAnnotation -builddate -Line1 "connect to https://$subnet.3$($Node):7543/avi/avigui.html to complete the Installation" -Line2 "root:$rootuser" -Line3 "password:$rootpassword" -Line4 "SupportUser = Supp0rtHarV1"
         }
@@ -275,62 +341,62 @@ switch ($PsCmdlet.ParameterSetName)
         $Annotation = $NodeClone | Set-VMXAnnotation -builddate -Line1 "connect to https://$subnet.3$($Node):8543/avi/avigui.html to complete the Installation" -Line2 "root:$rootuser" -Line3 "password:$rootpassword" -Line4 "SupportUser = Supp0rtInd1"
         }
 
-    Write-Verbose "Configuring Memory to $memsize"
+    Write-Host -ForegroundColor Gray " ==>Configuring Memory to $memsize"
     $Memory = $NodeClone | Set-VMXmemory -MemoryMB $memsize
-    Write-Verbose "Configuring $Numcpu CPUs"
+    Write-Host -ForegroundColor Gray " ==>Configuring $Numcpu CPUs"
     $Processor = $nodeclone | Set-VMXprocessor -Processorcount $Numcpu
-    Write-Verbose "Starting VM $($NodeClone.Clonename)"
+    Write-Host -ForegroundColor Magenta " ==>Starting VM $($NodeClone.Clonename)"
     $Started = $NodeClone | start-vmx
     if ($configure.IsPresent)
     {
     $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
     $ip="$subnet.3$Node"
+    Write-Host -ForegroundColor Gray  -NoNewline " [==]Waiting for VMware Tools"
      do {
         $ToolState = Get-VMXToolsState -config $NodeClone.config
         Write-Verbose "VMware tools are in $($ToolState.State) state"
-        sleep 10
+        sleep $sleep
         }
     until ($ToolState.state -match "running")
-    if ($mastervmx.VMXName -notmatch "AVE-7.2")
-    {
+	Write-Host " [running]"
+    # if ($mastervmx.VMXName -ge "AVE-7.2")
+    # {
+    Write-Host -ForegroundColor Gray -NoNewline " [==]Waiting for Avamar to come up"
     do {
-        Write-Warning "Waiting for Avamar to come up"
         $Process = Get-VMXProcessesInGuest -config $NodeClone.config -Guestuser $rootuser -Guestpassword $rootpassword
-        sleep 10
+        sleep $sleep
         }
     until ($process -match "mingetty")
-    Write-Verbose "Configuring Disks"
-    $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/perl /usr/local/avamar/bin/ave-part.pl" -Guestuser $rootuser -Guestpassword changeme -Verbose | Out-Null
-    Write-Verbose "rebooting VM $($NodeClone.Clonename)"
-#    we do not use shutdown since toolstate does not reset
-    $NodeClone | Stop-VMX | Out-Null
-    $NodeClone | start-vmx | Out-Null
-    do {
-        $ToolState = Get-VMXToolsState -config $NodeClone.config 
-        Write-Verbose "VMware tools are in $($ToolState.State) state"
-        sleep 10
+	Write-Host " [running]"
+    if ($DNS2)
+        {
+        $nameserver = "nameserverver1=$DNS1 nameserver2=$DNS2"
         }
-    until ($ToolState.state -match "running")
-    }
-    $NodeClone | Invoke-VMXBash -Scriptblock "yast2 lan edit id=0 ip=$IP netmask=255.255.255.0 prefix=24 verbose" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
-    $NodeClone | Invoke-VMXBash -Scriptblock "hostname $($NodeClone.CloneName)" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
+    else
+        {
+        $nameserver = "nameserverver1=$DNS1"
+        }
+    $Hostname = $NodeClone.CloneName.ToLower()
+    Write-Host -ForegroundColor White "do NOT log in to Appliance until network configured"
+    $NodeClone | Invoke-VMXBash -Scriptblock "/usr/bin/perl /usr/local/avamar/bin/ave-part.pl" -Guestuser $rootuser -Guestpassword changeme | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock "yast2 lan edit id=0 ip=$IP netmask=255.255.255.0 prefix=24 verbose" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock "hostname $Hostname" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
     $Scriptblock = "echo 'default "+$DefaultGateway+" - -' > /etc/sysconfig/network/routes"
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock  -Guestuser $rootuser -Guestpassword $rootpassword -Verbose  | Out-Null
-    $sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SEARCHLIST=`"`"/NETCONFIG_DNS_STATIC_SEARCHLIST=`""+$BuildDomain+"."+$Custom_DomainSuffix+"`"/g' /etc/sysconfig/network/config" 
-    $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock  -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
+    $sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SEARCHLIST=`"`"/NETCONFIG_DNS_STATIC_SEARCHLIST=`""+$BuildDomain+"."+$custom_domainsuffix+"`"/g' /etc/sysconfig/network/config" 
+    $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
     $sed = "sed -i -- 's/NETCONFIG_DNS_STATIC_SERVERS=`"`"/NETCONFIG_DNS_STATIC_SERVERS=`""+$subnet+".10`"/g' /etc/sysconfig/network/config"
-    $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
-    $NodeClone | Invoke-VMXBash -Scriptblock "/sbin/netconfig -f update" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
-    $Scriptblock = "echo '$ip $($Nodeprefix)$($Node) $($Nodeprefix)$($Node).$($BuildDomain).$Custom_DomainSuffix'  >> /etc/hosts"
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
-
-    $Scriptblock = "echo '"+$Nodeprefix+$Node+"."+$BuildDomain+"."+$Custom_DomainSuffix+"'  > /etc/HOSTNAME"
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
-    $NodeClone | Invoke-VMXBash -Scriptblock "/etc/init.d/network restart" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock $sed -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock "/sbin/netconfig -f update" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
+    $Scriptblock = "echo '$ip $Hostname $Hostname.$($BuildDomain).$custom_domainsuffix'  >> /etc/hosts"
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
+    $Scriptblock = "echo '$Hostname.$BuildDomain.$custom_domainsuffix'  > /etc/HOSTNAME"
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock "/etc/init.d/network restart" -Guestuser $rootuser -Guestpassword $rootpassword | Out-Null
     do {
         $ToolState = Get-VMXToolsState -config $NodeClone.config 
         Write-Verbose "VMware tools are in $($ToolState.State) state"
-        sleep 10
+        sleep $sleep
         }
     until ($ToolState.state -match "running")
     if ($Hostkey)
@@ -341,24 +407,18 @@ switch ($PsCmdlet.ParameterSetName)
         $Scriptblock = "echo '$Hostkey' >> /home/admin/.ssh/authorized_keys2"
         Write-Verbose $Scriptblock
         $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $rootpassword
-
         }
-
-    # Write-Verbose "Starting Avamar Installer, this may take a while"
-    # $NodeClone | Invoke-VMXBash -Scriptblock "/bin/sh /usr/local/avamar/src/avinstaller-bootstrap-7.1.1-141.sles11_64.x86_64.run" -Guestuser $rootuser -Guestpassword $rootpassword -Verbose | Out-Null
-    Write-Host "Trying to connect to https://$subnet.3$($Node):7543/avi/avigui.html to complete the Installation"
-    # Start-Process "https://$subnet.3$($Node):8543/avi/avigui.html"
     
-
+    Write-Host "connect to https://$subnet.3$($Node):7543/avi/avigui.html to complete the installation, you may wait a few minutes"
     } # end configure
-    Write-Host $Annotation
+    
     }
     else
         {
         Write-Warning "Node $Nodeprefix$node already exists"
         }
 
-}
+	}
 
 }
 }
