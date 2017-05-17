@@ -304,12 +304,15 @@ if ($scaleio.IsPresent)
         {
         Write-Warning "Single MDM installations with MemoryTweaking  are only for Test Deployments and Memory Contraints/Manager Laptops :-)"
         $mdm_ip="$mdm_ipa"
+		$mdm_ipb = $mdm_ipa
         }
     else
         {
         $mdm_ip="$mdm_ipa,$mdm_ipb"
         }
 	Write-Host -ForegroundColor Gray " ==>using MDM IP´s $mdm_ip"
+	Set-LABSIOConfig -mdm_ipa $mdm_ipa -mdm_ipb $mdm_ipb -gateway_ip $tb_ip -system_name $SystemName -pool_name $StoragePoolName -pd_name $ProtectionDomainName
+
 	$ubuntu_sio_ver = $ubuntu_ver -replace "_",".0"
 	$Ubuntu = Get-ChildItem *$ubuntu_sio_ver* -Path $scaleio_dir -Include "*UBUNTU_$ubuntu_sio_ver*" -Recurse -Directory -ErrorAction SilentlyContinue
 if (!$ubuntu)
