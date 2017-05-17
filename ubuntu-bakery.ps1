@@ -74,6 +74,7 @@ Param(
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [Parameter(ParameterSetName = "scaleio", Mandatory = $true)]
 [Switch]$singlemdm,
+[Parameter(ParameterSetName = "openstack",Mandatory=$false)]
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [Switch]$Openstack_Controller,
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)]
