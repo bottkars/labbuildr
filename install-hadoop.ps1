@@ -23,38 +23,51 @@
 
 #>
 [CmdletBinding(DefaultParametersetName = "defaults")]
-Param(
+Param(    
+[Parameter(ParameterSetName = "install",Mandatory = $false)]
+	[ValidateSet('Centos7_3_1611','Centos7_1_1511','Centos7_1_1503')]
+	[string]$centos_ver = 'Centos7_3_1611',
+
+
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateRange(1,3)][int32]$Disks = 1,
+[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateRange(1,3)][int32]$SCSI_DISK_COUNT = 1,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir = 'h:\sources',
+[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir = $labdefaults.sourcedir,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath = '.\CentOS7 Master',
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$MasterPath = $labdefaults.Masterpath,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [int32]$Nodes=1,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [int32]$Startnode = 1,
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
-[Parameter(ParameterSetName = "install",Mandatory=$false)][ipaddress]$subnet = "192.168.2.0",
+[Parameter(ParameterSetName = "install",Mandatory=$false)][ipaddress]$subnet = $labdefaults.mysubnet,
 [Parameter(ParameterSetName = "install",Mandatory=$False)]
-[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain = "labbuildr",
-[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = "vmnet2",
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
+[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain = $labdefaults.BuildDomain,
+[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet = $labdefaults.vmnet,
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateSet('hadoop-2.7.0','hadoop-2.7.1','hadoop-2.7.2')]$release="hadoop-2.7.2",
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$Update
+[ValidateSet('hadoop-2.7.0','hadoop-2.7.1','hadoop-2.7.2','hadoop-2.7.3','hadoop-2.8.0')]$release="hadoop-2.8.0",
+[Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$Update,
+     $Hostkey = $labdefaults.HostKey,
+     $Gateway = $labdefaults.Gateway,
+     $DefaultGateway = $labdefaults.Defaultgateway,
+     $DNS1 = $labdefaults.DNS1,
+     $DNS2 = $labdefaults.DNS2,
+<#
+    Size
+    'XS'  = 1vCPU, 512MB
+    'S'   = 1vCPU, 768MB
+    'M'   = 1vCPU, 1024MB
+    'L'   = 2vCPU, 2048MB
+    'XL'  = 2vCPU, 4096MB 
+    'TXL' = 4vCPU, 6144MB
+    'XXL' = 4vCPU, 8192MB
+  #>
+	[ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL",
+$ip_startrange = 230
+
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
-$centos_ver = "7"
-$Range = "23"
-$Start = "1"
 $Scenarioname = "Hadoop"
 $Guestuser = $Scenarioname.ToLower()
 $Nodeprefix = "$($Scenarioname)Node"
@@ -67,44 +80,8 @@ else
 $Builddir = $PSScriptRoot
 $Scriptdir = Join-Path $Builddir "Scripts"
 If ($Defaults.IsPresent)
-    {
-    $labdefaults = Get-labDefaults
-    $vmnet = $labdefaults.vmnet
-    $subnet = $labdefaults.MySubnet
-    $BuildDomain = $labdefaults.BuildDomain
-    try
-        {
-        $Sourcedir = $labdefaults.Sourcedir
-        }
-    catch [System.Management.Automation.ValidationMetadataException]
-        {
-        Write-Warning "Could not test Sourcedir Found from Defaults, USB stick connected ?"
-        Break
-        }
-    catch [System.Management.Automation.ParameterBindingException]
-        {
-        Write-Warning "No valid Sourcedir Found from Defaults, USB stick connected ?"
-        Break
-        }
-    try
-        {
-        $Masterpath = $LabDefaults.Masterpath
-        }
-    catch
-        {
-        # Write-Host -ForegroundColor Gray " ==> No Masterpath specified, trying default"
-        $Masterpath = $Builddir
-        }
-     $Hostkey = $labdefaults.HostKey
-     $Gateway = $labdefaults.Gateway
-     $DefaultGateway = $labdefaults.Defaultgateway
-     $DNS1 = $labdefaults.DNS1
-     $DNS2 = $labdefaults.DNS2
-    }
-if (!$DNS2)
-    {
-    $DNS2 = $DNS1
-    }
+    { deny-labdefaults
+}
 
 if ($LabDefaults.custom_domainsuffix)
 	{
@@ -115,40 +92,16 @@ else
 	$custom_domainsuffix = "local"
 	}
 
-if (!$Masterpath) {$Masterpath = $Builddir}
-$OS = "Centos$centos_ver"
-switch ($centos_ver)
-    {
-    "7"
-        {
-        $netdev = "eno16777984"
-        $Required_Master = "$OS Master"
-        }
-    default
-        {
-        $netdev= "eno16777984"
-        $Required_Master = $OS
-        }
-    }
+
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 $rootuser = "root"
 $Guestpassword = "Password123!"
 [uint64]$Disksize = 100GB
-$scsi = 0
-try
-    {
-    $yumcachedir = join-path -Path $Sourcedir "$OS\cache\yum" -ErrorAction stop
-    }
-catch [System.Management.Automation.DriveNotFoundException]
-    {
-    write-warning "Sourcedir not found. Stick not inserted ?"
-    break
-    }
 
 ###
 
-
+$Node_requires = "tar wget java-1.7.0-openjdk git vim"
 $DefaultTimezone = "Europe/Berlin"
 $Guestpassword = "Password123!"
 $Rootuser = "root"
@@ -161,7 +114,7 @@ $scsi = 0
 ###### checking master Present
 try
     {
-    $MasterVMX = test-labmaster -Masterpath $MasterPath -Master $Required_Master -Confirm:$Confirm -erroraction stop
+    $MasterVMX = test-labmaster -Masterpath $MasterPath -Master $centos_ver -Confirm:$Confirm -erroraction stop
     }
 catch
     {
@@ -174,17 +127,7 @@ catch
     exit
     }
 ####
-if (!$MasterVMX.Template) 
-            {
-            write-verbose "Templating Master VMX"
-            $template = $MasterVMX | Set-VMXTemplate
-            }
-        $Basesnap = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base"
-        if (!$Basesnap) 
-        {
-         Write-verbose "Base snap does not exist, creating now"
-        $Basesnap = $MasterVMX | New-VMXSnapshot -SnapshotName BASE
-        }
+
 if (!(Test-path "$Sourcedir\$Scenarioname"))
     {
 	New-Item -ItemType Directory "$Sourcedir\$Scenarioname" -Force | Out-Null
@@ -203,98 +146,57 @@ if (!(Test-Path "$Sourcedir\$Scenarioname\$release.tar.gz"))
 		}
 	}
 ####Build Machines#
-    $machinesBuilt = @()
-    foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
-        {
-        If (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue))
-        {
-        Write-Host -ForegroundColor Magenta " ==>Creating $Nodeprefix$node"
-        $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node 
-        If ($Node -eq $Start)
-            {
-			$Primary = $NodeClone
-            }
-        if (!($DefaultGateway))
-            {
-            $DefaultGateway = "$subnet.$Range$Node"
-            }
-        $Config = Get-VMXConfig -config $NodeClone.config
-        Write-Verbose "Tweaking Config"
-        Write-Verbose "Creating Disks"
-        foreach ($LUN in (1..$Disks))
-            {
-            $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-            Write-Verbose "Building new Disk $Diskname"
-            $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-            Write-Verbose "Adding Disk $Diskname to $($NodeClone.VMXname)"
-            $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
-            }
-        Write-Verbose "Configuring NIC 0 for $vmnet"
-        Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -config $NodeClone.Config -WarningAction SilentlyContinue | Out-Null
-        Set-VMXVnet -Adapter 0 -vnet $vmnet -config $NodeClone.Config | Out-Null
-        $Displayname = $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.CloneName)@$BuildDomain"
-        $Scenario = $NodeClone |Set-VMXscenario -config $NodeClone.Config -Scenarioname $Scenarioname -Scenario 7
-        $ActivationPrefrence = $NodeClone |Set-VMXActivationPreference -config $NodeClone.Config -activationpreference $Node
-        $NodeClone | Set-VMXprocessor -Processorcount 4 | Out-Null
-        $NodeClone | Set-VMXmemory -MemoryMB 4096 | Out-Null
-        $Config = $Nodeclone | Get-VMXConfig
-        $Config = $Config -notmatch "ide1:0.fileName"
-        $Config | Set-Content -Path $NodeClone.config 
-        Write-Verbose "Starting $Nodeprefix$Node"
-        start-vmx -Path $NodeClone.Path -VMXName $NodeClone.CloneName | Out-Null
-        $machinesBuilt += $($NodeClone.cloneName)
-    }
+$machinesBuilt = @()
+
+foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
+    {
+    Write-Host -ForegroundColor White "Checking for $Nodeprefix$node"
+    $Lab_VMX = ""
+	$Lab_VMX = New-LabVMX -CentOS -CentOS_ver $centos_ver -Size $Size -SCSI_DISK_COUNT $SCSI_DISK_COUNT -SCSI_DISK_SIZE $Disksize -VMXname $Nodeprefix$Node -SCSI_Controller $SCSI_Controller -vtbit:$vtbit -start
+	if ($Lab_VMX)
+		{
+		$temp_object = New-Object System.Object
+		$temp_object | Add-Member -type NoteProperty -name Name -Value $Nodeprefix$Node
+		$temp_object | Add-Member -type NoteProperty -name Number -Value $Node
+		$machinesBuilt += $temp_object
+		}       
     else
-        {
-        write-Warning "Machine $Nodeprefix$node already Exists"
-        }
+		{
+		Write-Warning "Machine $Nodeprefix$Node already exists"
+		}
+			
+	}
+if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+    {
+    Write-verbose "Now Pausing"
+    pause
     }
-    foreach ($Node in $machinesBuilt)
-        {
-        $ip="$subnet.$Range$($Node[-1])"
-        $NodeClone = get-vmx $Node
-        do {
-            $ToolState = Get-VMXToolsState -config $NodeClone.config
-            Write-Verbose "VMware tools are in $($ToolState.State) state"
-            sleep 5
+
+
+foreach ($Node in $machinesBuilt)
+    {
+		$ip_byte = ($ip_startrange+$Node.Number)
+		$ip="$subnet.$ip_byte"
+        $Nodeclone = Get-VMX $Node.Name
+        if ($Node.number -eq 1)
+            {
+            $Masterip = $ip    
             }
-        until ($ToolState.state -match "running")
-        Write-Verbose "Setting Shared Folders"
-        $NodeClone | Set-VMXSharedFolderState -enabled | Out-Null
-        Write-verbose "Cleaning Shared Folders"
-        $Nodeclone | Set-VMXSharedFolder -remove -Sharename Sources | Out-Null
-        Write-Verbose "Adding Shared Folders"        
-        $NodeClone | Set-VMXSharedFolder -add -Sharename Sources -Folder $Sourcedir  | Out-Null
-        $NodeClone | Set-VMXLinuxNetwork -ipaddress $ip -network "$subnet.0" -netmask "255.255.255.0" -gateway $DefaultGateway -device eno16777984 -Peerdns -DNS1 $DNS1 -DNSDOMAIN "$BuildDomain.$Custom_DomainSuffix" -Hostname "$Nodeprefix$Node"  -rootuser $Rootuser -rootpassword $Guestpassword | Out-Null
+		Write-Verbose "Configuring Node $($Node.Number) $($Node.Name) with $IP"
+        $Hostname = $Nodeclone.vmxname.ToLower()
+		$Nodeclone | Set-LabCentosVMX -ip $IP -CentOS_ver $centos_ver -Additional_Packages $Node_requires -Host_Name $Hostname -DNS1 $DNS1 -DNS2 $DNS2 -VMXName $Nodeclone.vmxname
+
+	write-verbose "disabling kenel oops"
+	$Scriptblock =  "echo 'kernel.panic_on_oops=0' >> /etc/sysctl.conf;sysctl -p"
+    Write-Verbose $Scriptblock
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+
     write-verbose "Setting Timezone"
     $Scriptblock = "timedatectl set-timezone $DefaultTimezone"
     Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile -Confirm:$false -nowait | Out-Null
 
 
-
-    write-verbose "Disabling IPv6"
-    $Scriptblock = "echo 'net.ipv6.conf.all.disable_ipv6 = 1' >> /etc/sysctl.conf;sysctl -p"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-
-
-    write-verbose "Setting Hostname"
-    $Scriptblock = "hostnamectl set-hostname $($NodeClone.vmxname)"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-    
-    $Scriptblock =  "echo '$ip $($NodeClone.vmxname) $($NodeClone.vmxname).$BuildDomain.$Custom_DomainSuffix'  >> /etc/hosts"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-
-    $Scriptblock = "systemctl disable iptables.service"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-    
-    $Scriptblock = "systemctl stop iptables.service"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
 
     Write-Verbose "Creating $Guestuser"
@@ -307,32 +209,6 @@ if (!(Test-Path "$Sourcedir\$Scenarioname\$release.tar.gz"))
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 
-	 ### preparing yum
-    $file = "/etc/yum.conf"
-    $Property = "cachedir"
-    $Scriptblock = "grep -q '^$Property' $file && sed -i 's\^$Property=/var*.\$Property=/mnt/hgfs/Sources/$OS/\' $file || echo '$Property=/mnt/hgfs/Sources/$OS/yum/`$basearch/`$releasever/' >> $file"
-    Write-Verbose $Scriptblock
-    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-
-    $file = "/etc/yum.conf"
-    $Property = "keepcache"
-    $Scriptblock = "grep -q '^$Property' $file && sed -i 's\$Property=0\$Property=1\' $file || echo '$Property=1' >> $file"
-    Write-Verbose $Scriptblock
-    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-
-    Write-Host -ForegroundColor Gray " ==>Generating Yum Cache on $Sourcedir"
-    $Scriptblock="yum makecache"
-    Write-Verbose $Scriptblock
-    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile | Out-Null
-
-
-    if ($update.IsPresent)
-        {
-        Write-Verbose "Performing yum update, this may take a while"
-        $Scriptblock = "yum update -y"
-        Write-Verbose $Scriptblock
-        $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-        }
 
     $Packages = "tar wget java-1.7.0-openjdk"
     Write-Verbose "Checking for $Packages"
@@ -342,34 +218,10 @@ if (!(Test-Path "$Sourcedir\$Scenarioname\$release.tar.gz"))
 
 #### Start ssh for pwless local login
     
-        
-    $Scriptblock ="/usr/bin/ssh-keygen -t dsa -N '' -f /home/$Guestuser/.ssh/id_dsa"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword | Out-Null
-
-    
-    $Scriptblock = "cat ~/.ssh/id_dsa.pub >> ~/.ssh/authorized_keys;chmod 0600 ~/.ssh/authorized_keys"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword | Out-Null
-
-    $Scriptblock = "{ echo -n 'localhost '; cat /etc/ssh/ssh_host_ecdsa_key.pub; } >> ~/.ssh/known_hosts"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword | Out-Null
-    
-    $Scriptblock = "{ echo -n '0.0.0.0 '; cat /etc/ssh/ssh_host_ecdsa_key.pub; } >> ~/.ssh/known_hosts"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword | Out-Null
-
-
-    $Scriptblock = "{ echo -n '$($NodeClone.vmxname) '; cat /etc/ssh/ssh_host_ecdsa_key.pub; } >> ~/.ssh/known_hosts"
-    Write-Verbose $Scriptblock
-    $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword | Out-Null
-#### end ssh
-
     $Scriptblock = "/usr/bin/tar xzfv /mnt/hgfs/Sources/$Scenarioname/$release.tar.gz -C /home/$Guestuser; ls /home/$Guestuser/$release"
     Write-Verbose $Scriptblock
     $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile /home/$Guestuser/tar.log | Out-Null
-
+       
     $HADOOP_HOME = "/home/hadoop/$release"
     Write-Verbose "Setting Environment" 
     $Scriptblock = "echo 'export JAVA_HOME=/usr/lib/jvm/jre`nexport HADOOP_HOME=/home/hadoop/$release`nexport HADOOP_INSTALL=`$HADOOP_HOME`nexport HADOOP_MAPRED_HOME=`$HADOOP_HOME`nexport HADOOP_COMMON_HOME=`$HADOOP_HOME`nexport HADOOP_HDFS_HOME=`$HADOOP_HOME`nexport HADOOP_YARN_HOME=`$HADOOP_HOME`nexport HADOOP_COMMON_LIB_NATIVE_DIR=`$HADOOP_HOME/lib/native`nexport PATH=`$PATH:`$HADOOP_HOME/sbin:`$HADOOP_HOME/bin`nexport JAVA_LIBRARY_PATH=`$HADOOP_HOME/lib/native:`$JAVA_LIBRARY_PATH' >> /home/$Guestuser/.bashrc"
