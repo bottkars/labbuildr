@@ -330,7 +330,7 @@ facts:
   storage_pools:
     - name: sp1
       members:
-        - 192.168.2.245
+        - $IP
       options:
         is_protected: false
         is_cold_storage_enabled: false
