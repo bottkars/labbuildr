@@ -157,41 +157,10 @@ $Rootpassword = "Password123!"
 $Guestuser = "$($Szenarioname.ToLower())user"
 $Guestpassword = "Password123!"
 $Node_requires = @()
-$Node_requires = ('git','numactl','libaio','vim')
+$Node_requires = ('git','numactl','libaio','vim','docker-engine')
 
 $repo = "https://github.com/EMCECS/ECS-CommunityEdition.git"
 switch ($Branch) {
-    "release-2.1" {
-        $Docker_imagename = "emccorp/ecs-software-2.1"
-        $Docker_image = "ecs-software-2.1"
-        $Docker_imagetag = "latest"
-        $Git_Branch = $Branch
-    }
-    "master" {
-        $Docker_image = "ecs-software-2.2.1"
-        $Docker_imagename = "emccorp/ecs-software-2.2.1"
-        $Docker_imagetag = $latest_ecs
-        $Git_Branch = $Branch
-    }
-    "develop" {
-        $Docker_image = "ecs-software-3.0.0"
-        $Docker_imagename = "emccorp/ecs-software-3.0.0"
-        $Docker_imagetag = "latest"
-        $Git_Branch = $Branch
-    }
-    "2.2.1.0" {
-        $Docker_image = "ecs-software-2.2.1"
-        $Docker_imagename = "emccorp/ecs-software-2.2.1"
-        $Docker_imagetag = $Branch
-        $Git_Branch = "master"
-        #$repo = "https://github.com/bottkars/ECS-CommunityEdition.git"
-    }
-    "2.2.1.0-a" {
-        $Docker_image = "ecs-software-2.2.1"
-        $Docker_imagename = "emccorp/ecs-software-2.2.1"
-        $Docker_imagetag = $Branch
-        $Git_Branch = "master"
-    }
     "3.0.0.1" {
         $Docker_image = "ecs-software-3.0.0"
         $Docker_imagename = "emccorp/ecs-software-3.0.0"
@@ -288,9 +257,38 @@ foreach ($Node in $machinesBuilt) {
  #   $Scriptblock = "/usr/bin/easy_install ecscli"
  #   Write-Verbose $Scriptblock
  #   $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
-    ####### docker path´s
-    #Docker_basepath = Join-Path $Sourcedir $Docker
-    #Docker_Image_file = Join-Path $Docker_basepath "$($Docker_image)_$Docker_imagetag.tgz"
+####### docker path´s
+    Docker_basepath = Join-Path $Sourcedir Docker
+    Docker_Image_file = Join-Path $Docker_basepath "$($Docker_image)_$Docker_imagetag.tgz"
+#### docker workaround save unitil further notice
+    if (Test-Path $Docker_Image_file)
+        {
+        $Scriptblock = "gunzip -c /mnt/hgfs/Sources/docker/$($Docker_image)_$Docker_imagetag.tgz| docker load;docker tag $($Docker_imagename):$Docker_imagetag $($Docker_imagename):latest"
+        Write-Verbose $Scriptblock
+        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+        }
+    else {
+        if (!(Test-Path $Docker_Image_file) -and !($offline.IsPresent)) {
+            New-Item -ItemType Directory $Docker_basepath -ErrorAction SilentlyContinue | Out-Null
+            $Scriptblock = "docker pull $($Docker_imagename):$Docker_imagetag"
+            Write-Verbose $Scriptblock
+            $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+            $Scriptblock = "docker save $($Docker_imagename):$Docker_imagetag | gzip -c >  /mnt/hgfs/Sources/docker/$($Docker_image)_$Docker_imagetag.tgz"
+            Write-Verbose $Scriptblock
+            $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword # -logfile $Logfile
+        }
+        else {
+            if (!(Test-Path $Docker_Image_file)) {
+                Write-Warning "no docker Image available, exiting now ..."
+                exit
+                }
+            [switch]$offline_available = $true
+            }
+        
+        }
+    
+
+### enc docker save workaround
 $Git_Branch = 'develop'
 $Scriptblock = "git clone -b $Git_Branch --single-branch $repo"
 Write-Verbose $Scriptblock
