@@ -391,7 +391,7 @@ $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $
 Write-Host -ForegroundColor Gray " ==>Adjusting docker run for non tty ( pull request made )"
 $Scriptblock = "/usr/bin/sudo -s sed -i -e 's\-it\-i\g' /ECS-CommunityEdition/ui/run.sh"
 Write-verbose $Scriptblock
-$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile $Logfile   # -Confirm:$false -SleepSec 60
+$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile   # -Confirm:$false -SleepSec 60
 
 
 $Scriptblock = 'shutdown -r now'
