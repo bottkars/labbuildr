@@ -33,7 +33,7 @@ Param (
     [switch]$rexray,
     [ValidateRange(0, 3)]
     [int]$SCSI_Controller = 0,
-    [ValidateRange(1, 3)]
+    [ValidateRange(3, 3)] # set hard for ECS 3 installer
     [int]$SCSI_DISK_COUNT = 3,
 
     <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
@@ -149,6 +149,7 @@ If (!$DNS2 -and $DNS1) {
 If (!$DNS1 -and $DNS2) {
     $DNS1 = $DNS2
 }
+$DNS_Domain = "$BuildDomain.$custom_domainsuffix"
 [System.Version]$subnet = $Subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 $DefaultTimezone = "Europe/Berlin"
@@ -273,7 +274,7 @@ foreach ($Node in $machinesBuilt) {
 
     Write-Verbose "Configuring Node $($Node.Number) $($Node.Name) with $IP"
     $Hostname = $Nodeclone.vmxname.ToLower()
-    $Nodeclone | Set-LabCentosVMX -ip $IP -CentOS_ver $centos_ver -Additional_Packages $Node_requires -Host_Name $Hostname -DNS1 $DNS1 -DNS2 $DNS2 -VMXName $Nodeclone.vmxname
+    $Nodeclone | Set-LabCentosVMX -ip $IP -CentOS_ver $centos_ver -Additional_Packages $Node_requires -Host_Name $Hostname -DNS1 $DNS1 -DNS2 $DNS2 -DNS_DOMAIN_NAME $DNS_Domain  -VMXName $Nodeclone.vmxname
 #    $Nodeclone | Set-LabCentosVMX -ip $IP -CentOS_ver $centos_ver -Additional_Packages $Node_requires -Additional_Epel_Packages $Epel_Packages -Host_Name $Hostname -DNS1 $DNS1 -DNS2 $DNS2 -VMXName $Nodeclone.vmxname
     ##### Prepare
     if ($EMC_ca.IsPresent) {
@@ -298,6 +299,113 @@ Write-Verbose $Scriptblock
 $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
 
+Write-Host -ForegroundColor White "Starting ECS Preparation, this may take a while"
+Write-Host -ForegroundColor White "find logs in "
+
+$Scriptblock = 'cd /ECS-CommunityEdition; ./bootstrap.sh'
+Write-Verbose $Scriptblock
+$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+
+$Scriptblock = 'shutdown -r now'
+Write-Verbose $Scriptblock
+$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+	do {
+		$ToolState = $Nodeclone | Get-VMXToolsState 
+		Set-LABUi -short -title "VMware tools are in $($ToolState.State) state"
+		Start-Sleep -Seconds 5
+    }
+    until ($ToolState.state -match "running")
+$my_yaml = "# deploy.yml for labbuildr
+
+licensing:
+  license_accepted: true
+facts:
+  install_node: $ip
+  management_clients:
+    - 0.0.0.0/0
+  ssh_defaults:
+    ssh_username: $Guestuser
+    ssh_password: $Password
+  node_defaults:
+    dns_domain: $dns_domain  
+    dns_servers:
+      - $DNS1
+    ntp_servers:
+      - 0.de.pool.ntp.org
+    entropy_source: /dev/urandom
+    autonaming: moons
+    ecs_root_user: root
+    ecs_root_pass: ChangeMe
+  storage_pool_defaults:
+    is_cold_storage_enabled: false
+    is_protected: false
+    description: Default storage pool description
+    ecs_block_devices:
+      - /dev/sdb
+      - /dev/sdc
+      - /dev/sdd
+  storage_pools:
+    - name: sp1
+      members:
+        - 192.168.2.245
+      options:
+        is_protected: false
+        is_cold_storage_enabled: false
+        description: My First SP
+        ecs_block_devices:
+          - /dev/sdb
+          - /dev/sdc
+          - /dev/sdd
+  virtual_data_center_defaults:
+    description: $Builddomain virtual data center 
+  virtual_data_centers:
+    - name: vdc1
+      members:
+        - sp1
+      options:
+        description: My First VDC
+  replication_group_defaults:
+    description: Default replication group description
+    enable_rebalancing: true
+    allow_all_namespaces: true
+    is_full_rep: false
+  replication_groups:
+    - name: rg1
+      members:
+        - vdc1
+      options:
+        description: My First RG
+        enable_rebalancing: true
+        allow_all_namespaces: true
+        is_full_rep: false
+  namespace_defaults:
+    is_stale_allowed: false
+    is_compliance_enabled: false
+  namespaces:
+    - name: ns1
+      replication_group: rg1
+      administrators:
+        - root
+      options:
+        is_stale_allowed: false
+        is_compliance_enabled: false
+"
+
+$File = "$Sourcedir\deploy.yml"
+$my_yaml | Set-Content $file
+$File = Get-ChildItem $File
+$NodeClone | copy-VMXfile2guest -Sourcefile $File.FullName -targetfile "/etc/pki/ca-trust/source/anchors/$($File.Name)" -Guestuser $Rootuser -Guestpassword $Guestpassword
+
+$Scriptblock = 'cd /ECS-CommunityEdition; ./step1'
+Write-Verbose $Scriptblock
+$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+
+$Scriptblock = 'cd /ECS-CommunityEdition; ./step2'
+Write-Verbose $Scriptblock
+$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+
+
+<#
 Pause
     ####pause
     Write-Verbose $Docker_Image_file
@@ -353,7 +461,6 @@ WantedBy=default.target`
         "systemctl start docker-ecsstandalone"
     )
     #'chmod +x /etc/rc.d/rc.local')
-    #>
     foreach ($Scriptblock in $Scriptlets) {
         Write-Verbose $Scriptblock
         $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
@@ -390,7 +497,6 @@ if ($Branch -eq "feature-ecs-2.2")
     }
 else
     {
-    #>
     $Methods = ('UploadLicense', 'CreateObjectVarray', 'CreateDataStore', 'InsertVDC', 'CreateObjectVpool', 'CreateNamespace')
     $Namespace_Name = "ns1"
     $Pool_Name = "Pool_$Node"
@@ -420,6 +526,7 @@ else
     $Scriptblock = "/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$Namespace_Name --ObjectVArray=$Pool_Name --ObjectVPool=$Replicaton_Group_Name --UserName=$Guestuser --DataStoreName=$Datastore_Name --VDCName=$VDC_NAME --MethodName=$Method"
     Write-verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile $Logfile
+#>
 }
 $StopWatch.Stop()
 Write-host -ForegroundColor White "ECS Deployment took $($StopWatch.Elapsed.ToString())"
