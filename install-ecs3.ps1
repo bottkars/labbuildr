@@ -298,25 +298,6 @@ $Scriptblock = "git clone -b $Git_Branch --single-branch $repo"
 Write-Verbose $Scriptblock
 $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
-
-Write-Host -ForegroundColor White "Starting ECS Preparation, this may take a while"
-Write-Host -ForegroundColor White "find logs in "
-
-$Scriptblock = 'cd /ECS-CommunityEdition; ./bootstrap.sh'
-Write-Verbose $Scriptblock
-$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
-
-$Scriptblock = 'shutdown -r now'
-Write-Verbose $Scriptblock
-$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
-
-Start-Sleep -Seconds 10
-	do {
-		$ToolState = $Nodeclone | Get-VMXToolsState 
-		Set-LABUi -short -title "VMware tools are in $($ToolState.State) state"
-		Start-Sleep -Seconds 5
-    }
-    until ($ToolState.state -match "running")
 $my_yaml = "# deploy.yml for labbuildr
 
 licensing:
@@ -397,7 +378,27 @@ $File = "$Sourcedir\deploy.yml"
 $my_yaml | Set-Content $file
 convert-VMXdos2unix -Sourcefile $file -Verbose
 $File = Get-ChildItem $File
-$NodeClone | copy-VMXfile2guest -Sourcefile $File.FullName -targetfile "/opt/emc/ecs-install/$($File.Name)" -Guestuser $Rootuser -Guestpassword $Guestpassword
+$NodeClone | copy-VMXfile2guest -Sourcefile $File.FullName -targetfile "/root/$($File.Name)" -Guestuser $Rootuser -Guestpassword $Guestpassword
+
+
+Write-Host -ForegroundColor White "Starting ECS Preparation, this may take a while"
+Write-Host -ForegroundColor White "find logs in /ECS-CommunityEdition "
+
+$Scriptblock = 'cd /ECS-CommunityEdition; ./bootstrap.sh -c /root/deploy.yml'
+Write-Verbose $Scriptblock
+$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+
+$Scriptblock = 'shutdown -r now'
+Write-Verbose $Scriptblock
+$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+
+Start-Sleep -Seconds 10
+	do {
+		$ToolState = $Nodeclone | Get-VMXToolsState 
+		Set-LABUi -short -title "VMware tools are in $($ToolState.State) state"
+		Start-Sleep -Seconds 5
+    }
+    until ($ToolState.state -match "running")
 
 $Scriptblock = 'cd /ECS-CommunityEdition; ./step1'
 Write-Verbose $Scriptblock
