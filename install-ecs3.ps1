@@ -407,11 +407,8 @@ if (!$ui_config.IsPresent)
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
     Set-LABUi -short -title $Scriptblock   
     }
-
-
-
 }
 $StopWatch.Stop()
 Write-host -ForegroundColor White "ECS Deployment took $($StopWatch.Elapsed.ToString())"
 Write-Host -ForegroundColor White "Success !? Browse to https://$($IP):443 and login with root/ChangeMe"
-Set-LABUi -short -title $Scriptblock   
+Set-LABUi 
