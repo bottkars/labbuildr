@@ -405,11 +405,15 @@ do {
     }
     until ($ToolState.state -match "running")
 
-
+Write-Host -ForegroundColor White "Starting ECS Configuration Step1, this may take a while"
+Write-Host -ForegroundColor White "you may follow the process with 'tail -f ls /tmp/systemd-private-*-vmtoolsd.service-*/tmp/labbuildr.log"
 $Scriptblock = 'cd /ECS-CommunityEdition; /root/bin/step1'
 Write-Verbose $Scriptblock
 $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
+
+Write-Host -ForegroundColor White "Starting ECS Customization Step2, this may take a while"
+Write-Host -ForegroundColor White "you may follow the process with 'tail -f ls /tmp/systemd-private-*-vmtoolsd.service-*/tmp/labbuildr.log"
 $Scriptblock = 'cd /ECS-CommunityEdition; /root/bin/step2'
 Write-Verbose $Scriptblock
 $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
