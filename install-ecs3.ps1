@@ -241,7 +241,7 @@ foreach ($Node in $machinesBuilt) {
 
     Write-Verbose "Configuring Node $($Node.Number) $($Node.Name) with $IP"
     $Hostname = $Nodeclone.vmxname.ToLower()
-    $Nodeclone | Set-LabCentosVMX -ip $IP -CentOS_ver $centos_ver -Additional_Packages $Node_requires -Host_Name $Hostname -DNS1 $DNS1 -DNS2 $DNS2 -DNS_DOMAIN_NAME $DNS_Domain  -VMXName $Nodeclone.vmxname
+    $Nodeclone | Set-LabCentosVMX -ip $IP -CentOS_ver $centos_ver -Additional_Epel_Packages docker -Additional_Packages $Node_requires -Host_Name $Hostname -DNS1 $DNS1 -DNS2 $DNS2 -DNS_DOMAIN_NAME $DNS_Domain  -VMXName $Nodeclone.vmxname
 #    $Nodeclone | Set-LabCentosVMX -ip $IP -CentOS_ver $centos_ver -Additional_Packages $Node_requires -Additional_Epel_Packages $Epel_Packages -Host_Name $Hostname -DNS1 $DNS1 -DNS2 $DNS2 -VMXName $Nodeclone.vmxname
     ##### Prepare
     if ($EMC_ca.IsPresent) {
