@@ -292,7 +292,7 @@ foreach ($Node in $machinesBuilt) {
     ####### docker path´s
     #Docker_basepath = Join-Path $Sourcedir $Docker
     #Docker_Image_file = Join-Path $Docker_basepath "$($Docker_image)_$Docker_imagetag.tgz"
-$branch = 'develop'
+$Git_Branch = 'develop'
 $Scriptblock = "git clone -b $Git_Branch --single-branch $repo"
 Write-Verbose $Scriptblock
 $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
