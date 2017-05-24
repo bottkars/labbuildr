@@ -397,14 +397,15 @@ Write-Host -ForegroundColor White "you may follow the process with 'tail -f /tmp
 $Scriptblock = 'cd /ECS-CommunityEdition; /root/bin/step1'
 Write-Verbose $Scriptblock
 $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
-
+Set-LABUi -short -title $Scriptblock   
 if (!$ui_config.IsPresent)
     {
     Write-Host -ForegroundColor White "Starting ECS Customization Step2, this may take a while"
-    Write-Host -ForegroundColor White "you may follow the process with 'tail -f ls /tmp/systemd-private-*-vmtoolsd.service-*/tmp/labbuildr.log"
+    Write-Host -ForegroundColor White "you may follow the process with 'tail -f ls /tmp/systemd-private-*-vmtoolsd.service-*/tmp/labbuildr.log'"
     $Scriptblock = 'cd /ECS-CommunityEdition; /root/bin/step2'
-    Write-Verbose $Scriptblock
+    Write-Verbose $Scriptbloc
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+    Set-LABUi -short -title $Scriptblock   
     }
 
 
@@ -413,3 +414,4 @@ if (!$ui_config.IsPresent)
 $StopWatch.Stop()
 Write-host -ForegroundColor White "ECS Deployment took $($StopWatch.Elapsed.ToString())"
 Write-Host -ForegroundColor White "Success !? Browse to https://$($IP):443 and login with root/ChangeMe"
+Set-LABUi -short -title $Scriptblock   
