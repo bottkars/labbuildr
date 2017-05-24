@@ -104,9 +104,7 @@ Param (
 #requires -version 3.0
 #requires -module vmxtoolkit
 $latest_ecs = "3.0.0.1"
-$Range = "24"
-$Start = "1"
-$IPOffset = 5
+$Logfile = "/tmp/labbuildr.log"
 $Szenarioname = "ECS"
 $Builddir = $PSScriptRoot
 $Masterpath = $Builddir
