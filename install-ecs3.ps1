@@ -245,7 +245,7 @@ foreach ($Node in $machinesBuilt) {
  #   Write-Verbose $Scriptblock
  #   $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 ####### docker path´s
-    $Docker_basepath = Join-Path $Sourcedir Docker
+    $Docker_basepath = Join-Path $Sourcedir docker
     $Docker_Image_file = Join-Path $Docker_basepath "$($Docker_image)_$Docker_imagetag.tgz"
 #### docker workaround save unitil further notice
     if (Test-Path $Docker_Image_file)
