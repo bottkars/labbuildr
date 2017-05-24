@@ -307,8 +307,8 @@ facts:
   management_clients:
     - 0.0.0.0/0
   ssh_defaults:
-    ssh_username: $Guestuser
-    ssh_password: $Password
+    ssh_username: $Default_Guestuser
+    ssh_password: $guestpassword
   node_defaults:
     dns_domain: $dns_domain  
     dns_servers:
@@ -388,9 +388,16 @@ $Scriptblock = 'cd /ECS-CommunityEdition; ./bootstrap.sh -c /root/deploy.yml'
 Write-Verbose $Scriptblock
 $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
+Write-Host -ForegroundColor Gray " ==>Adjusting docker run for non tty ( pull request made )"
+$Scriptblock = "/usr/bin/sudo -s sed -i -e 's\-it\-i\g' /ECS-CommunityEdition/ui/run.sh"
+Write-verbose $Scriptblock
+$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile $Logfile   # -Confirm:$false -SleepSec 60
+
+
 $Scriptblock = 'shutdown -r now'
 Write-Verbose $Scriptblock
 $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -nowait -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+start-sleep 30
 do {
 		$ToolState = $Nodeclone | Get-VMXToolsState 
 		Set-LABUi -short -title "VMware tools are in $($ToolState.State) state"
@@ -398,11 +405,12 @@ do {
     }
     until ($ToolState.state -match "running")
 
-$Scriptblock = 'cd /ECS-CommunityEdition; ./step1'
+
+$Scriptblock = 'cd /ECS-CommunityEdition; /root/bin/step1'
 Write-Verbose $Scriptblock
 $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
-$Scriptblock = 'cd /ECS-CommunityEdition; ./step2'
+$Scriptblock = 'cd /ECS-CommunityEdition; /root/bin/step2'
 Write-Verbose $Scriptblock
 $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
