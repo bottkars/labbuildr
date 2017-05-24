@@ -393,8 +393,9 @@ facts:
 
 $File = "$Sourcedir\deploy.yml"
 $my_yaml | Set-Content $file
+convert-VMXdos2unix -Sourcefile $file -Verbose
 $File = Get-ChildItem $File
-$NodeClone | copy-VMXfile2guest -Sourcefile $File.FullName -targetfile "/etc/pki/ca-trust/source/anchors/$($File.Name)" -Guestuser $Rootuser -Guestpassword $Guestpassword
+$NodeClone | copy-VMXfile2guest -Sourcefile $File.FullName -targetfile "/opt/emc/ecs-install/$($File.Name)" -Guestuser $Rootuser -Guestpassword $Guestpassword
 
 $Scriptblock = 'cd /ECS-CommunityEdition; ./step1'
 Write-Verbose $Scriptblock
