@@ -236,6 +236,11 @@ foreach ($Node in $machinesBuilt) {
         $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
     }
 
+    $Scriptblock = 'rm -f /etc/localtime;ln -s /usr/share/zoneinfo/UTC /etc/localtime'
+    Write-Verbose $Scriptblock
+    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+
+
  #   $Scriptblock = "/usr/bin/easy_install ecscli"
  #   Write-Verbose $Scriptblock
  #   $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
