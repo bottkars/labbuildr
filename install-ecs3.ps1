@@ -391,7 +391,7 @@ $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $
 $Scriptblock = 'shutdown -r now'
 Write-Verbose $Scriptblock
 $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -nowait -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
-	do {
+do {
 		$ToolState = $Nodeclone | Get-VMXToolsState 
 		Set-LABUi -short -title "VMware tools are in $($ToolState.State) state"
 		Start-Sleep -Seconds 5
