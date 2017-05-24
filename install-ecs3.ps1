@@ -378,11 +378,11 @@ $File = "$Sourcedir\deploy.yml"
 $my_yaml | Set-Content $file
 convert-VMXdos2unix -Sourcefile $file -Verbose
 $File = Get-ChildItem $File
-$NodeClone | copy-VMXfile2guest -Sourcefile $File.FullName -targetfile "/root/$($File.Name)" -Guestuser $Rootuser -Guestpassword $Guestpassword
+$NodeClone | copy-VMXfile2guest -Sourcefile $File.FullName -targetfile "/root/$($File.Name)" -Guestuser $Rootuser -Guestpassword $Guestpassword |Out-Null
 
 
 Write-Host -ForegroundColor White "Starting ECS Preparation, this may take a while"
-Write-Host -ForegroundColor White "find logs in /ECS-CommunityEdition "
+Write-Host -ForegroundColor White "you may follow the process with 'tail -f /ECS-CommunityEdition/install.log'"
 
 $Scriptblock = 'cd /ECS-CommunityEdition; ./bootstrap.sh -c /root/deploy.yml'
 Write-Verbose $Scriptblock
