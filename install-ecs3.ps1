@@ -77,7 +77,7 @@ Param (
     [Parameter(ParameterSetName = "install", Mandatory = $false)][switch]$FullClone,
     [Parameter(ParameterSetName = "install", Mandatory = $false)]
     [ValidateSet('mosaicme')]$PrepareBuckets,
-    [Parameter(ParameterSetName = "install", Mandatory = $false)][ValidateSet('8192', '12288', '16384', '20480', '30720', '51200', '65536')]$Memory = "12288",
+    [Parameter(ParameterSetName = "install", Mandatory = $false)][ValidateSet('8192', '12288', '16384', '20480', '30720', '51200', '65536')]$Memory = "16384",
     [Parameter(ParameterSetName = "install", Mandatory = $false)]
     [ValidateSet('3.0.0.1')]$Branch = '3.0.0.1',
     [switch]$AdjustTimeouts,
@@ -292,8 +292,10 @@ foreach ($Node in $machinesBuilt) {
     ####### docker path´s
     #Docker_basepath = Join-Path $Sourcedir $Docker
     #Docker_Image_file = Join-Path $Docker_basepath "$($Docker_image)_$Docker_imagetag.tgz"
-
-
+$branch = 'develop'
+$Scriptblock = "git clone -b $Git_Branch --single-branch $repo"
+Write-Verbose $Scriptblock
+$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
 
 Pause
