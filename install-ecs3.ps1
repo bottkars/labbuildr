@@ -35,7 +35,6 @@ Param (
     [int]$SCSI_Controller = 0,
     [ValidateRange(3, 3)] # set hard for ECS 3 installer
     [int]$SCSI_DISK_COUNT = 3,
-
     <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
     [Parameter(ParameterSetName = "install", Mandatory = $false)]
     [int32]$Startnode = 1,
@@ -71,36 +70,19 @@ Param (
     $DNS2 = $Global:labdefaults.DNS2,
     [switch]$Defaults,
     [switch]$vtbit,
-
-
-
     [Parameter(ParameterSetName = "install", Mandatory = $false)][switch]$FullClone,
-    [Parameter(ParameterSetName = "install", Mandatory = $false)]
-    [ValidateSet('mosaicme')]$PrepareBuckets,
     [Parameter(ParameterSetName = "install", Mandatory = $false)][ValidateSet('8192', '12288', '16384', '20480', '30720', '51200', '65536')]$Memory = "16384",
     [Parameter(ParameterSetName = "install", Mandatory = $false)]
     [ValidateSet('3.0.0.1')]$Branch = '3.0.0.1',
-    [switch]$AdjustTimeouts,
     [Parameter(ParameterSetName = "install", Mandatory = $false)][switch]$EMC_ca,
-    [Parameter(ParameterSetName = "install", Mandatory = $false)][switch]$uiconfig,
+    [Parameter(ParameterSetName = "install", Mandatory = $false)][switch]$ui_config,
     [Parameter(ParameterSetName = "install", Mandatory = $false)][ValidateSet(150GB, 500GB, 520GB)][uint64]$Disksize = 150GB,
-
-    [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
     [Parameter(ParameterSetName = "install", Mandatory = $False)]
     [ValidateLength(1, 15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain = "labbuildr",
     [Parameter(ParameterSetName = "install", Mandatory = $false)][ValidateSet('vmnet2', 'vmnet3', 'vmnet4', 'vmnet5', 'vmnet6', 'vmnet7', 'vmnet9', 'vmnet10', 'vmnet11', 'vmnet12', 'vmnet13', 'vmnet14', 'vmnet15', 'vmnet16', 'vmnet17', 'vmnet18', 'vmnet19')]$VMnet = $labdefaults.vmnet,
-    [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript( { Test-Path -Path $_ })]$Defaultsfile = "./defaults.xml",
     [switch]$offline,
-    [switch]$pausebeforescript,
     $Custom_IP
-
-
-
-
-
-
-
-)
+) 
 #requires -version 3.0
 #requires -module vmxtoolkit
 $latest_ecs = "3.0.0.1"
@@ -376,7 +358,6 @@ convert-VMXdos2unix -Sourcefile $file -Verbose
 $File = Get-ChildItem $File
 $NodeClone | copy-VMXfile2guest -Sourcefile $File.FullName -targetfile "/root/$($File.Name)" -Guestuser $Rootuser -Guestpassword $Guestpassword |Out-Null
 
-
 Write-Host -ForegroundColor White "Starting ECS Preparation, this may take a while"
 Write-Host -ForegroundColor White "you may follow the process with 'tail -f /ECS-CommunityEdition/install.log'"
 
@@ -407,136 +388,17 @@ $Scriptblock = 'cd /ECS-CommunityEdition; /root/bin/step1'
 Write-Verbose $Scriptblock
 $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
-
-Write-Host -ForegroundColor White "Starting ECS Customization Step2, this may take a while"
-Write-Host -ForegroundColor White "you may follow the process with 'tail -f ls /tmp/systemd-private-*-vmtoolsd.service-*/tmp/labbuildr.log"
-$Scriptblock = 'cd /ECS-CommunityEdition; /root/bin/step2'
-Write-Verbose $Scriptblock
-$Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
-
-
-<#
-Pause
-    ####pause
-    Write-Verbose $Docker_Image_file
-    if (!(Test-Path $Docker_Image_file) -and !($offline.IsPresent)) {
-        New-Item -ItemType Directory $Docker_basepath -ErrorAction SilentlyContinue | Out-Null
-        $Scriptblock = "docker pull $($Docker_imagename):$Docker_imagetag"
-        Write-Verbose $Scriptblock
-        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
-        $Scriptblock = "docker save $($Docker_imagename):$Docker_imagetag | gzip -c >  /mnt/hgfs/Sources/docker/$($Docker_image)_$Docker_imagetag.tgz"
-        Write-Verbose $Scriptblock
-        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword # -logfile $Logfile
-    }
-    else {
-        if (!(Test-Path $Docker_Image_file)) {
-            Write-Warning "no docker Image available, exiting now ..."
-            exit
-        }
-        [switch]$offline_available = $true
-    }
-    $Scriptblock = "git clone -b $Git_Branch --single-branch $repo"
+if (!$ui_config.IsPresent)
+    {
+    Write-Host -ForegroundColor White "Starting ECS Customization Step2, this may take a while"
+    Write-Host -ForegroundColor White "you may follow the process with 'tail -f ls /tmp/systemd-private-*-vmtoolsd.service-*/tmp/labbuildr.log"
+    $Scriptblock = 'cd /ECS-CommunityEdition; /root/bin/step2'
     Write-Verbose $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
-    Write-Host -ForegroundColor Magenta " ==>Installing ECS Singlenode, this may take a while ..."
-    if ($pausebeforescript.ispresent) {
-        pause
     }
-    if ($Branch -ge "2.2.0.1") {
-        Write-Host -ForegroundColor white " ==>install ecs with loading docker image"
-        $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks $($devices -join " ") --ethadapter eno16777984 --hostname $hostname --imagename $Docker_imagename --imagetag $Docker_imagetag --load-image /mnt/hgfs/Sources/docker/$($Docker_image)_$Docker_imagetag.tgz"# &> /tmp/ecsinst_step1.log"
-    }
-    else {
-        $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step1_ecs_singlenode_install.py --disks $($devices -join " ") --ethadapter eno16777984 --hostname $hostname"#  &> /tmp/ecsinst_step1.log"
-    }
-    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile $Logfile
-    Write-Host -ForegroundColor Magenta " ==>Setting automatic startup of docker and ecs container"
-    $Scriptlets = (
-        "systemctl enable docker.service",
-        #"echo 'docker start ecsstandalone' `>>/etc/rc.local",
-        "cat > /etc/systemd/system/docker-ecsstandalone.service <<EOF
-[Unit]`
-Description=EMC ECS Standalone Container`
-Requires=docker.service`
-After=docker.service`
-[Service]`
-Restart=always`
-ExecStart=/usr/bin/docker start -a ecsstandalone`
-ExecStop=/usr/bin/docker stop -t 2 ecsstandalone`
-[Install]`
-WantedBy=default.target`
-",
-        "systemctl daemon-reload",
-        "systemctl enable docker-ecsstandalone",
-        "systemctl start docker-ecsstandalone"
-    )
-    #'chmod +x /etc/rc.d/rc.local')
-    foreach ($Scriptblock in $Scriptlets) {
-        Write-Verbose $Scriptblock
-        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword
-    }
-}
-if ($uiconfig.ispresent) {
-    Write-Warning "Please wait up to 5 Minutes and Connect to https://$($ip):443
-Use root:ChangeMe for Login
-"
-}
-else {
-    Write-Host -ForegroundColor White "Starting ECS Install Step 2 for creation of Datacenters and Containers.
-This might take up to 45 Minutes
-Approx. 2000 Objects are to be created
-you may chek the opject count with your bowser at http://$($IP):9101"
-    # $Logfile =  "/tmp/ecsinst_Step2.log"
-    #$Scriptblock = "/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$($BuildDomain)ns1 --ObjectVArray=$($BuildDomain)OVA1 --ObjectVPool=$($BuildDomain)OVP1 --UserName=$Guestuser --DataStoreName=$($BuildDomain)ds1 --VDCName=vdc1 --MethodName= &> /tmp/ecsinst_step2.log"
-    # curl --insecure https://192.168.2.211:443
 
-    Write-Host -ForegroundColor White "waiting for Webserver to accept logins"
-    $Scriptblock = "curl -i -k https://$($ip):4443/login -u root:ChangeMe"
-    Write-verbose $Scriptblock
-    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -Confirm:$false -SleepSec 60
-    if ($AdjustTimeouts.isPresent) {
-        Write-Host -ForegroundColor Gray " ==>Adjusting Timeouts"
-        $Scriptblock = "/usr/bin/sudo -s sed -i -e 's\30, 60, InsertVDC\300, 300, InsertVDC\g' /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py"
-        Write-verbose $Scriptblock
-        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile $Logfile   # -Confirm:$false -SleepSec 60
-    }
-    <#
-if ($Branch -eq "feature-ecs-2.2")
-    {
-    $Methods = ('UploadLicense','CreateObjectVarray','InsertVDC','CreateObjectVpool','CreateNamespace')
-    }
-else
-    {
-    $Methods = ('UploadLicense', 'CreateObjectVarray', 'CreateDataStore', 'InsertVDC', 'CreateObjectVpool', 'CreateNamespace')
-    $Namespace_Name = "ns1"
-    $Pool_Name = "Pool_$Node"
-    $Replicaton_Group_Name = "RG_1"
-    $Datastore_Name = "DS1"
-    $VDC_NAME = "VDC_$Node"
-    foreach ( $Method in $Methods ) {
-        Write-Host -ForegroundColor Gray " ==>running Method $Method, monitor tail -f /var/log/vipr/emcvipr-object/ssm.log"
-        $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$Namespace_Name --ObjectVArray=$Pool_Name --ObjectVPool=$Replicaton_Group_Name --UserName=$Guestuser --DataStoreName=$Datastore_Name --VDCName=$VDC_NAME --MethodName=$Method"
-        Write-verbose $Scriptblock
-        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile $Logfile
-    }
-    $Method = 'CreateUser'
-    Write-Host -ForegroundColor Gray " ==>running Method $Method"
-    $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$Namespace_Name --ObjectVArray=$Pool_Name --ObjectVPool=$Replicaton_Group_Name --UserName=$Guestuser --DataStoreName=$Datastore_Name --VDCName=$VDC_NAME --MethodName=$Method;exit 0"
-    Write-verbose $Scriptblock
-    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile $Logfile
-    if ("mosaicme" -in $PrepareBuckets) {
-        $Method = 'CreateUser'
-        Write-Host -ForegroundColor Gray " ==>running Method $Method"
-        $Scriptblock = "cd /ECS-CommunityEdition/ecs-single-node;/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$Namespace_Name --ObjectVArray=$Pool_Name --ObjectVPool=$Replicaton_Group_Name --UserName=mosaicme --DataStoreName=$Datastore_Name --VDCName=$VDC_NAME --MethodName=$Method;exit 0"
-        Write-verbose $Scriptblock
-        $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile $Logfile
-    }
-    $Method = 'CreateSecretKey'
-    Write-Host -ForegroundColor Gray " ==>running Method $Method"
-    $Scriptblock = "/usr/bin/sudo -s python /ECS-CommunityEdition/ecs-single-node/step2_object_provisioning.py --ECSNodes=$IP --Namespace=$Namespace_Name --ObjectVArray=$Pool_Name --ObjectVPool=$Replicaton_Group_Name --UserName=$Guestuser --DataStoreName=$Datastore_Name --VDCName=$VDC_NAME --MethodName=$Method"
-    Write-verbose $Scriptblock
-    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Guestuser -Guestpassword $Guestpassword -logfile $Logfile
-#>
+
+
 }
 $StopWatch.Stop()
 Write-host -ForegroundColor White "ECS Deployment took $($StopWatch.Elapsed.ToString())"
