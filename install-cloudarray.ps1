@@ -18,7 +18,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://github.com/bottkars/labbuildr/wiki/install-cloudarray.ps1
+   http://labbuildr.readthedocs.io/en/latest/Solutionpacks//install-cloudarray.ps1
 .EXAMPLE
 .\install-cloudarray.ps1 -ovf C:\Users\bottk\Downloads\CloudArray_ESXi5_7.0.6.0.8713\CloudArray_ESXi5_7.0.
 6.0.8713.ovf

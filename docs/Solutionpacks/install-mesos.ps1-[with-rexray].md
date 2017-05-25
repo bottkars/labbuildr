@@ -1,6 +1,6 @@
 # install-mesos including support for emc rexray volume driver and scaleio
 
-mesos with rexray requires a running scaleio environment. i recommend [ScaleIO SVM Solutionpack](https://github.com/bottkars/labbuildr/wiki/install-scaleiosvm.ps1)
+mesos with rexray requires a running scaleio environment. i recommend [ScaleIO SVM Solutionpack](http://labbuildr.readthedocs.io/en/latest/Solutionpacks//install-scaleiosvm.ps1)
 In this example, ScleIO SVM was deployed and now additional Volumes / SDC´s are created.  
 Please make sure to approve the MDM Certificates via the REST Gateway on https://gatewayip:443/rest.jsp
 ![image](https://cloud.githubusercontent.com/assets/8255007/17048627/a1774de8-4fe7-11e6-8f44-a4b174ad148a.png)

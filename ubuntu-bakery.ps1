@@ -1097,7 +1097,7 @@ spec:`
 	$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 	Write-Host -ForegroundColor White "K8S State"
 	write-host (($nodeclone | Get-VMXVariable -GuestVariable K8SSTATE).k8sstate -join "`n")  -ForegroundColor Green
-	Write-Host "you may start your kubectl proxy on your localhost ( see  https://github.com/bottkars/labbuildr/wiki/ubuntu-bakery.ps1#k8s )"
+	Write-Host "you may start your kubectl proxy on your localhost ( see  http://labbuildr.readthedocs.io/en/latest/Solutionpacks//ubuntu-bakery.ps1#k8s )"
 
 	}
 $StopWatch.Stop()

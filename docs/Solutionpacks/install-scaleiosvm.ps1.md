@@ -4,8 +4,8 @@
 
 install-scaleiosvm installs a 3-Node ScaleIO Cluster based upon the ScaleIO VMware Storage Virtual Machine ( SVM ).  
 the process is devided in 2 steps:
-* [import](https://github.com/bottkars/labbuildr/wiki/install-scaleiosvm.ps1#import)
-* [install](https://github.com/bottkars/labbuildr/wiki/install-scaleiosvm.ps1#install)
+* [import](http://labbuildr.readthedocs.io/en/latest/Solutionpacks//install-scaleiosvm.ps1#import)
+* [install](http://labbuildr.readthedocs.io/en/latest/Solutionpacks//install-scaleiosvm.ps1#install)
 
 ## import  
 

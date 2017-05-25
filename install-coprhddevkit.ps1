@@ -18,7 +18,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://github.com/bottkars/labbuildr/wiki/SolutionPacks#install-coprhddevkit 
+   http://labbuildr.readthedocs.io/en/latest/Solutionpacks//SolutionPacks#install-coprhddevkit 
 .EXAMPLE
 #>
 [CmdletBinding(DefaultParametersetName = "import")]

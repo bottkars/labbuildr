@@ -22,7 +22,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://github.com/bottkars/labbuildr/wiki/SolutionPacks#install-Unity
+   http://labbuildr.readthedocs.io/en/latest/Solutionpacks//SolutionPacks#install-Unity
 .EXAMPLE
     Importing the ovf template
  .\install-Unity.ps1 -ovf E:\EMC_VAs\Unity-1.4.5.2-535679\Unity-1.4.5.2-535679.ovf

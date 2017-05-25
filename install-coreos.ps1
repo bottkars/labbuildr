@@ -18,7 +18,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://github.com/bottkars/labbuildr/wiki/SolutionPacks#install-coreos
+   http://labbuildr.readthedocs.io/en/latest/Solutionpacks//SolutionPacks#install-coreos
 .EXAMPLE
 .\install-coreos.ps1 -defaults
 this will install a Puppetmaster on CentOS7 using default Values derived from defaults.xml

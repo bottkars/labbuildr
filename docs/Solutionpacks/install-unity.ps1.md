@@ -8,13 +8,13 @@ PhysicalMemory     : 8095
 
  
 the installation runs in 3 steps
-* [import](https://github.com/bottkars/labbuildr/wiki/install-unity.ps1#import)  
-* [install](https://github.com/bottkars/labbuildr/wiki/install-unity.ps1#install)  
-* [initial setup wizard](https://github.com/bottkars/labbuildr/wiki/install-unity.ps1#starting-the-initial-installation-wizard)
+* [import](http://labbuildr.readthedocs.io/en/latest/Solutionpacks//install-unity.ps1#import)  
+* [install](http://labbuildr.readthedocs.io/en/latest/Solutionpacks//install-unity.ps1#install)  
+* [initial setup wizard](http://labbuildr.readthedocs.io/en/latest/Solutionpacks//install-unity.ps1#starting-the-initial-installation-wizard)
 
-also, view the [options](https://github.com/bottkars/labbuildr/wiki/install-unity.ps1#options) for unity install  
+also, view the [options](http://labbuildr.readthedocs.io/en/latest/Solutionpacks//install-unity.ps1#options) for unity install  
 for labbuildr windows machines, there is a powershell script to configure iSCSI  
-* [labbuildr-iscsi](https://github.com/bottkars/labbuildr/wiki/install-unity.ps1#labbuildr-iscsi)   
+* [labbuildr-iscsi](http://labbuildr.readthedocs.io/en/latest/Solutionpacks//install-unity.ps1#labbuildr-iscsi)   
 
 ## import  
 you must download you version of unity vsa from http://www.emc.com/products-solutions/trial-software-download/unity-vsa.htm  
