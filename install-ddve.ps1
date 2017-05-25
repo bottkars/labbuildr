@@ -24,7 +24,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   http://labbuildr.readthedocs.io/en/latest/Solutionpacks//SolutionPacks#install-ddve
+   http://labbuildr.readthedocs.io/en/master/Solutionpacks///SolutionPacks#install-ddve
 .EXAMPLE
     Importing the ovf template
  .\install-ddve.ps1 -ovf G:\Sources\ddve-5.6.0.3-485123\ddve-5.6.0.3-485123.ovf

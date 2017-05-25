@@ -19,7 +19,7 @@
    limitations under the License.
 
 .LINK
-   http://labbuildr.readthedocs.io/en/latest/Solutionpacks//install-nve.ps1
+   http://labbuildr.readthedocs.io/en/master/Solutionpacks///install-nve.ps1
 .EXAMPLE
 #>
 [CmdletBinding()]

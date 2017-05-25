@@ -24,7 +24,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   http://labbuildr.readthedocs.io/en/latest/Solutionpacks//install-VCSA.ps1
+   http://labbuildr.readthedocs.io/en/master/Solutionpacks///install-VCSA.ps1
 .EXAMPLE
     Importing the ovf template
 	.\install-vcsa.ps1 -ovf C:\Sourcesvmware-vcsa.ova

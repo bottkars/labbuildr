@@ -1,6 +1,6 @@
 ﻿
 ![logo](https://cloud.githubusercontent.com/assets/8255007/17669992/3d3a18ba-6310-11e6-829a-2d8fc7995712.jpg)  
-:new:**NEW BETA ARRIVED FOR OSX, LIUX and Windows, see [wiki for details](http://labbuildr.readthedocs.io/en/latest/Solutionpacks//NEW-BETA-LABBUILDR-LINUX-OSX)**   
+:new:**NEW BETA ARRIVED FOR OSX, LIUX and Windows, see [wiki for details](http://labbuildr.readthedocs.io/en/master/Solutionpacks///NEW-BETA-LABBUILDR-LINUX-OSX)**   
 labbuildr 2016-3 3rd Anniversary   
 =======
 
@@ -17,7 +17,7 @@ labbuildr deploys the folowing scenarios:
 
   
 Labbuildr requires dowload of a prebuilt sources.vhd and prebuilt os masters.
-See http://labbuildr.readthedocs.io/en/latest/Solutionpacks//Master for details
+See http://labbuildr.readthedocs.io/en/master/Solutionpacks///Master for details
 
 For the 2016 release, the following changes applied to labbuildr:
 

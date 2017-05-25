@@ -95,7 +95,7 @@ once the cluster is built, kubernetes dashboard deployment starts.
 ![image](https://cloud.githubusercontent.com/assets/8255007/24656226/eb3f4510-1941-11e7-8ad3-8e366aa462e6.png)
 
 
-follow the instructions for [Kubernetes Dashboard](http://labbuildr.readthedocs.io/en/latest/Solutionpacks//ubuntu-bakery.ps1#kubernetes-dashboard)  
+follow the instructions for [Kubernetes Dashboard](http://labbuildr.readthedocs.io/en/master/Solutionpacks///ubuntu-bakery.ps1#kubernetes-dashboard)  
 
 <h2 id="kubernetesdash">Kubernetes Dashboard</h2> 
 

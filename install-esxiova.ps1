@@ -24,7 +24,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   http://labbuildr.readthedocs.io/en/latest/Solutionpacks//install-esxiova.ps1
+   http://labbuildr.readthedocs.io/en/master/Solutionpacks///install-esxiova.ps1
 .EXAMPLE
     Importing the ovf template
 	.\install-esxiova.ps1 -import -nestedesx_ver ['Nested_ESXi6','Nested_ESXi5','Nested_ESXi6.5']

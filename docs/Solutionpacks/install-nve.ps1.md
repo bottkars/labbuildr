@@ -3,8 +3,8 @@ nve (networker virtual edition) is a ova deliverd, pre-configured networker serv
 nve uses the avp package format to deliver upgrades.
 
 install-nve is a 2-step process:
-* [import](http://labbuildr.readthedocs.io/en/latest/Solutionpacks//install-nve.ps1#import)
-* [install](http://labbuildr.readthedocs.io/en/latest/Solutionpacks//install-nve.ps1#install)
+* [import](http://labbuildr.readthedocs.io/en/master/Solutionpacks///install-nve.ps1#import)
+* [install](http://labbuildr.readthedocs.io/en/master/Solutionpacks///install-nve.ps1#install)
 
 ## import
 to download / import an nve from OVA as a master, run

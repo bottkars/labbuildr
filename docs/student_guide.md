@@ -3,10 +3,10 @@ Manadatory in each class is the preparation of Student Laptops/pc´s
 For Windows 10 users, please make sure no not use edge browser for copy paste operations 
 
 This Guide is divided in Multiple Chapters
-* [Prerequirements](http://labbuildr.readthedocs.io/en/latest/Solutionpacks//Student-Guide#01-prerequirements)
-* [install and run labbuildr](http://labbuildr.readthedocs.io/en/latest/Solutionpacks//Student-Guide#10-install-and-run-labbuildr)  
-* [defaults](http://labbuildr.readthedocs.io/en/latest/Solutionpacks//Student-Guide#12-adjusting-defaults)
-* [Running VM´s](http://labbuildr.readthedocs.io/en/latest/Solutionpacks//Student-Guide#13-running-vms)    
+* [Prerequirements](http://labbuildr.readthedocs.io/en/master/Solutionpacks///Student-Guide#01-prerequirements)
+* [install and run labbuildr](http://labbuildr.readthedocs.io/en/master/Solutionpacks///Student-Guide#10-install-and-run-labbuildr)  
+* [defaults](http://labbuildr.readthedocs.io/en/master/Solutionpacks///Student-Guide#12-adjusting-defaults)
+* [Running VM´s](http://labbuildr.readthedocs.io/en/master/Solutionpacks///Student-Guide#13-running-vms)    
 
 # 0.1 Prerequirements
 In this part, students check / install the required software
@@ -31,7 +31,7 @@ at the prompt, enter
 ```Powershell
 ($PSVersionTable).PSVersion -ge "3.0"
 ```  
-if the answer is "true", skip to [0.1.4 Execution Policy](http://labbuildr.readthedocs.io/en/latest/Solutionpacks//Student-Guide#014-execution-policy) 
+if the answer is "true", skip to [0.1.4 Execution Policy](http://labbuildr.readthedocs.io/en/master/Solutionpacks///Student-Guide#014-execution-policy) 
 ![image](https://cloud.githubusercontent.com/assets/8255007/17082310/aa99e2c6-5179-11e6-8347-0ce2982b4fea.png)   
 
 ## 0.1.2 Check .Net Framework 
@@ -39,7 +39,7 @@ Prereq for Powershell 3.0/4.0 is Net Framework 4.5
 ``` Powershell
 (Get-ItemProperty -Path 'HKLM:\Software\Microsoft\NET Framework Setup\NDP\v4\Full' -ErrorAction SilentlyContinue).Version -ge '4.5*'
 ``` 
-if the answer is true, skip to step [0.1.3 Install Powershell](http://labbuildr.readthedocs.io/en/latest/Solutionpacks//Student-Guide#013-install-powershell-40) 
+if the answer is true, skip to step [0.1.3 Install Powershell](http://labbuildr.readthedocs.io/en/master/Solutionpacks///Student-Guide#013-install-powershell-40) 
 for any other answers, download and run [.Net 4.5.2 Installer]($Url=http://download.microsoft.com/download/E/2/1/E21644B5-2DF2-47C2-91BD-63C560427900/NDP452-KB2901907-x86-x64-AllOS-ENU.exe")  
 ## 0.1.3 install Powershell 4.0  
 Powershell (4.0) is part of Windows Management Framework (WMF) 4.0.   
@@ -171,7 +171,7 @@ use this ip address ( or MySubnet.4) with your browser to connect to the admin i
 Login to the ui an be done with your Webbrowser with user root/Password123!  
 ## 1.3.2 Build a domain controller
 to build the domain controller, follow
-[Build-lab.ps1 -DConly](http://labbuildr.readthedocs.io/en/latest/Solutionpacks//build-lab.ps1---DConly)
+[Build-lab.ps1 -DConly](http://labbuildr.readthedocs.io/en/master/Solutionpacks///build-lab.ps1---DConly)
 # 2.0 Managing VM´s  
 get a list of all all labbuildr commands  
 ```Powershell

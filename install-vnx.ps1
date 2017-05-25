@@ -19,7 +19,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   http://labbuildr.readthedocs.io/en/latest/Solutionpacks//SolutionPacks#install-vnx
+   http://labbuildr.readthedocs.io/en/master/Solutionpacks///SolutionPacks#install-vnx
 .EXAMPLE
     .\install-vnx.ps1 -Defaults -configure
     installs a Single Datamover VNX

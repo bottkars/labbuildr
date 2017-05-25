@@ -18,7 +18,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
- http://labbuildr.readthedocs.io/en/latest/Solutionpacks//SolutionPacks/#Install-isi
+ http://labbuildr.readthedocs.io/en/master/Solutionpacks///SolutionPacks/#Install-isi
 .EXAMPLE
 
 #>

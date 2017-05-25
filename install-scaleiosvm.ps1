@@ -15,7 +15,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   http://labbuildr.readthedocs.io/en/latest/Solutionpacks//install-scaleiosvm.ps1
+   http://labbuildr.readthedocs.io/en/master/Solutionpacks///install-scaleiosvm.ps1
 .EXAMPLE
 .\install-scaleiosvm.ps1 -Sourcedir d:\sources
 .EXAMPLE

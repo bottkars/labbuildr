@@ -18,7 +18,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   http://labbuildr.readthedocs.io/en/latest/Solutionpacks//install-aptcache.ps1
+   http://labbuildr.readthedocs.io/en/master/Solutionpacks///install-aptcache.ps1
 .EXAMPLE
 .\install-Ubuntu.ps1
 This will install 3 Ubuntu Nodes Ubuntu1 -Ubuntu3 from the Default Ubuntu Master

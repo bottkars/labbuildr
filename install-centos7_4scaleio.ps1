@@ -18,7 +18,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   http://labbuildr.readthedocs.io/en/latest/Solutionpacks//SolutionPacks#install-centos7_4scaleio
+   http://labbuildr.readthedocs.io/en/master/Solutionpacks///SolutionPacks#install-centos7_4scaleio
 .EXAMPLE
 .\install-centos7_4scaleio.ps1 -Defaults
 This will install 3 Centos Nodes CentOSNode1 -CentOSNode3 from the Default CentOS7 Master , in the Default 192.168.2.0 network, IP .221 - .223

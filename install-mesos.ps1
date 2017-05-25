@@ -18,7 +18,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   http://labbuildr.readthedocs.io/en/latest/Solutionpacks/install-mesos.ps1
+   http://labbuildr.readthedocs.io/en/master/Solutionpacks//install-mesos.ps1
 .EXAMPLE
 #>
 [CmdletBinding(DefaultParametersetName = "install")]

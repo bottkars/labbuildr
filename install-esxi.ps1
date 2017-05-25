@@ -23,7 +23,7 @@
    limitations under the License.
 
 .LINK
-	http://labbuildr.readthedocs.io/en/latest/Solutionpacks//install-esxi.ps1
+	http://labbuildr.readthedocs.io/en/master/Solutionpacks///install-esxi.ps1
 .EXAMPLE
 #>
 [CmdletBinding()]

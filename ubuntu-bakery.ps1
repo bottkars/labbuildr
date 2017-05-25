@@ -18,7 +18,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   http://labbuildr.readthedocs.io/en/latest/Solutionpacks/ubuntu-bakery.ps1
+   http://labbuildr.readthedocs.io/en/master/Solutionpacks//ubuntu-bakery.ps1
 .EXAMPLE
 .\install-Ubuntu.ps1
 This will install 3 Ubuntu Nodes Ubuntu1 -Ubuntu3 from the Default Ubuntu Master
@@ -1097,7 +1097,7 @@ spec:`
 	$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 	Write-Host -ForegroundColor White "K8S State"
 	write-host (($nodeclone | Get-VMXVariable -GuestVariable K8SSTATE).k8sstate -join "`n")  -ForegroundColor Green
-	Write-Host "you may start your kubectl proxy on your localhost ( see  http://labbuildr.readthedocs.io/en/latest/Solutionpacks//ubuntu-bakery.ps1#k8s )"
+	Write-Host "you may start your kubectl proxy on your localhost ( see  http://labbuildr.readthedocs.io/en/master/Solutionpacks///ubuntu-bakery.ps1#k8s )"
 
 	}
 $StopWatch.Stop()
