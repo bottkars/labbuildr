@@ -25,7 +25,6 @@ Param (
     [Parameter(ParameterSetName = "install", Mandatory = $false)]
     [ValidateSet('Centos7_3_1611')]
     [string]$centos_ver = 'Centos7_3_1611',
-    [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
     [Parameter(ParameterSetName = "install", Mandatory = $false)][switch]$Update,
     [Parameter(ParameterSetName = "install", Mandatory = $false)]
     [ValidateRange(1, 1)][int32]$Nodes = 1,

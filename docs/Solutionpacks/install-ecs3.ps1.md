@@ -19,10 +19,10 @@ during customization, 3 disks, 16GB and 4CPU are added.
 to speed up installation time, the containerimage for ecs will always be stored on the labbuildr sources preserving the image tag. specific images can be selected from istall-ecs3
 
 
-once all seetings are done, the bootsrap process for ecs is done.
+once all seetings are done, the bootstrap process for ecs is invoked.
 ![image](https://cloud.githubusercontent.com/assets/8255007/26436902/251a4fe6-411a-11e7-9354-d9376a09606a.png)
 after the bootstrap and injecting a customized deploy.yaml file, ecs node will reboot.
-you can follow the progress of the bootstrap on ecsnode1 by doing 
+you can follow the progress of the bootstrap on ecsnode1 using ssh or the vmconsole 
 ```
 tail -f /ECS-CommunityEdition/install.log
 ```
@@ -33,7 +33,7 @@ after reboot, step1 will start once docker service is up and running
 
 ![image](https://cloud.githubusercontent.com/assets/8255007/26437184/d22ceaa8-411b-11e7-9591-d7cce6c61f4c.png)
 
-you can monitor step1 by 
+you can monitor step1 by using ssh or the vmconsole 
 ```
 tail -f /tmp/systemd-private-*-vmtoolsd.service-*/tmp/labbuildr.log
 ```
@@ -41,7 +41,7 @@ tail -f /tmp/systemd-private-*-vmtoolsd.service-*/tmp/labbuildr.log
 
 
 once step1 is finished, step2 starts automatically.
-you can monitor step2 by 
+you can monitor step2 by using ssh or the vmconsole 
 ```
 tail -f /tmp/systemd-private-*-vmtoolsd.service-*/tmp/labbuildr.log
 ```
@@ -66,4 +66,3 @@ follow the instructions of the wizard
 custom parameters can be specified, see get-help install-ecs3.ps1
 
 
-once the node is booted, the system is running the network configuration of the node
