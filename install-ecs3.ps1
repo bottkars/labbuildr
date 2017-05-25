@@ -15,7 +15,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   http://labbuildr.readthedocs.io/en/latest/Solutionpacks//install-ecs.ps1
+   http://labbuildr.readthedocs.io/en/latest/Solutionpacks/install-ecs3.ps1
 .EXAMPLE
 #>
 
