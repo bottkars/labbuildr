@@ -40,6 +40,25 @@ tail -f /tmp/systemd-private-*-vmtoolsd.service-*/tmp/labbuildr.log
 ![image](https://cloud.githubusercontent.com/assets/8255007/26437939/4ae4c232-4120-11e7-8baf-67b4be6880fd.png)
 
 
+once step1 is finished, step2 starts automatically.
+you can monitor step2 by 
+```
+tail -f /tmp/systemd-private-*-vmtoolsd.service-*/tmp/labbuildr.log
+```
+
+![image](https://cloud.githubusercontent.com/assets/8255007/26439048/9f273b80-4126-11e7-8720-4a4aebc41679.png)
+
+once finished, the deploymenttimes will be displayed for each step.
+![image](https://cloud.githubusercontent.com/assets/8255007/26439527/e5d67db4-4128-11e7-9365-68f25563cebd.png)
+
+you can now login to your ecs instance with root / changeme.
+follow the instructions of the wizard
+
+
+![image](https://cloud.githubusercontent.com/assets/8255007/26439615/3b259ba6-4129-11e7-9c28-228e37dcec44.png)
+
+
+![image](https://cloud.githubusercontent.com/assets/8255007/26439713/8b6e2bc8-4129-11e7-8f9a-d6f657053a0c.png)
 
 
 
