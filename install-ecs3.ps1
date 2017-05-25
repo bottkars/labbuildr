@@ -254,6 +254,7 @@ $StopWatch_docker = [System.Diagnostics.Stopwatch]::StartNew()
     if (Test-Path $Docker_Image_file)
         {
         $Scriptblock = "gunzip -c /mnt/hgfs/Sources/docker/$($Docker_image)_$Docker_imagetag.tgz| docker load;docker tag $($Docker_imagename):$Docker_imagetag $($Docker_imagename):latest"
+        Set-LABUi -short -title $Scriptblock
         Write-Verbose $Scriptblock
         $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
         }
