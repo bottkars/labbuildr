@@ -233,11 +233,13 @@ foreach ($Node in $machinesBuilt) {
         }
         $Scriptblock = "update-ca-trust"
         Write-Verbose $Scriptblock
+        Set-LABUi -short -title $Scriptblock
         $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
     }
 
     $Scriptblock = 'rm -f /etc/localtime;ln -s /usr/share/zoneinfo/UTC /etc/localtime'
     Write-Verbose $Scriptblock
+    Set-LABUi -short -title $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
 
@@ -260,9 +262,11 @@ $StopWatch_docker = [System.Diagnostics.Stopwatch]::StartNew()
             New-Item -ItemType Directory $Docker_basepath -ErrorAction SilentlyContinue | Out-Null
             $Scriptblock = "docker pull $($Docker_imagename):$Docker_imagetag"
             Write-Verbose $Scriptblock
+            Set-LABUi -short -title $Scriptblock
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
             $Scriptblock = "docker save $($Docker_imagename):$Docker_imagetag | gzip -c >  /mnt/hgfs/Sources/docker/$($Docker_image)_$Docker_imagetag.tgz;docker tag $($Docker_imagename):$Docker_imagetag $($Docker_imagename):latest"
             Write-Verbose $Scriptblock
+            Set-LABUi -short -title $Scriptblock
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword # -logfile $Logfile
         }
         else {
@@ -280,6 +284,7 @@ $StopWatch_docker.stop()
 $Git_Branch = 'develop'
 $Scriptblock = "git clone -b $Git_Branch --single-branch $repo"
 Write-Verbose $Scriptblock
+Set-LABUi -short -title $Scriptblock
 $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
 $my_yaml = "# deploy.yml for labbuildr
@@ -369,16 +374,19 @@ Write-Host -ForegroundColor White "you may follow the process with 'tail -f /ECS
 $StopWatch_bootstrap = [System.Diagnostics.Stopwatch]::StartNew()
 $Scriptblock = 'cd /ECS-CommunityEdition; ./bootstrap.sh -c /root/deploy.yml'
 Write-Verbose $Scriptblock
+Set-LABUi -short -title $Scriptblock
 $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 $StopWatch_bootstrap.stop()
 Write-Host -ForegroundColor Gray " ==>Adjusting docker run for non tty ( pull request made )"
 $Scriptblock = "/usr/bin/sudo -s sed -i -e 's\-it\-i\g' /ECS-CommunityEdition/ui/run.sh"
 Write-verbose $Scriptblock
+Set-LABUi -short -title $Scriptblock
 $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile   # -Confirm:$false -SleepSec 60
 
 
 $Scriptblock = 'shutdown -r now'
 Write-Verbose $Scriptblock
+Set-LABUi -short -title $Scriptblock
 $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -nowait -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 start-sleep 30
 do {
@@ -391,6 +399,7 @@ do {
 Write-Host -ForegroundColor Gray " ==>Waiting for Docker Daemon"
 $Scriptblock = 'until [[ "$(systemctl is-active docker)" == "active" ]]; do sleep 5; done'
 Write-Verbose $Scriptblock
+Set-LABUi -short -title $Scriptblock
 $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword #-logfile $Logfile
 
 Write-Host -ForegroundColor White "Starting ECS Configuration Step1, this may take a while"
