@@ -37,6 +37,8 @@ you can monitor step1 by
 ```
 tail -f /tmp/systemd-private-*-vmtoolsd.service-*/tmp/labbuildr.log
 ```
+![image](https://cloud.githubusercontent.com/assets/8255007/26437939/4ae4c232-4120-11e7-8baf-67b4be6880fd.png)
+
 
 
 
