@@ -121,7 +121,7 @@ else {
     }
     $Content = $Content | where {$_ -notmatch "gui.exitAtPowerOff"}
     $Content += 'gui.exitAtPowerOff = "TRUE"'
-    $Content += 'disk.EnableUUID=”true”'
+    $Content += 'disk.EnableUUID = "TRUE"'
     $Content = $Content | where {$_ -notmatch "virtualHW.version"}
     $Content += 'virtualHW.version = "' + "$($Global:vmwareversion.Major)" + '"'
     Set-Content -Path $Clone.config -Value $content -Force
