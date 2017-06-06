@@ -3973,6 +3973,10 @@ switch ($PsCmdlet.ParameterSetName)
 			    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script create-cluster.ps1 -Parameter "-Nodeprefix '$NamePrefix$NodePrefix' -IPAddress '$ClusterIP' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive 
                 }
             }
+            if ($SpacesDirect.IsPresent)
+                {
+                    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script new-s2dpool.ps1 -Parameter "$CommonParameter" -interactive
+                }
 	} # End Switchblock Blanknode
 	"docker" {
 		$Disks = 2
