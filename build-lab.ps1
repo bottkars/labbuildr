@@ -3951,7 +3951,13 @@ switch ($PsCmdlet.ParameterSetName)
                     {
 		            $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter "-nw_ver $nw_ver -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter"
                     }
-				invoke-postsection
+                if ($node -eq $Blank_End)
+                    {
+                        invoke-postsection -wait
+                    }    
+				else {
+                    invoke-postsection
+                } 
 			}# end Cloneok
 		} # end foreach
     	if ($Cluster.IsPresent)
