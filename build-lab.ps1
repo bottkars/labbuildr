@@ -3975,7 +3975,7 @@ switch ($PsCmdlet.ParameterSetName)
             }
             if ($SpacesDirect.IsPresent)
                 {
-                    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script new-s2dpool.ps1 -Parameter "$CommonParameter" -interactive
+                    $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script new-s2dpool.ps1 -Parameter "-nodes $blanknodes $CommonParameter" -interactive
                 }
 	} # End Switchblock Blanknode
 	"docker" {
