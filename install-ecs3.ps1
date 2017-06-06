@@ -25,12 +25,10 @@ Param (
     [Parameter(ParameterSetName = "install", Mandatory = $false)]
     [ValidateSet('Centos7_3_1611')]
     [string]$centos_ver = 'Centos7_3_1611',
-    [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
     [Parameter(ParameterSetName = "install", Mandatory = $false)][switch]$Update,
     [Parameter(ParameterSetName = "install", Mandatory = $false)]
     [ValidateRange(1, 1)][int32]$Nodes = 1,
     [Parameter(ParameterSetName = "install", Mandatory = $false)]
-    [switch]$rexray,
     [ValidateRange(0, 3)]
     [int]$SCSI_Controller = 0,
     [ValidateRange(3, 3)] # set hard for ECS 3 installer
@@ -241,6 +239,7 @@ foreach ($Node in $machinesBuilt) {
     Write-Verbose $Scriptblock
     Set-LABUi -short -title $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+
     ####### docker path´s
     $Docker_basepath = Join-Path $Sourcedir docker
     $Docker_Image_file = Join-Path $Docker_basepath "$($Docker_image)_$Docker_imagetag.tgz"
@@ -277,6 +276,7 @@ foreach ($Node in $machinesBuilt) {
     $StopWatch_docker.stop()
     ### enc docker save workaround
     #$Git_Branch = 'develop'
+
     $Scriptblock = "git clone -b $Git_Branch --single-branch $repo"
     Write-Verbose $Scriptblock
     Set-LABUi -short -title $Scriptblock
