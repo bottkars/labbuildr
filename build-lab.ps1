@@ -119,11 +119,6 @@ Specify if Networker Scenario sould be installed
 	[Parameter(ParameterSetName = "Isilon")]
     [switch][alias('isi')]$Isilon,
     <#
-    Selects the Storage Spaces Scenario, still work in progress
-    IP-Addresses: .170 - .179
-    #>
-	[Parameter(ParameterSetName = "Spaces")][switch]$Spaces,
-    <#
     Selects the Syncplicity Panorama Server
     IP-Addresses: .18
     #>
@@ -164,7 +159,6 @@ Specify if Networker Scenario sould be installed
     #>
 	[Parameter(ParameterSetName = "Blanknodes")][switch][alias('bn')]$Blanknode,
 	[Parameter(ParameterSetName = "Blanknodes")][switch][alias('bnhv')]$BlankHV,
-	[Parameter(ParameterSetName = "Blanknodes")][switch][alias('S2D')]$SpacesDirect,
 	[Parameter(ParameterSetName = "Blanknodes")][string][alias('CLN')]$ClusterName,
     <#
     Selects the SOFS Scenario
@@ -236,8 +230,6 @@ Specify if Networker Scenario sould be installed
     <# Install a DAG without Management IP Address ? #>
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)][switch]$DAGNOIP,
-    <# Specify Number of Spaces Hosts #>
-    [Parameter(ParameterSetName = "Spaces", Mandatory = $false)][ValidateRange(1, 2)][int]$SpaceNodes = "1",
     <# Specify Number of Hyper-V Hosts #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][ValidateRange(1, 9)][int][alias('hvnodes')]$HyperVNodes = "1",
 	<# ScaleIO on hyper-v #>
@@ -463,7 +455,6 @@ Machine Sizes
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
 	[Parameter(ParameterSetName = "DConly", Mandatory = $false)]
-	[Parameter(ParameterSetName = "Spaces", Mandatory = $false)]
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
     [Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
@@ -755,7 +746,7 @@ Sources should be populated from a bases sources.zip
     #>
     [Parameter(ParameterSetName = "update",Mandatory = $false, HelpMessage = "this will force update labbuildr")]
     [switch]$force,
-    <# Turn on Logging to Console#>
+    <# Set iSCSI as Storage Option#>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
 	#[Parameter(ParameterSetName = "E14", Mandatory = $false)]
@@ -772,6 +763,23 @@ Sources should be populated from a bases sources.zip
     #[Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	#[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 	[switch]$iSCSI,
+    <# SET Spaces Direct as Storage Option #>
+    [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
+	#[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+	#[Parameter(ParameterSetName = "E14", Mandatory = $false)]
+	#[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "E16", Mandatory = $false)]
+	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
+	#[Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "DConly", Mandatory = $false)]
+	#[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
+	#[Parameter(ParameterSetName = "docker", Mandatory = $false)]
+	[switch]$SpacesDirect,
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
 	#[Parameter(ParameterSetName = "E14", Mandatory = $false)]
@@ -2075,6 +2083,8 @@ if (!($DConly.IsPresent))
         $SQL = $true
         $Scenario = 2
         }
+
+    
 	if ($HyperV.IsPresent)
 	{
         $Scenarioname = "Hyper-V"
@@ -2152,21 +2162,50 @@ if ($SOFS.IsPresent)
     if ($DefaultGateway.IsPresent){ Write-Host -ForegroundColor Magenta " ==>The Gateway will be $DefaultGateway"}
 	if ($Cluster.IsPresent) { write-verbose "The Nodes will be Clustered ( Single Node Clusters )" }
 }
-if ($HyperV.IsPresent -and $iSCSI.IsPresent)
-{
-$Cluster = $true
-}#end Hyperv.ispresent
-if ($ScaleIO.IsPresent)
-{
-    If ($HyperVNodes -lt 3)
-                {
-                Write-Host -ForegroundColor Gray " ==>Need 3 nodes for ScaleIO, incrementing to 3"
-                $HyperVNodes = 3
+if ($HyperV.IsPresent)
+    {
+    if ($iscsi.IsPresent)
+        {
+        $SpacesDirect = $false
+        $storage = 'iscsi'    
+        }
+    if ($SpacesDirect.ispresent)
+        {
+        $iscsi = $false
+        $storage = 'SpacesDirect'
+        $Cluster = $true
+        If ($HyperVNodes -lt 2)
+                    {
+                    $HyperVNodes = 2
+                    Write-Host -ForegroundColor Gray " ==>Need $HyperVnodes Nodes for $Storage, incrementing"
                 }
-$Work_Items +=  " ==>we are going to Install ScaleIO on $HyperVNodes Hyper-V Nodes in cluster HV$($Clusternum)Cluster"
-    if ($DefaultGateway.IsPresent){ Write-Host -ForegroundColor Magenta " ==>The Gateway will be $DefaultGateway"}
-	# if ($Cluster.IsPresent) { write-verbose "The Nodes will be Clustered ( Single Node Clusters )" }
-}
+        If ($Disks -lt 4)
+            {
+                $Disks = 4
+            }        
+            
+        }        
+    if ($ScaleIO.IsPresent)
+        {
+        $iscsi = $false
+        $SpacesDirect = $false    
+        $Cluster = $true
+        $Storage = 'ScaleIO'
+        If ($Disks -lt 1)
+            {
+            $Disks = 1
+            }         
+        If ($HyperVNodes -lt 3)
+                    {
+                    $HyperVNodes = 3
+                    Write-Host -ForegroundColor Gray " ==>Need $HyperVnodes  Nodes for $Storage, incrementing"
+                    }
+        }
+    $Work_Items +=  " ==>we are going to Install $HyperVNodes Hyper-V Nodes with $Storage"
+    if ($Cluster.IsPresent) {
+    $Work_Items += "nodes will be clustered in cluster HV$($Clusternum)Cluster"}
+       
+    }
 if ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG" -or $SPdbtype -eq "AlwaysOn")
 {
 	$Work_Items +=  " ==>we are going to Install an SQL Always On Cluster with $AAGNodes Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using VMnet$VMnet"
@@ -2712,11 +2751,11 @@ If ($Java8_required)
         Write-Verbose "Got $LatestJava"
         }
     }
-if ($docker.IsPresent)
+if ($docker.IsPresent -or $SpacesDirect.IsPresent)
 	{
 	if ($Master -lt "2016")
 		{
-		Write-Host " ==>setting Docker Master to $Latest_2016"
+		Write-Host " ==>setting Master to $Latest_2016"
 		$master = $Latest_2016
 		}
 	# Receive-LABDocker -Destination $labbuildr_sourcedir -ver 1.12 -arch win -branch beta
@@ -2804,7 +2843,7 @@ if ($DCMaster -ne $Master)
 	{
 	$My_DC_Master = test-labmaster -Masterpath "$Masterpath" -Master $DCMaster -mastertype vmware -Confirm:$Confirm
 	$DC_MasterVMX = $My_DC_Master.config
-	Write-Verbose " ==>we got master $DC_MasterVMX"
+	Write-Verbose " ==>we got DC-master $DC_MasterVMX"
 	}
 else
 	{$DC_MasterVMX = $MyMaster.config}
@@ -3515,15 +3554,12 @@ switch ($PsCmdlet.ParameterSetName)
         $FirstVMX =  "$($Clusterprefix)NODE$Firstnode"
 		$HVLIST = @()
         $AddonFeatures = "RSAT-ADDS, RSAT-ADDS-TOOLS, AS-HTTP-Activation, NET-Framework-45-Features, Hyper-V, Hyper-V-Tools, Hyper-V-PowerShell, WindowsStorageManagementService"
-		if ($ScaleIO.IsPresent)
+        If ($Disks)
             {
-            if (!$Cluster.IsPresent)
-                {
-                Write-Host -ForegroundColor Magenta " ==>we want a Cluster for Automated SCALEIO Deployment, adjusting"
-                [switch]$Cluster = $true
-                }
-            If (!$Disks){$Disks = 1}
             $cloneparm = " -AddDisks -disks $Disks"
+            }
+        if ($ScaleIO.IsPresent)
+            {
             if ("XXL" -notmatch $Size)
                 {
                 Write-Host -ForegroundColor Gray " ==>we adjust size to XL Machine to make ScaleIO RUN"
@@ -3726,6 +3762,11 @@ switch ($PsCmdlet.ParameterSetName)
                     $script_invoke = get-vmx $FirstVMX | invoke-vmxpowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script configure-mdm.ps1 -Parameter "-IPv4Subnet $IPv4Subnet -CSVnum 3 -ScaleIO_Major $ScaleIO_Major" -interactive
                     }
             }
+        if ($SpacesDirect.ispresent)
+            {
+            $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script new-s2dpool.ps1 -Parameter "-nodes $hypervnodes $CommonParameter" -interactive 
+                
+            }    
 		if ($SCVMM.IsPresent)
 		    {
 			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $In_Guest_UNC_SQLScriptDir -Script install-sql.ps1 -Parameter "-SQLVER $SQLVER -DefaultDBpath -SourcePath $IN_Guest_UNC_Sourcepath $Coreparameter $CommonParameter" -interactive
@@ -4050,49 +4091,6 @@ switch ($PsCmdlet.ParameterSetName)
 	} #end 
 
 	} # End Switchblock Blanknode
-	"Spaces" {
-		foreach ($Node in (1..$SpaceNodes))
-		{
-			###################################################
-			# Setup of a Blank Node
-			# Init
-			$Nodeip = "$IPv4Subnet.17$Node"
-            $NodePrefix	= "Spaces"
-            $Nodename = "$NodePrefix$Node"
-			$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
-			$IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\$NodePrefix"
-			###################################################
-			# we need a DC, so check it is running
-		    Write-Verbose $IPv4Subnet
-            write-verbose $Nodename
-            write-verbose $Nodeip
-            Write-Verbose $Disks
-            Write-Verbose $ClusterName
-            if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
-                {
-                Write-verbose "Now Pausing"
-                pause
-                }
-			test-dcrunning
-			if ($SpaceNodes -gt 1) {$AddonFeatures = "Failover-Clustering, RSAT-Clustering"}
-			$CloneOK = Invoke-expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference $Node -Builddir $Builddir -Mastervmx $MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -size $Size -Sourcedir $Sourcedir -MainMemUseFile:$($lab_MainMemUseFile)"
-			###################################################
-			If ($CloneOK)
-				{
-				$NodeClone = Get-VMX -Path $CloneVMX
-				write-verbose "Copy Configuration files, please be patient"
-				test-user -whois Administrator
-				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
-				invoke-postsection -wait
-			}# end Cloneok
-		} # end foreach
-		if ($SpaceNodes -gt 1)
-		{
-			write-host
-			Write-Host -ForegroundColor Gray " ==>Forming Storage Spaces Cluster"
-			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_Scriptroot -Script create-cluster.ps1 -Parameter "-Nodeprefix 'Spaces' -IPAddress '$IPv4Subnet.170' -IPV6Prefix $IPV6Prefix -IPv6PrefixLength $IPv6PrefixLength -AddressFamily $AddressFamily $CommonParameter" -interactive
-		}
-	} # End Switchblock Spaces
 	"SQL" {
 		$Node = 1 # chnge when supporting Nodes Parameter and AAG
 		###################################################
