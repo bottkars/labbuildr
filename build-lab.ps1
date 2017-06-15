@@ -3010,7 +3010,6 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
                 {
                 Write-Verbose $CommonParameter
                 }
-            Write-Verbose $Coreparameter
             if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
             {
             Write-verbose "Now Pausing"
