@@ -3299,7 +3299,7 @@ switch ($PsCmdlet.ParameterSetName)
 					}
 
      	$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script configure-exchange.ps1 -interactive -Parameter "-SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter"
-#  -nowait
+
         if ($EXNode -eq ($EXNodes+$EXStartNode-1)) #are we last sever in Setup ?!
             {
             if ($DAG.IsPresent)
@@ -4041,9 +4041,10 @@ switch ($PsCmdlet.ParameterSetName)
             $Nodeprefix = "WIN"
             $NamePrefix = "DockerHost"
 		    $Nodename = "$NamePrefix$NodePrefix$Node"
-			$CloneVMX = Join-Path  $Builddir (Join-path $Nodename "$Nodename.vmx")
+			$CloneVMX = Join-Path $Builddir (Join-path $Nodename "$Nodename.vmx")
 			$Host_ScriptDir = Join-Path $Default_Host_ScriptDir $NamePrefix
-			$IN_Guest_UNC_ScenarioScriptDir = Join-Path "$IN_Guest_UNC_Scriptroot\docker"
+			$IN_Guest_UNC_ScenarioScriptDir = Join-Path $IN_Guest_UNC_Scriptroot "docker"
+            Write-Verbose $CloneVMX
             #$ClusterIP = "$IPv4Subnet.180"
 			###################################################
 		    Write-Verbose $IPv4Subnet
