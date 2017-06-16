@@ -51,6 +51,7 @@ $Master_StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
 $masterVMX = Test-LABmaster -Masterpath $masterpath -Master $photonOS
 $Master_StopWatch.stop()
 New-Item -ItemType Directory ./labbuildr-scripts/Photon/config-drive -Force | Out-Null
+$Hostkey = $HostKey -split "\n" | select -First 1
 foreach ($Node in $Startnode..(($Startnode - 1) + $Nodes)) {
     if (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue)) {   
         write-verbose "Creating $Nodeprefix$node"
