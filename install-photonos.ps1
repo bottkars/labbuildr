@@ -27,40 +27,34 @@ this will install a Puppetmaster on CentOS7 using default Values derived from de
 #
 [CmdletBinding()]
 Param(
-[Parameter(ParameterSetName = "install",Mandatory=$false)]
-[ValidateScript({ Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir = $labdefaults.Sourcedir,
-#[Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = $labdefaults.MySubnet,
-[Parameter(ParameterSetName = "install",Mandatory=$False)]
-[ValidateLength(1,15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain = $labdefaults.BuildDomain,
-[Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = $labdefaults.vmnet,
-[Parameter(ParameterSetName = "install", Mandatory = $false)][ValidateSet('photon-1.0-rev2')]$photonOS = 'photon-1.0-rev2',
-[Parameter(ParameterSetName = "install", Mandatory = $false)]$masterpath = $labdefaults.Masterpath,
- $Startnode = 1,
- $nodes = 1
-
+    [Parameter(ParameterSetName = "install", Mandatory = $false)]
+    [ValidateScript( { Test-Path -Path $_ -ErrorAction SilentlyContinue })]$Sourcedir = $labdefaults.Sourcedir,
+    [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = $labdefaults.MySubnet,
+    [Parameter(ParameterSetName = "install", Mandatory = $False)]
+    [ValidateLength(1, 15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain = $labdefaults.BuildDomain,
+    [Parameter(ParameterSetName = "install", Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2', 'vmnet3')]$vmnet = $labdefaults.vmnet,
+    [Parameter(ParameterSetName = "install", Mandatory = $false)][ValidateSet('photon-1.0-rev2')]$photonOS = 'photon-1.0-rev2',
+    [Parameter(ParameterSetName = "install", Mandatory = $false)]$masterpath = $labdefaults.Masterpath,
+    $Startnode = 1,
+    $nodes = 1
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
+$StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
+$Nodeprefix = "PhotonOSNode"
+[System.Version]$subnet = $subnet.ToString()
+$Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
+$Master_StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
+$masterVMX = Test-LABmaster -Masterpath $masterpath -Master $photonOS
+$Master_StopWatch.stop()
+
+foreach ($Node in $Startnode..(($Startnode - 1) + $Nodes)) {
+    if (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue)) {   
+        write-verbose "Creating $Nodeprefix$node"
+        $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node 
 
 
-{
-
-    $Nodeprefix = "PhotonOSNode"
-    [System.Version]$subnet = $Subnet.ToString()
-    $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
-
-    $masterVMX = Test-LABmaster -Masterpath $masterpath -Master $photonOS
-
-
-    foreach ($Node in $Startnode..(($Startnode-1)+$Nodes))
-        {
-        if (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue))
-            {   
-            write-verbose "Creating $Nodeprefix$node"
-            $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node 
-
-
-  <#  $User_data= "#cloud-config
+        <#  $User_data= "#cloud-config
 hostname: $($nodeclone.clonename)
 ssh_authorized_keys:
     - $($Hostkey)
@@ -122,17 +116,18 @@ coreos:
 		$Content = $Nodeclone | Get-VMXConfig 
 		$Content = $Content -replace 'preset','soft'
 		$Content | Set-Content -Path $NodeClone.config #>
-		$NodeClone | start-vmx | Out-Null 
-	}#end machine
+        $NodeClone | start-vmx | Out-Null 
+    }#end machine
 
-	else 
-		{
-		Write-Warning "Machine already exists"
-		}
+    else {
+        Write-Warning "Machine already exists"
+    }
 
 
-	}#end foreach
+}#end foreach
 
-}
+$StopWatch.Stop()
+Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString())"
+Write-host -ForegroundColor White "Master Section took $($Master_StopWatch.Elapsed.ToString())"
 
 
