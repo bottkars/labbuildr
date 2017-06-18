@@ -1849,10 +1849,7 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     }
 #### do we have unset parameters ?
 if (!$AddressFamily){$AddressFamily = "IPv4" }
-if (!$labdefaults.DockerRegistry)
-    {
-    Set-LABDockerRegistry  -dockerregistry "$subnet.40"   
-    }
+
 ###################################################
 if ($savedefaults.IsPresent)
 {
@@ -4024,6 +4021,10 @@ switch ($PsCmdlet.ParameterSetName)
                 }
 	} # End Switchblock Blanknode
 	"docker" {
+        if (!$labdefaults.DockerRegistry)
+            {
+            Set-LABDockerRegistry  -dockerregistry "$subnet.40"   
+            }
 		$Disks = 2
 		$node = 1
         $VTbit = $True
