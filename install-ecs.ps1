@@ -54,7 +54,8 @@ $Sourcedir = 'h:\sources',
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [int32]$Nodes=1,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
-[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateRange(1,3)][int32]$Disks = 3,[Parameter(ParameterSetName = "install",Mandatory=$false)]
+[Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateRange(1,3)][int32]$Disks = 3,
+[Parameter(ParameterSetName = "install",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateRange(1,5)]
 [int32]$Startnode = 1,
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>

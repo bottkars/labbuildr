@@ -38,15 +38,46 @@ Param(
     [Parameter(ParameterSetName = "install", Mandatory = $false)]$DNS1 = $labdefaults.DNS1,
     [Parameter(ParameterSetName = "install", Mandatory = $false)]$DefaultGateway = $labdefaults.DefaultGateway,
     [Parameter(ParameterSetName = "install", Mandatory = $false)]$Hostkey = $labdefaults.Hostkey,
+    [Parameter(ParameterSetName = "install", Mandatory=$False)][ValidateRange(1,3)][int32]$Disks,
     $Startnode = 1,
     $nodes = 1,
-    $rootpasswd = "Password123!" 
+    [uint64]$Disksize = 100GB,
+    $rootpasswd = "Password123!",
+    [int]$IP_Offset = 40,
+    [switch]$docker_registry 
 
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
-$StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
+$writefile = @()
+$runcmd = @()
+$runcmd += "    - echo '{ `"insecure-registries`":[`"$subnet.40:5000`"] }' >> /etc/docker/daemon.json`n"
+$runcmd += "   - systemctl restart docker`n"
 $Nodeprefix = "PhotonOSNode"
+if ($docker_registry.IsPresent)
+    {
+        $disks = 1
+        $Disksize = 500GB
+        $nodes = 1 
+        $Nodeprefix = "DockerRegistry"
+        $IP_Offset = $IP_Offset -1
+        $runcmd += "   - echo -e `"o\nn\np\n1\n\n\nw`" | fdisk /dev/sdb`n"
+        $runcmd += "   - mkfs.ext4 /dev/sdb1`n"
+        $runcmd += "   - echo `"/dev/sdb1 /data   ext4    defaults 1 1`" >> /etc/fstab`n"
+        $runcmd += "   - mkdir /data;mount /data`n"
+        $writefile += "
+    - path: /root/docker-compose.yml
+      content: | 
+       registry:
+         restart: always
+         image: registry:2
+         ports:
+          - 5000:5000
+         volumes:
+          - /data:/var/lib/registry
+"
+    }
+$StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
 [System.Version]$subnet = $subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 $Master_StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
@@ -57,8 +88,9 @@ $Hostkey = $HostKey -split "\n" | select -First 1
 foreach ($Node in $Startnode..(($Startnode - 1) + $Nodes)) {
     if (!(get-vmx $Nodeprefix$node -WarningAction SilentlyContinue)) {   
         write-verbose "Creating $Nodeprefix$node"
-        $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node 
-        $IP = "$subnet.4$Node"
+        $NodeClone = $MasterVMX | Get-VMXSnapshot | where Snapshot -Match "Base" | New-VMXLinkedClone -CloneName $Nodeprefix$Node
+        $IP_byte = $IP_Offset + $node 
+        $IP = "$subnet.$ip_byte"
         $meta_Data = "instance-id: iid-local01
 local-hostname: cloudimg"
 
@@ -80,6 +112,7 @@ write_files:
     - path: /etc/systemd/network/10-dhcp-en.network
       permissions: 0644
       content: | 
+$writefile  
 runcmd:
     - systemctl restart systemd-networkd
     - passwd root -u
@@ -87,7 +120,13 @@ runcmd:
     - echo -e '$rootpasswd\n$rootpasswd' | passwd root    
     - systemctl enable docker
     - systemctl start docker
+$runcmd    
 "
+#    - /etc/docker/daemon.json
+#      permissions 755
+#      content: | 
+#       { `"insecure-registries`":[`"$subnet.40:5000`"] }
+
         $User_data | Set-Content -Path "$PSScriptRoot/labbuildr-scripts/Photon/config-drive/user-data" | Out-Null 
         $meta_Data | Set-Content -Path "$PSScriptRoot/labbuildr-scripts/Photon/config-drive/meta-data" | Out-Null 
         convert-VMXdos2unix -Sourcefile "$PSScriptRoot/labbuildr-scripts/Photon/config-drive/user-data" | Out-Null 
@@ -99,7 +138,16 @@ runcmd:
         $NodeClone | Set-VMXVnet -Adapter 0 -Vnet $vmnet -WarningAction SilentlyContinue | Out-Null 
         $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.Clonename)@$BuildDomain" | Out-Null 
         $NodeClone | Set-VMXAnnotation -Line1 "root password" -Line2 $rootpasswd | Out-Null 
-        
+        if ($disks)
+            {
+            $SCSI = 0    
+            foreach ($LUN in (1..($Disks)))
+                    {
+                    $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
+                    $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
+                    $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
+                }
+            }
         $Content = $Nodeclone | Get-VMXConfig 
         $Content = $Content -replace 'preset', 'soft'
         $Content | Set-Content -Path $NodeClone.config #>
