@@ -1849,6 +1849,10 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     }
 #### do we have unset parameters ?
 if (!$AddressFamily){$AddressFamily = "IPv4" }
+if (!$labdefaults.DockerRegistry)
+    {
+    Set-LABDockerRegistry  -dockerregistry "$subnet.40"   
+    }
 ###################################################
 if ($savedefaults.IsPresent)
 {
@@ -1881,6 +1885,7 @@ $config =@()
         $config += ("<IPv6PrefixLength>$($IPv6PrefixLength)</IPv6PrefixLength>")
         $config += ("<Gateway>$($Gateway.IsPresent)</Gateway>")
         $config += ("<DefaultGateway>$($DefaultGateway)</DefaultGateway>")
+        $config += ("<DockerRegistry>$($Labdefaults.DockerRegistry)</DockerRegistry>")
         $config += ("<APT_Cache_IP>$($APT_Cache_IP)</APT_Cache_IP>")
         $config += ("<DNS1>$($DNS1)</DNS1>")
         $config += ("<DNS2>$($DNS2)</DNS2>")
@@ -4070,7 +4075,7 @@ switch ($PsCmdlet.ParameterSetName)
 		            $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter "-nw_ver $nw_ver -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter"
                     }
 				invoke-postsection -wait
-				$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-docker.ps1 -Parameter "-SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter" -interactive 
+				$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-docker.ps1 -Parameter "-SourcePath $IN_Guest_UNC_Sourcepath -docker_registry $($labdefaults.DockerRegistry) $CommonParameter" -interactive 
 			}# end Cloneok
 		 # end foreach
 <#
