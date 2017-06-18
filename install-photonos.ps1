@@ -39,7 +39,9 @@ Param(
     [Parameter(ParameterSetName = "install", Mandatory = $false)]$DefaultGateway = $labdefaults.DefaultGateway,
     [Parameter(ParameterSetName = "install", Mandatory = $false)]$Hostkey = $labdefaults.Hostkey,
     $Startnode = 1,
-    $nodes = 1
+    $nodes = 1,
+    $rootpasswd = "Password123!" 
+
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
@@ -64,10 +66,6 @@ local-hostname: cloudimg"
 hostname: $($nodeclone.clonename)
 ssh_authorized_keys:
     - $($Hostkey)
-chpasswd:
-  list: |  
-    root:Password123!
-    expire: False    
 write_files:
     - path: /etc/systemd/network/10-static-en.network
       permissions: 0644
@@ -82,9 +80,13 @@ write_files:
     - path: /etc/systemd/network/10-dhcp-en.network
       permissions: 0644
       content: | 
-
 runcmd:
     - systemctl restart systemd-networkd
+    - passwd root -u
+    - passwd root -x 99999999    
+    - echo -e '$rootpasswd\n$rootpasswd' | passwd root    
+    - systemctl enable docker
+    - systemctl start docker
 "
         $User_data | Set-Content -Path "$PSScriptRoot/labbuildr-scripts/Photon/config-drive/user-data" | Out-Null 
         $meta_Data | Set-Content -Path "$PSScriptRoot/labbuildr-scripts/Photon/config-drive/meta-data" | Out-Null 
@@ -96,6 +98,8 @@ runcmd:
         $NodeClone | Set-VMXNetworkAdapter -Adapter 0 -ConnectionType custom -AdapterType vmxnet3 -WarningAction SilentlyContinue | Out-Null 
         $NodeClone | Set-VMXVnet -Adapter 0 -Vnet $vmnet -WarningAction SilentlyContinue | Out-Null 
         $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.Clonename)@$BuildDomain" | Out-Null 
+        $NodeClone | Set-VMXAnnotation -Line1 "root password" -Line2 $rootpasswd | Out-Null 
+        
         $Content = $Nodeclone | Get-VMXConfig 
         $Content = $Content -replace 'preset', 'soft'
         $Content | Set-Content -Path $NodeClone.config #>
