@@ -73,7 +73,7 @@ if ($docker_registry.IsPresent)
       content: | 
        registry:
          restart: always
-         image: registry:2
+         image: registry:latest
          ports:
           - 5000:5000
          volumes:
