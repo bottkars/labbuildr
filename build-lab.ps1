@@ -4023,7 +4023,7 @@ switch ($PsCmdlet.ParameterSetName)
 	"docker" {
         if (!$labdefaults.DockerRegistry)
             {
-            Set-LABDockerRegistry  -dockerregistry "$subnet.40"   
+            Set-LABDockerRegistry  -dockerregistry "$IPv4Subnet.40"   
             }
 		$Disks = 2
 		$node = 1
