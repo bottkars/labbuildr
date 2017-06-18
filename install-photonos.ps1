@@ -65,6 +65,9 @@ if ($docker_registry.IsPresent)
         $runcmd += "   - mkfs.ext4 /dev/sdb1`n"
         $runcmd += "   - echo `"/dev/sdb1 /data   ext4    defaults 1 1`" >> /etc/fstab`n"
         $runcmd += "   - mkdir /data;mount /data`n"
+        $runcmd += "   - curl -L https://github.com/docker/compose/releases/download/1.13.0/docker-compose-``uname -s``-``uname -m`` > /usr/bin/docker-compose`n"
+        $runcmd += "   - chmod +X /usr/bin/docker-compose;chmod 755 /usr/bin/docker-compose`n"
+        $runcmd += "   - /usr/bin/docker-compose -f /root/docker-compose.yml up -d"
         $writefile += "
     - path: /root/docker-compose.yml
       content: | 
