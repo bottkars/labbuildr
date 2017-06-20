@@ -62,3 +62,11 @@ docker pull microsoft/mssql-server-windows
 ```
 ![image](https://user-images.githubusercontent.com/8255007/27322680-492cf660-559f-11e7-9ee4-db88ade0c121.png)
 
+once download is complete, we tag the image with the local registry name/ip:
+```
+docker tag microsoft/mssql-server-windows:latest 192.168.2.40/microsoft/mssql-server-windows:latest
+```
+and push it to the local registry
+```
+docker push 192.168.2.40/microsoft/mssql-server-windows:latest
+```
