@@ -29,8 +29,9 @@ if you install manually, here is an example docker compose:
           - /data:/var/lib/registry
 ```
 
-to make Docker Windows able to pusk images to the linux registry, the allow-nondistributable-artifacts must be set in 
+to make Docker Windows able to push images to the linux registry, the allow-nondistributable-artifacts must be set in 
  c:\programdata\docker\config\daemon.json 
+insecure registry is also defined in that by insecure-registries directive
 example
 ```json
 {
@@ -38,3 +39,26 @@ example
 "allow-nondistributable-artifacts": ["192.168.2.40:5000"]
 }
 ```
+When using labbuildr a windows dockerhost can be automatically brought online by running:
+
+```Powershell
+.\build-lab.ps1 -Master 2016core -docker -Size xl -defaults
+```
+
+modifications for the private registry and nondistributable artifacts are made automatically then.
+#### verify
+run docker info to verify setings and versions on your windows host
+```docker info
+```
+![image](https://user-images.githubusercontent.com/8255007/27322624-182bb3d0-559f-11e7-8280-cfed52ec2bc6.png)
+
+#### test
+
+to download a windows based image from the docker hub, run 
+docker pull <iamge:tag>
+in this example i used microsoft sql server, as the size was the original reason to build this :-)
+```
+docker pull microsoft/mssql-server-windows
+```
+![image](https://user-images.githubusercontent.com/8255007/27322680-492cf660-559f-11e7-9ee4-db88ade0c121.png)
+
