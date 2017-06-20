@@ -1,6 +1,6 @@
 ## how to build a docker registry for windows an linux
 
-### example uing: docker registry on photon os
+### using: docker registry on photon os
 
 ##### requires : docker registry 2.5 or later ( using 2.61 in this example )
 ##### requires : docker daemon on windows, minimum 17.06
