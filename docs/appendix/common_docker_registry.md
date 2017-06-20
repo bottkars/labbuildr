@@ -6,8 +6,8 @@
 ##### requires : docker daemon on windows, minimum 17.06
 
 ### Setup:
-install a docker host for your registry. in my example, i deploy a docker registry on a Photon Containerhost
-in labbuildr use the command:
+install a docker host for your registry. in my example, i deploy a docker registry on a Photon Containerhost  
+for labbuildr, you can use use the command:
 ```Powershell
 .\install-photon.ps1 -docker_registry
 ```
@@ -28,6 +28,9 @@ if you install manually, here is an example docker compose:
          volumes:
           - /data:/var/lib/registry
 ```
+
+you can build your registry manually by
+
 
 to make Docker Windows able to push images to the linux registry, the allow-nondistributable-artifacts must be set in 
  c:\programdata\docker\config\daemon.json 
@@ -76,7 +79,7 @@ we can now ask the registry for the catalog by
 ```
 Invoke-RestMethod http://192.168.2.40:5000/v2/_catalog | Select-Object -ExpandProperty repositories
 ```
-![image](https://user-images.githubusercontent.com/8255007/27325123-b8a33ca4-55a7-11e7-9e93-f2898f3a7e97.png)
+![image](https://user-images.githubusercontent.com/8255007/27326026-8ce55388-55aa-11e7-9614-bb7f7f0daa2c.png)
 
 
 
