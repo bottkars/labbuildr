@@ -31,6 +31,10 @@ if you install manually, here is an example docker compose:
 
 you can build your registry manually by
 
+```
+/usr/bin/docker-compose -f /root/docker-compose.yml up -d
+```
+
 
 to make Docker Windows able to push images to the linux registry, the allow-nondistributable-artifacts must be set in 
  c:\programdata\docker\config\daemon.json 
@@ -51,7 +55,8 @@ When using labbuildr a windows dockerhost can be automatically brought online by
 modifications for the private registry and nondistributable artifacts are made automatically then.
 #### verify
 run docker info to verify setings and versions on your windows host
-```docker info
+```Powershell
+docker info
 ```
 ![image](https://user-images.githubusercontent.com/8255007/27322624-182bb3d0-559f-11e7-8280-cfed52ec2bc6.png)
 
