@@ -68,5 +68,5 @@ docker tag microsoft/mssql-server-windows:latest 192.168.2.40/microsoft/mssql-se
 ```
 and push it to the local registry
 ```
-docker push 192.168.2.40/microsoft/mssql-server-windows:latest
+docker push 192.168.2.40:5000/microsoft/mssql-server-windows:latest
 ```
