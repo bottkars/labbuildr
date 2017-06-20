@@ -80,9 +80,10 @@ Invoke-RestMethod http://192.168.2.40:5000/v2/_catalog | Select-Object -ExpandPr
 
 
 
-on a second docker windows host, we verivy the image by pulling it
+on a second docker windows host, we verify the image by pulling it
 ```Powershell
 docker pull 192.168.2.40:5000/microsoft/mssql-server-windows:latest
 ```
-![image](https://user-images.githubusercontent.com/8255007/27325209-f55883de-55a7-11e7-9fa1-2c89f2960261.png)
+![image](https://user-images.githubusercontent.com/8255007/27325356-731643f6-55a8-11e7-902c-4b753b1d7124.png)
 
+you will notice a faster download speed now as you refer to your local repo
