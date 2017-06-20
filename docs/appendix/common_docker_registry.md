@@ -1,11 +1,11 @@
 ## how to build a docker registry for windows an linux
 
-# example uing: docker registry on photon os
+### example uing: docker registry on photon os
 
-# requires : docker registry 2.5 or later ( using 2.61 in this example )
-# requires : docker daemon on windows, minimum 17.06
+##### requires : docker registry 2.5 or later ( using 2.61 in this example )
+##### requires : docker daemon on windows, minimum 17.06
 
-## Setup:
+### Setup:
 install a docker host for your registry. in my example, i deploy a docker registry on a Photon Containerhost
 in labbuildr use the command:
 ```Powershell
