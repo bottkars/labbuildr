@@ -34,7 +34,8 @@ you can build your registry manually by
 ```
 /usr/bin/docker-compose -f /root/docker-compose.yml up -d
 ```
-
+![image](https://user-images.githubusercontent.com/8255007/27326254-4803f9ee-55ab-11e7-84cf-73a0a9eeb735.png)
+the registry in this example uses /data dockervolume, a mountpoint for sdb1 in my case
 
 to make Docker Windows able to push images to the linux registry, the allow-nondistributable-artifacts must be set in 
  c:\programdata\docker\config\daemon.json 
