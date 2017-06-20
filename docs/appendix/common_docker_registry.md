@@ -64,9 +64,25 @@ docker pull microsoft/mssql-server-windows
 
 once download is complete, we tag the image with the local registry name/ip:
 ```
-docker tag microsoft/mssql-server-windows:latest 192.168.2.40/microsoft/mssql-server-windows:latest
+docker tag microsoft/mssql-server-windows:latest 192.168.2.40:5000/microsoft/mssql-server-windows:latest
 ```
 and push it to the local registry
 ```
 docker push 192.168.2.40:5000/microsoft/mssql-server-windows:latest
 ```
+
+![image](https://user-images.githubusercontent.com/8255007/27324683-3ee90c0a-55a6-11e7-8428-bb70b1df3632.png)
+we can now ask the registry for the catalog by 
+```
+Invoke-RestMethod http://192.168.2.40:5000/v2/_catalog | Select-Object -ExpandProperty repositories
+```
+![image](https://user-images.githubusercontent.com/8255007/27325123-b8a33ca4-55a7-11e7-9e93-f2898f3a7e97.png)
+
+
+
+on a second docker windows host, we verivy the image by pulling it
+```Powershell
+docker pull 192.168.2.40:5000/microsoft/mssql-server-windows:latest
+```
+![image](https://user-images.githubusercontent.com/8255007/27325209-f55883de-55a7-11e7-9fa1-2c89f2960261.png)
+
