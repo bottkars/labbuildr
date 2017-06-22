@@ -98,7 +98,9 @@ if ($docker_registry.IsPresent)
            threshold: 3
        proxy:
          remoteurl: https://registry-1.docker.io
-"    }
+         "
+Set-LABDockerRegistry -DockerRegistry "$subnet.40" 
+           }
 $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
 $Master_StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
 $masterVMX = Test-LABmaster -Masterpath $masterpath -Master $photonOS
