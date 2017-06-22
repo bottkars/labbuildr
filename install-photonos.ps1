@@ -60,7 +60,7 @@ if ($docker_registry.IsPresent)
     {
         $runcmd = @()
         $runcmd += "    - echo '{ `"insecure-registries`":[`"$subnet.40:5000`"],' >> /etc/docker/daemon.json`n"
-        $runcmd += "   - echo ' `"registry-mirrors`":[`"$subnet.40:5000`"] }' >> /etc/docker/daemon.json`n"
+        $runcmd += "   - echo ' `"registry-mirrors`":[`"http://$subnet.40:5000`"] }' >> /etc/docker/daemon.json`n"
         $runcmd += "   - systemctl restart docker`n"
         $disks = 1
         $Disksize = 500GB
