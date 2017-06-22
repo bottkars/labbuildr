@@ -38,7 +38,7 @@ Param(
     [Parameter(ParameterSetName = "install", Mandatory = $false)]$DNS1 = $labdefaults.DNS1,
     [Parameter(ParameterSetName = "install", Mandatory = $false)]$DefaultGateway = $labdefaults.DefaultGateway,
     [Parameter(ParameterSetName = "install", Mandatory = $false)]$Hostkey = $labdefaults.Hostkey,
-    [Parameter(ParameterSetName = "install", Mandatory=$False)][ValidateRange(1,3)][int32]$Disks,
+    [Parameter(ParameterSetName = "install", Mandatory = $False)][ValidateRange(1, 3)][int32]$Disks,
     $Startnode = 1,
     $nodes = 1,
     [uint64]$Disksize = 100GB,
@@ -53,29 +53,30 @@ Param(
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 $writefile = @()
 $runcmd = @()
-$runcmd += "    - echo '{ `"insecure-registries`":[`"$subnet.40:5000`"]} ' >> /etc/docker/daemon.json`n"
-$runcmd += "   - systemctl restart docker`n"
+if ($docker_registry.IsPresent) {
+    Set-LABDockerRegistry -DockerRegistry "$subnet.40" 
+}
+if ($labdefaults.DockerRegistry -ne "") {
+    $runcmd += "    - echo '{ `"insecure-registries`":[`"$($labdefaults.DockerRegistry):5000`"],' >> /etc/docker/daemon.json`n"
+    $runcmd += "   - echo ' `"registry-mirrors`":[`"http://$($labdefaults.DockerRegistry):5000`"] }' >> /etc/docker/daemon.json`n"
+    $runcmd += "   - systemctl restart docker`n"
+}
 $Nodeprefix = "PhotonOSNode"
-if ($docker_registry.IsPresent)
-    {
-        $runcmd = @()
-        $runcmd += "    - echo '{ `"insecure-registries`":[`"$subnet.40:5000`"],' >> /etc/docker/daemon.json`n"
-        $runcmd += "   - echo ' `"registry-mirrors`":[`"http://$subnet.40:5000`"] }' >> /etc/docker/daemon.json`n"
-        $runcmd += "   - systemctl restart docker`n"
-        $disks = 1
-        $Disksize = 500GB
-        $nodes = 1 
-        $Nodeprefix = "DockerRegistry"
-        $IP_Offset = $IP_Offset -1
-        $runcmd += "   - echo -e `"o\nn\np\n1\n\n\nw`" | fdisk /dev/sdb`n"
-        $runcmd += "   - mkfs.ext4 /dev/sdb1`n"
-        $runcmd += "   - echo `"/dev/sdb1 /data   ext4    defaults 1 1`" >> /etc/fstab`n"
-        $runcmd += "   - mkdir /data;mount /data`n"
-        $runcmd += "   - curl -L https://github.com/docker/compose/releases/download/1.13.0/docker-compose-``uname -s``-``uname -m`` > /usr/bin/docker-compose`n"
-        $runcmd += "   - chmod +X /usr/bin/docker-compose;chmod 755 /usr/bin/docker-compose`n"
-#        $runcmd += "   - /usr/bin/docker-compose -f /root/docker-compose.yml up -d"
-        $runcmd += "   - /usr/bin/docker run -d -p 5000:5000 --restart=always --name registry -v /data:/var/lib/registry -v /root/config.yml:/etc/docker/registry/config.yml  registry:latest"
-        $writefile += "
+if ($docker_registry.IsPresent) {
+    $disks = 1
+    $Disksize = 500GB
+    $nodes = 1 
+    $Nodeprefix = "DockerRegistry"
+    $IP_Offset = $IP_Offset - 1
+    $runcmd += "   - echo -e `"o\nn\np\n1\n\n\nw`" | fdisk /dev/sdb`n"
+    $runcmd += "   - mkfs.ext4 /dev/sdb1`n"
+    $runcmd += "   - echo `"/dev/sdb1 /data   ext4    defaults 1 1`" >> /etc/fstab`n"
+    $runcmd += "   - mkdir /data;mount /data`n"
+    $runcmd += "   - curl -L https://github.com/docker/compose/releases/download/1.13.0/docker-compose-``uname -s``-``uname -m`` > /usr/bin/docker-compose`n"
+    $runcmd += "   - chmod +X /usr/bin/docker-compose;chmod 755 /usr/bin/docker-compose`n"
+    #        $runcmd += "   - /usr/bin/docker-compose -f /root/docker-compose.yml up -d"
+    $runcmd += "   - /usr/bin/docker run -d -p 5000:5000 --restart=always --name registry -v /data:/var/lib/registry -v /root/config.yml:/etc/docker/registry/config.yml  registry:latest"
+    $writefile += "
     - path: /root/config.yml
       content: | 
        version: 0.1
@@ -99,8 +100,7 @@ if ($docker_registry.IsPresent)
        proxy:
          remoteurl: https://registry-1.docker.io
          "
-Set-LABDockerRegistry -DockerRegistry "$subnet.40" 
-           }
+}
 $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
 $Master_StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
 $masterVMX = Test-LABmaster -Masterpath $masterpath -Master $photonOS
@@ -144,10 +144,10 @@ runcmd:
     - systemctl start docker
 $runcmd    
 "
-#    - /etc/docker/daemon.json
-#      permissions 755
-#      content: | 
-#       { `"insecure-registries`":[`"$subnet.40:5000`"] }
+        #    - /etc/docker/daemon.json
+        #      permissions 755
+        #      content: | 
+        #       { `"insecure-registries`":[`"$subnet.40:5000`"] }
 
         $User_data | Set-Content -Path "$PSScriptRoot/labbuildr-scripts/Photon/config-drive/user-data" | Out-Null 
         $meta_Data | Set-Content -Path "$PSScriptRoot/labbuildr-scripts/Photon/config-drive/meta-data" | Out-Null 
@@ -160,16 +160,14 @@ $runcmd
         $NodeClone | Set-VMXVnet -Adapter 0 -Vnet $vmnet -WarningAction SilentlyContinue | Out-Null 
         $NodeClone | Set-VMXDisplayName -DisplayName "$($NodeClone.Clonename)@$BuildDomain" | Out-Null 
         $NodeClone | Set-VMXAnnotation -Line1 "root password" -Line2 $rootpasswd | Out-Null 
-        if ($disks)
-            {
+        if ($disks) {
             $SCSI = 0    
-            foreach ($LUN in (1..($Disks)))
-                    {
-                    $Diskname =  "SCSI$SCSI"+"_LUN$LUN.vmdk"
-                    $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
-                    $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
-                }
+            foreach ($LUN in (1..($Disks))) {
+                $Diskname = "SCSI$SCSI" + "_LUN$LUN.vmdk"
+                $Newdisk = New-VMXScsiDisk -NewDiskSize $Disksize -NewDiskname $Diskname -Verbose -VMXName $NodeClone.VMXname -Path $NodeClone.Path 
+                $AddDisk = $NodeClone | Add-VMXScsiDisk -Diskname $Newdisk.Diskname -LUN $LUN -Controller $SCSI
             }
+        }
         $Content = $Nodeclone | Get-VMXConfig 
         $Content = $Content -replace 'preset', 'soft'
         $Content | Set-Content -Path $NodeClone.config #>
