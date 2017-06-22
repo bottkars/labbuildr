@@ -49,6 +49,8 @@ Param(
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
+[System.Version]$subnet = $subnet.ToString()
+$Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 $writefile = @()
 $runcmd = @()
 $runcmd += "    - echo '{ `"insecure-registries`":[`"$subnet.40:5000`"]} ' >> /etc/docker/daemon.json`n"
@@ -98,8 +100,6 @@ if ($docker_registry.IsPresent)
          remoteurl: https://registry-1.docker.io
 "    }
 $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
-[System.Version]$subnet = $subnet.ToString()
-$Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 $Master_StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
 $masterVMX = Test-LABmaster -Masterpath $masterpath -Master $photonOS
 $Master_StopWatch.stop()
