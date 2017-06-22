@@ -49,15 +49,17 @@ Param(
 )
 #requires -version 3.0
 #requires -module vmxtoolkit
-[System.Version]$subnet = $subnet.ToString()
-$Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 $writefile = @()
 $runcmd = @()
-$runcmd += "    - echo '{ `"insecure-registries`":[`"$subnet.40:5000`"] }' >> /etc/docker/daemon.json`n"
+$runcmd += "    - echo '{ `"insecure-registries`":[`"$subnet.40:5000`"]} ' >> /etc/docker/daemon.json`n"
 $runcmd += "   - systemctl restart docker`n"
 $Nodeprefix = "PhotonOSNode"
 if ($docker_registry.IsPresent)
     {
+        $runcmd = @()
+        $runcmd += "    - echo '{ `"insecure-registries`":[`"$subnet.40:5000`"],' >> /etc/docker/daemon.json`n"
+        $runcmd += "   - echo ' `"insecure-registries`":[`"$subnet.40:5000`"] }' >> /etc/docker/daemon.json`n"
+        $runcmd += "   - systemctl restart docker`n"
         $disks = 1
         $Disksize = 500GB
         $nodes = 1 
@@ -67,22 +69,38 @@ if ($docker_registry.IsPresent)
         $runcmd += "   - mkfs.ext4 /dev/sdb1`n"
         $runcmd += "   - echo `"/dev/sdb1 /data   ext4    defaults 1 1`" >> /etc/fstab`n"
         $runcmd += "   - mkdir /data;mount /data`n"
-        $runcmd += "   - curl -L https://github.com/docker/compose/releases/download/1.13.0/docker-compose-``uname -s``-``uname -m`` > /usr/bin/docker-compose`n"
-        $runcmd += "   - chmod +X /usr/bin/docker-compose;chmod 755 /usr/bin/docker-compose`n"
-        $runcmd += "   - /usr/bin/docker-compose -f /root/docker-compose.yml up -d"
+#        $runcmd += "   - curl -L https://github.com/docker/compose/releases/download/1.13.0/docker-compose-``uname -s``-``uname -m`` > /usr/bin/docker-compose`n"
+#        $runcmd += "   - chmod +X /usr/bin/docker-compose;chmod 755 /usr/bin/docker-compose`n"
+#        $runcmd += "   - /usr/bin/docker-compose -f /root/docker-compose.yml up -d"
+        $runcmd += "   - /usr/bin/docker run -d -p 5000:5000 --restart=always --name registry -v /data:/var/lib/registry -v /rrot/config.yml:/etc/docker/registry/config.yml  registry:latest"
         $writefile += "
-    - path: /root/docker-compose.yml
+    - path: /root/config.yml
       content: | 
-       registry:
-         restart: always
-         image: registry:latest
-         ports:
-          - 5000:5000
-         volumes:
-          - /data:/var/lib/registry
+       version: 0.1
+        log:
+          fields:
+            service: registry
+        storage:
+          cache:
+            blobdescriptor: inmemory
+          filesystem:
+            rootdirectory: /var/lib/registry
+        http:
+          addr: :5000
+          headers:
+            X-Content-Type-Options: [nosniff]
+        health:
+          storagedriver:
+            enabled: true
+            interval: 10s
+            threshold: 3
+        proxy:
+          remoteurl: https://registry-1.docker.io
 "
     }
 $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
+[System.Version]$subnet = $subnet.ToString()
+$Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 $Master_StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
 $masterVMX = Test-LABmaster -Masterpath $masterpath -Master $photonOS
 $Master_StopWatch.stop()
