@@ -58,7 +58,7 @@ if ($docker_registry.IsPresent)
     {
         $runcmd = @()
         $runcmd += "    - echo '{ `"insecure-registries`":[`"$subnet.40:5000`"],' >> /etc/docker/daemon.json`n"
-        $runcmd += "   - echo ' `"insecure-registries`":[`"$subnet.40:5000`"] }' >> /etc/docker/daemon.json`n"
+        $runcmd += "   - echo ' `"registry-mirrors`":[`"$subnet.40:5000`"] }' >> /etc/docker/daemon.json`n"
         $runcmd += "   - systemctl restart docker`n"
         $disks = 1
         $Disksize = 500GB
@@ -77,27 +77,26 @@ if ($docker_registry.IsPresent)
     - path: /root/config.yml
       content: | 
        version: 0.1
-        log:
-          fields:
-            service: registry
-        storage:
-          cache:
-            blobdescriptor: inmemory
-          filesystem:
-            rootdirectory: /var/lib/registry
-        http:
-          addr: :5000
-          headers:
-            X-Content-Type-Options: [nosniff]
-        health:
-          storagedriver:
-            enabled: true
-            interval: 10s
-            threshold: 3
-        proxy:
-          remoteurl: https://registry-1.docker.io
-"
-    }
+       log:
+         fields:
+           service: registry
+       storage:
+         cache:
+           blobdescriptor: inmemory
+         filesystem:
+           rootdirectory: /var/lib/registry
+       http:
+         addr: :5000
+         headers:
+           X-Content-Type-Options: [nosniff]
+       health:
+         storagedriver:
+           enabled: true
+           interval: 10s
+           threshold: 3
+       proxy:
+         remoteurl: https://registry-1.docker.io
+"    }
 $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
 [System.Version]$subnet = $subnet.ToString()
 $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
