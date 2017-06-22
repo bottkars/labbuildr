@@ -72,7 +72,7 @@ if ($docker_registry.IsPresent)
 #        $runcmd += "   - curl -L https://github.com/docker/compose/releases/download/1.13.0/docker-compose-``uname -s``-``uname -m`` > /usr/bin/docker-compose`n"
 #        $runcmd += "   - chmod +X /usr/bin/docker-compose;chmod 755 /usr/bin/docker-compose`n"
 #        $runcmd += "   - /usr/bin/docker-compose -f /root/docker-compose.yml up -d"
-        $runcmd += "   - /usr/bin/docker run -d -p 5000:5000 --restart=always --name registry -v /data:/var/lib/registry -v /rrot/config.yml:/etc/docker/registry/config.yml  registry:latest"
+        $runcmd += "   - /usr/bin/docker run -d -p 5000:5000 --restart=always --name registry -v /data:/var/lib/registry -v /root/config.yml:/etc/docker/registry/config.yml  registry:latest"
         $writefile += "
     - path: /root/config.yml
       content: | 
