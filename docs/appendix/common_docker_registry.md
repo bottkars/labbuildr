@@ -96,3 +96,33 @@ docker pull 192.168.2.40:5000/microsoft/mssql-server-windows:latest
 ![image](https://user-images.githubusercontent.com/8255007/27325356-731643f6-55a8-11e7-902c-4b753b1d7124.png)
 
 you will notice a faster download speed now as you refer to your local repo
+
+
+## config.yml ecample for ECS
+version: 0.1  
+log:  
+  fields:  
+    service: registry  
+storage:  
+  cache:  
+    blobdescriptor: inmemory  
+  s3:  
+    accesskey: docker  
+    secretkey: TQMDSwwf5KFN+rSJVI89TOI8Rc1cz4CxrREajdk6  
+    region: Standard  
+    regionendpoint: http://192.168.2.245:9020  
+    bucket: registry  
+    encrypt: false  
+    chunksize: 5242880  
+    multipartcopychunksize: 33554432  
+    multipartcopymaxconcurrency: 100  
+    multipartcopythresholdsize: 33554432  
+http:  
+  addr: :5000  
+  headers:  
+    X-Content-Type-Options: [nosniff]  
+health:  
+  storagedriver:  
+    enabled: true  
+    interval: 10s  
+    threshold: 3
