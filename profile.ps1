@@ -55,7 +55,8 @@ catch
     Set-LABMasterpath -Masterpath (Join-Path $labbuildr_home "Master.labbuildr").tostring() | Out-Null
 	Set-LABSources -Sourcedir (Join-Path $labbuildr_home "Sources.labbuildr").tostring() | Out-Null
     }
-if ((Get-LABDefaults).SQLVER -notmatch 'ISO')
+$global:labdefaults = Get-LABDefaults
+if ($global:labdefaults.SQLVER -notmatch 'ISO')
 	{
 	Set-LABSQLver -SQLVER SQL2014SP2_ISO | Out-Null
     }
@@ -83,7 +84,7 @@ else
     $blog = [xml](new-object System.Net.WebClient).DownloadString($Url)
     $blog.rss.channel.item |  where {$_.title -match "vmxtoolkit" -or $_.title -Match "labbuildr"} |select Link | ft
     }#>
-$global:labdefaults = Get-LABDefaults
+
 if ($global:labdefaults.Languagetag -match "_")
     {
     $global:labdefaults.Languagetag = $global:labdefaults.Languagetag -replace "_","-"
