@@ -114,4 +114,3 @@ else
 	}
 Set-LabUI
 Get-VMX
-Write-Host -ForegroundColor white  "If upgraded from Asparagus release, plese run update twice with -force"
