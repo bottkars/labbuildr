@@ -188,7 +188,7 @@ Specify if Networker Scenario sould be installed
     CU Location is [Driveletter]:\sources\e2016[cuver], e.g. c:\sources\e2016Preview1
     #>
 	[Parameter(ParameterSetName = "E16", Mandatory = $false)]
-    [ValidateSet('final','cu1','cu2','cu3','cu4','cu5')]
+    [ValidateSet('final','cu1','cu2','cu3','cu4','cu5','cu6')]
     $e16_cu,
 <#
     Determines Exchange CU Version to be Installed
@@ -198,7 +198,7 @@ Specify if Networker Scenario sould be installed
     CU Location is [Driveletter]:\sources\e2013[cuver], e.g. c:\sources\e2013cu7
     #>
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
-    [ValidateSet('cu1','cu2','cu3','sp1','cu5','cu6','cu7','cu8','cu9','cu10','cu11','cu12','cu13','cu14','cu15','cu16')]
+    [ValidateSet('cu1','cu2','cu3','sp1','cu5','cu6','cu7','cu8','cu9','cu10','cu11','cu12','cu13','cu14','cu15','cu16','cu17')]
     [alias('ex_cu')]$e15_cu,
 <#
     Determines Exchange UR Version to be Installed
@@ -208,7 +208,7 @@ Specify if Networker Scenario sould be installed
     CU Location is [Driveletter]:\sources\e2013[cuver], e.g. c:\sources\e2013cu7
     #>
 	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
-    [ValidateSet('ur1','ur2','ur3','ur4','ur5','ur6','ur7','ur8v2','ur9','ur10','ur11','ur12','ur13','ur14','ur15','ur16')]
+    [ValidateSet('ur1','ur2','ur3','ur4','ur5','ur6','ur7','ur8v2','ur9','ur10','ur11','ur12','ur13','ur14','ur15','ur16','ur17')]
     [alias('e2010_ur')]$e14_ur,
 <#
     Determines Exchange CU Version to be Installed
@@ -905,10 +905,10 @@ $ScaleIO_OS = "Windows"
 $ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
 $latest_nmm = 'nmm9104'
 $latest_nw = 'nw9104'
-$latest_e16_cu = 'cu5'
-$latest_e15_cu = 'cu16'
+$latest_e16_cu = 'cu6'
+$latest_e15_cu = 'cu17'
 $latest_e14_sp = 'sp3'
-$latest_e14_ur = 'ur16'
+$latest_e14_ur = 'ur17'
 $latest_sqlver  = 'SQL2016_ISO'
 $latest_master = '2012R2FallUpdate'
 $Latest_2016 = '2016'
