@@ -32,15 +32,24 @@ Now proceed with the install of the SCOM Management Packs on SCOM Host
 Start-Process msiexec.exe -ArgumentList "/i `"\\vmware-host\shared Folders\sources\esi\ESI.SCOM.ManagementPacks.5.0.1.3.Setup\ESI.SCOM.ManagementPacks.5.0.1.3.Setup.msi`" /passive /log c:\scripts\esilog" -Wait -PassThru
 ```
 ## On the SCOM Server
-
-Open SCOM Powershellto import the Management Packs into SCOM
+### install management packs
+Open SCOM Powershell to import the Management Packs into SCOM
 ```Powershell
 Get-SCOMManagementPack -ManagementPackFile 'C:\Program Files (x86)\EMC\ESI SCOM Management Packs\*.*'
 Import-SCOMManagementPack -Fullname 'C:\Program Files (x86)\EMC\ESI SCOM Management Packs\*.*'
 ```
-
-Install Management Agent on ESI Controller
+### deploy Management Agent to ESI Controller
 ```Powershell
 $PrimaryMgmtServer = Get-SCOMManagementServer -ComputerName "SCOM.labbuildr.local"
 Install-SCOMAgent -DNSHostName "gennode1.labbuildr.local" -PrimaryManagementServer $PrimaryMgmtServer
 ```
+
+### create object discovery override for ESI Host
+
+
+In SCOM Management Console, go to 
+--> Authoring --Discovery
+and search for EMC SI Sevice Discovery
+right click on Overrides, Override the Object Discovery, for a specific Object of Class Windows Computer
+![image](https://user-images.githubusercontent.com/8255007/27821583-0e74879a-60a3-11e7-81a3-f584e962b067.png)
+
