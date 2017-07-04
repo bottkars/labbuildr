@@ -52,4 +52,7 @@ In SCOM Management Console, go to
 and search for EMC SI Sevice Discovery
 right click on Overrides, Override the Object Discovery, for a specific Object of Class Windows Computer
 ![image](https://user-images.githubusercontent.com/8255007/27821583-0e74879a-60a3-11e7-81a3-f584e962b067.png)
+Select teh ESI Controller host
+Adjust the Values
 
+![image](https://user-images.githubusercontent.com/8255007/27821818-e368af3a-60a3-11e7-9d66-8d41160eb8af.png)
