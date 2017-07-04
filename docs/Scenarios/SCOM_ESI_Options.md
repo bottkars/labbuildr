@@ -34,7 +34,10 @@ Add-EmcSystem -SystemType ScaleIO -Params $params -UserFriendlyName SIO_HyperV
 ```
 ![image](https://user-images.githubusercontent.com/8255007/27827573-3155cfac-60b8-11e7-9ba7-281210b115fa.png)
 
+verify the system has added to the ESI Console with  https://localhost:54501/esi/console
 
+
+![image](https://user-images.githubusercontent.com/8255007/27827635-81338956-60b8-11e7-9f39-0c0b3aacd92f.png)
 
 Now proceed with the install of the SCOM Management Packs on SCOM Host
 ```Powershell
