@@ -31,10 +31,9 @@ Now proceed with the install of the SCOM Management Packs on SCOM Host
 ```Powershell
 Start-Process msiexec.exe -ArgumentList "/i `"\\vmware-host\shared Folders\sources\esi\ESI.SCOM.ManagementPacks.5.0.1.3.Setup\ESI.SCOM.ManagementPacks.5.0.1.3.Setup.msi`" /passive /log c:\scripts\esilog" -Wait -PassThru
 ```
-On scom Server
+## On the SCOM Server
 
-Open SCOM Powershell
-Import the Management Packs into SCOM
+Open SCOM Powershellto import the Management Packs into SCOM
 ```Powershell
 Get-SCOMManagementPack -ManagementPackFile 'C:\Program Files (x86)\EMC\ESI SCOM Management Packs\*.*'
 Import-SCOMManagementPack -Fullname 'C:\Program Files (x86)\EMC\ESI SCOM Management Packs\*.*'
