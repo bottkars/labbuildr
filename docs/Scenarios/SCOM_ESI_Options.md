@@ -56,3 +56,5 @@ Select teh ESI Controller host
 Adjust the Values
 
 ![image](https://user-images.githubusercontent.com/8255007/27821818-e368af3a-60a3-11e7-9d66-8d41160eb8af.png)
+
+Wait some time for the Discovery Cycles to Fully discover your ESI Environment
