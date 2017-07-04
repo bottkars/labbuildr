@@ -1,4 +1,4 @@
-# this guide describes how to deploy scom testbed usin EMC Storage Integrator
+# this guide describes how to deploy A scom testbed using the EMC Storage Integrator
 
 follow the deployment, and choose some otional hosts/Storage Devices to install:
 
@@ -27,4 +27,21 @@ $params = @{"Username"="admin";"Password"="Password123!";"ManagementIp"="192.168
 Add-EmcSystem -SystemType Unity -Params $params -UserFriendlyName UnityVSA
 ```
 
-Now proceed 
+Now proceed with the install of the SCOM Management Packs on SCOM Host
+```Powershell
+Start-Process msiexec.exe -ArgumentList "/i `"\\vmware-host\shared Folders\sources\esi\ESI.SCOM.ManagementPacks.5.0.1.3.Setup\ESI.SCOM.ManagementPacks.5.0.1.3.Setup.msi`" /passive /log c:\scripts\esilog" -Wait -PassThru
+```
+On scom Server
+
+Open SCOM Powershell
+Import the Management Packs into SCOM
+```Powershell
+Get-SCOMManagementPack -ManagementPackFile 'C:\Program Files (x86)\EMC\ESI SCOM Management Packs\*.*'
+Import-SCOMManagementPack -Fullname 'C:\Program Files (x86)\EMC\ESI SCOM Management Packs\*.*'
+```
+
+Install Management Agent on ESI Controller
+```Powershell
+$PrimaryMgmtServer = Get-SCOMManagementServer -ComputerName "SCOM.labbuildr.local"
+Install-SCOMAgent -DNSHostName "gennode1.labbuildr.local" -PrimaryManagementServer $PrimaryMgmtServer
+```
