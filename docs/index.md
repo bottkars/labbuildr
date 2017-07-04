@@ -22,17 +22,24 @@ labbuildr deploys the folowing scenarios:
 
 
 ## Update    
-to update from labbuildr harmony release, run update:   
+to update from labbuildr from prevoious release, run update:   
 build-lab.ps1 -update  
    
 
 ## Install    
 
-it is not recommended to use git for installing labbuildr.  
-labbuildr comes with its own installer:
+labbuildr can be installed using PowershellGet. If you are note running Windows 10, install PowershellGet from
+[Powershell Gallery](https://www.powershellgallery.com)
 
-### Fully automated Installation from powershell
-````Powershell
+### Fully automated Installation Using Powershell Get Methog
+```Powershell
+Install-Script install-labbuildr -Force -Scope CurrentUser
+install-labbuildr.ps1 -branch master
+```
+
+
+### Fully automated Installation from powershell Using Download Method
+```Powershell
 $Uri = "https://gist.githubusercontent.com/bottkars/410fe056809c38d96562/raw/install-labbuildr.ps1"
 $DownloadLocation = "$Env:USERPROFILE\Downloads"
 $File = Split-Path -Leaf $Uri
@@ -40,14 +47,14 @@ $OutFile = Join-Path $DownloadLocation $File
 Invoke-WebRequest -Uri $Uri -OutFile $OutFile
 Unblock-File -Path $Outfile
 Invoke-Expression $OutFile
-````
+```
 fo detailed installation instructions, see [Student Guide](student_guide.md)
 
 ## Directory Structure   
 
 
 labbuildr --  |    
-              |--scripts    
+              |--labbuildr-scripts    
               |--labtools    
               |--vmxtoolkit    
                 
