@@ -43,6 +43,10 @@ Import-SCOMManagementPack -Fullname 'C:\Program Files (x86)\EMC\ESI SCOM Managem
 $PrimaryMgmtServer = Get-SCOMManagementServer -ComputerName "SCOM.labbuildr.local"
 Install-SCOMAgent -DNSHostName "gennode1.labbuildr.local" -PrimaryManagementServer $PrimaryMgmtServer
 ```
+### edit regitry on ESI Host for Store Maximum
+```Powershell
+Set-ItemProperty -Path HKLM:\System\CurrentControlSet\Services\HealthService\Parameters -Value 0x00001400 -Type dword -name "Persistence Version Store Maximum"
+```
 
 ### create object discovery override for ESI Host
 
