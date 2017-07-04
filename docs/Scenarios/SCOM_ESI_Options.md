@@ -1,4 +1,5 @@
 # this guide describes how to deploy A scom testbed using the EMC Storage Integrator
+![image](https://user-images.githubusercontent.com/8255007/27825344-7a20d604-60af-11e7-9509-3bca5efd693b.png)  
 
 follow the deployment, and choose some otional hosts/Storage Devices to install:
 
