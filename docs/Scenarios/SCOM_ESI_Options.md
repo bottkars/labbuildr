@@ -75,3 +75,7 @@ Adjust the Values
 ![image](https://user-images.githubusercontent.com/8255007/27821818-e368af3a-60a3-11e7-9d66-8d41160eb8af.png)
 
 Wait some time for the Discovery Cycles to Fully discover your ESI Environment
+
+## Example Override Summary
+![image](https://user-images.githubusercontent.com/8255007/27833794-8512815a-60d4-11e7-87a8-1eabe4c5cd74.png)
+
