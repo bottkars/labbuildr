@@ -14,7 +14,7 @@ browse to https://localhost:54501/esi/console to view the Service for you webbro
 
 Adding systems ( on Controller node, EG, Blanknode ):
 
-Add the UnityVSA to ESI Service:
+## Add add UnityVSA to ESI Service:
 
 
 first, verify connection with uemcli
@@ -27,6 +27,14 @@ Add the System
 $params = @{"Username"="admin";"Password"="Password123!";"ManagementIp"="192.168.2.171"};
 Add-EmcSystem -SystemType Unity -Params $params -UserFriendlyName UnityVSA
 ```
+## add a ScaleIO System
+```Powershell
+$params = @{"Username"="admin";"Password"="Password123!";"IpAddress"="192.168.2.153"};
+Add-EmcSystem -SystemType ScaleIO -Params $params -UserFriendlyName SIO_HyperV
+```
+![image](https://user-images.githubusercontent.com/8255007/27827573-3155cfac-60b8-11e7-9ba7-281210b115fa.png)
+
+
 
 Now proceed with the install of the SCOM Management Packs on SCOM Host
 ```Powershell
