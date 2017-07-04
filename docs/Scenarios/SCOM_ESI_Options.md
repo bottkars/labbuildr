@@ -46,6 +46,7 @@ Install-SCOMAgent -DNSHostName "gennode1.labbuildr.local" -PrimaryManagementServ
 ### edit regitry on ESI Host for Store Maximum
 ```Powershell
 Set-ItemProperty -Path HKLM:\System\CurrentControlSet\Services\HealthService\Parameters -Value 0x00001400 -Type dword -name "Persistence Version Store Maximum"
+Restart-Service HealthService
 ```
 
 ### create object discovery override for ESI Host
