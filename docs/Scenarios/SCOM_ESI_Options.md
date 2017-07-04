@@ -1,6 +1,6 @@
-# this guide descripes how to deploy scom testbed
+# this guide describes how to deploy scom testbed usin EMC Storage Integrator
 
-follow the deployment from, and choose some otional hosts to install:
+follow the deployment, and choose some otional hosts/Storage Devices to install:
 
 <script src="https://gist.github.com/bottkars/b28326bb6b0595192508530777abed84.js"></script>
 
