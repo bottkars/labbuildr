@@ -31,7 +31,8 @@ build-lab.ps1 -update
 labbuildr can be installed using PowershellGet. If you are note running Windows 10, install PowershellGet from
 [Powershell Gallery](https://www.powershellgallery.com)
 
-### Fully automated Installation Using Powershell Get Methog
+![Installation via Powershell Get](https://user-images.githubusercontent.com/8255007/27817547-0991ef12-6092-11e7-9f57-0860e5cb6c83.png)
+### Fully automated Installation Using Powershell Get Method
 ```Powershell
 Install-Script install-labbuildr -Force -Scope CurrentUser
 install-labbuildr.ps1 -branch master
