@@ -13,7 +13,7 @@ however, as not jet ready for prime with many changes, it is only available via 
 
 ## Requirements on OSX
 to run vmxtoolkit on OSX, you need to have  
-* PowerShell for OSX installed  
+* PowerShell for OSX installed  ( Preferrably 6.0Beta )
 * .Net Core
 * p7zip /rudix  
 see [PowerShell for OSX](https://github.com/PowerShell/PowerShell/blob/master/docs/installation/linux.md#os-x-1011) for instructions  it is also recommended to install .NET Core for OSX from for details on installation of .NET Core LIBS see [.NET Core on MACOS](https://www.microsoft.com/net/core#macos)   
