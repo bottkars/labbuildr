@@ -71,7 +71,7 @@ Param (
     [Parameter(ParameterSetName = "install", Mandatory = $false)][switch]$FullClone,
     [Parameter(ParameterSetName = "install", Mandatory = $false)][ValidateSet('8192', '12288', '16384', '20480', '30720', '51200', '65536')]$Memory = "16384",
     [Parameter(ParameterSetName = "install", Mandatory = $false)]
-    [ValidateSet('3.0.0.1','3.0.0.2')]$Branch = '3.0.0.2',
+    [ValidateSet('3.0.0.1','3.0.0.2','latest')]$Branch = '3.0.0.2',
     [Parameter(ParameterSetName = "install", Mandatory = $false)][switch]$EMC_ca,
     [Parameter(ParameterSetName = "install", Mandatory = $false)][switch]$ui_config,
     [Parameter(ParameterSetName = "install", Mandatory = $false)][ValidateSet(150GB, 500GB, 520GB)][uint64]$Disksize = 150GB,
