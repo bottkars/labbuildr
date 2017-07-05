@@ -79,8 +79,7 @@ Param (
     [ValidateLength(1, 15)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,15}[a-zA-Z0-9]+$")][string]$BuildDomain = "labbuildr",
     [Parameter(ParameterSetName = "install", Mandatory = $false)][ValidateSet('vmnet2', 'vmnet3', 'vmnet4', 'vmnet5', 'vmnet6', 'vmnet7', 'vmnet9', 'vmnet10', 'vmnet11', 'vmnet12', 'vmnet13', 'vmnet14', 'vmnet15', 'vmnet16', 'vmnet17', 'vmnet18', 'vmnet19')]$VMnet = $labdefaults.vmnet,
     [switch]$offline,
-    $Custom_IP,
-    $MainMemUseFile = $Global:labdefaults.MainMemUseFile
+    $Custom_IP
 ) 
 #requires -version 3.0
 #requires -module vmxtoolkit
@@ -189,7 +188,7 @@ $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
 foreach ($Node in $Startnode..(($Startnode - 1) + $Nodes)) {
     Write-Host -ForegroundColor White "Checking for $Nodeprefix$node"
     $Lab_VMX = ""
-    $Lab_VMX = New-LabVMX -CentOS -CentOS_ver $centos_ver -Size $Size -SCSI_DISK_COUNT $SCSI_DISK_COUNT -SCSI_DISK_SIZE $Disksize -VMXname $Nodeprefix$Node -SCSI_Controller $SCSI_Controller -vtbit:$vtbit -memory $Memory -start -MainMemUseFile $MainMemUseFile
+    $Lab_VMX = New-LabVMX -CentOS -CentOS_ver $centos_ver -Size $Size -SCSI_DISK_COUNT $SCSI_DISK_COUNT -SCSI_DISK_SIZE $Disksize -VMXname $Nodeprefix$Node -SCSI_Controller $SCSI_Controller -vtbit:$vtbit -memory $Memory -start
     if ($Lab_VMX) {
         $temp_object = New-Object System.Object
         $temp_object | Add-Member -type NoteProperty -name Name -Value $Nodeprefix$Node
