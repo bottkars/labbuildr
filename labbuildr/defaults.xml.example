@@ -3,7 +3,9 @@
 -->
 <config>
 <LanguageTag>en_US</LanguageTag>
-<nmm_ver>nmm9102</nmm_ver>
+<Timezone>W. Europe Standard Time</Timezone>
+<nmm_ver>nmm91112</nmm_ver>
+<nw_ver>nw9112</nw_ver>
 <nmm>False</nmm>
 <nw_ver>nw9102</nw_ver>
 <master>2012R2FallUpdate</master>
