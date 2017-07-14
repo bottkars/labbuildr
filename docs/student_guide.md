@@ -83,25 +83,32 @@ do not Forget to star labbuildr :-)
 In this section Studends wll install labbuildr, review basic settings and get introduced to some basic commands  
 
 ## 1.1 installation
-in this chapter, students will learn how to install labbuildr.  
-make shure vmware workstation is closed. this will allow for deletion of vm´s if required.  
-this section can be re-used as a guide to install multiple instances of labbuildr
-to install labbuildr, copy the content of [ get labbuildr installer](https://gist.githubusercontent.com/bottkars/212bc227190f47dbe4ef71b4bc5c1f9a/raw/labbuildr%2520installer) to your powershell window ( note: edge might block this )
-![image](https://cloud.githubusercontent.com/assets/8255007/17082498/9f4200fa-5180-11e6-96be-7c393cdb5ade.png)
+### Install    
 
-the tool will download the installer from git, and will end with the default installation program.  
-before starting the installer, check where you want to install. the default location is c:\labbuildr2016 
-with 
+labbuildr can be installed using PowershellGet. If you are note running Windows 10, install PowershellGet from
+[Powershell Gallery](https://www.powershellgallery.com)
+
+![Installation via Powershell Get](https://user-images.githubusercontent.com/8255007/27817547-0991ef12-6092-11e7-9f57-0860e5cb6c83.png)
+### Fully automated Installation Using Powershell Get Method
 ```Powershell
-.\install-labbuildr.ps1 -Installpath [path]
+Install-Script install-labbuildr -Force -Scope CurrentUser
+install-labbuildr.ps1 -branch master
 ```
-you may want to set your own path. You can have multiple instances of labbuildr running on your machine, each should get it´s own Path
-start your installation by hitting enter
-![image](https://cloud.githubusercontent.com/assets/8255007/17082574/1c7241ae-5184-11e6-90f6-a1df255e0e7d.png)   
 
-after the installation is finished, read the message that is displayed, and press return to continue. 
-![image](https://cloud.githubusercontent.com/assets/8255007/17082584/53e0cda4-5184-11e6-8c2c-8d3037bbdd87.png)  
-you should now have a labbuildr2016 icon on your desktop ( the name of the icon indicates the directory name )
+
+### Fully automated Installation from powershell Using Download Method
+```Powershell
+$Uri = "https://gist.githubusercontent.com/bottkars/410fe056809c38d96562/raw/install-labbuildr.ps1"
+$DownloadLocation = "$Env:USERPROFILE\Downloads"
+$File = Split-Path -Leaf $Uri
+$OutFile = Join-Path $DownloadLocation $File
+Invoke-WebRequest -Uri $Uri -OutFile $OutFile
+Unblock-File -Path $Outfile
+Invoke-Expression $OutFile
+```
+for detailed installation instructions, see [Student Guide](student_guide.md)
+
+
 
 ## 1.2 run labbuildr
 double click on the labbuildr icon on your desktop  
