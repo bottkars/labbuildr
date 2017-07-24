@@ -98,9 +98,6 @@ install-labbuildr.ps1 -branch master
 
 ### Fully automated Installation from powershell Using Download Method
 <script src="https://gist.github.com/bottkars/212bc227190f47dbe4ef71b4bc5c1f9a.js"></script>  
-for detailed installation instructions, see [Student Guide](student_guide.md)
-
-
 
 ## 1.2 run labbuildr
 double click on the labbuildr icon on your desktop  
@@ -179,31 +176,3 @@ getting a list of running vm´s
 ```Powershell
 get-vmx | where state -Match running  | ft
 ```
-
-A
-A
-A
-A
-A
-A
-A
-A
-A
-A
-A
-A
-A
-A
-A
-A
-A
-A
-A
-A
-A
-A
-A
-A
-A
-A
-
