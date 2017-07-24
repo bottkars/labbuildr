@@ -97,15 +97,7 @@ install-labbuildr.ps1 -branch master
 
 
 ### Fully automated Installation from powershell Using Download Method
-```Powershell
-$Uri = "https://gist.githubusercontent.com/bottkars/410fe056809c38d96562/raw/install-labbuildr.ps1"
-$DownloadLocation = "$Env:USERPROFILE\Downloads"
-$File = Split-Path -Leaf $Uri
-$OutFile = Join-Path $DownloadLocation $File
-Invoke-WebRequest -Uri $Uri -OutFile $OutFile
-Unblock-File -Path $Outfile
-Invoke-Expression $OutFile
-```
+<script src="https://gist.github.com/bottkars/212bc227190f47dbe4ef71b4bc5c1f9a.js"></script>  
 for detailed installation instructions, see [Student Guide](student_guide.md)
 
 
@@ -153,8 +145,7 @@ Virtual net used by labbuildr machines. doess not need to exist unless you want 
 for host connection, add the netwwok using the vmware virtual network editor. Create vmnet2 with  
 * dhcp disabled
 * connect host virtual adapter
-* subnet ip 192.168.2.0
-<script src="https://gist.github.com/bottkars/212bc227190f47dbe4ef71b4bc5c1f9a.js"></script>   
+* subnet ip 192.168.2.0  
 ![image](https://cloud.githubusercontent.com/assets/8255007/17090582/243470fc-5232-11e6-87f5-f8c576eb8690.png)
  
 ## 1.3 running vm´s
