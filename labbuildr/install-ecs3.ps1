@@ -137,7 +137,7 @@ $Rootpassword = "Password123!"
 $Guestuser = "$($Szenarioname.ToLower())user"
 $Guestpassword = "Password123!"
 $Node_requires = @()
-$Node_requires = ('git', 'numactl', 'libaio', 'vim', 'docker-engine')
+$Node_requires = ('git', 'numactl', 'libaio', 'vim', 'docker')
 
 $repo = "https://github.com/EMCECS/ECS-CommunityEdition.git"
 switch ($Branch) {
@@ -212,7 +212,7 @@ if (!$machinesBuilt) {
     break
 }
 
-# $Node_requires = $Node_requires -join ","
+#$Node_requires = $Node_requires -join ","
 foreach ($Node in $machinesBuilt) {
     if (!$Custom_IP) {
         $ip_byte = ($ip_startrange + $Node.Number) 
@@ -227,7 +227,8 @@ foreach ($Node in $machinesBuilt) {
 
     Write-Verbose "Configuring Node $($Node.Number) $($Node.Name) with $IP"
     $Hostname = $Nodeclone.vmxname.ToLower()
-    $Nodeclone | Set-LabCentosVMX -ip $IP -CentOS_ver $centos_ver -Additional_Epel_Packages docker -Additional_Packages $Node_requires -Host_Name $Hostname -DNS1 $DNS1 -DNS2 $DNS2 -DNS_DOMAIN_NAME $DNS_Domain  -VMXName $Nodeclone.vmxname
+    $Nodeclone | Set-LabCentosVMX -ip $IP -CentOS_ver $centos_ver -Additional_Packages $Node_requires -Host_Name $Hostname -DNS1 $DNS1 -DNS2 $DNS2 -DNS_DOMAIN_NAME $DNS_Domain  -VMXName $Nodeclone.vmxname
+#    $Nodeclone | Set-LabCentosVMX -ip $IP -CentOS_ver $centos_ver -Additional_Epel_Packages docker -Additional_Packages $Node_requires -Host_Name $Hostname -DNS1 $DNS1 -DNS2 $DNS2 -DNS_DOMAIN_NAME $DNS_Domain  -VMXName $Nodeclone.vmxname
     #    $Nodeclone | Set-LabCentosVMX -ip $IP -CentOS_ver $centos_ver -Additional_Packages $Node_requires -Additional_Epel_Packages $Epel_Packages -Host_Name $Hostname -DNS1 $DNS1 -DNS2 $DNS2 -VMXName $Nodeclone.vmxname
     ##### Prepare
     if ($EMC_ca.IsPresent) {
@@ -247,9 +248,16 @@ foreach ($Node in $machinesBuilt) {
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
     ####### docker path´s
+    
     $Docker_basepath = Join-Path $Sourcedir docker
     $Docker_Image_file = Join-Path $Docker_basepath "$($Docker_image)_$Docker_imagetag.tgz"
     $StopWatch_docker = [System.Diagnostics.Stopwatch]::StartNew()    
+    $Scriptblock = 'systemctl start docker'
+    Write-Verbose $Scriptblock
+    Set-LABUi -short -title $Scriptblock
+    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+
+    
     #### docker workaround save unitil further notice
     if (Test-Path $Docker_Image_file) {
         $Scriptblock = "gunzip -c /mnt/hgfs/Sources/docker/$($Docker_image)_$Docker_imagetag.tgz| docker load;docker tag $($Docker_imagename):$Docker_imagetag $($Docker_imagename):latest"
