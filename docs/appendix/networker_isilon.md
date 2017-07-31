@@ -28,6 +28,13 @@ this will download the latest isilon from www.emc.com and build a standard maste
 ```
 follow the instructions provided after the above to configure isilon !  
 
+once your cluster is up and running, point your browser to
+[https://192.168.2.41:8080/OneFS/Licensing](https://192.168.2.41:8080/OneFS/Licensing)  
+to geerate trial license
+
+
+![image](https://user-images.githubusercontent.com/8255007/28770836-f009d046-75e0-11e7-8a27-83515c264a88.png)
+
 
 # MPSS and Fast Incrementals
 # Setup in Networker:
