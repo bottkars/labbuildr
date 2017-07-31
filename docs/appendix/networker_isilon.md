@@ -60,11 +60,7 @@ suppressed 1872 bytes of output.
 27.07.2017 12:02:51 Action backup traditional 'Backup' with job id 76 is exiting with status 'succeeded', exit code 0
  
 ## On Isilon it looks like this:
-![image](https://user-images.githubusercontent.com/8255007/28766105-378aadae-75ce-11e7-9294-3c1414c1770a.png)  
-## Why are old Snaps not deleted by Networker ?  Strange….   
-![image](https://user-images.githubusercontent.com/8255007/28766109-487c020c-75ce-11e7-8134-791909c32a85.png)
-![image](https://user-images.githubusercontent.com/8255007/28766114-5347b4c4-75ce-11e7-8bf0-90943a62084a.png)
-
+![image](https://user-images.githubusercontent.com/8255007/28766105-378aadae-75ce-11e7-9294-3c1414c1770a.png) 
  
 ## Job Details Full Backup:   
   
