@@ -26,6 +26,8 @@ this will download the latest isilon from www.emc.com and build a standard maste
 # install isilon
 .\install-isiova.ps1
 ```
+follow the instructions provided after the above to configure isilon !  
+
 
 # MPSS and Fast Incrementals
 # Setup in Networker:
