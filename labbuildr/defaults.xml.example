@@ -27,7 +27,7 @@
 <DNS1>192.168.2.4</DNS1>
 <DNS2>192.168.2.4</DNS2>
 <Sourcedir></Sourcedir>
-<ScaleIOVer>2.0-7536.0</ScaleIOVer>
+<ScaleIOVer>2.0-13000.211</ScaleIOVer>
 <Masterpath></Masterpath>
 <NoDomainCheck></NoDomainCheck>
 <Puppet></Puppet>
