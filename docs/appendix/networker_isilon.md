@@ -4,8 +4,8 @@ the installation allows to be in Corporate Network / VPN ! ( but is faster witho
 
 Assumptions:
  - using Windows10 ( EMC Image or native)
- - have VMware 12 installed
-( you may wan´t to review http://labbuildr.readthedocs.io/en/master/student_guide/ if new to labbuildr) 
+ - have VMware 12 installed   
+( you may wan´t to review [student guide](http://labbuildr.readthedocs.io/en/master/student_guide/) if new to labbuildr) 
 ## check vmware installed with proper vmnet !!
 make sure you have vmnet2 set to 192.168.2.0 and connect a host virtual adapter to it !
 
