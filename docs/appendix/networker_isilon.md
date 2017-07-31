@@ -1,7 +1,8 @@
-# kudo´s for alex gaiswinkler for the MPSS and fast incrementals Setup doku
+### kudo´s for alex gaiswinkler for the MPSS and fast incrementals Setup doku
 this is a installation faststart for networker champions using newtorker, isilon and MPSS
-## check vmnet
-make sure you have vmnet2 set to 192.168.2.0 and connect a host wirtual adapter do it !
+the installation allows to be in Corporate Network / VPN ! ( but is faster without :-) )
+## check vmware installed with proper vmnet !!
+make sure you have vmnet2 set to 192.168.2.0 and connect a host virtual adapter to it !
 
 
 ![image](https://user-images.githubusercontent.com/8255007/28767140-d3321752-75d2-11e7-91b8-d95dd13e2b61.png)
@@ -10,6 +11,15 @@ make sure you have vmnet2 set to 192.168.2.0 and connect a host wirtual adapter 
 
 <script src="https://gist.github.com/bottkars/822916c35f032794997ec587d1db6e72.js"></script>
 
+
+## install latest isilon
+
+```Powershell
+#force download of latest isilon
+.\install-isiova.ps1 -import -forcedownload
+# install isilon
+.\install-isiova.ps1
+```
 
 # MPSS and Fast Incrementals
 # Setup in Networker:
