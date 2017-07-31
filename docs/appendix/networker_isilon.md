@@ -1,18 +1,24 @@
 ### kudo´s for alex gaiswinkler for the MPSS and fast incrementals Setup doku
 this is a installation faststart for networker champions using newtorker, isilon and MPSS
-the installation allows to be in Corporate Network / VPN ! ( but is faster without :-) )
+the installation allows to be in Corporate Network / VPN ! ( but is faster without :-) )  
+
+Assumptions:
+ - using Windows10 ( EMC Image or native)
+ - have VMware 12 installed
+( you may wan´t to review http://labbuildr.readthedocs.io/en/master/student_guide/ if new to labbuildr) 
 ## check vmware installed with proper vmnet !!
 make sure you have vmnet2 set to 192.168.2.0 and connect a host virtual adapter to it !
 
 
 ![image](https://user-images.githubusercontent.com/8255007/28767140-d3321752-75d2-11e7-91b8-d95dd13e2b61.png)
 
-## install and customize labbuildr 
+## install and customize labbuildr if not already done
 
 <script src="https://gist.github.com/bottkars/822916c35f032794997ec587d1db6e72.js"></script>
 
 
 ## install latest isilon
+this will download the latest isilon from www.emc.com and build a standard master from the ova
 
 ```Powershell
 #force download of latest isilon
