@@ -518,6 +518,7 @@ Version Of Networker Modules
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
     [ValidateSet(
+    'nmm9201',#-#    
     'nmm9111','nmm9112',#-#   
 	'nmm9100','nmm9102','nmm9103','nmm9104','nmm9105','nmm9106',#-#
     'nmm9010','nmm9011','nmm9012','nmm9013','nmm9014','nmm9015','nmm9016',#
@@ -549,7 +550,8 @@ Version Of Networker Modules
 	[switch]$NW,
     <#
 Version Of Networker Server / Client to be installed
-'nw9111','nw9112',#-#    
+    'nw9201',#-#
+    'nw9111','nw9112',#-#
 	'nw9100','nw9102','nw9103','nw9104','nw9105','nw9106',#-#
     'nw9010','nw9011','nw9012','nw9013','nw9014','nw9015','nw9016',#
     'nw90.DA','nw9001','nw9002','nw9003','nw9004','nw9005','nw9006','nw9007','nw9008',
@@ -588,6 +590,7 @@ Version Of Networker Server / Client to be installed
     [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
     [ValidateSet(
+    'nw9201',#-#        
 	'nw9111','nw9112',#-#    
 	'nw9100','nw9102','nw9103','nw9104','nw9105','nw9106',#-#
     'nw9010','nw9011','nw9012','nw9013','nw9014','nw9015','nw9016',#
