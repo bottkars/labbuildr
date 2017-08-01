@@ -4,10 +4,9 @@
 <config>
 <LanguageTag>en_US</LanguageTag>
 <Timezone>W. Europe Standard Time</Timezone>
-<nmm_ver>nmm91112</nmm_ver>
+<nmm_ver>nmm9112</nmm_ver>
 <nw_ver>nw9112</nw_ver>
 <nmm>False</nmm>
-<nw_ver>nw9102</nw_ver>
 <master>2012R2FallUpdate</master>
 <sqlver>SQL2016_ISO</sqlver>
 <e14_ur>ur16</e14_ur>
