@@ -14,7 +14,7 @@ if (!(Test-Path "$PSScriptRoot/docker/docker-machine-driver-vmwareworkstation.ex
     {
     Write-Warning "Docker Tools for labbuildr not installed, trying to install"
     $Destination = (Get-LABDefaults).sourcedir
-    Receive-LABDocker -install -Install_Dir $PSScriptRoot -Destination$labdefaults.sourcedir -branch $branch
+    Receive-LABDocker -install -Install_Dir $PSScriptRoot -Destination $labdefaults.sourcedir -branch $branch
     #break
     }
 
