@@ -1,4 +1,11 @@
-﻿if (($env:Path) -notmatch ("/docker"))
+﻿param (
+[ValidateSet(
+    'beta','stable'
+    )]
+    [string]$branch="stable"
+)
+
+if (($env:Path) -notmatch ("/docker"))
     {
     Write-Host "Adjusting Path"
     $env:Path="$env:Path;$PSScriptRoot/docker"
@@ -7,7 +14,7 @@ if (!(Test-Path "$PSScriptRoot/docker/docker-machine-driver-vmwareworkstation.ex
     {
     Write-Warning "Docker Tools for labbuildr not installed, trying to install"
     $Destination = (Get-LABDefaults).sourcedir
-    Receive-LABDocker -install -Install_Dir $PSScriptRoot -Destination C:\sources\
+    Receive-LABDocker -install -Install_Dir $PSScriptRoot -Destination$labdefaults.sourcedir -branch $branch
     #break
     }
 
