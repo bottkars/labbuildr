@@ -41,8 +41,8 @@ $MasterPath,
 'release-2.4.1','release-2.4',
 'release-3.0','release-3.0.0.1-sc',
 'release-3.5',
-'VIPR-3.5-GA','VIPR-3.1-GA','VIPR-3.0-GA','VIPR-3.0.0.2-GA','feature-COP-26740-openSUSE-42.2'
-)]$branch = "master",
+'VIPR-3.5-GA','VIPR-3.1-GA','VIPR-3.0-GA','VIPR-3.0.0.2-GA','feature-SuseLeapsupport','feature-COP-26740-openSUSE-42.2'
+)]$branch = "feature-SuseLeapsupport",
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ipaddress]$subnet = "192.168.2.0",
@@ -130,16 +130,15 @@ $Subnet = $Subnet.major.ToString() + "." + $Subnet.Minor + "." + $Subnet.Build
 $logfile = "/tmp/labbuildr.log"
 #$OS = "OpenSUSE"
 #$Required_Master = $OS
-#if ($branch -match 'feature-COP-26740-openSUSE-42.2')
- #   {
+if ($branch -match 'feature-SuseLeapsupport' -or 'feature-COP-26740-openSUSE-42.2')
+   {
         $Required_Master = 'openSUSE42_2'
         $OPENSUSE_VER = '42.2'
-  #  }
-#else 
-#    {
-#        $OPENSUSE_VER = '13.2'
-#try
-#    {
+  }
+else 
+    {
+        $OPENSUSE_VER = '13.2'
+    }
 #    $MasterPath = Join-Path $MasterPath $OS
 #    }        
 #    catch [System.Management.Automation.MetadataException]
@@ -333,19 +332,19 @@ if (!(Test-path $Scriptdir ))
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
 
-        $Scriptblock = "zypper --non-interactive install --no-recommends git make gcc48 gcc-c++ acl ; echo $?"
+        $Scriptblock = "zypper --non-interactive install --no-recommends git make gcc48 gcc-c++ acl rpmbuild java-1_8_0-openjdk java-1_8_0-openjdk-devel; echo $?"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
            
         $Scriptblock = "git clone -b $branch https://review.coprhd.org/scm/ch/coprhd-controller.git"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
-		
+		<#
         $Leap_Dir = '/coprhd-controller/packaging/appliance-images/openSUSE/42.2/'
         $Scriptblock = "rm -rf $Leap_Dir; git clone https://github.com/bottkars/coprHD_leap $Leap_Dir"
         Write-Verbose $Scriptblock
         $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
-
+        #>
 
 		if ($Static_mirror -match "halifax")
 			{
