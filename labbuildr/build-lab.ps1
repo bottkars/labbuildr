@@ -1020,7 +1020,7 @@ function update-fromGit
 				if ($Global:vmxtoolkit_type -eq "win_x86_64")
 					{
 					Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir/update/$repo-$branch.zip" -ignoresize
-					Expand-LABZip -zipfilename "$Builddir/update/$repo-$branch.zip" -destination $Destination -Folder $repo-$branch/$repo
+					Expand-LABZip -zipfilename "$Builddir/update/$repo-$branch.zip" -destination $Destination -Folder $repo-$branch\$repo
 					}
 				else
 					{
@@ -1382,7 +1382,7 @@ switch ($PsCmdlet.ParameterSetName)
         $ReloadProfile = $False
         $Repo = $my_repo
         $RepoLocation = "bottkars"
-		[datetime]$latest_local_git =  [datetime]::parse($Latest_labbuildr_git, $git_Culture)
+		[datetime]$latest_local_git = [datetime]::parse($Latest_labbuildr_git, $git_Culture)
         $Destination = "$Builddir"
         $Has_update = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination
         if (Test-Path (join-path $Builddir "deletefiles.txt"))
@@ -1416,7 +1416,7 @@ switch ($PsCmdlet.ParameterSetName)
         $RepoLocation = "bottkars"
         try
             {
-            $latest_local_file = Get-Content  (Join-Path $Builddir "$($Repo)-$branch.gitver") -ErrorAction SilentlyContinue
+            $latest_local_file = Get-Content (Join-Path $Builddir "$($Repo)-$branch.gitver") -ErrorAction SilentlyContinue
 			$latest_local_git =  get-date $latest_local_file
             }
         catch
