@@ -1386,12 +1386,8 @@ switch ($PsCmdlet.ParameterSetName)
         $ReloadProfile = $False
         $Repo = $my_repo
         $RepoLocation = "bottkars"
-<<<<<<< HEAD
-		[datetime]$latest_local_git = [datetime]::parse($Latest_labbuildr_git, $git_Culture)
-=======
 		#[datetime]$latest_local_git =  [datetime]::parse($Latest_labbuildr_git, $git_Culture)
         $latest_local_git = Get-Date $Latest_labbuildr_git
->>>>>>> 6c29722d0cccc2f9f3a2e8edcbb3f1d26e1d2d25
         $Destination = "$Builddir"
         Write-Verbose $latest_local_git
         $Has_update = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -verbose
