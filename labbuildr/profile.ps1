@@ -68,7 +68,10 @@ If (!$global:labdefaults.Sourcedir)
     {	
 	Set-LABSources -Sourcedir (Join-Path $labbuildr_home "Sources.labbuildr").tostring()  | out-null
     }
-
+If (!$global:labdefaults.NoDomainCheck)
+    {	
+	Set-LABNoDomainCheck -enabled:$false  | out-null
+    }
 
 $buildlab = (join-path $self "build-lab.ps1")
 .$buildlab
