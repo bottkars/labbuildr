@@ -621,7 +621,7 @@ This should be used in Distributed scenario´s
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-    [switch]$NoDomainCheck = $labdefaults.NoDomainCheck,
+    [switch]$NoDomainCheck = ([System.Convert]::ToBoolean($labdefaults.NoDomainCheck)),
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
