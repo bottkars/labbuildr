@@ -189,7 +189,7 @@ Specify if Networker Scenario sould be installed
     #>
 	[Parameter(ParameterSetName = "E16", Mandatory = $false)]
     [ValidateSet('final','cu1','cu2','cu3','cu4','cu5','cu6')]
-    $e16_cu,
+    $e16_cu = $labdefaults.e16_cu,
 <#
     Determines Exchange CU Version to be Installed
     Valid Versions are:
@@ -199,7 +199,7 @@ Specify if Networker Scenario sould be installed
     #>
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
     [ValidateSet('cu1','cu2','cu3','sp1','cu5','cu6','cu7','cu8','cu9','cu10','cu11','cu12','cu13','cu14','cu15','cu16','cu17')]
-    [alias('ex_cu')]$e15_cu,
+    [alias('ex_cu')]$e15_cu = $labdefaults.e15_cu,
 <#
     Determines Exchange UR Version to be Installed
     Valid Versions are:
@@ -209,7 +209,7 @@ Specify if Networker Scenario sould be installed
     #>
 	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
     [ValidateSet('ur1','ur2','ur3','ur4','ur5','ur6','ur7','ur8v2','ur9','ur10','ur11','ur12','ur13','ur14','ur15','ur16','ur17')]
-    [alias('e2010_ur')]$e14_ur,
+    [alias('e2010_ur')]$e14_ur = $labdefaults.e14_ur,
 <#
     Determines Exchange CU Version to be Installed
     Valid Versions are:
@@ -219,10 +219,10 @@ Specify if Networker Scenario sould be installed
     #>
 	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
     [ValidateSet('sp3')]
-    [alias('e2010_sp')]$e14_sp,
+    [alias('e2010_sp')]$e14_sp = $labdefaults.e14_sp,
     [Parameter(ParameterSetName = "E14", Mandatory = $false)]
     [ValidateSet('de_DE','en_US')]
-    [alias('e2010_lang')]$e14_lang = 'de_DE',
+    [alias('e2010_lang')]$e14_lang = 'en_US',
     <# schould we prestage users ? #>
 	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
@@ -249,7 +249,7 @@ Specify if Networker Scenario sould be installed
 	'1.31-258.2','1.31-1277.3','1.31-2333.2',
 	'1.30-426.0'
 	)]
-    [alias('siover','Scaleio_Ver')]$ScaleIOVer,
+    [alias('siover','Scaleio_Ver')]$ScaleIOVer = $labdefaults.ScaleioVer,
     <# single mode with mdm only on first node ( no secondary, no tb ) #>
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$singlemdm,
     # <# Cluster modemdm automatically#>
@@ -294,24 +294,7 @@ Specify if Networker Scenario sould be installed
     [ValidateSet(#'SQL2014SP1slip','SQL2012','SQL2012SP1','SQL2012SP2','SQL2012SP1SLIP','SQL2014','SQL2016',
 	'SQL2012_ISO',
 	'SQL2014SP2_ISO',
-	'SQL2016_ISO')]$SQLVER,    
-	######################### common Parameters start here in Order
-    <# reads the Default Config from defaults.xml
-    <config>
-    <nmm_ver>nmm82</nmm_ver>
-    <nw_ver>nw82</nw_ver>
-    <master>2012R2UEFIMASTER</master>
-    <sqlver>SQL2014</sqlver>
-    <e15_cu>cu6</e15_cu>
-    <vmnet>2</vmnet>
-    <BuildDomain>labbuildr</BuildDomain>
-    <MySubnet>10.10.0.0</MySubnet>
-    <AddressFamily>IPv4</AddressFamily>
-    <IPV6Prefix>FD00::</IPV6Prefix>
-    <IPv6PrefixLength>8</IPv6PrefixLength>
-    <NoAutomount>False</NoAutomount>
-    </config>
-#>
+	'SQL2016_ISO')]$SQLVER = $labdefaults.sqlver,    
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
@@ -375,7 +358,7 @@ Specify if Networker Scenario sould be installed
     '2012R2_Ger','2012_R2',
     '2012R2FallUpdate','2012R2Fall_Ger',
     '2012_Ger','2012'
-    )][string]$Master,
+    )][string]$Master = $labdefaults.master,
     <#do we want a special path to the Masters ? #>
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
@@ -393,7 +376,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-	$Masterpath,
+	$Masterpath = $labdefaults.Masterpath,
     <# Do we want Additional Disks / of additional 100GB Disks for ScaleIO. The disk will be made ready for ScaleIO usage in Guest OS#>
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][ValidateRange(1, 6)][int][alias('ScaleioDisks')]$Disks,
@@ -403,7 +386,7 @@ Specify if Networker Scenario sould be installed
     #>
     [Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
     [Parameter(ParameterSetName = "DConly", Mandatory = $false)]
-    [switch][alias('gw')]$Gateway,
+    [switch][alias('gw')]$Gateway = $labdefaults.Gateway,
 <# select vmnet, number from 1 to 19#>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
@@ -421,7 +404,8 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-    [ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet,
+    [ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]
+    $VMnet = $labdefaults.vmnet,
  #   [Parameter(Mandatory = $false, HelpMessage = "Enter a valid VMware network Number vmnet between 1 and 19 ")]
 <# This stores the defaul config in defaults.xml#>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
@@ -484,7 +468,7 @@ Machine Sizes
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-	[ValidateLength(1,63)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,63}[a-zA-Z0-9]+$")][string]$BuildDomain,
+	[ValidateLength(1,63)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,63}[a-zA-Z0-9]+$")][string]$BuildDomain = $labdefaults.BuildDomain,
 <# Turn this one on if you would like to install a Hypervisor inside a VM #>
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
 	[switch]$VTbit,
@@ -498,7 +482,7 @@ Machine Sizes
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
-	[switch]$NMM,
+	[switch]$NMM = $labdefaults.NMM,
     <#
 Version Of Networker Modules
     'nmm9201',#-#    
@@ -534,7 +518,7 @@ Version Of Networker Modules
     'nmm8218','nmm8217','nmm8216','nmm8214','nmm8212','nmm8210',
     'nmmunknown'
     )]
-    $nmm_ver,
+    $nmm_ver = $labdefaults.nmm_ver,
 <# Indicates to install Networker Server with Scenario #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
@@ -616,7 +600,7 @@ Version Of Networker Server / Client to be installed
     'nw8007','nw8006','nw8005','nw81004','nw8003','nw8002','nw8000',
     'nwunknown'
     )]
-    $nw_ver,
+    $nw_ver = $labdefaults.nw_ver,
 ### network Parameters ######
 <# Disable Domainchecks for running DC
 This should be used in Distributed scenario´s
@@ -637,7 +621,7 @@ This should be used in Distributed scenario´s
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-    [switch]$NoDomainCheck,
+    [switch]$NoDomainCheck = $labdefaults.NoDomainCheck,
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
@@ -654,7 +638,8 @@ This should be used in Distributed scenario´s
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-	[Validatepattern(‘(?<Address>((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))’)]$MySubnet,
+    [Validatepattern(‘(?<Address>((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))’)]
+    $MySubnet = $labdefaults.MySubnet,
 <# Specify your IP Addressfamilie/s
 Valid values 'IPv4','IPv6','IPv4IPv6'
 #>
@@ -674,7 +659,8 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-	[Validateset('IPv4','IPv6','IPv4IPv6')]$AddressFamily,
+    [Validateset('IPv4','IPv6','IPv4IPv6')]
+    $AddressFamily = $labdefaults.Addressfamily,
 <# Specify your IPv6 ULA Prefix, consider https://www.sixxs.net/tools/grh/ula/  #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
@@ -692,7 +678,8 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-    [ValidateScript({$_ -match [IPAddress]$_ })]$IPV6Prefix,
+    [ValidateScript({$_ -match [IPAddress]$_ })]
+    $IPV6Prefix = $Labdefaults.IPv6Prefix,
 <# Specify your IPv6 ULA Prefix Length, #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
@@ -711,7 +698,7 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
-    $IPv6PrefixLength,
+    $IPv6PrefixLength = $labdefaults.IPv6Prefixlength,
 <#
 Specify the Path to your Sources
 Example[Driveletter]:\Sources, eg. USB Device, local drive c
@@ -734,7 +721,7 @@ Sources should be populated from a bases sources.zip
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-    [String]$Sourcedir,
+    [String]$Sourcedir = $labdefaults.Sourcedir,
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
@@ -817,7 +804,6 @@ Sources should be populated from a bases sources.zip
 ###################################################
 [string]$Myself_ps1 = $MyInvocation.MyCommand
 $myself = $Myself_ps1.TrimEnd(".ps1")
-#$AddressFamily = 'IPv4'
 $IPv4PrefixLength = '24'
 $Builddir = $PSScriptRoot
 $local_culture = Get-Culture
@@ -1523,6 +1509,7 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
 [switch]$lab_MainMemUseFile = $false
 if ($defaults.IsPresent)
     {
+    Deny-LabDefaults     <#
     if (Test-Path $Builddir\defaults.xml)
         {
         Write-Host -ForegroundColor White " ==>loading defaults from $Builddir\defaults.xml"
@@ -1793,7 +1780,7 @@ if ($defaults.IsPresent)
 			[switch]$lab_MainMemUseFile = $true
 			}
 		
-    }
+    #>}
 if (!$MySubnet) {$MySubnet = "192.168.2.0"}
 $IPv4Subnet = convert-iptosubnet $MySubnet
 if (!$BuildDomain) { $BuildDomain = $Default_BuildDomain }
@@ -1865,6 +1852,8 @@ if (!$AddressFamily){$AddressFamily = "IPv4" }
 ###################################################
 if ($savedefaults.IsPresent)
 {
+    Deny-LabDefaults
+<#    
 $defaultsfile = New-Item -ItemType file $Builddir\defaults.xml -Force
 Write-Host -ForegroundColor White  "saving defaults to $Builddir\defaults.xml"
 $config =@()
@@ -1912,6 +1901,7 @@ $config =@()
         $config += ("<MainMemUseFile>$($LabDefaults.MainMemUseFile)</MainMemUseFile>")
         $config += ("</config>")
 $config | Set-Content $defaultsfile
+#>
 }
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent -and $savedefaults.IsPresent )
     {
@@ -1982,7 +1972,7 @@ else
 	}	   
 if (!$Master)
     {
-    Write-Warning "No Master was specified. See get-help .\labbuildr.ps1 -Parameter Master !!"
+    Write-Warning "No Master was specified. See get-help $myself -Parameter Master !!"
     Write-Host -ForegroundColor Gray " ==>Load masters from $UpdateUri"
     break
     } # end Master
