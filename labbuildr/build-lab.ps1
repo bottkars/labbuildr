@@ -968,7 +968,7 @@ function update-fromGit
             [switch]$delete
             )
 		$AuthHeaders = @{'Authorization' = "token b64154d0de42396ebd72b9f53ec863f2234f6997"}
-		if ($Global:vmxtoolkit_type -eq "win_x86_64" )
+		if ($Global:vmxtoolkit_type -in ("win_x86_64","LINUX"))
 			{
 			$branch =  $branch.ToLower()
 			$Isnew = $false
@@ -977,11 +977,12 @@ function update-fromGit
 			$Zip = ("https://github.com/$RepoLocation/$repo/archive/$branch.zip").ToLower()
 			$local_culture = Get-Culture
 			$git_Culture = New-Object System.Globalization.CultureInfo 'en-US'
-			if ($Global:vmxtoolkit_type -in ("win_x86_64","LINUX") )
-				{
+			#if ($Global:vmxtoolkit_type -in ("win_x86_64","LINUX") )
+			#	{
 				try
 					{
-					$request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head -ErrorAction Stop -Headers $AuthHeaders
+                    $request = Invoke-RestMethod -UseBasicParsing -Uri $Uri -Method Get -Headers $AuthHeaders -ContentType "application/json" -ErrorAction Stop  
+					#$request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head -ErrorAction Stop -Headers $AuthHeaders
 					}
 				Catch
 					{
@@ -993,9 +994,10 @@ function update-fromGit
 					exit
 					}
 				
-				$latest_OnGit =  $request.Headers.'Last-Modified'
-				#Write-Host $latest_OnGit
-				}
+				$latest_OnGit =  $request.commit.author.date
+				Write-host "Got date $($request.commit.author.date)"
+                #Write-Host $latest_OnGit
+			#	}
 			##else
 		#		{
 		#		$request = curl -D - $Uri | grep Last-Modified
@@ -1011,7 +1013,7 @@ function update-fromGit
 						{
 						$newDir = New-Item -ItemType Directory -Path "$Updatepath" | out-null
 						}
-				Write-Host -ForegroundColor Gray " ==>we found a newer Version for $repo on Git Dated $($request.Headers.'Last-Modified')"
+				Write-Host -ForegroundColor Gray " ==>we found a newer Version for $repo on Git Dated $latest_OnGit"
 				if ($delete.IsPresent)
 					{
 					Write-Host -ForegroundColor Gray "==>cleaning $Destination"
@@ -1019,16 +1021,18 @@ function update-fromGit
 					}
 				if ($Global:vmxtoolkit_type -eq "win_x86_64")
 					{
-					Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir/update/$repo-$branch.zip" -ignoresize
-					Expand-LABZip -zipfilename "$Builddir/update/$repo-$branch.zip" -destination $Destination -Folder $repo-$branch\$repo
+					Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Updatepath/$repo-$branch.zip" -ignoresize
+					Expand-LABZip -zipfilename "$Updatepath/$repo-$branch.zip" -destination $Destination -Folder $repo-$branch\$repo
 					}
 				else
 					{
-					Receive-LABBitsFile -DownLoadUrl $Zip -destination "$Builddir/update/$repo-$branch.zip"
-					Expand-LABpackage -Archive "$Builddir/update/$repo-$branch.zip" -filepattern $Repo-$branch -destination $Destination
-					}
+					Receive-LABBitsFile -DownLoadUrl $Zip -destination "$Updatepath/$repo-$branch.zip"
+					Expand-LABpackage -Archive "$UpdatePath/$repo-$branch.zip" -filepattern $Repo-$branch/$repo -destination "./expand" -Force 
+					New-Item -ItemType Directory $Destination -Force | Out-Null
+                    Move-Item -Path "./expand/$repo-$branch/$repo/*" -Destination $Destination -Force -Confirm:$false # -recurse
+                    } 
 				$Isnew = $true
-				$latest_OnGit | Set-Content (join-path $Builddir "$repo-$branch.gitver")
+				Get-Date $latest_OnGit | Set-Content (join-path $Builddir "$repo-$branch.gitver")
 				}
 			else
 				{
@@ -1382,9 +1386,16 @@ switch ($PsCmdlet.ParameterSetName)
         $ReloadProfile = $False
         $Repo = $my_repo
         $RepoLocation = "bottkars"
+<<<<<<< HEAD
 		[datetime]$latest_local_git = [datetime]::parse($Latest_labbuildr_git, $git_Culture)
+=======
+		#[datetime]$latest_local_git =  [datetime]::parse($Latest_labbuildr_git, $git_Culture)
+        $latest_local_git = Get-Date $Latest_labbuildr_git
+>>>>>>> 6c29722d0cccc2f9f3a2e8edcbb3f1d26e1d2d25
         $Destination = "$Builddir"
-        $Has_update = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination
+        Write-Verbose $latest_local_git
+        $Has_update = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -verbose
+        $Has_update
         if (Test-Path (join-path $Builddir "deletefiles.txt"))
 		    {
 			$deletefiles = get-content (join-path $Builddir "deletefiles.txt")
@@ -1422,17 +1433,17 @@ switch ($PsCmdlet.ParameterSetName)
         catch
             {}
         #$Latest_local_git = $Latest_$($repo)_git
-        $Destination = "$Builddir\$Repo"
+        $Destination = "$Builddir/$Repo"
         if ($Has_update = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -delete)
             {
             $ReloadProfile = $True
             }
         }
         ####
-        $Branch | Set-Content -Path "$Builddir\labbuildr.branch" -Force # -Verbose
+        $Branch | Set-Content -Path "$Builddir/labbuildr.branch" -Force # -Verbose
         if ($ReloadProfile)
             {
-            Remove-Item .\Update -Recurse -Confirm:$false
+            Remove-Item ./Update -Recurse -Confirm:$false
 			Write-Host -ForegroundColor White  " ==>Update Done"
             Write-Host -ForegroundColor White  " ==>press any key for reloading Modules"
             pause
@@ -1465,7 +1476,7 @@ switch ($PsCmdlet.ParameterSetName)
                 If ($branch -ne "master")
                     {
                     Write-Warning "you are on $branch, considered experimental
-==>recommended action is running '.\build-lab.ps1 -update -branch master -force'"
+==>recommended action is running './build-lab.ps1 -update -branch master -force'"
 Write-Host
                     }
                 if ($Latest_labbuildr_git)
@@ -1501,7 +1512,7 @@ Write-Host
 if (!(test-path (Join-path $builddir $scripts )))
 	{
 	Write-Warning "labbuildr changed the scriptdir to $Scripts. we can not find scripts $Scripts, please run
-	 .\build-lab.ps1 -update -force"
+	 ./build-lab.ps1 -update -force"
 	Break
 	}
 
@@ -1518,16 +1529,16 @@ if ($defaults.IsPresent)
     {
     Deny-LabDefaults
     return     <#
-    if (Test-Path $Builddir\defaults.xml)
+    if (Test-Path $Builddir/defaults.xml)
         {
-        Write-Host -ForegroundColor White " ==>loading defaults from $Builddir\defaults.xml"
+        Write-Host -ForegroundColor White " ==>loading defaults from $Builddir/defaults.xml"
         $LabDefaults = Get-LABDefaults
         }
        if (!($LabDefaults))
             {
             try
                 {
-                $LabDefaults = Get-labDefaults -Defaultsfile ".\defaults.xml.example"
+                $LabDefaults = Get-labDefaults -Defaultsfile "./defaults.xml.example"
                 }
             catch
                 {
@@ -1849,9 +1860,9 @@ If ($Gateway.IsPresent)
             }
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     {
-    if (Test-Path $Builddir\defaults.xml)
+    if (Test-Path $Builddir/defaults.xml)
         {
-        Get-Content $Builddir\defaults.xml | Write-Host -ForegroundColor Gray
+        Get-Content $Builddir/defaults.xml | Write-Host -ForegroundColor Gray
         }
     }
 #### do we have unset parameters ?
@@ -1862,8 +1873,8 @@ if ($savedefaults.IsPresent)
 {
     Deny-LabDefaults
 <#    
-$defaultsfile = New-Item -ItemType file $Builddir\defaults.xml -Force
-Write-Host -ForegroundColor White  "saving defaults to $Builddir\defaults.xml"
+$defaultsfile = New-Item -ItemType file $Builddir/defaults.xml -Force
+Write-Host -ForegroundColor White  "saving defaults to $Builddir/defaults.xml"
 $config =@()
 		$config += ("<!--
       Warning ! DO NOT EDIT THIS FILE !!!!!!!!!!!!!!!
@@ -1914,7 +1925,7 @@ $config | Set-Content $defaultsfile
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent -and $savedefaults.IsPresent )
     {
     Write-Verbose  "Defaults after Save"
-    Get-Content $Builddir\defaults.xml | Write-Host -ForegroundColor Magenta
+    Get-Content $Builddir/defaults.xml | Write-Host -ForegroundColor Magenta
     }
 ####### Master Check
 if (!$Sourcedir -and !$USE_SOURCES_ON_SMB.IsPresent)
@@ -2873,7 +2884,7 @@ else
 			Pause
 			}
 		Set-LABDNS1 -DNS1 "$IPv4Subnet.10"
-		$CloneOK = Invoke-Expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 0 -Builddir $Builddir -Mastervmx $DC_MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Size 'L' -Sourcedir $Sourcedir -MainMemUseFile:$($lab_MainMemUseFile)"
+		$CloneOK = Invoke-Expression "$Builddir/Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 0 -Builddir $Builddir -Mastervmx $DC_MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Size 'L' -Sourcedir $Sourcedir -MainMemUseFile:$($lab_MainMemUseFile)"
 		###################################################
 		#
 		# DC Setup
