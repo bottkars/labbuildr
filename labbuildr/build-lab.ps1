@@ -1022,7 +1022,7 @@ function update-fromGit
 				if ($Global:vmxtoolkit_type -eq "win_x86_64")
 					{
 					Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Updatepath/$repo-$branch.zip" -ignoresize
-					Expand-LABZip -zipfilename "$Updatepath/$repo-$branch.zip" -destination $Destination -Folder "$repo-$branch\$repo"
+					Expand-LABZip -zipfilename "$Updatepath\$repo-$branch.zip" -destination $Destination -Folder "$repo-$branch\$repo"
 					}
 				else
 					{
