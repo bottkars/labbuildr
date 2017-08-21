@@ -1509,7 +1509,8 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
 [switch]$lab_MainMemUseFile = $false
 if ($defaults.IsPresent)
     {
-    Deny-LabDefaults     <#
+    Deny-LabDefaults
+    return     <#
     if (Test-Path $Builddir\defaults.xml)
         {
         Write-Host -ForegroundColor White " ==>loading defaults from $Builddir\defaults.xml"

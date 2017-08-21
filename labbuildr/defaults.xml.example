@@ -4,8 +4,8 @@
 <config>
 <LanguageTag>en_US</LanguageTag>
 <Timezone>W. Europe Standard Time</Timezone>
-<nmm_ver>nmm9112</nmm_ver>
-<nw_ver>nw9112</nw_ver>
+<nmm_ver>nmm9113</nmm_ver>
+<nw_ver>nw9113</nw_ver>
 <nmm>False</nmm>
 <master>2012R2FallUpdate</master>
 <sqlver>SQL2016_ISO</sqlver>
@@ -28,7 +28,7 @@
 <Sourcedir></Sourcedir>
 <ScaleIOVer>2.0-13000.211</ScaleIOVer>
 <Masterpath></Masterpath>
-<NoDomainCheck></NoDomainCheck>
+<NoDomainCheck>False</NoDomainCheck>
 <Puppet></Puppet>
 <PuppetMaster></PuppetMaster>
 <Hostkey></Hostkey>
