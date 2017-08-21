@@ -482,7 +482,7 @@ Machine Sizes
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
-	[switch]$NMM = $labdefaults.NMM,
+	[switch]$NMM = ([System.Convert]::ToBoolean($labdefaults.NMM),
     <#
 Version Of Networker Modules
     'nmm9201',#-#    
