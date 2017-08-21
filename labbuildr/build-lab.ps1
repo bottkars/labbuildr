@@ -977,7 +977,7 @@ function update-fromGit
 			$Zip = ("https://github.com/$RepoLocation/$repo/archive/$branch.zip").ToLower()
 			$local_culture = Get-Culture
 			$git_Culture = New-Object System.Globalization.CultureInfo 'en-US'
-			if ($Global:vmxtoolkit_type -eq "win_x86_64" )
+			if ($Global:vmxtoolkit_type -in ("win_x86_64","LINUX") )
 				{
 				try
 					{

@@ -73,8 +73,7 @@ If (!$global:labdefaults.NoDomainCheck)
 	Set-LABNoDomainCheck -enabled:$false  | out-null
     }
 
-$buildlab = (join-path $self "build-lab.ps1")
-.$buildlab
+
 <#write-host -ForegroundColor Yellow "Running VMware $vmwareversion"
 if (!(Test-Connection community.emc.com -Quiet -Count 2 -ErrorAction SilentlyContinue))
     {
@@ -115,5 +114,7 @@ else
 			}
 		}
 	}
+$buildlab = (join-path $self "build-lab.ps1")
+.$buildlab    
 Set-LabUI
 Get-VMX
