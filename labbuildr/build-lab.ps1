@@ -386,7 +386,7 @@ Specify if Networker Scenario sould be installed
     #>
     [Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
     [Parameter(ParameterSetName = "DConly", Mandatory = $false)]
-    [switch][alias('gw')]$Gateway = $labdefaults.Gateway,
+    [switch][alias('gw')]$Gateway = ([System.Convert]::ToBoolean($labdefaults.Gateway)),
 <# select vmnet, number from 1 to 19#>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
