@@ -1447,10 +1447,17 @@ switch ($PsCmdlet.ParameterSetName)
     }# end Updatefromgit
     "Shortcut"
         {
-				Write-Host -ForegroundColor White  "creating desktop Shortcut for $Buildname"
-				createshortcut
-                return
-    }# end shortcut
+            if ($Global:vmxtoolkit_type -match "win_x86_64")
+                {
+                Write-Host -ForegroundColor White  "creating desktop Shortcut for $Buildname"
+                createshortcut
+                }
+            else 
+                {
+                Write-Host "function only available on windows"
+                }    
+            return
+        }# end shortcut
     "Version"
         {
 				Write-Host -ForegroundColor Magenta -NoNewline "$my_repo version $major-$Edition on branch : "
