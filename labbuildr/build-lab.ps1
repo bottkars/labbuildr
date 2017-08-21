@@ -890,13 +890,13 @@ $Edition = "Midsummer"
 $Default_attachement = "https://www.emc.com/collateral/solution-overview/h12476-so-hybrid-cloud.pdf"
 $Default_vmnet = "vmnet2"
 $Default_BuildDomain = "labbuildr"
-$Default_Subnet = "192.168.2.0"
-$Default_IPv6Prefix = "FD00::"
+#$Default_Subnet = "192.168.2.0"
+#$Default_IPv6Prefix = "FD00::"
 $Default_IPv6PrefixLength = '8'
-$Default_AddressFamily = "IPv4"
+#$Default_AddressFamily = "IPv4"
 $latest_ScaleIOVer = '2.0-13000.211'
-$ScaleIO_OS = "Windows"
-$ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
+#$ScaleIO_OS = "Windows"
+#$ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
 $latest_nmm = 'nmm9113'
 $latest_nw = 'nw9113'
 $latest_e16_cu = 'cu6'
@@ -906,17 +906,17 @@ $latest_e14_ur = 'ur17'
 $latest_sqlver  = 'SQL2016_ISO'
 $latest_master = '2012R2FallUpdate'
 $Latest_2016 = '2016'
-$latest_sql_2012 = 'SQL2012_ISO'
-$NW85_requiredJava = "jre-7u61-windows-x64"
+#$latest_sql_2012 = 'SQL2012_ISO'
+#$NW85_requiredJava = "jre-7u61-windows-x64"
 $Adminuser = "Administrator"
 $Adminpassword = "Password123!"
-$WAIKVER = "WAIK_10_1607"
+#$WAIKVER = "WAIK_10_1607"
 $DCNODE = "DCNODE"
 $NWNODE = "NWSERVER"
-$SPver = "SP2013SP1fndtn"
+#$SPver = "SP2013SP1fndtn"
 $Sleep = 10
 [string]$Sources = "Sources"
-$Sourcedirdefault = "c:\$Sources"
+#$Sourcedirdefault = "c:\$Sources"
 [string]$Scripts = "labbuildr-scripts"
 $Buildname = Split-Path -Leaf $Builddir
 $Scenarioname = "default"
@@ -925,7 +925,7 @@ $AddonFeatures = ("RSAT-ADDS", "RSAT-ADDS-TOOLS", "AS-HTTP-Activation", "NET-Fra
 $Gatewayhost = "11"
 $Default_Host_ScriptDir = Join-Path $Builddir $Scripts
 $DC_Scriptdir = Join-Path $Default_Host_ScriptDir "dcnode"
-$DCNode_VMX = Join-Path $Builddir (Join-Path $DCNODE "$DCNODE.vmx")
+#$DCNode_VMX = Join-Path $Builddir (Join-Path $DCNODE "$DCNODE.vmx")
 $IN_Guest_UNC_Scriptroot = "\\vmware-host\Shared Folders\Scripts"
 $IN_Guest_UNC_Sourcepath = "\\vmware-host\Shared Folders\Sources"
 $IN_Guest_UNC_NodeScriptDir = "$IN_Guest_UNC_Scriptroot\Node"
@@ -952,7 +952,7 @@ function convert-iptosubnet
 function get-update
 {
 	param ([string]$UpdateSource, [string] $Updatedestination)
-	$Origin = $MyInvocation.MyCommand
+	#$Origin = $MyInvocation.MyCommand
 	$update = New-Object System.Net.WebClient
 	$update.DownloadFile($Updatesource, $Updatedestination)
 }
@@ -1129,13 +1129,13 @@ function domainjoin
 		foreach ($i in (1..$sleep)) 
 			{
 			Write-Host -ForegroundColor Yellow "-`b" -NoNewline
-			sleep 1
+			Start-Sleep -Seconds 1
 			Write-Host -ForegroundColor Yellow "\`b" -NoNewline
-			sleep 1
+			Start-Sleep -Seconds 1
 			Write-Host -ForegroundColor Yellow "|`b" -NoNewline
-			sleep 1
+			Start-Sleep -Seconds 1
 			Write-Host -ForegroundColor Yellow "/`b" -NoNewline
-			sleep 1
+			Start-Sleep -Seconds 1
 			}
 		}
     Write-Host -ForegroundColor Green "[Done]"
@@ -1236,13 +1236,13 @@ function test-user
 		foreach ($i in (1..$sleep))
 			{
 			Write-Host -ForegroundColor Yellow "-`b" -NoNewline
-			sleep 1
+			Start-Sleep -Seconds 1
 			Write-Host -ForegroundColor Yellow "\`b" -NoNewline
-			sleep 1
+			Start-Sleep -Seconds 1
 			Write-Host -ForegroundColor Yellow "|`b" -NoNewline
-			sleep 1
+			Start-Sleep -Seconds 1
 			Write-Host -ForegroundColor Yellow "/`b" -NoNewline
-			sleep 1
+			Start-Sleep -Seconds 1
 			}
 	}
 until ($cmdresult -match $whois) 
@@ -1316,13 +1316,13 @@ function checkpoint-progress
 			foreach ($i in (1..$sleep))
 				{
 				Write-Host -ForegroundColor Yellow "-`b" -NoNewline
-				sleep 1
+				Start-Sleep -Seconds 1
 				Write-Host -ForegroundColor Yellow "\`b" -NoNewline
-				sleep 1
+				Start-Sleep -Seconds 1
 				Write-Host -ForegroundColor Yellow "|`b" -NoNewline
-				sleep 1
+				Start-Sleep -Seconds 1
 				Write-Host -ForegroundColor Yellow "/`b" -NoNewline
-				sleep 1
+				Start-Sleep -Seconds 1
 				}
 			}
 		write-host -ForegroundColor Green "[reached]"
@@ -2901,13 +2901,13 @@ else
 					foreach ($i in (1..$sleep))
 						{
 						Write-Host -ForegroundColor Yellow "-`b" -NoNewline
-						sleep 1
+						Start-Sleep -Seconds 1
 						Write-Host -ForegroundColor Yellow "\`b" -NoNewline
-						sleep 1
+						Start-Sleep -Seconds 1
 						Write-Host -ForegroundColor Yellow "|`b" -NoNewline
-						sleep 1
+						Start-Sleep -Seconds 1
 						Write-Host -ForegroundColor Yellow "/`b" -NoNewline
-						sleep 1
+						Start-Sleep -Seconds 1
 						}
 					}
 				}
@@ -2919,13 +2919,13 @@ else
 					foreach ($i in (1..$sleep))
 						{
 						Write-Host -ForegroundColor Yellow "-`b" -NoNewline
-						sleep 1
+						Start-Sleep -Seconds 1
 						Write-Host -ForegroundColor Yellow "\`b" -NoNewline
-						sleep 1
+						Start-Sleep -Seconds 1
 						Write-Host -ForegroundColor Yellow "|`b" -NoNewline
-						sleep 1
+						Start-Sleep -Seconds 1
 						Write-Host -ForegroundColor Yellow "/`b" -NoNewline
-						sleep 1
+						Start-Sleep -Seconds 1
 						}
 					}
 				}
@@ -2943,13 +2943,13 @@ else
 					foreach ($i in (1..$sleep))
 						{
 						Write-Host -ForegroundColor Yellow "-`b" -NoNewline
-						sleep 1
+						Start-Sleep -Seconds 1
 						Write-Host -ForegroundColor Yellow "\`b" -NoNewline
-						sleep 1
+						Start-Sleep -Seconds 1
 						Write-Host -ForegroundColor Yellow "|`b" -NoNewline
-						sleep 1
+						Start-Sleep -Seconds 1
 						Write-Host -ForegroundColor Yellow "/`b" -NoNewline
-						sleep 1
+						Start-Sleep -Seconds 1
 						}
 				}
 			write-host -ForegroundColor Green "[finished]"
@@ -3177,7 +3177,7 @@ switch ($PsCmdlet.ParameterSetName)
             #$EXSetupStart = Get-Date
 			While ($FileOK = (&$vmrun -gu $BuildDomain\Administrator -gp Password123! fileExistsInGuest $CloneVMX "$IN_Guest_LogDir\exchange.pass") -ne "The file exists.")
 				{
-				sleep $Sleep
+				Start-Sleep -Seconds $Sleep
 				} #end while
 			Write-Host
             do {
@@ -3304,7 +3304,7 @@ switch ($PsCmdlet.ParameterSetName)
         #$EXSetupStart = Get-Date
 			While ($FileOK = (&$vmrun -gu $BuildDomain\Administrator -gp Password123! fileExistsInGuest $CloneVMX $IN_Guest_LogDir\exchange.pass) -ne "The file exists.")
 			{
-				sleep $Sleep
+				Start-Sleep -Seconds $Sleep
 			} #end while
 			Write-Host
                 do {
@@ -3480,13 +3480,13 @@ switch ($PsCmdlet.ParameterSetName)
 			foreach ($i in (1..$sleep))
 				{
 				Write-Host -ForegroundColor Yellow "-`b" -NoNewline
-				sleep 1
+				Start-Sleep -Seconds 1
 				Write-Host -ForegroundColor Yellow "\`b" -NoNewline
-				sleep 1
+				Start-Sleep -Seconds 1
 				Write-Host -ForegroundColor Yellow "|`b" -NoNewline
-				sleep 1
+				Start-Sleep -Seconds 1
 				Write-Host -ForegroundColor Yellow "/`b" -NoNewline
-				sleep 1
+				Start-Sleep -Seconds 1
 				}
 			} #end while
             Write-Host -ForegroundColor Green "[finished]"
@@ -4402,13 +4402,13 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
 			foreach ($i in (1..$sleep)) 
 				{
 				Write-Host -ForegroundColor Yellow "-`b" -NoNewline
-				sleep 1
+				Start-Sleep -Seconds 1
 				Write-Host -ForegroundColor Yellow "\`b" -NoNewline
-				sleep 1
+				Start-Sleep -Seconds 1
 				Write-Host -ForegroundColor Yellow "|`b" -NoNewline
-				sleep 1
+				Start-Sleep -Seconds 1
 				Write-Host -ForegroundColor Yellow "/`b" -NoNewline
-				sleep 1
+				Start-Sleep -Seconds 1
 				}
 			}
 		write-host -ForegroundColor Green "[started]"
