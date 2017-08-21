@@ -1021,7 +1021,7 @@ function update-fromGit
 					}
 				if ($Global:vmxtoolkit_type -eq "win_x86_64")
 					{
-					Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Updatepath/$repo-$branch.zip" -ignoresize
+					Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Updatepath\$repo-$branch.zip" -ignoresize
 					Expand-LABZip -zipfilename "$Updatepath\$repo-$branch.zip" -destination $Destination -Folder "$repo-$branch\$repo"
 					}
 				else
@@ -1429,7 +1429,7 @@ switch ($PsCmdlet.ParameterSetName)
         catch
             {}
         #$Latest_local_git = $Latest_$($repo)_git
-        $Destination = "$Builddir/$Repo"
+        $Destination = Join-Path $Builddir $Repo
         if ($Has_update = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -delete)
             {
             $ReloadProfile = $True
