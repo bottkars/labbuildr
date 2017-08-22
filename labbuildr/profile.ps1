@@ -10,6 +10,9 @@ $size.width=120
 $size.height=36
 $Userinterface.WindowSize = $size
 #>
+param(
+    [switch]$noopenwrt
+)
 if ($vmxtoolkit_type -eq "win_x86_64")
 	{
 	$labbuildr_home = $env:USERPROFILE
@@ -95,6 +98,10 @@ if ($global:labdefaults.Languagetag -match "_")
 if (!$global:labdefaults.timezone)
     {
     Set-Labtimezone  | out-null
+    }
+if ($noopenwrt.IsPresent)
+    {
+        Set-LABOpenWRT -enabled:$false
     }
 if ($global:labdefaults.openwrt -eq "false")
 	{
