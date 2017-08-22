@@ -3407,7 +3407,7 @@ switch ($PsCmdlet.ParameterSetName)
         Write-Verbose "IPv6PrefixLength = $IPv6PrefixLength"
         Write-Verbose "Addressfamily = $AddressFamily"
         Write-Verbose "EXAddressFamiliy = $EXAddressFamiliy"
-		Write-Verbose "Echxnge CU = $e16_cu"
+		Write-Verbose "Exchange CU = $e16_cu"
 		Write-Verbose "Net Framework $NET_VER"
 		Write-Verbose "Master $Master"
         if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
@@ -3437,8 +3437,14 @@ switch ($PsCmdlet.ParameterSetName)
 			#if ($iSCSI.IsPresent)
 			#	{
 			#	$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script enable-labiscsi.ps1 -Parameter "-Target_IP $IPv4Subnet.$iSCSI_TARGET" -interactive
-			#	}
+            #	}
+            If ($E16_REQUIRED_KB)
+            {
 			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchangeprereqs.ps1 -interactive -Parameter "-NET_VER $NET_VER -KB $E16_REQUIRED_KB -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter"
+            }
+            else {
+                $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchangeprereqs.ps1 -interactive -Parameter "-NET_VER $NET_VER -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter"
+            }
             checkpoint-progress -step exprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
             If ($E16_REQUIRED_KB -ge 'KB4010672')
                 {
