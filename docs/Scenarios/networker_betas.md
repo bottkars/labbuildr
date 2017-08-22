@@ -26,5 +26,5 @@ Expand-LABpackage -Archive /home/bottk/Downloads/nw_win_x64.zip -destination /ho
 # Extract the package to nmmunknown
 Expand-LABpackage -Archive /home/bottk/Downloads/nmm_win_x64.zip -destination /home/bottk/Sources.labbuildr/Networker/nmmunknown/    
 # Run Exchange Setup
-/build-lab.ps1 -Exchange2016 -nmm  -nmm_ver nmmunknown -nw_ver nwunknown -DAG -EXNodes 1 -Master 2016 -defaults  
+/build-lab.ps1 -Exchange2016 -nmm  -nmm_ver nmmunknown -nw_ver nwunknown -DAG -EXNodes 1 -Master 2016  
 ```
