@@ -13,8 +13,8 @@ for labbuildr, you can use use the command:
 ```
 
 this will
-- install latest phopton os
-- pull docker-registry latest
+- install latest phopton os  
+- pull docker-registry latest  
 if you install manually, here is an example docker compose:
 
 ```yaml
@@ -29,7 +29,7 @@ if you install manually, here is an example docker compose:
           - /data:/var/lib/registry
 ```
 
-you can build your registry manually by
+you can build your registry manually by  
 
 ```
 /usr/bin/docker-compose -f /root/docker-compose.yml up -d
@@ -37,10 +37,10 @@ you can build your registry manually by
 ![image](https://user-images.githubusercontent.com/8255007/27326254-4803f9ee-55ab-11e7-84cf-73a0a9eeb735.png)
 the registry in this example uses /data dockervolume, a mountpoint for sdb1 in my case
 
-to make Docker Windows able to push images to the linux registry, the allow-nondistributable-artifacts must be set in 
- c:\programdata\docker\config\daemon.json 
-insecure registry is also defined in that by insecure-registries directive
-example
+to make Docker Windows able to push images to the linux registry, the allow-nondistributable-artifacts must be set in  
+ c:\programdata\docker\config\daemon.json   
+insecure registry is also defined in that by insecure-registries directive  
+example  
 ```json
 {
 "insecure-registries":["192.168.2.40:5000"],
@@ -53,9 +53,9 @@ When using labbuildr a windows dockerhost can be automatically brought online by
 .\build-lab.ps1 -Master 2016core -docker -Size xl -defaults
 ```
 
-modifications for the private registry and nondistributable artifacts are made automatically then.
+modifications for the private registry and nondistributable artifacts are made automatically then.  
 #### verify
-run docker info to verify setings and versions on your windows host
+run docker info to verify setings and versions on your windows host  
 ```Powershell
 docker info
 ```
@@ -65,7 +65,7 @@ docker info
 
 to download a windows based image from the docker hub, run 
 docker pull <iamge:tag>
-in this example i used microsoft sql server, as the size was the original reason to build this :-)
+in this example i used microsoft sql server, as the size was the original reason to build this :-)  
 ```
 docker pull microsoft/mssql-server-windows
 ```
