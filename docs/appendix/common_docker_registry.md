@@ -12,7 +12,7 @@ for labbuildr, you can use use the command:
 .\install-photon.ps1 -docker_registry
 ```
 
-this will
+this will  
 - install latest phopton os  
 - pull docker-registry latest  
 if you install manually, here is an example docker compose:
