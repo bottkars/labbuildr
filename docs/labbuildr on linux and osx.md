@@ -1,4 +1,4 @@
-## labbuildr beta Support for LINUX/OSX
+## labbuildr Support for LINUX/OSX
 with powershell on OSX/LINUX labbuildr will start to support labbuildr on OSX and Linux
 this will incude:
 * vmxtoolkit
@@ -7,7 +7,7 @@ this will incude:
 * labbuildr
 
 See [LINUX VIDEO](https://www.youtube.com/watch?v=ZjXEVWe9KU4) for a demo  
-however, as not jet ready for prime with many changes, it is only available via git pull from the current master branch
+
 
 ![github_osx_powershell_vmxtoolkit](https://cloud.githubusercontent.com/assets/8255007/17848963/c08f8588-6856-11e6-8714-82d50f96dc93.gif)
 
@@ -46,17 +46,9 @@ VMware workstation is complaining that it is not possible to set a network adapt
 https://kb.vmware.com/selfservice/microsites/search.do?language=en_US&cmd=displayKC&externalId=287#.V-De9Q28qRE.email
 
 
-# LINUX/OSX port is currently only available via Git clone, no auto installer 
+
 ## Install labbuildr on OSX/LINUX
 
-to clone labbuildr for VMware/Fusion and required Tools and scripts, use   
-```Bash
-git clone -b master https://github.com/bottkars/labbuildr
-cd labbuildr
-git clone -b master https://github.com/bottkars/labbuildr-scripts 
-git clone -b master https://github.com/bottkars/labtools
-git clone -b master https://github.com/bottkars/vmxtoolkit
-```
 # USAGE
 ## Automatic start via profile.ps1
 once powereshell is installed and the repos are pulled,, labbuildr can set your environment with the included profile.ps1   
