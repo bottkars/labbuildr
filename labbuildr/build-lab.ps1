@@ -1513,7 +1513,6 @@ if (!(test-path (Join-path $builddir $scripts )))
 	}
 
 #################### default Parameter Section Start
-write-verbose "Config pre defaults"
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     {
     write-output $PSCmdlet.MyInvocation.BoundParameters
@@ -1835,17 +1834,56 @@ else
 	$LanguageTag = "en-US"
 	}
 $DCMaster = $Master
-write-verbose "After defaults !!!! "
 Write-Verbose "Sourcedir : $Sourcedir"
 Write-Verbose "SMBSourcedir : $($LabDefaults.SMBSourcedir)"
-Write-Verbose "NWVER : $nw_ver"
 Write-Verbose "Gateway : $($Gateway.IsPresent)"
 Write-Verbose "NMM : $($nmm.IsPresent)"
 Write-Verbose "MySubnet : $MySubnet"
-Write-Verbose "ScaleIOVer : $ScaleIOVer"
 Write-Verbose "Masterpath : $Masterpath"
 Write-Verbose "Master : $Master"
-Write-Verbose "Defaults before Safe:"
+if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+{
+	$builtinParameters = @("ErrorAction","WarningAction","Verbose","ErrorVariable","WarningVariable","OutVariable","OutBuffer","Debug")
+	$totalParameterCount = $($MyInvocation.MyCommand.Parameters.count)
+	$parameterCount = 0 
+	($MyInvocation.MyCommand.Parameters ).Keys | ForEach-Object {
+		if ( $builtinParameters -notcontains $_ ) 
+			{
+			$parameterCount++
+			}
+		}
+		$boundParameters = @()
+		Write-Host -ForegroundColor Yellow "$parameterCount parameters defined param statement"
+		Write-Host -ForegroundColor Yellow "$($MyInvocation.BoundParameters.count) parameters are provided on the cmdline:"
+		$MyInvocation.BoundParameters.keys | ForEach-Object {
+		Write-Host "'$($_)' = '$($PSBoundParameters.Item($_))'"
+		$boundParameters+=$_
+	}
+	Write-Host -ForegroundColor Yellow "These parameters have been configured with default values:"
+	$parametersToIgnore = $builtinParameters + $boundParameters
+
+	($MyInvocation.MyCommand.Parameters ).Keys | ForEach-Object {
+	if ( $boundParameters -notcontains $_ ) 
+		{
+		$val = (Get-Variable -Name $_ -EA SilentlyContinue).Value
+		if( $val.length -gt 0 ) 
+			{
+			"'$($_)' = '$($val)'"
+			}
+		}
+	}
+ 	Write-Host -ForegroundColor Yellow "Parameters with no Value:"
+	($MyInvocation.MyCommand.Parameters ).Keys | ForEach-Object {
+		if ( $parametersToIgnore -notcontains $_ ) {
+		$val = (Get-Variable -Name $_ -EA SilentlyContinue).Value
+		if( $val.length -eq 0 )
+			{
+			"'$($_)'"
+			}
+		}
+	}
+   	pause
+}
 If ($DefaultGateway -match "$IPv4Subnet.$Gatewayhost")
     {
     $gateway = $true
