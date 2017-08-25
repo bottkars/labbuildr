@@ -40,7 +40,7 @@
     - ExtraConfig option 'sched.mem.pin' is not allowed, will skip it.
     Completed successfully
 .EXAMPLE
-    Install a ddmcNode with defaults from defaults.xml
+    Install a ddmcNode with defaults from defaults.json
    .\install-ddmc.ps1 -Masterpath .\ddmc-1.4.5.2-535679 -Defaults
     WARNING: VM Path does currently not exist
     WARNING: Get-VMX : VM does currently not exist
@@ -59,7 +59,7 @@ Param(
 [Parameter(ParameterSetName = "defaults",Mandatory=$False)]
 [Parameter(ParameterSetName = "install",Mandatory=$true)]$MasterPath,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$Defaults = $true,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.json",
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 [Parameter(ParameterSetName = "install",Mandatory=$false)][ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]$subnet = "192.168.2.0",
 [Parameter(ParameterSetName = "install",Mandatory=$False)]
@@ -114,7 +114,8 @@ switch ($PsCmdlet.ParameterSetName)
                 {
                 try
                     {
-                    $labdefaults = Get-labDefaults -Defaultsfile ".\defaults.xml.example"
+                    New-LabDefaults    
+                    $labdefaults = Get-labDefaults
                     }
                 catch
                     {

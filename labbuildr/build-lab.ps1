@@ -408,7 +408,7 @@ Specify if Networker Scenario sould be installed
     $VMnet = $labdefaults.vmnet,
  #   [Parameter(Mandatory = $false, HelpMessage = "Enter a valid VMware network Number vmnet between 1 and 19 ")]
 <# This stores the defaul config in defaults.xml#>
-	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
+<#	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
@@ -423,7 +423,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-	[switch]$savedefaults,
+	[switch]$savedefaults,#>
 <# Specify if Machines should be Clustered, valid for Hyper-V and Blanknodes Scenario  #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
@@ -1854,13 +1854,6 @@ If ($Gateway.IsPresent)
             {
             $DefaultGateway = "$IPv4Subnet.$Gatewayhost"
             }
-if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
-    {
-    if (Test-Path $Builddir/defaults.xml)
-        {
-        Get-Content $Builddir/defaults.xml | Write-Host -ForegroundColor Gray
-        }
-    }
 #### do we have unset parameters ?
 if (!$AddressFamily){$AddressFamily = "IPv4" }
 
@@ -1918,11 +1911,7 @@ $config =@()
 $config | Set-Content $defaultsfile
 #>
 }
-if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent -and $savedefaults.IsPresent )
-    {
-    Write-Verbose  "Defaults after Save"
-    Get-Content $Builddir/defaults.xml | Write-Host -ForegroundColor Magenta
-    }
+
 ####### Master Check
 if (!$Sourcedir -and !$USE_SOURCES_ON_SMB.IsPresent)
     {

@@ -21,7 +21,7 @@
    http://labbuildr.readthedocs.io/en/master/Solutionpacks///SolutionPacks#install-coreos
 .EXAMPLE
 .\install-coreos.ps1 -defaults
-this will install a Puppetmaster on CentOS7 using default Values derived from defaults.xml
+this will install a Puppetmaster on CentOS7 using default Values derived from defaults.json
 
 #>
 #

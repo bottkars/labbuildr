@@ -51,10 +51,10 @@ The extracte OVA will be dehydrated to a VMware Workstation Master #>
 <# Configure automatically configures the Scalio Cluster and will always install 3 Nodes !  #>
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][switch]$configure,
-<# Use labbuildr Defaults.xml #>
+<# Use labbuildr defaults.json #>
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
-<# Path to a Defaults.xml #>
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
+<# Path to a defaults.json #>
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.json"
 )
 #requires -version 3.0
 #requires -module vmxtoolkit

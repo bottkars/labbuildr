@@ -71,7 +71,7 @@ Param(
 	[Parameter(ParameterSetName = "install",Mandatory = $false)][switch]$esxui,
 	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 	[ValidateScript({ Test-Path -Path $_ })]
-	$Defaultsfile=".\defaults.xml",
+	$Defaultsfile=".\defaults.json",
 	[Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 	[Parameter(ParameterSetName = "install", Mandatory = $false)]
 	[ValidateSet('XS', 'S', 'M', 'L', 'XL','TXL','XXL')]$Size = "XL"

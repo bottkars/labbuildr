@@ -85,12 +85,12 @@ The extracte OVA will be dehydrated to a VMware Workstation Master #>
 <# we use SingleMDM parameter with Configure for test and dev to Showcase ScaleIO und LowMem Machines #>
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$False)][switch]$singlemdm,
-<# Use labbuildr Defaults.xml #>
+<# Use labbuildr defaults.json #>
 [Parameter(ParameterSetName = "import", Mandatory = $false)]
 
 [Parameter(ParameterSetName = "defaults", Mandatory = $true)][switch]$Defaults,
-<# Path to a Defaults.xml #>
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
+<# Path to a defaults.json #>
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.json"
 )
 #requires -version 3.0
 #requires -module vmxtoolkit

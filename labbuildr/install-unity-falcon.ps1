@@ -39,7 +39,7 @@
     - ExtraConfig option 'sched.mem.pin' is not allowed, will skip it.
     Completed successfully
 .EXAMPLE
-    Install a UnityNode with defaults from defaults.xml
+    Install a UnityNode with defaults from defaults.json
    .\install-Unity-Falcon.ps1 -Masterpath .\Unity-1.4.5.2-535679 -Defaults
     WARNING: VM Path does currently not exist
     WARNING: Get-VMX : VM does currently not exist
@@ -101,7 +101,7 @@ $MasterPath,
 $Nodes = 1,
 #[Parameter(ParameterSetName = "generateuuid",Mandatory=$false)]
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]
-$Defaultsfile=".\defaults.xml",
+$Defaultsfile=".\defaults.json",
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 [Parameter(ParameterSetName = "install",Mandatory=$false)]
 [ValidateScript({$_ -match [IPAddress]$_ })][ipaddress]
@@ -169,8 +169,8 @@ to deploy unity. for other options, see get-help .\$($MyInvocation.MyCommand) -o
             {
             try
                 {
-                $labdefaults = Get-labDefaults -Defaultsfile ".\defaults.xml.example"
-                }
+                    New-LabDefaults    
+                    $labdefaults = Get-labDefaults                }
             catch
                 {
                 Write-Warning "no  defaults or example defaults found, exiting now"

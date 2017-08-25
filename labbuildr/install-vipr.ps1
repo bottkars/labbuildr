@@ -31,7 +31,7 @@ Param(
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [ValidateSet('vipr-2.3.0.0.828','vipr-2.2.1.0.1106','vipr-2.4.0.0.519','vipr-2.4.1.0.220','vipr-3.0.0.0.814','vipr-3.5.0.0.606')]
 $viprmaster = "vipr-3.5.0.0.606",
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml"
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.json"
 
 )
 

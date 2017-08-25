@@ -55,7 +55,7 @@ _______|_________|_____|_________
 [Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateSet('0.5TB','1TB','2TB','4TB')][string]$AVESize = "0.5TB",
 
 [Parameter(ParameterSetName = "default", Mandatory = $false)][switch]$Defaults = $true,
-[Parameter(ParameterSetName = "default", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+[Parameter(ParameterSetName = "default", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.json",
 
 
 [Parameter(ParameterSetName = "configure", Mandatory = $false)]
