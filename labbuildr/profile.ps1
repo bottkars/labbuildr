@@ -11,6 +11,7 @@ $size.height=36
 $Userinterface.WindowSize = $size
 #>
 param(
+    $defaultsfile = "./defaults.json",
     [switch]$noopenwrt
 )
 if ($vmxtoolkit_type -eq "win_x86_64")
@@ -47,13 +48,13 @@ catch
 
 try
     {
-    Get-ChildItem .\defaults.xml -ErrorAction Stop | Out-Null
+    Get-ChildItem $defaultsfile -ErrorAction Stop | Out-Null
     }
 catch
     [System.Management.Automation.ItemNotFoundException]
     {
-    Write-Host -ForegroundColor Yellow "no defaults.xml found, using labbuildr default settings"
-    Copy-Item .\defaults.xml.example .\defaults.xml
+    Write-Host -ForegroundColor Yellow "no defaults.json found, using labbuildr default settings"
+    Copy-Item "$defaultsfile.example" $defaultsfile
 	$Master_path = Join-Path $labbuildr_home "Master.labbuildr"
     Set-LABMasterpath -Masterpath (Join-Path $labbuildr_home "Master.labbuildr").tostring() | Out-Null
 	Set-LABSources -Sourcedir (Join-Path $labbuildr_home "Sources.labbuildr").tostring() | Out-Null
