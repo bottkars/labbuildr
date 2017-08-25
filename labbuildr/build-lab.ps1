@@ -1563,49 +1563,52 @@ else
 	$LanguageTag = "en-US"
 	}
 $DCMaster = $Master
+## default verboser
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
 {
-	$builtinParameters = @("ErrorAction","WarningAction","Verbose","ErrorVariable","WarningVariable","OutVariable","OutBuffer","Debug")
-	$totalParameterCount = $($MyInvocation.MyCommand.Parameters.count)
-	$parameterCount = 0 
-	($MyInvocation.MyCommand.Parameters ).Keys | ForEach-Object {
-		if ( $builtinParameters -notcontains $_ ) 
-			{
-			$parameterCount++
-			}
-		}
-		$boundParameters = @()
-		Write-Host -ForegroundColor Yellow "$parameterCount parameters defined param statement"
-		Write-Host -ForegroundColor Yellow "$($MyInvocation.BoundParameters.count) parameters are provided on the cmdline:"
-		$MyInvocation.BoundParameters.keys | ForEach-Object {
-		Write-Host "'$($_)' = '$($PSBoundParameters.Item($_))'"
-		$boundParameters+=$_
-	}
-	Write-Host -ForegroundColor Yellow "These parameters have been configured with default values:"
-	$parametersToIgnore = $builtinParameters + $boundParameters
-
-	($MyInvocation.MyCommand.Parameters ).Keys | ForEach-Object {
-	if ( $boundParameters -notcontains $_ ) 
-		{
-		$val = (Get-Variable -Name $_ -EA SilentlyContinue).Value
-		if( $val.length -gt 0 ) 
-			{
-			"'$($_)' = '$($val)'"
-			}
-		}
-	}
- 	Write-Host -ForegroundColor Yellow "Parameters with no Value:"
-	($MyInvocation.MyCommand.Parameters ).Keys | ForEach-Object {
-		if ( $parametersToIgnore -notcontains $_ ) {
-		$val = (Get-Variable -Name $_ -EA SilentlyContinue).Value
-		if( $val.length -eq 0 )
-			{
-			"'$($_)'"
-			}
-		}
-	}
-   	pause
+$builtinParameters = @("ErrorAction","WarningAction","Verbose","ErrorVariable","WarningVariable","OutVariable","OutBuffer","Debug")
+$totalParameterCount = $($MyInvocation.MyCommand.Parameters.count)
+$parameterCount = 0 
+($MyInvocation.MyCommand.Parameters ).Keys | ForEach-Object {
+    if ( $builtinParameters -notcontains $_ ) 
+        {
+        $parameterCount++
+        }
+    }
+    $boundParameters = @()
+    Write-Host -ForegroundColor Yellow "$parameterCount parameters defined param statement"
+    Write-Host -ForegroundColor Yellow "$($MyInvocation.BoundParameters.count) parameters are provided on the cmdline:"
+    $MyInvocation.BoundParameters.keys | ForEach-Object {
+    Write-Host "'$($_)' = '$($PSBoundParameters.Item($_))'"
+    $boundParameters+=$_
 }
+Write-Host -ForegroundColor Yellow "These parameters have been configured with default values:"
+$parametersToIgnore = $builtinParameters + $boundParameters
+
+($MyInvocation.MyCommand.Parameters ).Keys | ForEach-Object {
+if ( $boundParameters -notcontains $_ ) 
+    {
+    $val = (Get-Variable -Name $_ -EA SilentlyContinue).Value
+    if( $val.length -gt 0 ) 
+        {
+        "'$($_)' = '$($val)'"
+        }
+    }
+}
+ Write-Host -ForegroundColor Yellow "Parameters with no Value:"
+($MyInvocation.MyCommand.Parameters ).Keys | ForEach-Object {
+    if ( $parametersToIgnore -notcontains $_ ) {
+    $val = (Get-Variable -Name $_ -EA SilentlyContinue).Value
+    if( $val.length -eq 0 )
+        {
+        "'$($_)'"
+        }
+    }
+}
+   pause
+}
+
+
 If ($DefaultGateway -match "$IPv4Subnet.$Gatewayhost")
     {
     $gateway = $true
