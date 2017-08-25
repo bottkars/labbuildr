@@ -1834,13 +1834,6 @@ else
 	$LanguageTag = "en-US"
 	}
 $DCMaster = $Master
-Write-Verbose "Sourcedir : $Sourcedir"
-Write-Verbose "SMBSourcedir : $($LabDefaults.SMBSourcedir)"
-Write-Verbose "Gateway : $($Gateway.IsPresent)"
-Write-Verbose "NMM : $($nmm.IsPresent)"
-Write-Verbose "MySubnet : $MySubnet"
-Write-Verbose "Masterpath : $Masterpath"
-Write-Verbose "Master : $Master"
 If ($DefaultGateway -match "$IPv4Subnet.$Gatewayhost")
     {
     $gateway = $true
