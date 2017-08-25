@@ -20,7 +20,7 @@ if ($vmxtoolkit_type -eq "win_x86_64")
 	}
 else
 	{
-	$labbuildr_home = $home
+	$labbuildr_home = $HOME
 	}
 clear-host
 $self  = Get-Location
@@ -60,6 +60,14 @@ catch
 	Set-LABSources -Sourcedir (Join-Path $labbuildr_home "Sources.labbuildr").tostring() | Out-Null
     }
 $global:labdefaults = Get-LABDefaults
+if (!$global:labdefaults.Masterpath)
+    {
+    Set-LABMasterpath -Masterpath (Join-Path $labbuildr_home "Master.labbuildr").tostring() | Out-Null
+    }
+if (!$global:labdefaults.Sourcedir)
+    {
+    Set-LABSources -Sourcedir (Join-Path $labbuildr_home "Sources.labbuildr").tostring() | Out-Null
+    }    
 if ($global:labdefaults.SQLVER -notmatch 'ISO')
 	{
 	Set-LABSQLver -SQLVER SQL2014SP2_ISO | Out-Null
