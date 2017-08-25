@@ -54,7 +54,7 @@ catch
     [System.Management.Automation.ItemNotFoundException]
     {
     Write-Host -ForegroundColor Yellow "no defaults.json found, using labbuildr default settings"
-    Copy-Item "$defaultsfile.example" $defaultsfile
+    New-LABdefaults -Defaultsfile $defaultsfile
 	$Master_path = Join-Path $labbuildr_home "Master.labbuildr"
     Set-LABMasterpath -Masterpath (Join-Path $labbuildr_home "Master.labbuildr").tostring() | Out-Null
 	Set-LABSources -Sourcedir (Join-Path $labbuildr_home "Sources.labbuildr").tostring() | Out-Null
