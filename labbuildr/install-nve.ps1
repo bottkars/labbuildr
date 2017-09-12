@@ -29,6 +29,7 @@ Param(
 [Parameter(ParameterSetName = "defaults",Mandatory = $true)]
 [Parameter(ParameterSetName = "import",Mandatory = $false)]
 [ValidateSet(
+	'9.1.1.1','9.1.1.2','9.1.1.3', #-#
     '9.0.1-72',
 	'9.1.0.3','9.1.0.4',#-#
 	'9.0.1.1','9.0.1.2','9.0.1.3','9.0.1.4','9.0.1.5','9.0.1.6' #-#
