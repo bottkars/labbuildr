@@ -57,8 +57,8 @@ catch
     New-LABdefaults -Defaultsfile $defaultsfile
     $Master_path = Join-Path $labbuildr_home "Master.labbuildr"
     $Source_path = Join-Path $labbuildr_home "Sources.labbuildr"
-    Set-LABMasterpath -Masterpath $Master_path.tostring() | Out-Null
-    Set-LABSources -Sourcedir $Source_path.tostring() | Out-Null
+    Set-LABMasterpath -Masterpath $Master_path.tostring() #| Out-Null
+    Set-LABSources -Sourcedir $Source_path.tostring() #| Out-Null
     }
 $global:labdefaults = Get-LABDefaults
 if (!$global:labdefaults.Masterpath)
@@ -85,7 +85,6 @@ If (!$global:labdefaults.NoDomainCheck)
     {	
 	Set-LABNoDomainCheck -enabled:$false  | out-null
     }
-
 
 <#write-host -ForegroundColor Yellow "Running VMware $vmwareversion"
 if (!(Test-Connection community.emc.com -Quiet -Count 2 -ErrorAction SilentlyContinue))
