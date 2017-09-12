@@ -22,3 +22,5 @@
 ./SIOToolkit
 ./install-openstack.ps1
 ./labbuildr/
+./defaults.xml
+./defaults.xml.example

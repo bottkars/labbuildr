@@ -189,7 +189,7 @@ Specify if Networker Scenario sould be installed
     #>
 	[Parameter(ParameterSetName = "E16", Mandatory = $false)]
     [ValidateSet('final','cu1','cu2','cu3','cu4','cu5','cu6')]
-    $e16_cu,
+    $e16_cu = $labdefaults.e16_cu,
 <#
     Determines Exchange CU Version to be Installed
     Valid Versions are:
@@ -199,7 +199,7 @@ Specify if Networker Scenario sould be installed
     #>
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
     [ValidateSet('cu1','cu2','cu3','sp1','cu5','cu6','cu7','cu8','cu9','cu10','cu11','cu12','cu13','cu14','cu15','cu16','cu17')]
-    [alias('ex_cu')]$e15_cu,
+    [alias('ex_cu')]$e15_cu = $labdefaults.e15_cu,
 <#
     Determines Exchange UR Version to be Installed
     Valid Versions are:
@@ -209,7 +209,7 @@ Specify if Networker Scenario sould be installed
     #>
 	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
     [ValidateSet('ur1','ur2','ur3','ur4','ur5','ur6','ur7','ur8v2','ur9','ur10','ur11','ur12','ur13','ur14','ur15','ur16','ur17')]
-    [alias('e2010_ur')]$e14_ur,
+    [alias('e2010_ur')]$e14_ur = $labdefaults.e14_ur,
 <#
     Determines Exchange CU Version to be Installed
     Valid Versions are:
@@ -219,10 +219,10 @@ Specify if Networker Scenario sould be installed
     #>
 	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
     [ValidateSet('sp3')]
-    [alias('e2010_sp')]$e14_sp,
+    [alias('e2010_sp')]$e14_sp = $labdefaults.e14_sp,
     [Parameter(ParameterSetName = "E14", Mandatory = $false)]
     [ValidateSet('de_DE','en_US')]
-    [alias('e2010_lang')]$e14_lang = 'de_DE',
+    [alias('e2010_lang')]$e14_lang = 'en_US',
     <# schould we prestage users ? #>
 	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
     [Parameter(ParameterSetName = "E16", Mandatory = $false)]
@@ -249,7 +249,7 @@ Specify if Networker Scenario sould be installed
 	'1.31-258.2','1.31-1277.3','1.31-2333.2',
 	'1.30-426.0'
 	)]
-    [alias('siover','Scaleio_Ver')]$ScaleIOVer,
+    [alias('siover','Scaleio_Ver')]$ScaleIOVer = $labdefaults.ScaleioVer,
     <# single mode with mdm only on first node ( no secondary, no tb ) #>
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][switch]$singlemdm,
     # <# Cluster modemdm automatically#>
@@ -294,24 +294,7 @@ Specify if Networker Scenario sould be installed
     [ValidateSet(#'SQL2014SP1slip','SQL2012','SQL2012SP1','SQL2012SP2','SQL2012SP1SLIP','SQL2014','SQL2016',
 	'SQL2012_ISO',
 	'SQL2014SP2_ISO',
-	'SQL2016_ISO')]$SQLVER,    
-	######################### common Parameters start here in Order
-    <# reads the Default Config from defaults.xml
-    <config>
-    <nmm_ver>nmm82</nmm_ver>
-    <nw_ver>nw82</nw_ver>
-    <master>2012R2UEFIMASTER</master>
-    <sqlver>SQL2014</sqlver>
-    <e15_cu>cu6</e15_cu>
-    <vmnet>2</vmnet>
-    <BuildDomain>labbuildr</BuildDomain>
-    <MySubnet>10.10.0.0</MySubnet>
-    <AddressFamily>IPv4</AddressFamily>
-    <IPV6Prefix>FD00::</IPV6Prefix>
-    <IPv6PrefixLength>8</IPv6PrefixLength>
-    <NoAutomount>False</NoAutomount>
-    </config>
-#>
+	'SQL2016_ISO')]$SQLVER = $labdefaults.sqlver,    
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
@@ -375,7 +358,7 @@ Specify if Networker Scenario sould be installed
     '2012R2_Ger','2012_R2',
     '2012R2FallUpdate','2012R2Fall_Ger',
     '2012_Ger','2012'
-    )][string]$Master,
+    )][string]$Master = $labdefaults.master,
     <#do we want a special path to the Masters ? #>
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
@@ -393,7 +376,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-	$Masterpath,
+	$Masterpath = $labdefaults.Masterpath,
     <# Do we want Additional Disks / of additional 100GB Disks for ScaleIO. The disk will be made ready for ScaleIO usage in Guest OS#>
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
     [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)][ValidateRange(1, 6)][int][alias('ScaleioDisks')]$Disks,
@@ -403,7 +386,7 @@ Specify if Networker Scenario sould be installed
     #>
     [Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
     [Parameter(ParameterSetName = "DConly", Mandatory = $false)]
-    [switch][alias('gw')]$Gateway,
+    [switch][alias('gw')]$Gateway = ([System.Convert]::ToBoolean($labdefaults.Gateway)),
 <# select vmnet, number from 1 to 19#>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
@@ -421,10 +404,11 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-    [ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]$VMnet,
+    [ValidateSet('vmnet2','vmnet3','vmnet4','vmnet5','vmnet6','vmnet7','vmnet9','vmnet10','vmnet11','vmnet12','vmnet13','vmnet14','vmnet15','vmnet16','vmnet17','vmnet18','vmnet19')]
+    $VMnet = $labdefaults.vmnet,
  #   [Parameter(Mandatory = $false, HelpMessage = "Enter a valid VMware network Number vmnet between 1 and 19 ")]
 <# This stores the defaul config in defaults.xml#>
-	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
+<#	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
@@ -439,7 +423,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-	[switch]$savedefaults,
+	[switch]$savedefaults,#>
 <# Specify if Machines should be Clustered, valid for Hyper-V and Blanknodes Scenario  #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
@@ -484,7 +468,7 @@ Machine Sizes
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-	[ValidateLength(1,63)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,63}[a-zA-Z0-9]+$")][string]$BuildDomain,
+	[ValidateLength(1,63)][ValidatePattern("^[a-zA-Z0-9][a-zA-Z0-9-]{1,63}[a-zA-Z0-9]+$")][string]$BuildDomain = $labdefaults.BuildDomain,
 <# Turn this one on if you would like to install a Hypervisor inside a VM #>
 	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
 	[switch]$VTbit,
@@ -498,7 +482,7 @@ Machine Sizes
 	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
     [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
-	[switch]$NMM,
+	[switch]$NMM = ([System.Convert]::ToBoolean($labdefaults.NMM)),
     <#
 Version Of Networker Modules
     'nmm9201',#-#    
@@ -534,7 +518,7 @@ Version Of Networker Modules
     'nmm8218','nmm8217','nmm8216','nmm8214','nmm8212','nmm8210',
     'nmmunknown'
     )]
-    $nmm_ver,
+    $nmm_ver = $labdefaults.nmm_ver,
 <# Indicates to install Networker Server with Scenario #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
@@ -616,7 +600,7 @@ Version Of Networker Server / Client to be installed
     'nw8007','nw8006','nw8005','nw81004','nw8003','nw8002','nw8000',
     'nwunknown'
     )]
-    $nw_ver,
+    $nw_ver = $labdefaults.nw_ver,
 ### network Parameters ######
 <# Disable Domainchecks for running DC
 This should be used in Distributed scenario´s
@@ -637,7 +621,7 @@ This should be used in Distributed scenario´s
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint", Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-    [switch]$NoDomainCheck,
+    [switch]$NoDomainCheck = ([System.Convert]::ToBoolean($labdefaults.NoDomainCheck)),
 <# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
@@ -654,7 +638,8 @@ This should be used in Distributed scenario´s
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-	[Validatepattern(‘(?<Address>((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))’)]$MySubnet,
+    [Validatepattern(‘(?<Address>((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))’)]
+    $MySubnet = $labdefaults.MySubnet,
 <# Specify your IP Addressfamilie/s
 Valid values 'IPv4','IPv6','IPv4IPv6'
 #>
@@ -674,7 +659,8 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-	[Validateset('IPv4','IPv6','IPv4IPv6')]$AddressFamily,
+    [Validateset('IPv4','IPv6','IPv4IPv6')]
+    $AddressFamily = $labdefaults.Addressfamily,
 <# Specify your IPv6 ULA Prefix, consider https://www.sixxs.net/tools/grh/ula/  #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
@@ -692,7 +678,8 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
     [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-    [ValidateScript({$_ -match [IPAddress]$_ })]$IPV6Prefix,
+    [ValidateScript({$_ -match [IPAddress]$_ })]
+    $IPV6Prefix = $Labdefaults.IPv6Prefix,
 <# Specify your IPv6 ULA Prefix Length, #>
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
@@ -711,7 +698,7 @@ Valid values 'IPv4','IPv6','IPv4IPv6'
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
-    $IPv6PrefixLength,
+    $IPv6PrefixLength = $labdefaults.IPv6Prefixlength,
 <#
 Specify the Path to your Sources
 Example[Driveletter]:\Sources, eg. USB Device, local drive c
@@ -734,7 +721,7 @@ Sources should be populated from a bases sources.zip
     [Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-    [String]$Sourcedir,
+    [String]$Sourcedir = $labdefaults.Sourcedir,
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
 	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
@@ -817,7 +804,6 @@ Sources should be populated from a bases sources.zip
 ###################################################
 [string]$Myself_ps1 = $MyInvocation.MyCommand
 $myself = $Myself_ps1.TrimEnd(".ps1")
-#$AddressFamily = 'IPv4'
 $IPv4PrefixLength = '24'
 $Builddir = $PSScriptRoot
 $local_culture = Get-Culture
@@ -900,17 +886,17 @@ catch
 $custom_domainsuffix = "local"
 $AAGDB = "AWORKS"
 $major = "2017"
-$Edition = "Midsummer"
+$Edition = "Autunum VMworld2017 Edition"
 $Default_attachement = "https://www.emc.com/collateral/solution-overview/h12476-so-hybrid-cloud.pdf"
 $Default_vmnet = "vmnet2"
 $Default_BuildDomain = "labbuildr"
-$Default_Subnet = "192.168.2.0"
-$Default_IPv6Prefix = "FD00::"
+#$Default_Subnet = "192.168.2.0"
+#$Default_IPv6Prefix = "FD00::"
 $Default_IPv6PrefixLength = '8'
-$Default_AddressFamily = "IPv4"
+#$Default_AddressFamily = "IPv4"
 $latest_ScaleIOVer = '2.0-13000.211'
-$ScaleIO_OS = "Windows"
-$ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
+#$ScaleIO_OS = "Windows"
+#$ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
 $latest_nmm = 'nmm9113'
 $latest_nw = 'nw9113'
 $latest_e16_cu = 'cu6'
@@ -920,17 +906,17 @@ $latest_e14_ur = 'ur17'
 $latest_sqlver  = 'SQL2016_ISO'
 $latest_master = '2012R2FallUpdate'
 $Latest_2016 = '2016'
-$latest_sql_2012 = 'SQL2012_ISO'
-$NW85_requiredJava = "jre-7u61-windows-x64"
+#$latest_sql_2012 = 'SQL2012_ISO'
+#$NW85_requiredJava = "jre-7u61-windows-x64"
 $Adminuser = "Administrator"
 $Adminpassword = "Password123!"
-$WAIKVER = "WAIK_10_1607"
+#$WAIKVER = "WAIK_10_1607"
 $DCNODE = "DCNODE"
 $NWNODE = "NWSERVER"
-$SPver = "SP2013SP1fndtn"
+#$SPver = "SP2013SP1fndtn"
 $Sleep = 10
 [string]$Sources = "Sources"
-$Sourcedirdefault = "c:\$Sources"
+#$Sourcedirdefault = "c:\$Sources"
 [string]$Scripts = "labbuildr-scripts"
 $Buildname = Split-Path -Leaf $Builddir
 $Scenarioname = "default"
@@ -939,7 +925,7 @@ $AddonFeatures = ("RSAT-ADDS", "RSAT-ADDS-TOOLS", "AS-HTTP-Activation", "NET-Fra
 $Gatewayhost = "11"
 $Default_Host_ScriptDir = Join-Path $Builddir $Scripts
 $DC_Scriptdir = Join-Path $Default_Host_ScriptDir "dcnode"
-$DCNode_VMX = Join-Path $Builddir (Join-Path $DCNODE "$DCNODE.vmx")
+#$DCNode_VMX = Join-Path $Builddir (Join-Path $DCNODE "$DCNODE.vmx")
 $IN_Guest_UNC_Scriptroot = "\\vmware-host\Shared Folders\Scripts"
 $IN_Guest_UNC_Sourcepath = "\\vmware-host\Shared Folders\Sources"
 $IN_Guest_UNC_NodeScriptDir = "$IN_Guest_UNC_Scriptroot\Node"
@@ -966,7 +952,7 @@ function convert-iptosubnet
 function get-update
 {
 	param ([string]$UpdateSource, [string] $Updatedestination)
-	$Origin = $MyInvocation.MyCommand
+	#$Origin = $MyInvocation.MyCommand
 	$update = New-Object System.Net.WebClient
 	$update.DownloadFile($Updatesource, $Updatedestination)
 }
@@ -982,7 +968,7 @@ function update-fromGit
             [switch]$delete
             )
 		$AuthHeaders = @{'Authorization' = "token b64154d0de42396ebd72b9f53ec863f2234f6997"}
-		if ($Global:vmxtoolkit_type -eq "win_x86_64" )
+		if ($Global:vmxtoolkit_type -in ("win_x86_64","LINUX"))
 			{
 			$branch =  $branch.ToLower()
 			$Isnew = $false
@@ -991,11 +977,12 @@ function update-fromGit
 			$Zip = ("https://github.com/$RepoLocation/$repo/archive/$branch.zip").ToLower()
 			$local_culture = Get-Culture
 			$git_Culture = New-Object System.Globalization.CultureInfo 'en-US'
-			if ($Global:vmxtoolkit_type -eq "win_x86_64" )
-				{
+			#if ($Global:vmxtoolkit_type -in ("win_x86_64","LINUX") )
+			#	{
 				try
 					{
-					$request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head -ErrorAction Stop -Headers $AuthHeaders
+                    $request = Invoke-RestMethod -UseBasicParsing -Uri $Uri -Method Get -Headers $AuthHeaders -ContentType "application/json" -ErrorAction Stop  
+					#$request = Invoke-WebRequest -UseBasicParsing -Uri $Uri -Method Head -ErrorAction Stop -Headers $AuthHeaders
 					}
 				Catch
 					{
@@ -1007,9 +994,10 @@ function update-fromGit
 					exit
 					}
 				
-				$latest_OnGit =  $request.Headers.'Last-Modified'
-				#Write-Host $latest_OnGit
-				}
+				$latest_OnGit =  $request.commit.author.date
+				Write-host "Got date $($request.commit.author.date)"
+                #Write-Host $latest_OnGit
+			#	}
 			##else
 		#		{
 		#		$request = curl -D - $Uri | grep Last-Modified
@@ -1025,7 +1013,7 @@ function update-fromGit
 						{
 						$newDir = New-Item -ItemType Directory -Path "$Updatepath" | out-null
 						}
-				Write-Host -ForegroundColor Gray " ==>we found a newer Version for $repo on Git Dated $($request.Headers.'Last-Modified')"
+				Write-Host -ForegroundColor Gray " ==>we found a newer Version for $repo on Git Dated $latest_OnGit"
 				if ($delete.IsPresent)
 					{
 					Write-Host -ForegroundColor Gray "==>cleaning $Destination"
@@ -1033,16 +1021,18 @@ function update-fromGit
 					}
 				if ($Global:vmxtoolkit_type -eq "win_x86_64")
 					{
-					Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Builddir/update/$repo-$branch.zip" -ignoresize
-					Expand-LABZip -zipfilename "$Builddir/update/$repo-$branch.zip" -destination $Destination -Folder $repo-$branch/$repo
+					Get-LABHttpFile -SourceURL $Zip -TarGetFile "$Updatepath\$repo-$branch.zip" -ignoresize
+					Expand-LABZip -zipfilename "$Updatepath\$repo-$branch.zip" -destination $Destination -Folder "$repo-$branch\$repo"
 					}
 				else
 					{
-					Receive-LABBitsFile -DownLoadUrl $Zip -destination "$Builddir/update/$repo-$branch.zip"
-					Expand-LABpackage -Archive "$Builddir/update/$repo-$branch.zip" -filepattern $Repo-$branch -destination $Destination
-					}
+					Receive-LABBitsFile -DownLoadUrl $Zip -destination "$Updatepath/$repo-$branch.zip"
+					Expand-LABpackage -Archive "$UpdatePath/$repo-$branch.zip" -filepattern $Repo-$branch/$repo -destination "./expand" -Force 
+					New-Item -ItemType Directory $Destination -Force | Out-Null
+                    Move-Item -Path "./expand/$repo-$branch/$repo/*" -Destination $Destination -Force -Confirm:$false # -recurse
+                    } 
 				$Isnew = $true
-				$latest_OnGit | Set-Content (join-path $Builddir "$repo-$branch.gitver")
+				Get-Date $latest_OnGit | Set-Content (join-path $Builddir "$repo-$branch.gitver")
 				}
 			else
 				{
@@ -1139,13 +1129,13 @@ function domainjoin
 		foreach ($i in (1..$sleep)) 
 			{
 			Write-Host -ForegroundColor Yellow "-`b" -NoNewline
-			sleep 1
+			Start-Sleep -Seconds 1
 			Write-Host -ForegroundColor Yellow "\`b" -NoNewline
-			sleep 1
+			Start-Sleep -Seconds 1
 			Write-Host -ForegroundColor Yellow "|`b" -NoNewline
-			sleep 1
+			Start-Sleep -Seconds 1
 			Write-Host -ForegroundColor Yellow "/`b" -NoNewline
-			sleep 1
+			Start-Sleep -Seconds 1
 			}
 		}
     Write-Host -ForegroundColor Green "[Done]"
@@ -1246,13 +1236,13 @@ function test-user
 		foreach ($i in (1..$sleep))
 			{
 			Write-Host -ForegroundColor Yellow "-`b" -NoNewline
-			sleep 1
+			Start-Sleep -Seconds 1
 			Write-Host -ForegroundColor Yellow "\`b" -NoNewline
-			sleep 1
+			Start-Sleep -Seconds 1
 			Write-Host -ForegroundColor Yellow "|`b" -NoNewline
-			sleep 1
+			Start-Sleep -Seconds 1
 			Write-Host -ForegroundColor Yellow "/`b" -NoNewline
-			sleep 1
+			Start-Sleep -Seconds 1
 			}
 	}
 until ($cmdresult -match $whois) 
@@ -1326,13 +1316,13 @@ function checkpoint-progress
 			foreach ($i in (1..$sleep))
 				{
 				Write-Host -ForegroundColor Yellow "-`b" -NoNewline
-				sleep 1
+				Start-Sleep -Seconds 1
 				Write-Host -ForegroundColor Yellow "\`b" -NoNewline
-				sleep 1
+				Start-Sleep -Seconds 1
 				Write-Host -ForegroundColor Yellow "|`b" -NoNewline
-				sleep 1
+				Start-Sleep -Seconds 1
 				Write-Host -ForegroundColor Yellow "/`b" -NoNewline
-				sleep 1
+				Start-Sleep -Seconds 1
 				}
 			}
 		write-host -ForegroundColor Green "[reached]"
@@ -1396,9 +1386,12 @@ switch ($PsCmdlet.ParameterSetName)
         $ReloadProfile = $False
         $Repo = $my_repo
         $RepoLocation = "bottkars"
-		[datetime]$latest_local_git =  [datetime]::parse($Latest_labbuildr_git, $git_Culture)
+		#[datetime]$latest_local_git =  [datetime]::parse($Latest_labbuildr_git, $git_Culture)
+        $latest_local_git = Get-Date $Latest_labbuildr_git
         $Destination = "$Builddir"
-        $Has_update = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination
+        Write-Verbose $latest_local_git
+        $Has_update = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -verbose
+        $Has_update
         if (Test-Path (join-path $Builddir "deletefiles.txt"))
 		    {
 			$deletefiles = get-content (join-path $Builddir "deletefiles.txt")
@@ -1430,23 +1423,23 @@ switch ($PsCmdlet.ParameterSetName)
         $RepoLocation = "bottkars"
         try
             {
-            $latest_local_file = Get-Content  (Join-Path $Builddir "$($Repo)-$branch.gitver") -ErrorAction SilentlyContinue
+            $latest_local_file = Get-Content (Join-Path $Builddir "$($Repo)-$branch.gitver") -ErrorAction SilentlyContinue
 			$latest_local_git =  get-date $latest_local_file
             }
         catch
             {}
         #$Latest_local_git = $Latest_$($repo)_git
-        $Destination = "$Builddir\$Repo"
+        $Destination = Join-Path $Builddir $Repo
         if ($Has_update = update-fromGit -Repo $Repo -RepoLocation $RepoLocation -branch $branch -latest_local_Git $Latest_local_git -Destination $Destination -delete)
             {
             $ReloadProfile = $True
             }
         }
         ####
-        $Branch | Set-Content -Path "$Builddir\labbuildr.branch" -Force # -Verbose
+        $Branch | Set-Content -Path "$Builddir/labbuildr.branch" -Force # -Verbose
         if ($ReloadProfile)
             {
-            Remove-Item .\Update -Recurse -Confirm:$false
+            Remove-Item ./Update -Recurse -Confirm:$false
 			Write-Host -ForegroundColor White  " ==>Update Done"
             Write-Host -ForegroundColor White  " ==>press any key for reloading Modules"
             pause
@@ -1461,10 +1454,17 @@ switch ($PsCmdlet.ParameterSetName)
     }# end Updatefromgit
     "Shortcut"
         {
-				Write-Host -ForegroundColor White  "creating desktop Shortcut for $Buildname"
-				createshortcut
-                return
-    }# end shortcut
+            if ($Global:vmxtoolkit_type -match "win_x86_64")
+                {
+                Write-Host -ForegroundColor White  "creating desktop Shortcut for $Buildname"
+                createshortcut
+                }
+            else 
+                {
+                Write-Host "function only available on windows"
+                }    
+            return
+        }# end shortcut
     "Version"
         {
 				Write-Host -ForegroundColor Magenta -NoNewline "$my_repo version $major-$Edition on branch : "
@@ -1472,7 +1472,7 @@ switch ($PsCmdlet.ParameterSetName)
                 If ($branch -ne "master")
                     {
                     Write-Warning "you are on $branch, considered experimental
-==>recommended action is running '.\build-lab.ps1 -update -branch master -force'"
+==>recommended action is running './build-lab.ps1 -update -branch master -force'"
 Write-Host
                     }
                 if ($Latest_labbuildr_git)
@@ -1508,12 +1508,11 @@ Write-Host
 if (!(test-path (Join-path $builddir $scripts )))
 	{
 	Write-Warning "labbuildr changed the scriptdir to $Scripts. we can not find scripts $Scripts, please run
-	 .\build-lab.ps1 -update -force"
+	 ./build-lab.ps1 -update -force"
 	Break
 	}
 
 #################### default Parameter Section Start
-write-verbose "Config pre defaults"
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
     {
     write-output $PSCmdlet.MyInvocation.BoundParameters
@@ -1523,16 +1522,18 @@ if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
 [switch]$lab_MainMemUseFile = $false
 if ($defaults.IsPresent)
     {
-    if (Test-Path $Builddir\defaults.xml)
+    Deny-LabDefaults
+    return     <#
+    if (Test-Path $Builddir/defaults.xml)
         {
-        Write-Host -ForegroundColor White " ==>loading defaults from $Builddir\defaults.xml"
+        Write-Host -ForegroundColor White " ==>loading defaults from $Builddir/defaults.xml"
         $LabDefaults = Get-LABDefaults
         }
        if (!($LabDefaults))
             {
             try
                 {
-                $LabDefaults = Get-labDefaults -Defaultsfile ".\defaults.xml.example"
+                $LabDefaults = Get-labDefaults -Defaultsfile "./defaults.xml.example"
                 }
             catch
                 {
@@ -1793,7 +1794,7 @@ if ($defaults.IsPresent)
 			[switch]$lab_MainMemUseFile = $true
 			}
 		
-    }
+    #>}
 if (!$MySubnet) {$MySubnet = "192.168.2.0"}
 $IPv4Subnet = convert-iptosubnet $MySubnet
 if (!$BuildDomain) { $BuildDomain = $Default_BuildDomain }
@@ -1833,17 +1834,6 @@ else
 	$LanguageTag = "en-US"
 	}
 $DCMaster = $Master
-write-verbose "After defaults !!!! "
-Write-Verbose "Sourcedir : $Sourcedir"
-Write-Verbose "SMBSourcedir : $($LabDefaults.SMBSourcedir)"
-Write-Verbose "NWVER : $nw_ver"
-Write-Verbose "Gateway : $($Gateway.IsPresent)"
-Write-Verbose "NMM : $($nmm.IsPresent)"
-Write-Verbose "MySubnet : $MySubnet"
-Write-Verbose "ScaleIOVer : $ScaleIOVer"
-Write-Verbose "Masterpath : $Masterpath"
-Write-Verbose "Master : $Master"
-Write-Verbose "Defaults before Safe:"
 If ($DefaultGateway -match "$IPv4Subnet.$Gatewayhost")
     {
     $gateway = $true
@@ -1852,21 +1842,63 @@ If ($Gateway.IsPresent)
             {
             $DefaultGateway = "$IPv4Subnet.$Gatewayhost"
             }
-if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
-    {
-    if (Test-Path $Builddir\defaults.xml)
-        {
-        Get-Content $Builddir\defaults.xml | Write-Host -ForegroundColor Gray
-        }
-    }
 #### do we have unset parameters ?
 if (!$AddressFamily){$AddressFamily = "IPv4" }
 
 ###################################################
+
+
+if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
+{
+$builtinParameters = @("ErrorAction","WarningAction","Verbose","ErrorVariable","WarningVariable","OutVariable","OutBuffer","Debug")
+$totalParameterCount = $($MyInvocation.MyCommand.Parameters.count)
+$parameterCount = 0 
+($MyInvocation.MyCommand.Parameters ).Keys | ForEach-Object {
+    if ( $builtinParameters -notcontains $_ ) 
+        {
+        $parameterCount++
+        }
+    }
+    $boundParameters = @()
+    Write-Host -ForegroundColor Yellow "$parameterCount parameters defined param statement"
+    Write-Host -ForegroundColor Yellow "$($MyInvocation.BoundParameters.count) parameters are provided on the cmdline:"
+    $MyInvocation.BoundParameters.keys | ForEach-Object {
+    Write-Host "'$($_)' = '$($PSBoundParameters.Item($_))'"
+    $boundParameters+=$_
+}
+Write-Host -ForegroundColor Yellow "These parameters have been configured with default values:"
+$parametersToIgnore = $builtinParameters + $boundParameters
+
+($MyInvocation.MyCommand.Parameters ).Keys | ForEach-Object {
+if ( $boundParameters -notcontains $_ ) 
+    {
+    $val = (Get-Variable -Name $_ -EA SilentlyContinue).Value
+    if( $val.length -gt 0 ) 
+        {
+        "'$($_)' = '$($val)'"
+        }
+    }
+}
+ Write-Host -ForegroundColor Yellow "Parameters with no Value:"
+($MyInvocation.MyCommand.Parameters ).Keys | ForEach-Object {
+    if ( $parametersToIgnore -notcontains $_ ) {
+    $val = (Get-Variable -Name $_ -EA SilentlyContinue).Value
+    if( $val.length -eq 0 )
+        {
+        "'$($_)'"
+        }
+    }
+}
+   pause
+}
+
+
 if ($savedefaults.IsPresent)
 {
-$defaultsfile = New-Item -ItemType file $Builddir\defaults.xml -Force
-Write-Host -ForegroundColor White  "saving defaults to $Builddir\defaults.xml"
+    Deny-LabDefaults
+<#    
+$defaultsfile = New-Item -ItemType file $Builddir/defaults.xml -Force
+Write-Host -ForegroundColor White  "saving defaults to $Builddir/defaults.xml"
 $config =@()
 		$config += ("<!--
       Warning ! DO NOT EDIT THIS FILE !!!!!!!!!!!!!!!
@@ -1912,12 +1944,9 @@ $config =@()
         $config += ("<MainMemUseFile>$($LabDefaults.MainMemUseFile)</MainMemUseFile>")
         $config += ("</config>")
 $config | Set-Content $defaultsfile
+#>
 }
-if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent -and $savedefaults.IsPresent )
-    {
-    Write-Verbose  "Defaults after Save"
-    Get-Content $Builddir\defaults.xml | Write-Host -ForegroundColor Magenta
-    }
+
 ####### Master Check
 if (!$Sourcedir -and !$USE_SOURCES_ON_SMB.IsPresent)
     {
@@ -1982,7 +2011,7 @@ else
 	}	   
 if (!$Master)
     {
-    Write-Warning "No Master was specified. See get-help .\labbuildr.ps1 -Parameter Master !!"
+    Write-Warning "No Master was specified. See get-help $myself -Parameter Master !!"
     Write-Host -ForegroundColor Gray " ==>Load masters from $UpdateUri"
     break
     } # end Master
@@ -2875,7 +2904,7 @@ else
 			Pause
 			}
 		Set-LABDNS1 -DNS1 "$IPv4Subnet.10"
-		$CloneOK = Invoke-Expression "$Builddir\Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 0 -Builddir $Builddir -Mastervmx $DC_MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Size 'L' -Sourcedir $Sourcedir -MainMemUseFile:$($lab_MainMemUseFile)"
+		$CloneOK = Invoke-Expression "$Builddir/Clone-Node.ps1 -Scenario $Scenario -Scenarioname $Scenarioname -Activationpreference 0 -Builddir $Builddir -Mastervmx $DC_MasterVMX -Nodename $Nodename -Clonevmx $CloneVMX -vmnet $VMnet -Domainname $BuildDomain -Size 'L' -Sourcedir $Sourcedir -MainMemUseFile:$($lab_MainMemUseFile)"
 		###################################################
 		#
 		# DC Setup
@@ -2896,13 +2925,13 @@ else
 					foreach ($i in (1..$sleep))
 						{
 						Write-Host -ForegroundColor Yellow "-`b" -NoNewline
-						sleep 1
+						Start-Sleep -Seconds 1
 						Write-Host -ForegroundColor Yellow "\`b" -NoNewline
-						sleep 1
+						Start-Sleep -Seconds 1
 						Write-Host -ForegroundColor Yellow "|`b" -NoNewline
-						sleep 1
+						Start-Sleep -Seconds 1
 						Write-Host -ForegroundColor Yellow "/`b" -NoNewline
-						sleep 1
+						Start-Sleep -Seconds 1
 						}
 					}
 				}
@@ -2914,13 +2943,13 @@ else
 					foreach ($i in (1..$sleep))
 						{
 						Write-Host -ForegroundColor Yellow "-`b" -NoNewline
-						sleep 1
+						Start-Sleep -Seconds 1
 						Write-Host -ForegroundColor Yellow "\`b" -NoNewline
-						sleep 1
+						Start-Sleep -Seconds 1
 						Write-Host -ForegroundColor Yellow "|`b" -NoNewline
-						sleep 1
+						Start-Sleep -Seconds 1
 						Write-Host -ForegroundColor Yellow "/`b" -NoNewline
-						sleep 1
+						Start-Sleep -Seconds 1
 						}
 					}
 				}
@@ -2938,13 +2967,13 @@ else
 					foreach ($i in (1..$sleep))
 						{
 						Write-Host -ForegroundColor Yellow "-`b" -NoNewline
-						sleep 1
+						Start-Sleep -Seconds 1
 						Write-Host -ForegroundColor Yellow "\`b" -NoNewline
-						sleep 1
+						Start-Sleep -Seconds 1
 						Write-Host -ForegroundColor Yellow "|`b" -NoNewline
-						sleep 1
+						Start-Sleep -Seconds 1
 						Write-Host -ForegroundColor Yellow "/`b" -NoNewline
-						sleep 1
+						Start-Sleep -Seconds 1
 						}
 				}
 			write-host -ForegroundColor Green "[finished]"
@@ -3172,7 +3201,7 @@ switch ($PsCmdlet.ParameterSetName)
             #$EXSetupStart = Get-Date
 			While ($FileOK = (&$vmrun -gu $BuildDomain\Administrator -gp Password123! fileExistsInGuest $CloneVMX "$IN_Guest_LogDir\exchange.pass") -ne "The file exists.")
 				{
-				sleep $Sleep
+				Start-Sleep -Seconds $Sleep
 				} #end while
 			Write-Host
             do {
@@ -3299,7 +3328,7 @@ switch ($PsCmdlet.ParameterSetName)
         #$EXSetupStart = Get-Date
 			While ($FileOK = (&$vmrun -gu $BuildDomain\Administrator -gp Password123! fileExistsInGuest $CloneVMX $IN_Guest_LogDir\exchange.pass) -ne "The file exists.")
 			{
-				sleep $Sleep
+				Start-Sleep -Seconds $Sleep
 			} #end while
 			Write-Host
                 do {
@@ -3402,7 +3431,7 @@ switch ($PsCmdlet.ParameterSetName)
         Write-Verbose "IPv6PrefixLength = $IPv6PrefixLength"
         Write-Verbose "Addressfamily = $AddressFamily"
         Write-Verbose "EXAddressFamiliy = $EXAddressFamiliy"
-		Write-Verbose "Echxnge CU = $e16_cu"
+		Write-Verbose "Exchange CU = $e16_cu"
 		Write-Verbose "Net Framework $NET_VER"
 		Write-Verbose "Master $Master"
         if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
@@ -3432,8 +3461,14 @@ switch ($PsCmdlet.ParameterSetName)
 			#if ($iSCSI.IsPresent)
 			#	{
 			#	$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script enable-labiscsi.ps1 -Parameter "-Target_IP $IPv4Subnet.$iSCSI_TARGET" -interactive
-			#	}
+            #	}
+            If ($E16_REQUIRED_KB)
+            {
 			$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchangeprereqs.ps1 -interactive -Parameter "-NET_VER $NET_VER -KB $E16_REQUIRED_KB -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter"
+            }
+            else {
+                $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-exchangeprereqs.ps1 -interactive -Parameter "-NET_VER $NET_VER -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter"
+            }
             checkpoint-progress -step exprereq -reboot -Guestuser $Adminuser -Guestpassword $Adminpassword
             If ($E16_REQUIRED_KB -ge 'KB4010672')
                 {
@@ -3475,13 +3510,13 @@ switch ($PsCmdlet.ParameterSetName)
 			foreach ($i in (1..$sleep))
 				{
 				Write-Host -ForegroundColor Yellow "-`b" -NoNewline
-				sleep 1
+				Start-Sleep -Seconds 1
 				Write-Host -ForegroundColor Yellow "\`b" -NoNewline
-				sleep 1
+				Start-Sleep -Seconds 1
 				Write-Host -ForegroundColor Yellow "|`b" -NoNewline
-				sleep 1
+				Start-Sleep -Seconds 1
 				Write-Host -ForegroundColor Yellow "/`b" -NoNewline
-				sleep 1
+				Start-Sleep -Seconds 1
 				}
 			} #end while
             Write-Host -ForegroundColor Green "[finished]"
@@ -4397,13 +4432,13 @@ if (($NW.IsPresent -and !$NoDomainCheck.IsPresent) -or $NWServer.IsPresent)
 			foreach ($i in (1..$sleep)) 
 				{
 				Write-Host -ForegroundColor Yellow "-`b" -NoNewline
-				sleep 1
+				Start-Sleep -Seconds 1
 				Write-Host -ForegroundColor Yellow "\`b" -NoNewline
-				sleep 1
+				Start-Sleep -Seconds 1
 				Write-Host -ForegroundColor Yellow "|`b" -NoNewline
-				sleep 1
+				Start-Sleep -Seconds 1
 				Write-Host -ForegroundColor Yellow "/`b" -NoNewline
-				sleep 1
+				Start-Sleep -Seconds 1
 				}
 			}
 		write-host -ForegroundColor Green "[started]"

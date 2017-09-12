@@ -240,7 +240,7 @@ pip-log.txt
 Gateway.txt
 sources.vhd
 version.labbuildr
-defaults.xml
+defaults.json
 diskpart.txt
 /ISI*
 /HVN*

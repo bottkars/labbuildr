@@ -29,7 +29,7 @@
     Importing the ovf template
 	.\install-esxiova.ps1 -import -nestedesx_ver ['Nested_ESXi6','Nested_ESXi5','Nested_ESXi6.5']
  .EXAMPLE
-    Install a esxiovaNode with defaults from defaults.xml
+    Install a esxiovaNode with defaults from defaults.json
    .\install-esxiova.ps1 -nestedesx_ver ['Nested_ESXi6','Nested_ESXi5','Nested_ESXi6.5']
 
 #>

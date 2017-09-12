@@ -1010,9 +1010,10 @@ subjects:`
 ",
 				"kubectl create -f /root/kube-dashboard-rbac.yml --kubeconfig /etc/kubernetes/admin.conf",
 				"kubectl create -f https://rawgit.com/kubernetes/dashboard/master/src/deploy/kubernetes-dashboard.yaml --kubeconfig /etc/kubernetes/admin.conf",
-				"kubectl create -f https://raw.githubusercontent.com/kubernetes/heapster/master/deploy/kube-config/standalone/heapster-controller.yaml --kubeconfig /etc/kubernetes/admin.conf",
-				"kubectl create -f https://raw.githubusercontent.com/kubernetes/heapster/master/deploy/kube-config/standalone/heapster-service.yaml --kubeconfig /etc/kubernetes/admin.conf"
+				"kubectl create -f https://raw.githubusercontent.com/kubernetes/heapster/master/deploy/kube-config/standalone/heapster-controller.yaml --kubeconfig /etc/kubernetes/admin.conf"
 )
+#				"kubectl create -f https://raw.githubusercontent.com/kubernetes/heapster/master/deploy/kube-config/standalone/heapster-service.yaml --kubeconfig /etc/kubernetes/admin.conf"
+
 	foreach ($Scriptblock in $Scriptlets)
 		{
 		Write-Verbose $Scriptblock

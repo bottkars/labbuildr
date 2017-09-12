@@ -41,7 +41,7 @@
     - ExtraConfig option 'sched.mem.pin' is not allowed, will skip it.
     Completed successfully
 .EXAMPLE
-    Install a DDVeNode with defaults from defaults.xml
+    Install a DDVeNode with defaults from defaults.json
     .\install-ddve.ps1 -MasterPath .\ddve-5.6.0.3-485123\ -Defaults
     WARNING: VM Path does currently not exist
     WARNING: Get-VMX : VM does currently not exist
@@ -78,7 +78,7 @@ _____ __|_________|_____|_________
 [Parameter(ParameterSetName = "defaults",Mandatory=$False)]
 [Parameter(ParameterSetName = "install",Mandatory=$False)][ValidateSet('0.5TB','2TB','4TB','8TB')][string]$DDVESize = "2TB",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$Defaults = $true,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.json",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$false)][int32]$Nodes=1,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
@@ -159,7 +159,8 @@ switch ($PsCmdlet.ParameterSetName)
                 {
                 try
                     {
-                    $labdefaults = Get-labDefaults -Defaultsfile ".\defaults.xml.example"
+                        New-LabDefaults    
+                        $labdefaults = Get-labDefaults
                     }
                 catch
                     {

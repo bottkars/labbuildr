@@ -29,7 +29,7 @@
     Importing the ovf template
 	.\install-vcsa.ps1 -ovf C:\Sourcesvmware-vcsa.ova
  .EXAMPLE
-    Install a VCSANode with defaults from defaults.xml
+    Install a VCSANode with defaults from defaults.json
    .\install-vcsa.ps1 -Mastername vmware-vcsa
 
 #>

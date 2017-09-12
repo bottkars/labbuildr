@@ -33,7 +33,7 @@ Param(
 <#Specify Single (4GB) or DualDatamove (6GB) being Used
 #>
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][switch]$Defaults,
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.json",
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]
 [Parameter(ParameterSetName = "install",Mandatory=$False)][switch]$DualDM,
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)]

@@ -21,7 +21,7 @@
    http://labbuildr.readthedocs.io/en/master/Solutionpacks///SolutionPacks#install-puppetmaster
 .EXAMPLE
 .\install-puppetmaster.ps1 -defaults
-this will install a Puppetmaster on CentOS7 using default Values derived from defaults.xml
+this will install a Puppetmaster on CentOS7 using default Values derived from defaults.json
 
 #>
 #
@@ -43,7 +43,7 @@ Param(
 [Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('vmnet1', 'vmnet2','vmnet3')]$vmnet = "vmnet2",
 [Parameter(ParameterSetName = "install",Mandatory = $false)][ValidateSet('puppetlabs-release-7-11', 'PuppetEnterprise')]$PuppetMaster = "puppetlabs-release-7-11",
 
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.json",
 [switch]$download
 )
 #requires -version 3.0

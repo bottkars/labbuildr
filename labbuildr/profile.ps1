@@ -10,13 +10,17 @@ $size.width=120
 $size.height=36
 $Userinterface.WindowSize = $size
 #>
+param(
+    $defaultsfile = "./defaults.json",
+    [switch]$noopenwrt
+)
 if ($vmxtoolkit_type -eq "win_x86_64")
 	{
 	$labbuildr_home = $env:USERPROFILE
 	}
 else
 	{
-	$labbuildr_home = $home
+	$labbuildr_home = $HOME
 	}
 clear-host
 $self  = Get-Location
@@ -44,18 +48,26 @@ catch
 
 try
     {
-    Get-ChildItem .\defaults.xml -ErrorAction Stop | Out-Null
+    Get-ChildItem $defaultsfile -ErrorAction Stop | Out-Null
     }
 catch
     [System.Management.Automation.ItemNotFoundException]
     {
-    Write-Host -ForegroundColor Yellow "no defaults.xml found, using labbuildr default settings"
-    Copy-Item .\defaults.xml.example .\defaults.xml
+    Write-Host -ForegroundColor Yellow "no defaults.json found, using labbuildr default settings"
+    New-LABdefaults -Defaultsfile $defaultsfile
 	$Master_path = Join-Path $labbuildr_home "Master.labbuildr"
     Set-LABMasterpath -Masterpath (Join-Path $labbuildr_home "Master.labbuildr").tostring() | Out-Null
 	Set-LABSources -Sourcedir (Join-Path $labbuildr_home "Sources.labbuildr").tostring() | Out-Null
     }
 $global:labdefaults = Get-LABDefaults
+if (!$global:labdefaults.Masterpath)
+    {
+    Set-LABMasterpath -Masterpath (Join-Path $labbuildr_home "Master.labbuildr").tostring() | Out-Null
+    }
+if (!$global:labdefaults.Sourcedir)
+    {
+    Set-LABSources -Sourcedir (Join-Path $labbuildr_home "Sources.labbuildr").tostring() | Out-Null
+    }    
 if ($global:labdefaults.SQLVER -notmatch 'ISO')
 	{
 	Set-LABSQLver -SQLVER SQL2014SP2_ISO | Out-Null
@@ -68,10 +80,12 @@ If (!$global:labdefaults.Sourcedir)
     {	
 	Set-LABSources -Sourcedir (Join-Path $labbuildr_home "Sources.labbuildr").tostring()  | out-null
     }
+If (!$global:labdefaults.NoDomainCheck)
+    {	
+	Set-LABNoDomainCheck -enabled:$false  | out-null
+    }
 
 
-$buildlab = (join-path $self "build-lab.ps1")
-.$buildlab
 <#write-host -ForegroundColor Yellow "Running VMware $vmwareversion"
 if (!(Test-Connection community.emc.com -Quiet -Count 2 -ErrorAction SilentlyContinue))
     {
@@ -94,6 +108,10 @@ if (!$global:labdefaults.timezone)
     {
     Set-Labtimezone  | out-null
     }
+if ($noopenwrt.IsPresent)
+    {
+        Set-LABOpenWRT -enabled:$false
+    }
 if ($global:labdefaults.openwrt -eq "false")
 	{
 	Write-Host -ForegroundColor Yellow "==> Running labbuildr without OpenWRT, know what you do !"
@@ -112,5 +130,7 @@ else
 			}
 		}
 	}
+$buildlab = (join-path $self "build-lab.ps1")
+.$buildlab    
 Set-LabUI
 Get-VMX

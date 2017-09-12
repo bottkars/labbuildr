@@ -35,7 +35,7 @@ Param(
 )]
 
 $nve_ver = '9.1.0.4',
-[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.xml",
+[Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.json",
 [Parameter(ParameterSetName = "defaults",Mandatory = $false)]
 [ValidateRange(1,2)]
 [int32]$Nodes=1
