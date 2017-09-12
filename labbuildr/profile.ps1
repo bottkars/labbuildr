@@ -55,10 +55,10 @@ catch
     {
     Write-Host -ForegroundColor Yellow "no defaults.json found, using labbuildr default settings"
     New-LABdefaults -Defaultsfile $defaultsfile
-    $Master_path = Join-Path $labbuildr_home "Master.labbuildr"
-    $Source_path = Join-Path $labbuildr_home "Sources.labbuildr"
-    Set-LABMasterpath -Masterpath $Master_path.tostring() #| Out-Null
-    Set-LABSources -Sourcedir $Source_path.tostring() #| Out-Null
+#    $Master_path = Join-Path $labbuildr_home "Master.labbuildr"
+#    $Source_path = Join-Path $labbuildr_home "Sources.labbuildr"
+#    Set-LABMasterpath -Masterpath $Master_path.tostring() #| Out-Null
+#    Set-LABSources -Sourcedir $Source_path.tostring() #| Out-Null
     }
 $global:labdefaults = Get-LABDefaults
 if (!$global:labdefaults.Masterpath)
