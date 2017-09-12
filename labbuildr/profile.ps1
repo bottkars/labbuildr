@@ -86,7 +86,6 @@ If (!$global:labdefaults.NoDomainCheck)
 	Set-LABNoDomainCheck -enabled:$false  | out-null
     }
 
-
 <#write-host -ForegroundColor Yellow "Running VMware $vmwareversion"
 if (!(Test-Connection community.emc.com -Quiet -Count 2 -ErrorAction SilentlyContinue))
     {
