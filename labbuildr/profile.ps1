@@ -75,11 +75,13 @@ if ($global:labdefaults.SQLVER -notmatch 'ISO')
     }
 If (!$global:labdefaults.Masterpath)
     {	
-    Set-LABMasterpath -Masterpath (Join-Path $labbuildr_home "Master.labbuildr").tostring() | out-null
+    $Master_path = Join-Path $labbuildr_home "Master.labbuildr"
+    Set-LABMasterpath -Masterpath $Master_path.tostring() #| Out-null
     }
 If (!$global:labdefaults.Sourcedir)
-    {	
-	Set-LABSources -Sourcedir (Join-Path $labbuildr_home "Sources.labbuildr").tostring()  | out-null
+    {
+    $Source_path = Join-Path $labbuildr_home "Sources.labbuildr"
+    Set-LABSources -Sourcedir $Source_path.tostring() #| Out-Null
     }
 If (!$global:labdefaults.NoDomainCheck)
     {	
