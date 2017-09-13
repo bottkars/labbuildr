@@ -94,12 +94,24 @@ switch ($nve_ver)
 	{
 		'9.1.0.4'
 		{
-		$Product_tag = 'NVE-9.1.0.166'
+		$Product_tag = '9.1.0.166'
 		}
 		'9.1.0.3'
 		{
-		$Product_tag = 'NVE-9.1.0.132'
+		$Product_tag = '9.1.0.132'
 		}
+		'9.1.1.1'
+		{
+		$Product_tag = '9.1.1.107'
+		}
+		'9.1.1.2'
+		{
+		$Product_tag = '9.1.1.129'
+		}		
+		'9.1.1.3'
+		{
+		$Product_tag = '9.1.1.188'
+		}		
 	}
 
 switch ($PsCmdlet.ParameterSetName)
@@ -121,7 +133,7 @@ switch ($PsCmdlet.ParameterSetName)
             $OVA_File = Get-ChildItem -Path "$Sourcedir\$Product" -Recurse -include "$Product_tag.ova" -Exclude ".*" | Sort-Object -Descending | Select-Object -First 1
             if (!$OVA_File)
 				{
-				Write-Host "Could not find ova with pattern NVE-$Product_tag.ova in $Sourcedir\$Product"
+				Write-Host "Could not find ova with pattern *$Product_tag.ova in $Sourcedir\$Product"
 				Return
 				}
 			Write-Host -ForegroundColor Magenta " ==>Extraxting from OVA Package $OVA_File"
