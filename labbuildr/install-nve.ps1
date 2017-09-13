@@ -129,7 +129,7 @@ switch ($PsCmdlet.ParameterSetName)
             {
             Write-host -ForegroundColor Gray " ==> OVF does not exist, we need to extract from OVA" 
             Write-Host -ForegroundColor Gray " ==> Checking for $Product OVA package"
-            Receive-LABNetworker -nve -nve_ver $nve_ver -Destination "$Sourcedir" -Confirm:$false
+            Receive-LABNetworker -nve -nve_ver $nve_ver -Destination "$Sourcedir" -Confirm:$false -verbose
             $OVA_File = Get-ChildItem -Path "$Sourcedir" -Recurse "*$Product_tag.ova "-Exclude ".*" | Sort-Object -Descending | Select-Object -First 1
             if (!$OVA_File)
 				{
