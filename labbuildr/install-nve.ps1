@@ -237,7 +237,7 @@ switch ($PsCmdlet.ParameterSetName)
 
 		if (!($MasterVMX = Get-VMX -Path "$masterpath/*$($Product_tag)"))
 			{
-			Write-Host -ForegroundColor White "No Master exists for $Product_tag"
+			Write-Host -ForegroundColor White "No Master exists for $Masterpath $Product_tag"
 			return
 			}
 
