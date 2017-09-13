@@ -35,7 +35,7 @@ Param(
 	'9.0.1.1','9.0.1.2','9.0.1.3','9.0.1.4','9.0.1.5','9.0.1.6' #-#
 )]
 
-$nve_ver = '9.1.0.4',
+$nve_ver = '9.1.1.3',
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.json",
 [Parameter(ParameterSetName = "defaults",Mandatory = $false)]
 [ValidateRange(1,2)]
