@@ -102,15 +102,15 @@ switch ($nve_ver)
 		}
 		'9.1.1.1'
 		{
-		$Product_tag = '9.1.1.107'
+		$Product_tag = '9.1.1-107'
 		}
 		'9.1.1.2'
 		{
-		$Product_tag = '9.1.1.129'
+		$Product_tag = '9.1.1-129'
 		}		
 		'9.1.1.3'
 		{
-		$Product_tag = '9.1.1.188'
+		$Product_tag = '9.1.1-188'
 		}		
 	}
 
