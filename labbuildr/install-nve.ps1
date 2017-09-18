@@ -29,6 +29,7 @@ Param(
 [Parameter(ParameterSetName = "defaults",Mandatory = $true)]
 [Parameter(ParameterSetName = "import",Mandatory = $false)]
 [ValidateSet(
+	'9.2.0.3',
 	'9.1.1.1','9.1.1.2','9.1.1.3', #-#
     '9.0.1-72',
 	'9.1.0.3','9.1.0.4',#-#
@@ -111,7 +112,11 @@ switch ($nve_ver)
 		'9.1.1.3'
 		{
 		$Product_tag = '9.1.1.188'
-		}		
+		}
+		'9.2.0.3'
+		{
+		$Product_tag = '9.2.0.128'
+		}				
 	}
 
 switch ($PsCmdlet.ParameterSetName)
