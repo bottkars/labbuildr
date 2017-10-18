@@ -183,22 +183,22 @@ Specify if Networker Scenario sould be installed
     <#
     Determines Exchange CU Version to be Installed
     Valid Versions are:
-	'cu2','cu1','final'
+	'final','cu1','cu2','cu3','cu4','cu5','cu6','cu7'
     Default is latest
     CU Location is [Driveletter]:\sources\e2016[cuver], e.g. c:\sources\e2016Preview1
     #>
 	[Parameter(ParameterSetName = "E16", Mandatory = $false)]
-    [ValidateSet('final','cu1','cu2','cu3','cu4','cu5','cu6')]
+    [ValidateSet('final','cu1','cu2','cu3','cu4','cu5','cu6','cu7')]
     $e16_cu = $labdefaults.e16_cu,
 <#
     Determines Exchange CU Version to be Installed
     Valid Versions are:
-    'cu1','cu2','cu3','cu4','sp1','cu6','cu7'
+    'cu1','cu2','cu3','sp1','cu5','cu6','cu7','cu8','cu9','cu10','cu11','cu12','cu13','cu14','cu15','cu16','cu17','cu18'
     Default is latest
     CU Location is [Driveletter]:\sources\e2013[cuver], e.g. c:\sources\e2013cu7
     #>
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
-    [ValidateSet('cu1','cu2','cu3','sp1','cu5','cu6','cu7','cu8','cu9','cu10','cu11','cu12','cu13','cu14','cu15','cu16','cu17')]
+    [ValidateSet('cu1','cu2','cu3','sp1','cu5','cu6','cu7','cu8','cu9','cu10','cu11','cu12','cu13','cu14','cu15','cu16','cu17','cu18')]
     [alias('ex_cu')]$e15_cu = $labdefaults.e15_cu,
 <#
     Determines Exchange UR Version to be Installed
@@ -208,7 +208,7 @@ Specify if Networker Scenario sould be installed
     CU Location is [Driveletter]:\sources\e2013[cuver], e.g. c:\sources\e2013cu7
     #>
 	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
-    [ValidateSet('ur1','ur2','ur3','ur4','ur5','ur6','ur7','ur8v2','ur9','ur10','ur11','ur12','ur13','ur14','ur15','ur16','ur17')]
+    [ValidateSet('ur1','ur2','ur3','ur4','ur5','ur6','ur7','ur8v2','ur9','ur10','ur11','ur12','ur13','ur14','ur15','ur16','ur17','ur18')]
     [alias('e2010_ur')]$e14_ur = $labdefaults.e14_ur,
 <#
     Determines Exchange CU Version to be Installed
