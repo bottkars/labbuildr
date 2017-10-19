@@ -2329,7 +2329,7 @@ if ($Exchange2013.IsPresent)
         {
         $e15_cu = $Latest_e15_cu
         }
-	If ($e15_cu -lt "cu99")
+	If ($e15_cu -lt "cu16")
 		{
 		$NET_VER = "452"
 		}
