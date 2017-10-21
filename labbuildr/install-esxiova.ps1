@@ -30,16 +30,16 @@
 	.\install-esxiova.ps1 -import -nestedesx_ver ['Nested_ESXi6','Nested_ESXi5','Nested_ESXi6.5']
  .EXAMPLE
     Install a esxiovaNode with defaults from defaults.json
-   .\install-esxiova.ps1 -nestedesx_ver ['Nested_ESXi6','Nested_ESXi5','Nested_ESXi6.5']
+   .\install-esxiova.ps1 -nestedesx_ver ['Nested_ESXi6.0',Nested_ESXi6.5']
 
 #>
 [CmdletBinding(DefaultParametersetName = "default")]
 Param(
 [Parameter(ParameterSetName = "Import", Mandatory = $true)]
 [switch]$import,
-# 'Nested_ESXi6','Nested_ESXi5','Nested_ESXi6.5'
+# ''Nested_ESXi6.0','Nested_ESXi6.5'
 [ValidateSet(
-'Nested_ESXi6','Nested_ESXi5','Nested_ESXi6.5'
+'Nested_ESXi6.0','Nested_ESXi6.5'
 )]
 [string]$nestedesx_ver = "Nested_ESXi6.5",
 [String]$Mastername,
