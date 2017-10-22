@@ -90,7 +90,20 @@ switch ($PsCmdlet.ParameterSetName)
 	$OVF = Receive-LABnestedesxtemplate -Destination (Join-Path $Sourcedir "OVA") -nestedesx_ver $nestedesx_ver
 	$OVFfile = Get-Item $ovf
     $mastername = $OVFfile.BaseName
-    $OVA = Import-VMXOVATemplate -OVA $ovf -acceptAllEulas -AllowExtraConfig -quiet -destination $MasterPath 
+    if ($vmwareversion.Major -eq 14)
+        {
+            write-host "We try to avoid a OVF import Bug, trying to manually import"
+            Expand-LABpackage -Archive $OVF -filepattern *.vmdk -destination "$Masterpath/$mastername" -Verbose -force
+            Copy-Item "./template/$($nestedesx_ver)*.vmx" -Destination "$Masterpath/$mastername/$Mastername.vmx"
+            $Template_VMX = get-vmx -Path "$Masterpath/$mastername"
+            $Disk1 = $Template_VMX | Add-VMXScsiDisk -Diskname "$mastername-disk1.vmdk" -LUN 0 -Controller 0
+            $Disk2 = $Template_VMX | Add-VMXScsiDisk -Diskname "$mastername-disk2.vmdk" -LUN 1 -Controller 0 -VirtualSSD
+            $Disk3 = $Template_VMX | Add-VMXScsiDisk -Diskname "$mastername-disk3.vmdk" -LUN 2 -Controller 0 -VirtualSSD
+            
+        } 
+    else {
+        $OVA = Import-VMXOVATemplate -OVA $ovf -acceptAllEulas -AllowExtraConfig -quiet -destination $MasterPath 
+    }    
     #   & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck --acceptAllEulas   --name=$mastername $ovf $PSScriptRoot #
     Write-Host -ForegroundColor White  "Use `".\$($MyInvocation.MyCommand) -nestedesx_ver $nestedesx_ver `" to try defaults"
     }
