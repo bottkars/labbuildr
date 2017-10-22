@@ -94,7 +94,7 @@ switch ($PsCmdlet.ParameterSetName)
         {
             Write-Warning " running $($vmwareversion.ToString()),we try to avoid a OVF import Bug, trying a manual import"
             Expand-LABpackage -Archive $OVF -filepattern *.vmdk -destination "$Masterpath/$mastername" -Verbose -force
-            Copy-Item "./template/$($nestedesx_ver)*.vmx" -Destination "$Masterpath/$mastername/$Mastername.vmx"
+            Copy-Item "./template/$($nestedesx_ver)*.template" -Destination "$Masterpath/$mastername/$Mastername.vmx"
             $Template_VMX = get-vmx -Path "$Masterpath/$mastername"
             $Disk1 = $Template_VMX | Add-VMXScsiDisk -Diskname "$mastername-disk1.vmdk" -LUN 0 -Controller 0
             $Disk2 = $Template_VMX | Add-VMXScsiDisk -Diskname "$mastername-disk2.vmdk" -LUN 1 -Controller 0 -VirtualSSD

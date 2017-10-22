@@ -24,3 +24,4 @@
 ./labbuildr/
 ./defaults.xml
 ./defaults.xml.example
+./template/*.vmx
