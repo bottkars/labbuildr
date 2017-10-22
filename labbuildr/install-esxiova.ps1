@@ -92,7 +92,7 @@ switch ($PsCmdlet.ParameterSetName)
     $mastername = $OVFfile.BaseName
     if ($vmwareversion.Major -eq 14)
         {
-            write-host "We try to avoid a OVF import Bug, trying to manually import"
+            Write-Warning " running $($vmwareversion.ToString()),we try to avoid a OVF import Bug, trying a manual import"
             Expand-LABpackage -Archive $OVF -filepattern *.vmdk -destination "$Masterpath/$mastername" -Verbose -force
             Copy-Item "./template/$($nestedesx_ver)*.vmx" -Destination "$Masterpath/$mastername/$Mastername.vmx"
             $Template_VMX = get-vmx -Path "$Masterpath/$mastername"
