@@ -152,8 +152,8 @@ switch ($PsCmdlet.ParameterSetName)
 				Copy-Item "./template/UnityVSA.template" -Destination "$Masterpath/$mastername/$Mastername.vmx"
 				$Template_VMX = get-vmx -Path "$Masterpath/$mastername"
 				$Disk1 = $Template_VMX | Add-VMXScsiDisk -Diskname "$mastername-disk1.vmdk" -LUN 0 -Controller 0
-				$Disk2 = $Template_VMX | Add-VMXScsiDisk -Diskname "$mastername-disk2.vmdk" -LUN 1 -Controller 0 -VirtualSSD
-				$Disk3 = $Template_VMX | Add-VMXScsiDisk -Diskname "$mastername-disk3.vmdk" -LUN 2 -Controller 0 -VirtualSSD
+				$Disk2 = $Template_VMX | Add-VMXScsiDisk -Diskname "$mastername-disk2.vmdk" -LUN 1 -Controller 0
+				$Disk3 = $Template_VMX | Add-VMXScsiDisk -Diskname "$mastername-disk3.vmdk" -LUN 2 -Controller 0
 				
 			} 
 		else {
