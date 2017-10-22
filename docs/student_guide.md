@@ -166,7 +166,7 @@ use this ip address ( or MySubnet.4) with your browser to connect to the admin i
 Login to the ui an be done with your Webbrowser with user root/Password123!  
 ## 1.3.2 Build a domain controller
 to build the domain controller, follow
-[./Build-lab.ps1 -DConly](http://labbuildr.readthedocs.io/en/master/Scenarios/build-lab.ps1-DConly)
+[./Build-lab.ps1 -DConly](http://labbuildr.readthedocs.io/en/master/Scenarios/build-lab.ps1---DConly)
 # 2.0 Managing VM´s  
 get a list of all all labbuildr commands  
 ```Powershell
