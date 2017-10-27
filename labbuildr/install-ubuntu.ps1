@@ -44,7 +44,7 @@ Param(
 	[ValidateRange(1,1)]
 	[int32]$Disks = 1,
 	[Parameter(Mandatory = $false)]
-	[ValidateSet('16_4','15_10','14_4')]
+	[ValidateSet('17_10','16_4','15_10','14_4')]
 	[string]$ubuntu_ver = "16_4",
 	[Parameter(Mandatory=$false)]
 	$Scriptdir = (join-path (Get-Location) "labbuildr-scripts"),
@@ -123,21 +123,6 @@ if (!$DNS2)
     }
 $ip_startrange = $ip_startrange+$Startnode
 $logfile = "/tmp/labbuildr.log"
-switch ($ubuntu_ver)
-    {
-    "16_4"
-        {
-        $netdev = "ens160"
-        }
-    "15_10"
-        {
-        $netdev= "eno16777984"
-        }
-    default
-        {
-        $netdev= "eth0"
-        }
-    }
 $Nodeprefix = "Ubuntu"
 $Required_Master = "Ubuntu$ubuntu_ver"
 $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
