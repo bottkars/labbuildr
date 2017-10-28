@@ -159,7 +159,7 @@ foreach ($Node in $machinesBuilt)
     {
         $ip="$subnet.$ip_startrange"
         $NodeClone = get-vmx $Node
-		$Nodeclone | Set-LabUbuntuVMX -Ubuntu_ver $ubuntu_ver -Scriptdir $Scriptdir -Sourcedir $Sourcedir -DefaultGateway $DefaultGateway  -guestpassword $Guestpassword -Default_Guestuser $Default_Guestuser -Rootuser $rootuser -Hostkey $Hostkey -ip $ip -DNS1 $DNS1 -DNS2 $DNS2 -subnet $subnet -Host_Name $($Nodeclone.VMXname) -DNS_DOMAIN_NAME $DNS_DOMAIN_NAME
+		$Nodeclone | Set-LabUbuntuVMX -Ubuntu_ver $ubuntu_ver -Scriptdir $Scriptdir -Sourcedir $Sourcedir -DefaultGateway $DefaultGateway  -guestpassword $Guestpassword -Default_Guestuser $Default_Guestuser -Rootuser $rootuser -Hostkey $Hostkey -ip $ip -DNS1 $DNS1 -DNS2 $DNS2 -subnet $subnet -Host_Name $($Nodeclone.VMXname) -DNS_DOMAIN_NAME $DNS_DOMAIN_NAME -use_aptcache:$use_aptcache
  
  ## docker       
 		if ($docker)
@@ -187,6 +187,10 @@ foreach ($Node in $machinesBuilt)
 					{
 					$deb = "deb http://apt.dockerproject.org/repo ubuntu-xenial main"
 					}
+				'17_10'
+					{
+					$deb = "deb http://apt.dockerproject.org/repo ubuntu-zesty main"
+					}
 				}
 			
 			$Scriptblock = "echo '$deb' >> /etc/apt/sources.list.d/docker.list;apt-get update;apt-get purge lxc-docker;apt-cache policy docker-engine"
@@ -201,7 +205,7 @@ foreach ($Node in $machinesBuilt)
 			Write-Verbose $Scriptblock
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
-			$Scriptblock = "curl -L https://github.com/docker/compose/releases/download/1.8.0/docker-compose-``uname -s``-``uname -m`` > /usr/local/bin/docker-compose;chmod +x /usr/local/bin/docker-compose"
+			$Scriptblock = "curl -L https://github.com/docker/compose/releases/download/1.16.1/docker-compose-``uname -s``-``uname -m`` > /usr/local/bin/docker-compose;chmod +x /usr/local/bin/docker-compose"
 		    Write-Verbose $Scriptblock
             $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 			
