@@ -1013,18 +1013,20 @@ deb http://apt.kubernetes.io/ kubernetes-xenial main`
 kind: ClusterRoleBinding`
 apiVersion: rbac.authorization.k8s.io/v1beta1`
 metadata:`
-  name: dashboard-admin`
+  name: kubernetes-dashboard`
+  labels:`
+    k8s-app: kubernetes-dashboard`
 roleRef:`
   apiGroup: rbac.authorization.k8s.io`
   kind: ClusterRole`
   name: cluster-admin`
 subjects:`
 - kind: ServiceAccount`
-  name: default`
+  name: kubernetes-dashboard`
   namespace: kube-system`
 ",
 				"kubectl create -f /root/kube-dashboard-rbac.yml --kubeconfig /etc/kubernetes/admin.conf",
-				"kubectl create -f https://rawgit.com/kubernetes/dashboard/master/src/deploy/kubernetes-dashboard.yaml --kubeconfig /etc/kubernetes/admin.conf",
+				"kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml --kubeconfig /etc/kubernetes/admin.conf",
 				"kubectl create -f https://raw.githubusercontent.com/kubernetes/heapster/master/deploy/kube-config/standalone/heapster-controller.yaml --kubeconfig /etc/kubernetes/admin.conf"
 )
 #				"kubectl create -f https://raw.githubusercontent.com/kubernetes/heapster/master/deploy/kube-config/standalone/heapster-service.yaml --kubeconfig /etc/kubernetes/admin.conf"
