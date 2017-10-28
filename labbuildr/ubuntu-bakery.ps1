@@ -300,10 +300,10 @@ switch ($PsCmdlet.ParameterSetName)
 ###
 if ($scaleio.IsPresent -or $kubernetes.IsPresent)
 {
-	if ($ubuntu_ver -gt "16_04")
+	if ($ubuntu_ver -gt "16_4")
 		{
-			write-host "NO Support of $ubuntu_ver in Scenario, setting to 16_04 "
-			$ubuntu_ver = "16_04"
+			write-host "NO Support of $ubuntu_ver in Scenario, setting to 16_4 "
+			$ubuntu_ver = "16_4"
 		}
 	}
 if ($scaleio.IsPresent -and $Nodes -lt 3)
