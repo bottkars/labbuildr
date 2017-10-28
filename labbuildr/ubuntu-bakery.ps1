@@ -103,7 +103,8 @@ $Custom_Unity_Target_ip,
 	[ValidateRange(1,3)]
 	[int32]$Disks = 1,
 	[Parameter(Mandatory = $false)]
-	[ValidateSet('16_4','15_10','14_4')]
+	[ValidateSet('17_10','16_4','15_10','14_4' #-#
+	)]
 	[string]$ubuntu_ver = "16_4",
 	[Parameter(Mandatory=$false)]
 	$Scriptdir = (join-path (Get-Location) "labbuildr-scripts"),
@@ -296,6 +297,15 @@ switch ($PsCmdlet.ParameterSetName)
 			}
 		
 		}
+###
+if ($scaleio.IsPresent -or $kubernetes.IsPresent)
+{
+	if ($ubuntu_ver -gt "16_04")
+		{
+			write-host "NO Support of $ubuntu_ver in Scenario, setting to 16_04 "
+			$ubuntu_ver = "16_04"
+		}
+	}
 if ($scaleio.IsPresent -and $Nodes -lt 3)
 	{
 	Write-Host -ForegroundColor Gray " ==>Setting Nodes to 3"
@@ -818,7 +828,6 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 	$GatewayNode | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword | Out-Null
 	if ($kubernetes.IsPresent)
 	{
-
 	$Volumename = "k8sGateKeeper"
 	$sclicmd = "scli --add_volume --protection_domain_name $ProtectionDomainName --storage_pool_name $StoragePoolName --size_gb 8 --thin_provisioned --volume_name $VolumeName --mdm_ip $mdm_ip"
 	Write-Verbose $sclicmd
@@ -908,6 +917,10 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 				{
 				$deb = "deb http://apt.dockerproject.org/repo ubuntu-xenial main"
 				}
+			'17_10'
+				{
+				$deb = "deb http://apt.dockerproject.org/repo ubuntu-zesty main"
+				}
 			}
 			
 		$Scriptblock = "echo '$deb' >> /etc/apt/sources.list.d/docker.list;apt-get update;apt-get purge lxc-docker;apt-cache policy docker-engine"
@@ -922,7 +935,7 @@ curl --silent --show-error --insecure --user :`$TOKEN -X POST -H 'Content-Type: 
 		Write-Verbose $Scriptblock
         $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 
-		$Scriptblock = "curl -L https://github.com/docker/compose/releases/download/1.8.0/docker-compose-``uname -s``-``uname -m`` > /usr/local/bin/docker-compose;chmod +x /usr/local/bin/docker-compose"
+		$Scriptblock = "curl -L https://github.com/docker/compose/releases/download/1.16.1/docker-compose-``uname -s``-``uname -m`` > /usr/local/bin/docker-compose;chmod +x /usr/local/bin/docker-compose"
 		Write-Verbose $Scriptblock
         $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
 			
