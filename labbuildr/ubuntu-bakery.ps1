@@ -976,6 +976,8 @@ if ($kubernetes.IsPresent)
 deb http://apt.kubernetes.io/ kubernetes-xenial main`
 ",
 				"apt-get update",
+				"sed -i '/ swap / s/^/#/' /etc/fstab",
+				"swapoff -a",
 				"apt-get install -y docker.io",
 				"apt-get install -y kubelet kubeadm kubectl kubernetes-cni")
 		foreach ($Scriptblock in $Scriptlets)
@@ -988,14 +990,14 @@ deb http://apt.kubernetes.io/ kubernetes-xenial main`
 			$Scriptlets = (   'kubeadm init --pod-network-cidr 10.244.0.0/16',
 								'cp /etc/kubernetes/admin.conf $HOME',
 								'vmtoolsd --cmd="info-set guestinfo.JOINTOKEN $(kubeadm token list)"',
-								'kubectl create -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel-rbac.yml --kubeconfig /etc/kubernetes/admin.conf' ,
-								'kubectl create -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml --kubeconfig /etc/kubernetes/admin.conf',
+								'kubectl create -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/k8s-manifests/kube-flannel-rbac.yml --kubeconfig /etc/kubernetes/admin.conf' ,
+								'kubectl create -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/k8s-manifests/kube-flannel-legacy.yml --kubeconfig /etc/kubernetes/admin.conf',
 								'cp /etc/kubernetes/admin.conf /root/.kube/config'
 								)
 		    foreach ($Scriptblock in $Scriptlets)
 				{
 				Write-Verbose $Scriptblock
-				$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
+				$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword  -logfile $logfile| Out-Null
 				}
 			$Jointoken = $nodeclone | Get-VMXVariable -GuestVariable JOINTOKEN
 			$Jointoken = ($Jointoken.JOINTOKEN[1] -split " ")[0]
