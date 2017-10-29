@@ -990,8 +990,8 @@ deb http://apt.kubernetes.io/ kubernetes-xenial main`
 			$Scriptlets = (   'kubeadm init --pod-network-cidr 10.244.0.0/16',
 								'cp /etc/kubernetes/admin.conf $HOME',
 								'vmtoolsd --cmd="info-set guestinfo.JOINTOKEN $(kubeadm token list)"',
-								'kubectl create -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/k8s-manifests/kube-flannel-rbac.yml --kubeconfig /etc/kubernetes/admin.conf' ,
-								'kubectl create -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/k8s-manifests/kube-flannel-legacy.yml --kubeconfig /etc/kubernetes/admin.conf',
+								'kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.9.0/Documentation/kube-flannel.yml --kubeconfig /etc/kubernetes/admin.conf' ,
+#								'kubectl create -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/k8s-manifests/kube-flannel-legacy.yml --kubeconfig /etc/kubernetes/admin.conf',
 								'cp /etc/kubernetes/admin.conf /root/.kube/config'
 								)
 		    foreach ($Scriptblock in $Scriptlets)

@@ -100,6 +100,14 @@ follow the instructions for [Kubernetes Dashboard](http://labbuildr.readthedocs.
 <h2 id="kubernetesdash">Kubernetes Dashboard</h2> 
 
 there are multiple options to run the kubernetes dashboard
+- using kubectl on windows (copy config from host with scp upfront ):
+
+```Powershell
+Install-Script install-kubectl -Scope CurrentUser -Force
+install-kubectl.ps1  -Downloadlocation $HOME/kubectl/
+.$HOME/kubectl/kubectl.exe proxy
+```
+
 if you are running windows 10 with Bash support( requires at least Anniversary Update) the do the following:
 Open Bash on ubuntu on windows
 ![image](https://cloud.githubusercontent.com/assets/8255007/24656353/7bf784c8-1942-11e7-9d2b-c06fd5f9dec2.png)
@@ -133,7 +141,8 @@ kubectl proxy
 ```
 ![image](https://cloud.githubusercontent.com/assets/8255007/24664097/083f5a84-195a-11e7-8b93-9fbf8bc349e7.png)
 
-you can now start the dashboard by pointing the Browser to http://localhost:8001/ui
+you can now start the dashboard by pointing the Browser to   http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/  
+
 
 ![image](https://cloud.githubusercontent.com/assets/8255007/24664182/49bba698-195a-11e7-918f-b7c66186ff52.png)
 
