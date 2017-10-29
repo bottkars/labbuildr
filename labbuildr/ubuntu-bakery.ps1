@@ -1080,6 +1080,7 @@ parameters:`
   system: ScaleIO@$BuildDomain`
   protectionDomain: PD_$BuildDomain`
   storagePool: SP_$BuildDomain`
+  storageMode: ThinProvisionned`
   secretRef: sio-secret`
   fsType: xfs`
 ",
