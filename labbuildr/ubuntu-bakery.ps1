@@ -1084,7 +1084,7 @@ parameters:`
   system: ScaleIO@$BuildDomain`
   protectionDomain: PD_$BuildDomain`
   storagePool: SP_$BuildDomain`
-  storageMode: ThinProvisionned`
+  storageMode: ThinProvisioned`
   secretRef: sio-secret`
   fsType: xfs`
 ",
