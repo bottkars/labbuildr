@@ -1040,7 +1040,6 @@ subjects:`
 	$Scriptblock = "echo 'source <(kubectl completion bash)' >> /root/.bashrc;echo 'source <(kubectl completion bash)' >> /home/labbuildr/.bashrc"
 	Write-Verbose $Scriptblock
 	$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
-	"
 	if ($scaleio.IsPresent)
 		{
 		$byte_SIO_Password  = [System.Text.Encoding]::UTF8.GetBytes($SIO_Password)
