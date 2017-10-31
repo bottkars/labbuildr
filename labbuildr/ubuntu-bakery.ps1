@@ -1035,7 +1035,7 @@ subjects:`
 	foreach ($Scriptblock in $Scriptlets)
 		{
 		Write-Verbose $Scriptblock
-		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
+		$NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword | Out-Null
 		}
 	$Scriptblock = "echo 'source <(kubectl completion bash)' >> /root/.bashrc;echo 'source <(kubectl completion bash)' >> /home/labbuildr/.bashrc"
 	Write-Verbose $Scriptblock
