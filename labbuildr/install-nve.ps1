@@ -48,7 +48,7 @@ $rootuser = "root"
 $rootpassword = "changeme"
 $Product = "Networker"
 $nve_dotver = $nve_ver -replace "-","."
-$Product_tag = "nve-$nve_dotver"
+#$Product_tag = "nve-$nve_dotver"
 $labdefaults = Get-labDefaults
 $vmnet = $labdefaults.vmnet
 $subnet = $labdefaults.MySubnet
@@ -121,7 +121,7 @@ switch ($nve_ver)
 		{
 		$Product_tag = '9.2.0.172'
 		}
-		'9.2.0.4'
+		'9.2.0.5'
 		{
 		$Product_tag = '9.2.0.182'
 		}									
