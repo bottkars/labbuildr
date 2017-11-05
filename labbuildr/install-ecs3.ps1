@@ -23,8 +23,8 @@
 [CmdletBinding(DefaultParametersetName = "install")]
 Param (
     [Parameter(ParameterSetName = "install", Mandatory = $false)]
-    [ValidateSet('Centos7_3_1611')]
-    [string]$centos_ver = 'Centos7_3_1611',
+    [ValidateSet('Centos7_4_1708','Centos7_3_1611')]
+    [string]$centos_ver = 'Centos7_4_1708',
     [Parameter(ParameterSetName = "install", Mandatory = $false)][switch]$Update,
     [Parameter(ParameterSetName = "install", Mandatory = $false)]
     [ValidateRange(1, 1)][int32]$Nodes = 1,
@@ -71,7 +71,7 @@ Param (
     [Parameter(ParameterSetName = "install", Mandatory = $false)][switch]$FullClone,
     [Parameter(ParameterSetName = "install", Mandatory = $false)][ValidateSet('8192', '12288', '16384', '20480', '30720', '51200', '65536')]$Memory = "16384",
     [Parameter(ParameterSetName = "install", Mandatory = $false)]
-    [ValidateSet('3.0.0.1','3.0.0.2','latest')]$Branch = '3.0.0.2',
+    [ValidateSet('3.1.0.1','3.0.0.1','3.0.0.2','latest')]$Branch = '3.1.0.1',
     [Parameter(ParameterSetName = "install", Mandatory = $false)][switch]$EMC_ca,
     [Parameter(ParameterSetName = "install", Mandatory = $false)][switch]$ui_config,
     [Parameter(ParameterSetName = "install", Mandatory = $false)][ValidateSet(150GB, 500GB, 520GB)][uint64]$Disksize = 150GB,
@@ -141,6 +141,12 @@ $Node_requires = ('git', 'numactl', 'libaio', 'vim', 'docker')
 
 $repo = "https://github.com/EMCECS/ECS-CommunityEdition.git"
 switch ($Branch) {
+    "3.1.0.1" {
+        $Docker_image = "ecs-software-3.1.0"
+        $Docker_imagename = "emccorp/ecs-software-3.1.0"
+        $Docker_imagetag = "latest"
+        $Git_Branch = "develop"
+    }
     "3.0.0.2" {
         $Docker_image = "ecs-software-3.0.0"
         $Docker_imagename = "emccorp/ecs-software-3.0.0"
@@ -295,7 +301,40 @@ foreach ($Node in $machinesBuilt) {
     Write-Verbose $Scriptblock
     Set-LABUi -short -title $Scriptblock
     $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+    ##patch start
+    
+    
+    
+    switch ($centos_ver)
+        {
+            "Centos7_3_1611"
+                {
+                $patchver = "centos73"
+                }
 
+            "Centos7_4_1708"
+                {
+                $patchver = "centos74"
+                }
+        }
+
+    Write-Host -ForegroundColor White "Applying some labbuildr patches"
+    $Scriptblock = "sed -i '/open-vm-tools open-vm-tools-desktop docker/s///' /ECS-CommunityEdition/bootstrap_plugins/$patchver.plugin.sh"
+    Write-Verbose $Scriptblock
+    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+
+    $Scriptblock = "sed -i '/ntp docker/s///' /ECS-CommunityEdition/bootstrap_plugins/$patchver.plugin.sh"
+    Write-Verbose $Scriptblock
+    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+
+    ##### patch end
+
+    $Scriptblock ="echo release_artifact=`"$Docker_imagename`" >>/ECS-CommunityEdition/release.conf"
+    Write-Verbose $Scriptblock
+    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword # -logfile $Logfile
+    $Scriptblock ="echo release_tag=`"$Docker_imagetag`" >>/ECS-CommunityEdition/release.conf"
+    Write-Verbose $Scriptblock
+    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword # -logfile $Logfile
     $my_yaml = "# deploy.yml for labbuildr
 
 licensing:
@@ -307,6 +346,7 @@ facts:
   ssh_defaults:
     ssh_username: $Default_Guestuser
     ssh_password: $guestpassword
+    ssh_crypto: rsa
   node_defaults:
     dns_domain: $dns_domain  
     dns_servers:
@@ -381,16 +421,16 @@ facts:
     Write-Host -ForegroundColor White "Starting ECS Preparation, this may take a while"
     Write-Host -ForegroundColor White "you may follow the process with 'tail -f /ECS-CommunityEdition/install.log'"
     $StopWatch_bootstrap = [System.Diagnostics.Stopwatch]::StartNew()
-    $Scriptblock = 'cd /ECS-CommunityEdition; ./bootstrap.sh -c /root/deploy.yml'
-    Write-Verbose $Scriptblock
+    $Scriptblock = 'cd /ECS-CommunityEdition; ./bootstrap.sh -n -c /root/deploy.yml'
+    Write-Host $Scriptblock
     Set-LABUi -short -title $Scriptblock
-    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile
+    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword # -logfile $Logfile
     $StopWatch_bootstrap.stop()
     Write-Host -ForegroundColor Gray " ==>Adjusting docker run for non tty ( pull request made )"
     $Scriptblock = "/usr/bin/sudo -s sed -i -e 's\-it\-i\g' /ECS-CommunityEdition/ui/run.sh"
     Write-verbose $Scriptblock
     Set-LABUi -short -title $Scriptblock
-    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword -logfile $Logfile   # -Confirm:$false -SleepSec 60
+    $Bashresult = $NodeClone | Invoke-VMXBash -Scriptblock $Scriptblock -Guestuser $Rootuser -Guestpassword $Guestpassword #-logfile $Logfile   # -Confirm:$false -SleepSec 60
 
 
     $Scriptblock = 'shutdown -r now'
