@@ -778,7 +778,24 @@ Sources should be populated from a bases sources.zip
     #[Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
     #[Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	#[Parameter(ParameterSetName = "docker", Mandatory = $false)]
-	[switch]$SpacesDirect,
+    [switch]$SpacesDirect,
+    <# SET 2016KB Deploy Option Direct as Storage Option #>
+    [Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "E14", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "E16", Mandatory = $false)]
+    [Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "DConly", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
+    #[Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
+    #[Parameter(ParameterSetName = "docker", Mandatory = $false)]
+    [switch]$Deploy_2016KB,
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
 	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
 	#[Parameter(ParameterSetName = "E14", Mandatory = $false)]
@@ -906,6 +923,7 @@ $latest_e14_ur = 'ur18'
 $latest_sqlver  = 'SQL2016_ISO'
 $latest_master = '2012R2FallUpdate'
 $Latest_2016 = '2016'
+$latest_2016_KB = 'KB4041688'
 #$latest_sql_2012 = 'SQL2012_ISO'
 #$NW85_requiredJava = "jre-7u61-windows-x64"
 $Adminuser = "Administrator"
@@ -1295,13 +1313,18 @@ function checkpoint-progress
         [switch]$reboot,
         [switch]$Nowait,
         $Guestuser = $Adminuser,
-        $Guestpassword = $Adminpassword
+        $Guestpassword = $Adminpassword,
+        $KB
         )
 	$Origin = $MyInvocation.MyCommand
     if ($reboot.IsPresent)
         {
         $AddParameter = " -reboot"
         }
+    if ($KB)
+        {
+        $AddParameter = " -reboot -KB $KB"   
+        }    
 	$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath "$IN_Guest_UNC_Scriptroot\Node" -Script set-step.ps1 -nowait -interactive -Parameter " -step $step $AddParameter" # $CommonParameter
     if (!$Nowait.IsPresent)
         {
@@ -2178,7 +2201,17 @@ If ($DAG.IsPresent)
     }
 if (!$EXnodes)
     {$EXNodes = 1}
-if ($Blanknode.IsPresent)
+if ($Deploy_2016KB.IsPresent)
+    {
+    if (!$LabDefaults.Server2016KB)
+        {
+        Set-LABWindows2016KB -Server2016KB $latest_2016_KB
+        }
+    Receive-LABWindows2016Update -Destination (Join-Path $labbuildr_sourcedir "WindowsUpdate") -KB $LabDefaults.Server2016KB
+        
+    }
+    
+    if ($Blanknode.IsPresent)
 {
 	$Work_Items +=  " ==>we are going to Install $BlankNodes Blank Nodes with size $Size in Domain $BuildDomain with Subnet $MySubnet using $VMnet"
     Write-Host -ForegroundColor Magenta " ==>The Gateway will be $DefaultGateway"
@@ -3681,7 +3714,11 @@ switch ($PsCmdlet.ParameterSetName)
 				$NodeClone = Get-VMX -Path $CloneVMX
 				test-user -whois Administrator
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
-				test-user Administrator
+                test-user Administrator
+                if ($Deploy_2016KB.IsPresent -and $Master -ge "2016")
+                {
+                checkpoint-progress -step 31 -reboot -KB $LabDefaults.Server2016KB
+                }
 				$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script configure-hyperv.ps1 -interactive
 				$script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script set-winrm.ps1 -interactive
                 if ($ScaleIO.IsPresent)
@@ -4040,7 +4077,11 @@ switch ($PsCmdlet.ParameterSetName)
 				$NodeClone = Get-VMX -Path $CloneVMX
 				test-user -whois Administrator
 				domainjoin -Nodename $Nodename -Nodeip $Nodeip -BuildDomain $BuildDomain -AddressFamily $AddressFamily -AddOnfeatures $AddonFeatures
-                if ($NW.IsPresent)
+                if ($Deploy_2016KB.IsPresent -and $Master -ge "2016")
+                    {
+                    checkpoint-progress -step "2016KB" -reboot -KB $LabDefaults.Server2016KB
+                    }
+                if ($NW.IsPresent) 
                     {
 		            $script_invoke = $NodeClone | Invoke-VMXPowershell -Guestuser $Adminuser -Guestpassword $Adminpassword -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-nwclient.ps1 -interactive -Parameter "-nw_ver $nw_ver -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter"
                     }
