@@ -4,21 +4,23 @@
 =======
 
 labbuildr is a Framework based upon vmxtookit.
-labbuildr allows on demand creation of lab environments
+labbuildr allows on demand creation of lab environments on Vmware Workstation / Fusion  
 labbuildr deploys the folowing scenarios:
   - Exchange / Exchange DAG 2010,2013,2016
   - SQL / SQL Always on 2012,2014,2016
   - Hyper-V
-  - Standalone VMÂ´s
+  - Sharepoint
+  - Standalone VM´s
   - Mastering ESXi Installs
   - Automating EMC ScaleIO Installs
- 
-
+ and any more.  
+ labbuildr can be updated automatically.  
+labbuildr allows for fully customization of network environment vi a central configuration (labtools)
   
-Labbuildr requires dowload of a prebuilt sources.vhd and prebuilt os masters.
+labbuildr is based upon prebuilt masters.  
 See http://labbuildr.readthedocs.io/en/master/Solutionpacks/Master for details
 
-For the 2016 release, the following changes applied to labbuildr:
+For the 2016 release, the following changes applied to previous Versions labbuildr:
 
 - seperation of scripts to labbuildr-scripts
 - this allows scripts to be used independant  
@@ -26,7 +28,6 @@ For the 2016 release, the following changes applied to labbuildr:
 - new 2016 Support
 - Support for Syctr TP4 ( SCOM and SCVMM )
 - Support for Spaces Direct ( currently with Blank Nodes/Hyper-V Scenario )
-Currently Prared for testing:
 - Hyper-V
 - SCOM
 - SQL
