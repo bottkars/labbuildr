@@ -151,7 +151,8 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "SCVMM", Mandatory = $false)]
     [ValidateSet(
     'SC2012_R2',
-    'SC2016')]
+    'SC2016',
+    'SC1711')]
     $SC_Version = "SC2016",
     <#
     Selects the Blank Nodes Scenario
