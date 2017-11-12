@@ -2454,10 +2454,10 @@ if ($Exchange2016.IsPresent)
             }	
 		}
 	$E2016_Master_VMX = test-labmaster -Masterpath "$Masterpath" -Master $E2016_Master -mastertype vmware -Confirm:$Confirm
-	if ($E2016_Master -eq "2016")
+	if ($E2016_Master -lt "2016_1711" -and $E2016_Master -ge '2016')
 		{
 		Write-Host "We need to check KB $E16_REQUIRED_KB"
-		if ($E16_REQUIRED_KB -lt 'KB3206632')
+        if ($E16_REQUIRED_KB -lt 'KB3206632')
 			{
 			$E16_REQUIRED_KB = Receive-LABWindows2016Update -Destination (Join-Path $labbuildr_sourcedir "WindowsUpdate")
 			}
