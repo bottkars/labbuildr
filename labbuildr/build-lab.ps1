@@ -332,7 +332,7 @@ Specify if Networker Scenario sould be installed
  	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
    [Switch]$Toolsupdate,
     <# Wich version of OS Master should be installed
-   '2016_1705','2016core_1705','2016','2016core',#
+   '2016_1711','2016core_1711','2016','2016core',#
     '2012R2_Ger','2012_R2',
     '2012R2FallUpdate','2012R2Fall_Ger',
     '2012_Ger','2012'
@@ -354,7 +354,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
    	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 	[ValidateSet(
-   '2016_1705','2016core_1705','2016','2016core',#
+   '2016_1711','2016core_1711','2016','2016core',#
     '2012R2_Ger','2012_R2',
     '2012R2FallUpdate','2012R2Fall_Ger',
     '2012_Ger','2012'
@@ -2446,7 +2446,7 @@ if ($Exchange2016.IsPresent)
         If ($master -match 'core')
             {
             Write-Warning "Core Editions are not Supported for Exchange, defaulting to Server 2016" 
-            $E2016_Master = '2016'   
+            $E2016_Master = '2016_1711'   
             }
         else 
             {
