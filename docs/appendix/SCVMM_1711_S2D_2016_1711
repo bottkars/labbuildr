@@ -1,0 +1,3 @@
+```Powershell
+.\build-lab.ps1 -HyperV -HyperVNodes 2 -SpacesDirect -SC_Version SC1711 -SCVMM -ConfigureVMM -Master 2016_1711 -ConfigureVMM
+```
