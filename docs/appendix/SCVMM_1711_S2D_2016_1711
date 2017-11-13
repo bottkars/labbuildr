@@ -1,3 +1,11 @@
+## deploying a 2-Node S2D Spaces with Hyper-V, SCVMM 1711 and SQL2016 fully automated
+just issue line below and be patient as downloads may take time :-)
+
+
 ```Powershell
 .\build-lab.ps1 -HyperV -HyperVNodes 2 -SpacesDirect -SC_Version SC1711 -SCVMM -ConfigureVMM -Master 2016_1711 -ConfigureVMM
 ```
+
+![image](https://user-images.githubusercontent.com/8255007/32717986-efe6a6d4-c85b-11e7-8174-e8bd2cd5c560.png)
+
+![image](https://user-images.githubusercontent.com/8255007/32717859-80d0149c-c85b-11e7-8fde-1b41bf2d76f2.png)
