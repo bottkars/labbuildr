@@ -3508,7 +3508,7 @@ switch ($PsCmdlet.ParameterSetName)
                     }# End Nmm
             if ($Firstnode -and $honolulu.IsPresent)
                 {
-                    Invoke-VMXPowershell -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-honolulu.ps1 -interactive -Parameter "-Honolulu_setup $Honolulu_setup -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter" -Guestuser $Adminuser -Guestpassword $Adminpassword   
+                    $NodeClone | Invoke-VMXPowershell -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-honolulu.ps1 -interactive -Parameter "-Honolulu_setup $Honolulu_setup -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter" -Guestuser $Adminuser -Guestpassword $Adminpassword   
                 }        
             invoke-postsection -wait
             } # end Clone OK
