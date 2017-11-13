@@ -361,6 +361,24 @@ Specify if Networker Scenario sould be installed
     '2012R2FallUpdate','2012R2Fall_Ger',
     '2012_Ger','2012'
     )][string]$Master = $labdefaults.master,
+    <# Honolulu ? #>
+   # [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
+	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
+#	[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+#	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
+#	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+#   [Parameter(ParameterSetName = "E16", Mandatory = $false)]
+#	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
+#	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
+#   [Parameter(ParameterSetName = "DConly", Mandatory = $false)]
+#   [Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
+#   [Parameter(ParameterSetName = "SOFS", Mandatory = $false)]
+#   [Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+#    [#Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
+#    [Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+#    [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
+#   	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
+[switch]$honolulu,
     <#do we want a special path to the Masters ? #>
     [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 	[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
@@ -1957,7 +1975,11 @@ if ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG" -or $SPdbtyp
 ## Download Sewction       ######################
 #################################################
 $Download_StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
-
+if ($honolulu.IsPresent)
+    {
+        $honolulu_path = receive-labhonolulu
+        $Honolulu_setup = Split-Path -Leaf $honolulu_path
+    }
 $Work_Items = $()
 Write-Host -ForegroundColor Magenta " ==>Entering Download Section"
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
@@ -3483,7 +3505,11 @@ switch ($PsCmdlet.ParameterSetName)
                         $NMM_Parameter = "$NMM_Parameter -scvmm"
                         }
 			        $script_invoke = $NodeClone | Invoke-VMXPowershell -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-nmm.ps1 -interactive -Parameter "$NMM_Parameter -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter"-Guestuser $Adminuser -Guestpassword $Adminpassword
-		            }# End Nmm
+                    }# End Nmm
+            if ($Firstnode -and $honolulu.IsPresent)
+                {
+                    Invoke-VMXPowershell -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-honolulu.ps1 -interactive -Parameter "-Honolulu_setup $Honolulu_setup -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter" -Guestuser $Adminuser -Guestpassword $Adminpassword   
+                }        
             invoke-postsection -wait
             } # end Clone OK
 		} # end HV foreach
