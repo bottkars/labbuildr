@@ -21,3 +21,8 @@ Available Windows Master:
 |2016core|||original RTM|
 |2016core_1705|OS Version: 10.0.14393.0|(rs1_release.160915-0644)|(refresh image only)|
 |2016core_1711|OS Version: 10.0.14393.1378|(rs1_release.170620-2008)|re-imaged|
+
+
+Windows Server|OS Version|release |Comment|
+|---------------|----------------------------|----------------------------|---------------------|
+WS_1709| 10.0.16299.15 |(WinBuild.160101.0800)|private build|
