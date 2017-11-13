@@ -368,7 +368,7 @@ Specify if Networker Scenario sould be installed
 #	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
 #	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
 #   [Parameter(ParameterSetName = "E16", Mandatory = $false)]
-#	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
+	[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
 #	[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
 #   [Parameter(ParameterSetName = "DConly", Mandatory = $false)]
 #   [Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
