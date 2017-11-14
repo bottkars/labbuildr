@@ -2536,6 +2536,7 @@ $Master_StopWatch.Stop()
 
 ##########################################
 Write-Host -ForegroundColor Magenta " ==>leaving download section"
+$Install_messages = @()
 if ($Work_Items)
 	{ 
 	Write-Host -ForegroundColor Magenta $Work_Items
@@ -3509,6 +3510,7 @@ switch ($PsCmdlet.ParameterSetName)
             if ($Firstnode -and $honolulu.IsPresent)
                 {
                     $NodeClone | Invoke-VMXPowershell -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-honolulu.ps1 -interactive -Parameter "-Honolulu_setup $Honolulu_setup -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter" -Guestuser $Adminuser -Guestpassword $Adminpassword   
+                    $Install_messages += "Honululu can be reached from http://$($MySubnet).$($ip):8088 via supported Browsers ( i.E. No IE :-) ) "
                 }        
             invoke-postsection -wait
             } # end Clone OK
@@ -4194,6 +4196,7 @@ Write-host -ForegroundColor White "Deployment took $($StopWatch.Elapsed.ToString
 Write-host -ForegroundColor White "Software Section took $($Download_StopWatch.Elapsed.ToString())"
 Write-host -ForegroundColor White "Master Section took $($Master_StopWatch.Elapsed.ToString())"
 Write-Host -ForegroundColor White  "Deployed VM´s in Scenario $Scenarioname"
+Write-Host -ForegroundColor Magenta ($Install_messages -join "`n")
 get-vmx | where scenario -match $Scenarioname | ft vmxname,state,activationpreference
 Set-LabUI
 return
