@@ -32,6 +32,16 @@ foreach ($uri in ("https://raw.githubusercontent.com/bottkars/labbuildr-scripts/
 ```
 
 
+Once done with teh Master Creation delete all files except the VMDK and vmx, and remove all UUID, Bios and MAC information fromn the .vmx ( or use the templates here: 
+
+)
+
+Pack ze complete folder into a 7z and place the file into Master.Labbuildr folder.
+
+Labbuildr will catchip from there
+
+
+
 ## Creating a Preview Master 
 Preview Masters require one initial step
 1. Prepare Base Machine: 
