@@ -644,6 +644,25 @@ This should be used in Distributed scenario´s
 	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
     [Validatepattern(‘(?<Address>((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))’)]
     $MySubnet = $labdefaults.MySubnet,
+<# Specify your own Class-C Subnet in format xxx.xxx.xxx.xxx #>
+[Parameter(ParameterSetName = "Hyperv", Mandatory = $false)]
+[Parameter(ParameterSetName = "AAG", Mandatory = $false)]
+[Parameter(ParameterSetName = "E14", Mandatory = $false)]
+[Parameter(ParameterSetName = "E15", Mandatory = $false)]
+[Parameter(ParameterSetName = "E16", Mandatory = $false)]
+[Parameter(ParameterSetName = "DConly", Mandatory = $false)]
+[Parameter(ParameterSetName = "NWserver", Mandatory = $false)]
+[Parameter(ParameterSetName = "SQL", Mandatory = $false)]
+[Parameter(ParameterSetName = "Blanknodes", Mandatory = $false)]
+[Parameter(ParameterSetName = "Panorama", Mandatory = $false)]
+[Parameter(ParameterSetName = "SRM", Mandatory = $false)]
+[Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
+[Parameter(ParameterSetName = "SCOM", Mandatory = $false)]
+[Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
+[Parameter(ParameterSetName = "docker", Mandatory = $false)]
+[Validatepattern(‘(?<Address>((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))’)]
+$MyGateway = $labdefaults.DefaultGateway,
+
 <# Specify your IP Addressfamilie/s
 Valid values 'IPv4','IPv6','IPv4IPv6'
 #>
