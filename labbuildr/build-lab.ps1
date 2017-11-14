@@ -3514,10 +3514,10 @@ switch ($PsCmdlet.ParameterSetName)
                         }
 			        $script_invoke = $NodeClone | Invoke-VMXPowershell -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-nmm.ps1 -interactive -Parameter "$NMM_Parameter -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter"-Guestuser $Adminuser -Guestpassword $Adminpassword
                     }# End Nmm
-            if ($Firstnode -and $honolulu.IsPresent)
+            if ($hvnode -eq $Firstnode -and $honolulu.IsPresent)
                 {
                     $NodeClone | Invoke-VMXPowershell -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-honolulu.ps1 -interactive -Parameter "-Honolulu_setup $Honolulu_setup -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter" -Guestuser $Adminuser -Guestpassword $Adminpassword   
-                    $Install_messages += "Honululu can be reached from http://$($MySubnet).$($ip):8088 via supported Browsers ( i.E. No IE :-) ) "
+                    $Install_messages += "Honululu can be reached from http://$($NodeIp):8088 via supported Browsers ( i.E. No IE :-) ) "
                 }        
             invoke-postsection -wait
             } # end Clone OK
