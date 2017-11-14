@@ -63,7 +63,7 @@ once in Powershell, run
 d:\setup64.exe
 ```
 
-reboot Computer when install has finished.
+reboot VM when install has finished.
 
 Now start Powershell again and Run:
 ```Powershell
