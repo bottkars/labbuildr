@@ -114,7 +114,7 @@ if ($noopenwrt.IsPresent)
     {
         Set-LABOpenWRT -enabled:$false
     }
-if ($global:labdefaults.openwrt -eq "false")
+if (!$global:labdefaults.openwrt)
 	{
 	Write-Host -ForegroundColor Yellow "==> Running labbuildr without OpenWRT, know what you do !"
 	}

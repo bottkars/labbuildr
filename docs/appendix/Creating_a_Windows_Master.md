@@ -1,4 +1,4 @@
-This is an example to create a stdandar ( no Preview )windows master for labbuildr
+This is an example to create a  ( no Preview ) windows master for labbuildr
 
 ```Powershell
 $winserviso = Receive-LABWinservISO -Destination $labdefaults.Sourcedir -winserv_ver 2016 -lang en_US  
@@ -36,8 +36,8 @@ foreach ($uri in ("https://raw.githubusercontent.com/bottkars/labbuildr-scripts/
 Preview Masters require one initial step
 1. Prepare Base Machine: 
 ```Powershell
-# $url = "https://software-download.microsoft.com/pr/Windows_InsiderPreview_Server_16278.iso"
-# Receive-LABWinservISO -Destination $labdefaults.Sourcedir -winserv_ver 2016 -lang en_US  
+# you have to download the iso file for preview from Server insider
+# you have do download the iso file for WS 1709 from MSDN or Volume License
 
 [System.IO.FileInfo]$winserviso = "$HOME/Downloads/Windows_InsiderPreview_Server_16278.iso"
 $Winserv = 'WS_Preview_RS4'
