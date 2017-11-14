@@ -334,7 +334,8 @@ Specify if Networker Scenario sould be installed
  	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
    [Switch]$Toolsupdate,
     <# Wich version of OS Master should be installed
-   '2016_1711','2016core_1711','2016','2016core',#
+    'WS_1709','WS_Preview_RS4',#
+    '2016_1711','2016core_1711','2016','2016core',#
     '2012R2_Ger','2012_R2',
     '2012R2FallUpdate','2012R2Fall_Ger',
     '2012_Ger','2012'
@@ -356,7 +357,8 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
    	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 	[ValidateSet(
-   '2016_1711','2016core_1711','2016','2016core',#
+    'WS_1709','WS_Preview_RS4',#
+    '2016_1711','2016core_1711','2016','2016core',#
     '2012R2_Ger','2012_R2',
     '2012R2FallUpdate','2012R2Fall_Ger',
     '2012_Ger','2012'
@@ -924,7 +926,7 @@ $latest_e14_sp = 'sp3'
 $latest_e14_ur = 'ur18'
 $latest_sqlver  = 'SQL2016_ISO'
 $latest_master = '2012R2FallUpdate'
-$Latest_2016 = '2016'
+$Latest_2016 = '2016_1711'
 $latest_2016_KB = 'KB4041688'
 #$latest_sql_2012 = 'SQL2012_ISO'
 #$NW85_requiredJava = "jre-7u61-windows-x64"
@@ -1587,7 +1589,13 @@ else
 	{
 	$LanguageTag = "en-US"
 	}
-$DCMaster = $Master
+if ( $Master -match "WS")
+    {
+        $DCMaster = $Latest_2016
+    }
+else {$DCMaster = $Master}
+    
+
 If ($DefaultGateway -match "$IPv4Subnet.$Gatewayhost")
     {
     $gateway = $true
@@ -1600,7 +1608,6 @@ If ($Gateway.IsPresent)
 if (!$AddressFamily){$AddressFamily = "IPv4" }
 
 ###################################################
-
 
 if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
 {
@@ -2129,7 +2136,7 @@ if ($Exchange2016.IsPresent)
         }
 	else
 		{
-        If ($master -match 'core')
+        If ($master -match 'core' -or $master -match "WS")
             {
             Write-Warning "Core Editions are not Supported for Exchange, defaulting to Server 2016" 
             $E2016_Master = '2016_1711'   
@@ -2294,7 +2301,7 @@ if ($SQL.IsPresent -or $AlwaysOn.IsPresent)
         #New-Item -ItemType Directory -Path "$Aworks_Dir" -Force
         Expand-LABpackage -Archive $Aworks_File -destination $Aworks_Dir
         }
-    if ($Master -match 'core')
+    if ($Master -match 'core' -or $Master -match "WS")
         {
         if (!($SQL_OK = receive-labsql -SQLVER $SQLVER -Destination $labbuildr_sourcedir -Product_Dir "SQL" -no_ssms -extract -WarningAction SilentlyContinue))
             {
@@ -2754,7 +2761,7 @@ If ($AlwaysOn.IsPresent -or $PsCmdlet.ParameterSetName -match "AAG")
 			$Nodename = "AAGNODE" + $AAGNODE
 			$CloneVMX = Join-Path $Builddir (Join-Path $Nodename "$Nodename.vmx")
 			$AAGLIST += $CloneVMX
-            if ($Master -match "core")
+            if ($Master -match 'core' -or $Master -match "WS")
                 {
                 $Coreparameter = " -servercore"    
                 }
@@ -3314,7 +3321,7 @@ switch ($PsCmdlet.ParameterSetName)
                 $ClusterIP = "$IPv4Subnet.$IPNum"
                 }
             }
-        if ($Master -match "core")
+        if ($Master -match 'core' -or $Master -match "WS")
             {
             $Coreparameter = " -servercore"    
             }            
@@ -3378,7 +3385,7 @@ switch ($PsCmdlet.ParameterSetName)
 			$IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\HyperV\"
             $In_Guest_UNC_SQLScriptDir = "$IN_Guest_UNC_Scriptroot\sql\"
             $In_Guest_UNC_SCVMMScriptDir = "$IN_Guest_UNC_Scriptroot\scvmm\"
-            if ($Master -match "core")
+            if ($Master -match 'core' -or $Master -match "WS")
                 {
                 $Coreparameter = " -servercore"    
                 }            
@@ -4048,7 +4055,7 @@ switch ($PsCmdlet.ParameterSetName)
     $IN_Guest_UNC_ScenarioScriptDir = "$IN_Guest_UNC_Scriptroot\SCOM"
     $In_Guest_UNC_SQLScriptDir = "$IN_Guest_UNC_Scriptroot\sql\"
 	###################################################
-    if ($Master -match "core")
+    if ($Master -match 'core' -or $Master -match "WS")
         {
         $Coreparameter = " -servercore"    
         }
