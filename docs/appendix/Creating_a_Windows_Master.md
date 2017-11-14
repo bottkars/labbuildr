@@ -32,12 +32,10 @@ foreach ($uri in ("https://raw.githubusercontent.com/bottkars/labbuildr-scripts/
 ```
 
 
-Once done with teh Master Creation delete all files except the VMDK and vmx, and remove all UUID, Bios and MAC information fromn the .vmx ( or use the templates here: 
-https://raw.githubusercontent.com/bottkars/labbuildr/master/labbuildr/template/WS_1709.template
-(rename to .vmx)
+Once done with teh Master Creation delete all files except the VMDK and vmx, and remove all UUID, Bios and MAC information from the .vmx 
 )
 
-Pack thee complete folder into a 7z and place the file into Master.Labbuildr folder.
+Pack the complete folder into a 7z and place the file into Master.Labbuildr folder.
 
 Labbuildr will catchup from there
 
@@ -90,10 +88,10 @@ foreach ($uri in ("https://raw.githubusercontent.com/bottkars/labbuildr-scripts/
 ./prepare.ps1
 ```
 
-Once done with teh Master Creation delete all files except the VMDK and vmx, and remove all UUID, Bios and MAC information fromn the .vmx ( or use the templates here: 
+Once done with the Master Creation delete all files except the VMDK and vmx, and remove all UUID, Bios and MAC information fromn the .vmx  or use the templates here: 
 https://raw.githubusercontent.com/bottkars/labbuildr/master/labbuildr/template/WS_Preview_RS4.template
 (rename to .vmx)
-)
+
 
 Pack thee complete folder into a 7z and place the file into Master.Labbuildr folder.
 
