@@ -1068,9 +1068,10 @@ function update-fromGit
 				else
 					{
 					Receive-LABBitsFile -DownLoadUrl $Zip -destination "$Updatepath/$repo-$branch.zip"
-					Expand-LABpackage -Archive "$UpdatePath/$repo-$branch.zip" -filepattern $Repo-$branch/$repo -destination "./expand" -Force 
+                    Expand-LABpackage -Archive "$UpdatePath/$repo-$branch.zip" -filepattern $Repo-$branch/$repo -destination "./expand" -Force 
+                    # Remove-Item ./template -Force -Confirm:$false -Recurse | Out-Null
 					New-Item -ItemType Directory $Destination -Force | Out-Null
-                    Move-Item -Path "./expand/$repo-$branch/$repo/*" -Destination $Destination -Force -Confirm:$false # -recurse
+                    Move-Item -Path "./expand/$repo-$branch/$repo/*" -Destination $Destination -Force -Confirm:$false -ErrorAction SilentlyContinue # -recurse
                     } 
 				$Isnew = $true
 				Get-Date $latest_OnGit | Set-Content (join-path $Builddir "$repo-$branch.gitver")
