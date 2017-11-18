@@ -1009,7 +1009,7 @@ function update-fromGit
             [switch]$delete
             )
 		$AuthHeaders = @{'Authorization' = "token b64154d0de42396ebd72b9f53ec863f2234f6997"}
-		if ($Global:vmxtoolkit_type -in ("win_x86_64","LINUX"))
+		if ($Global:vmxtoolkit_type -in ("win_x86_64","LINUX","OSX"))
 			{
 			$branch =  $branch.ToLower()
 			$Isnew = $false
