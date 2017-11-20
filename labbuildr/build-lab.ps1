@@ -661,6 +661,7 @@ This should be used in Distributed scenario´s
 [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 [Parameter(ParameterSetName = "docker", Mandatory = $false)]
 [Validatepattern(‘(?<Address>((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))’)]
+[AllowEmptyString()]
 $MyGateway = $labdefaults.DefaultGateway,
 
 <# Specify your IP Addressfamilie/s

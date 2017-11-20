@@ -80,11 +80,13 @@ $sysprep = 'C:\sysprep'
 New-Item -ItemType Directory $sysprep -Force | Out-Null
 Set-Location $sysprep
 foreach ($uri in ("https://raw.githubusercontent.com/bottkars/labbuildr-scripts/master/labbuildr-scripts/Sysprep/Server2016.xml",
+"https://raw.githubusercontent.com/bottkars/labbuildr-scripts/master/labbuildr-scripts/Sysprep/WS_INSIDER.xml",
 "https://raw.githubusercontent.com/bottkars/labbuildr-scripts/master/labbuildr-scripts/Sysprep/prepare.ps1"))
     {
     $file = Split-Path -Leaf $uri
     Invoke-WebRequest -Uri $uri -OutFile (Join-Path $sysprep $file)
     }
+
 ./prepare.ps1
 ```
 
