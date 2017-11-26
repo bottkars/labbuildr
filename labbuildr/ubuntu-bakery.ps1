@@ -330,7 +330,7 @@ if ($scaleio.IsPresent)
 
 	$ubuntu_sio_ver = $ubuntu_ver -replace "_",".0"
 	$Ubuntu = Get-ChildItem *$ubuntu_sio_ver* -Path $scaleio_dir -Include "*UBUNTU_$ubuntu_sio_ver*" -Recurse -Directory -ErrorAction SilentlyContinue
-if (!$ubuntu)
+if (!$ubuntu -or $forcedownload.IsPresent)
 	{
 	Receive-LABScaleIO -Destination $Sourcedir -arch linux -unzip -force
 	$Ubuntu = Get-ChildItem *$ubuntu_sio_ver* -Path $scaleio_dir -Include "*UBUNTU_$ubuntu_sio_ver*" -Recurse -Directory -ErrorAction SilentlyContinue
