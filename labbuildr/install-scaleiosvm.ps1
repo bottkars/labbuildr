@@ -130,7 +130,7 @@ switch ($PsCmdlet.ParameterSetName)
         if ($vmwareversion.Major -eq 14)
         {
             Write-Warning " running $($vmwareversion.ToString()),we try to avoid a OVF import Bug, trying a manual import"
-            Expand-LABpackage -Archive $OVF -filepattern *.vmdk -destination "$Masterpath/$mastername" -Verbose -force
+            Expand-LABpackage -Archive $ovaPath.FullName -filepattern *.vmdk -destination "$Masterpath/$mastername" -Verbose -force
             Copy-Item "./template/ScaleIOVM_2nics.template" -Destination "$Masterpath/$mastername/$Mastername.vmx"
             $Template_VMX = get-vmx -Path "$Masterpath/$mastername"
             $Disk1_item = Get-Item "$Masterpath/$mastername/*disk1.vmdk"
