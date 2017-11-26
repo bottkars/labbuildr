@@ -66,6 +66,11 @@ Param(
 [Parameter(ParameterSetName = "openstack",Mandatory=$False)]
 [Parameter(ParameterSetName = "kubernetes",Mandatory=$False)]
 [switch]$forcedownload,
+[Parameter(ParameterSetName = "scaleio", Mandatory = $false)]
+[Parameter(ParameterSetName = "install",Mandatory = $false)]
+[Parameter(ParameterSetName = "openstack",Mandatory=$False)]
+[Parameter(ParameterSetName = "kubernetes",Mandatory=$False)]
+[switch]$forceupdate,
 [Parameter(ParameterSetName = "kubernetes",Mandatory=$false)]
 [Parameter(ParameterSetName = "install", Mandatory = $false)]
 [Parameter(ParameterSetName = "scaleio", Mandatory = $true)]
@@ -572,15 +577,11 @@ foreach ($Node in $machinesBuilt)
 		########
 		#Default Node Installer
 		Set-LABUi -title "Set-LabUbuntuVMX -Ubuntu_ver $ubuntu_ver -additional_packages $additional_packages" -short
-		$Nodeclone | Set-LabUbuntuVMX -Ubuntu_ver $ubuntu_ver -additional_packages $additional_packages -Scriptdir $Scriptdir -Sourcedir $Sourcedir -DefaultGateway $DefaultGateway  -guestpassword $Guestpassword -Default_Guestuser $Default_Guestuser -Rootuser $rootuser -Hostkey $Hostkey -ip $ip -DNS1 $DNS1 -DNS2 $DNS2 -subnet $subnet -Host_Name $($Nodeclone.VMXname) -DNS_DOMAIN_NAME $DNS_DOMAIN_NAME
+		$Nodeclone | Set-LabUbuntuVMX -Ubuntu_ver $ubuntu_ver -forceupdate:$($upgrade.IsPresent) -additional_packages $additional_packages -Scriptdir $Scriptdir -Sourcedir $Sourcedir -DefaultGateway $DefaultGateway  -guestpassword $Guestpassword -Default_Guestuser $Default_Guestuser -Rootuser $rootuser -Hostkey $Hostkey -ip $ip -DNS1 $DNS1 -DNS2 $DNS2 -subnet $subnet -Host_Name $($Nodeclone.VMXname) -DNS_DOMAIN_NAME $DNS_DOMAIN_NAME
 		Set-LABUi
 		########
 		#### end replace labbuildr7 Scema
-		if ($upgrade.ispresent)
-			{
-			$Scriptblock = "apt-get update;DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::=`"--force-confdef`" -o Dpkg::Options::=`"--force-confold`" dist-upgrade"
-			$nodeclone | Invoke-VMXBash -Scriptblock $scriptblock -Guestuser $rootuser -Guestpassword $Guestpassword -logfile $logfile | Out-Null
-			}
+
 		if ($cinder -contains "unity")
 			{
 			Write-Host -ForegroundColor Gray " ==>configuring iscsi $($NodeClone.VMXName)"
