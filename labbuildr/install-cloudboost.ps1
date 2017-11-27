@@ -100,12 +100,12 @@ switch ($PsCmdlet.ParameterSetName)
         $Mastername = $Mymaster.Basename
         import-VMXOVATemplate -OVA $ovf -destination $masterpath -acceptAllEulas
         # & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck  --name=$mastername $ovf $PSScriptRoot #
-        $Content = Get-Content $masterpath\$mastername\$mastername.vmx
+        $Content = Get-Content $masterpath/$mastername/$mastername.vmx
         $Content = $Content -notmatch 'snapshot.maxSnapshots'
         $Content = $Content -notmatch 'vmci0.pciSlotNumber'
         $Content += 'vmci0.pciSlotNumber = "33"'
-        $Content | Set-Content $masterpath\$mastername\$mastername.vmx
-        $Mastervmx = get-vmx -path $masterpath\$mastername\$mastername.vmx
+        $Content | Set-Content $masterpath/$mastername/$mastername.vmx
+        $Mastervmx = get-vmx -path $masterpath/$masternam/\$mastername.vmx
         $Mastervmx | Set-VMXHWversion -HWversion 7
         $Mastervmx | Get-VMXScsiDisk | where lun -Match 1 | Expand-VMXDiskfile -NewSize $Meta_Data_Disk_Size 
         foreach ($lun in 2..2)
