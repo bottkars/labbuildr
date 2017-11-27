@@ -105,7 +105,7 @@ switch ($PsCmdlet.ParameterSetName)
         $Content = $Content -notmatch 'vmci0.pciSlotNumber'
         $Content += 'vmci0.pciSlotNumber = "33"'
         $Content | Set-Content $masterpath/$mastername/$mastername.vmx
-        $Mastervmx = get-vmx -path $masterpath/$masternam/$mastername.vmx
+        $Mastervmx = get-vmx -path $masterpath/$mastername/$mastername.vmx
         $Mastervmx | Set-VMXHWversion -HWversion 7
         $Mastervmx | Get-VMXScsiDisk | where lun -Match 1 | Expand-VMXDiskfile -NewSize $Meta_Data_Disk_Size 
         foreach ($lun in 2..2)
