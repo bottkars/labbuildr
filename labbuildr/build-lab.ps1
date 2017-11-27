@@ -1075,6 +1075,10 @@ function update-fromGit
 					Receive-LABBitsFile -DownLoadUrl $Zip -destination "$Updatepath/$repo-$branch.zip"
                     Expand-LABpackage -Archive "$UpdatePath/$repo-$branch.zip" -filepattern $Repo-$branch/$repo -destination "./expand" -Force 
                     # Remove-Item ./template -Force -Confirm:$false -Recurse | Out-Null
+                    if ($repo -eq "labbuildr")
+                        {
+                            Remove-Item (join-path $Destination 'template')
+                        }
 					New-Item -ItemType Directory $Destination -Force | Out-Null
                     Move-Item -Path "./expand/$repo-$branch/$repo/*" -Destination $Destination -Force -Confirm:$false -ErrorAction SilentlyContinue # -recurse
                     } 
