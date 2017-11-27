@@ -1,8 +1,8 @@
 ﻿<#
 .Synopsis
-   .\install-scaleio.ps1
+   ./install-cloudboost.ps1
 .DESCRIPTION
-  install-scaleio is  the a vmxtoolkit solutionpack for configuring and deploying scaleio svm´s
+  install-cloudboost is  the a vmxtoolkit solutionpack for configuring and deploying cloudboost svm´s
 
       Copyright 2014 Karsten Bott
 
@@ -20,10 +20,10 @@
 .LINK
    https://community.emc.com/blogs/bottk/2015/02/05/labbuildrgoes-emc-cloudboost
 .EXAMPLE
-.\install-cloudboost.ps1 -ovf D:\Sources\cloudboost-ESXi5-5.1.0.6695\cloudboost-ESXi5-5.1.0.6695.ovf
+./install-cloudboost.ps1 -ovf D:/Sources/cloudboost-ESXi5-5.1.0.6695/cloudboost-ESXi5-5.1.0.6695.ovf
 This will convert cloudboost ESX Template
 .EXAMPLE
-.\install-cloudboost.ps1 -MasterPath .\cloudboost-ESXi5-5.1.0.6695 -Defaults
+./install-cloudboost.ps1 -MasterPath ./cloudboost-ESXi5-5.1.0.6695 -Defaults
 This will Install default Cloud boost
 #>
 [CmdletBinding()]
@@ -99,13 +99,13 @@ switch ($PsCmdlet.ParameterSetName)
         # $Mymaster = Get-Item $ovf
         $Mastername = $Mymaster.Basename
         import-VMXOVATemplate -OVA $ovf -destination $masterpath -acceptAllEulas
-        # & $global:vmwarepath\OVFTool\ovftool.exe --lax --skipManifestCheck  --name=$mastername $ovf $PSScriptRoot #
+        # & $global:vmwarepath/OVFTool/ovftool.exe --lax --skipManifestCheck  --name=$mastername $ovf $PSScriptRoot #
         $Content = Get-Content $masterpath/$mastername/$mastername.vmx
         $Content = $Content -notmatch 'snapshot.maxSnapshots'
         $Content = $Content -notmatch 'vmci0.pciSlotNumber'
         $Content += 'vmci0.pciSlotNumber = "33"'
         $Content | Set-Content $masterpath/$mastername/$mastername.vmx
-        $Mastervmx = get-vmx -path $masterpath/$masternam/\$mastername.vmx
+        $Mastervmx = get-vmx -path $masterpath/$masternam/$mastername.vmx
         $Mastervmx | Set-VMXHWversion -HWversion 7
         $Mastervmx | Get-VMXScsiDisk | where lun -Match 1 | Expand-VMXDiskfile -NewSize $Meta_Data_Disk_Size 
         foreach ($lun in 2..2)
@@ -115,7 +115,7 @@ switch ($PsCmdlet.ParameterSetName)
             }
 
         
-        Write-Host -ForegroundColor Yellow " ==>Now run .\install-cloudboost.ps1 -Master $(join-path $masterpath $mastername)"
+        Write-Host -ForegroundColor Yellow " ==>Now run ./install-cloudboost.ps1 -Master $(join-path $masterpath $mastername)"
         }
 default
     {
@@ -158,7 +158,7 @@ default
     $Nodeprefix = "cloudboost"
     If (!($MasterVMX = get-vmx -path $Master))
       {
-       Write-Warning "No Valid Master Found, please import Cloudboost OVA template first with .\install-cloudboost.ps1 -ovf [path to ova template]"
+       Write-Warning "No Valid Master Found, please import Cloudboost OVA template first with ./install-cloudboost.ps1 -ovf [path to ova template]"
       break
      }
     $Basesnap = $MasterVMX | Get-VMXSnapshot -WarningAction SilentlyContinue| where Snapshot -Match "Base"
