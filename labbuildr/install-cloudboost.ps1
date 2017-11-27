@@ -98,7 +98,7 @@ switch ($PsCmdlet.ParameterSetName)
         # if (!($mastername)) {$mastername = (Split-Path -Leaf $ovf).Replace(".ovf","")}
         # $Mymaster = Get-Item $ovf
         $Mastername = $Mymaster.Basename
-        import-VMXOVATemplate -OVA $ovf -destination $masterpath -acceptAllEulas
+        Import-VMXOVATemplate -OVA $ovf -destination $masterpath -acceptAllEulas
         # & $global:vmwarepath/OVFTool/ovftool.exe --lax --skipManifestCheck  --name=$mastername $ovf $PSScriptRoot #
         $Content = Get-Content $masterpath/$mastername/$mastername.vmx
         $Content = $Content -notmatch 'snapshot.maxSnapshots'
