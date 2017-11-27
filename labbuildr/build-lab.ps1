@@ -334,7 +334,7 @@ Specify if Networker Scenario sould be installed
  	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
    [Switch]$Toolsupdate,
     <# Wich version of OS Master should be installed
-    'WS_1709','WS_Preview_RS4',#
+    'WS_1709','WS_Preview_17035','WS_Preview_RS4',#
     '2016_1711','2016core_1711','2016','2016core',#
     '2012R2_Ger','2012_R2',
     '2012R2FallUpdate','2012R2Fall_Ger',
@@ -357,7 +357,7 @@ Specify if Networker Scenario sould be installed
     [Parameter(ParameterSetName = "APPSYNC", Mandatory = $false)]
    	[Parameter(ParameterSetName = "docker", Mandatory = $false)]
 	[ValidateSet(
-    'WS_1709','WS_Preview_RS4',#
+    'WS_1709','WS_Preview_17035','WS_Preview_RS4',#
     '2016_1711','2016core_1711','2016','2016core',#
     '2012R2_Ger','2012_R2',
     '2012R2FallUpdate','2012R2Fall_Ger',
@@ -665,6 +665,7 @@ This should be used in Distributed scenario´s
 [Parameter(ParameterSetName = "Sharepoint",Mandatory = $false)]
 [Parameter(ParameterSetName = "docker", Mandatory = $false)]
 [Validatepattern(‘(?<Address>((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))’)]
+[AllowEmptyString()]
 $MyGateway = $labdefaults.DefaultGateway,
 
 <# Specify your IP Addressfamilie/s
@@ -1013,7 +1014,7 @@ function update-fromGit
             [switch]$delete
             )
 		$AuthHeaders = @{'Authorization' = "token b64154d0de42396ebd72b9f53ec863f2234f6997"}
-		if ($Global:vmxtoolkit_type -in ("win_x86_64","LINUX"))
+		if ($Global:vmxtoolkit_type -in ("win_x86_64","LINUX","OSX"))
 			{
 			$branch =  $branch.ToLower()
 			$Isnew = $false
@@ -1072,9 +1073,10 @@ function update-fromGit
 				else
 					{
 					Receive-LABBitsFile -DownLoadUrl $Zip -destination "$Updatepath/$repo-$branch.zip"
-					Expand-LABpackage -Archive "$UpdatePath/$repo-$branch.zip" -filepattern $Repo-$branch/$repo -destination "./expand" -Force 
+                    Expand-LABpackage -Archive "$UpdatePath/$repo-$branch.zip" -filepattern $Repo-$branch/$repo -destination "./expand" -Force 
+                    # Remove-Item ./template -Force -Confirm:$false -Recurse | Out-Null
 					New-Item -ItemType Directory $Destination -Force | Out-Null
-                    Move-Item -Path "./expand/$repo-$branch/$repo/*" -Destination $Destination -Force -Confirm:$false # -recurse
+                    Move-Item -Path "./expand/$repo-$branch/$repo/*" -Destination $Destination -Force -Confirm:$false -ErrorAction SilentlyContinue # -recurse
                     } 
 				$Isnew = $true
 				Get-Date $latest_OnGit | Set-Content (join-path $Builddir "$repo-$branch.gitver")
@@ -3537,10 +3539,10 @@ switch ($PsCmdlet.ParameterSetName)
                         }
 			        $script_invoke = $NodeClone | Invoke-VMXPowershell -ScriptPath $IN_Guest_UNC_ScenarioScriptDir -Script install-nmm.ps1 -interactive -Parameter "$NMM_Parameter -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter"-Guestuser $Adminuser -Guestpassword $Adminpassword
                     }# End Nmm
-            if ($Firstnode -and $honolulu.IsPresent)
+            if ($hvnode -eq $Firstnode -and $honolulu.IsPresent)
                 {
                     $NodeClone | Invoke-VMXPowershell -ScriptPath $IN_Guest_UNC_NodeScriptDir -Script install-honolulu.ps1 -interactive -Parameter "-Honolulu_setup $Honolulu_setup -SourcePath $IN_Guest_UNC_Sourcepath $CommonParameter" -Guestuser $Adminuser -Guestpassword $Adminpassword   
-                    $Install_messages += "Honululu can be reached from http://$($MySubnet).$($ip):8088 via supported Browsers ( i.E. No IE :-) ) "
+                    $Install_messages += "Honululu can be reached from http://$($NodeIp):8088 via supported Browsers ( i.E. No IE :-) ) "
                 }        
             invoke-postsection -wait
             } # end Clone OK

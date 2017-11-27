@@ -125,8 +125,20 @@ switch ($PsCmdlet.ParameterSetName)
 			}
         $OVAPath = Get-ChildItem -Path "$Sourcedir\ScaleIO\$ScaleIO_Path" -Recurse -include "$ScaleIO_tag.ova"  -Exclude ".*" | Sort-Object -Descending
         $OVAPath = $OVApath[0]
-		$mastername = $($ovaPath.Basename)
+        $mastername = $($ovaPath.Basename)
+        
+        if ($vmwareversion.Major -eq 14)
+        {
+            Write-Warning " running $($vmwareversion.ToString()),we try to avoid a OVF import Bug, trying a manual import"
+            Expand-LABpackage -Archive $ovaPath.FullName -filepattern *.vmdk -destination "$Masterpath/$mastername" -Verbose -force
+            Copy-Item "./template/ScaleIOVM_2nics.template" -Destination "$Masterpath/$mastername/$Mastername.vmx"
+            $Template_VMX = get-vmx -Path "$Masterpath/$mastername"
+            $Disk1_item = Get-Item "$Masterpath/$mastername/*disk1.vmdk"
+            $Disk1 = $Template_VMX | Add-VMXScsiDisk -Diskname $Disk1_item.Name -LUN 0 -Controller 0          
+        } 
+    else {
 		$Template = Import-VMXOVATemplate -OVA $ovaPath.FullName -destination $Masterpath -acceptAllEulas -Quiet -AllowExtraConfig
+    }
         $MasterVMX = get-vmx -path "$Masterpath\$mastername"
         if (!$MasterVMX.Template)
             {

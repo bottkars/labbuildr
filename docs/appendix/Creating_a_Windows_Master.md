@@ -32,6 +32,15 @@ foreach ($uri in ("https://raw.githubusercontent.com/bottkars/labbuildr-scripts/
 ```
 
 
+Once done with teh Master Creation delete all files except the VMDK and vmx, and remove all UUID, Bios and MAC information from the .vmx 
+)
+
+Pack the complete folder into a 7z and place the file into Master.Labbuildr folder.
+
+Labbuildr will catchup from there
+
+
+
 ## Creating a Preview Master 
 Preview Masters require one initial step
 1. Prepare Base Machine: 
@@ -63,7 +72,7 @@ once in Powershell, run
 d:\setup64.exe
 ```
 
-reboot Computer when install has finished.
+reboot VM when install has finished.
 
 Now start Powershell again and Run:
 ```Powershell
@@ -71,11 +80,21 @@ $sysprep = 'C:\sysprep'
 New-Item -ItemType Directory $sysprep -Force | Out-Null
 Set-Location $sysprep
 foreach ($uri in ("https://raw.githubusercontent.com/bottkars/labbuildr-scripts/master/labbuildr-scripts/Sysprep/Server2016.xml",
+"https://raw.githubusercontent.com/bottkars/labbuildr-scripts/master/labbuildr-scripts/Sysprep/WS_INSIDER.xml",
 "https://raw.githubusercontent.com/bottkars/labbuildr-scripts/master/labbuildr-scripts/Sysprep/prepare.ps1"))
     {
     $file = Split-Path -Leaf $uri
     Invoke-WebRequest -Uri $uri -OutFile (Join-Path $sysprep $file)
     }
+
 ./prepare.ps1
 ```
 
+Once done with the Master Creation delete all files except the VMDK and vmx, and remove all UUID, Bios and MAC information fromn the .vmx  or use the templates here: 
+https://raw.githubusercontent.com/bottkars/labbuildr/master/labbuildr/template/WS_Preview_RS4.template
+(rename to .vmx)
+
+
+Pack thee complete folder into a 7z and place the file into Master.Labbuildr folder.
+
+Labbuildr will catchup from there

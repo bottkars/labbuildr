@@ -1,4 +1,5 @@
 Available Windows Master:
+    'WS_1709','WS_Preview_RS4',
     '2016_1711','2016core_1711','2016','2016core',#
     '2012R2_Ger','2012_R2','2012R2FallUpdate','2012R2Fall_Ger',
     '2012_Ger','2012'
@@ -26,3 +27,4 @@ Available Windows Master:
 Windows Server|OS Version|release |Comment|
 |---------------|----------------------------|----------------------------|---------------------|
 WS_1709| 10.0.16299.15 |(WinBuild.160101.0800)|private build|
+WS_PREVIEW_RS4|10.0.16278.1000 | (WinBuild.160101.0800)|
