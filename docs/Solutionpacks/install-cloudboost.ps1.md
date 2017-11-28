@@ -43,3 +43,33 @@ depending on your workstation settings, this might work with copy / paste :-)
 
 ![grafik](https://user-images.githubusercontent.com/8255007/33314305-8518fd88-d42d-11e7-90d2-e2058ef4c1f3.png)
 
+Once the Network is configured, trype in 'register' to register the Appliance with dpccloud.com:
+
+![grafik](https://user-images.githubusercontent.com/8255007/33314808-0256ef52-d42f-11e7-8d13-e600d4f4e460.png)
+
+login to https://console.dpccloud.com and select the cloudboost registration from the menu
+![grafik](https://user-images.githubusercontent.com/8255007/33314862-2d6adbb8-d42f-11e7-9dac-91a46e079d48.png)
+Enter your Claim Code and register
+
+![grafik](https://user-images.githubusercontent.com/8255007/33314926-6c8ab782-d42f-11e7-9d72-3dde537ea1c9.png)
+
+![grafik](https://user-images.githubusercontent.com/8255007/33314949-7f87f9f8-d42f-11e7-9cfc-911713872752.png)
+
+
+Click on the direct link to the cloudboost appliance for configuration
+it may take a few moments antil heartbeat is synched an the configure tab is enabled:
+
+![grafik](https://user-images.githubusercontent.com/8255007/33315224-580c0904-d430-11e7-8642-c378b1a26bd9.png)
+
+edit you specific configuration details for the appliance
+
+![grafik](https://user-images.githubusercontent.com/8255007/33315509-32b87da8-d431-11e7-83d8-7f6b35c003bf.png)
+
+click on update changes and the appliance will start fongiguring. this will take a few minutes:
+
+![grafik](https://user-images.githubusercontent.com/8255007/33315646-8d93b0ee-d431-11e7-977b-4712ad1f3c13.png)
+
+
+
+
+
