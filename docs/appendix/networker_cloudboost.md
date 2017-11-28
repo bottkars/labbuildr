@@ -16,3 +16,7 @@ Set-LABAPT_Cache_IP 10.10.3.200 # for Ubuntu
 ```Powershell
 ./build-lab.ps1 -Nwserver -nw_ver nw9210 
 ```
+
+install and configure cloudboost 
+[cloudboost setup](http://labbuildr.readthedocs.io/en/master/Solutionpacks/install-cloudboost.ps1/)
+

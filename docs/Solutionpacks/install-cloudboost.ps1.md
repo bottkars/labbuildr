@@ -71,10 +71,12 @@ click on update changes and the appliance will start fongiguring. this will take
 
 once the appliance has finished configuring, procced with integartion into you backup software.
 
-see networker cloudboost integration as an example
+
 ![grafik](https://user-images.githubusercontent.com/8255007/33316131-205a7164-d433-11e7-965e-20742ee7b965.png)
 ![grafik](https://user-images.githubusercontent.com/8255007/33316175-57181990-d433-11e7-8202-a6068889d468.png)
 
+see networker cloudboost integration as an example:
+[cludboost networker](http://labbuildr.readthedocs.io/en/master/appendix/networker_cloudboost/)
 
 
 

@@ -18,7 +18,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 .LINK
-   https://community.emc.com/blogs/bottk/2015/02/05/labbuildrgoes-emc-cloudboost
+   http://labbuildr.readthedocs.io/en/master/Solutionpacks/install-cloudboost.ps1/
 .EXAMPLE
 ./install-cloudboost.ps1 -ovf D:/Sources/cloudboost-ESXi5-5.1.0.6695/cloudboost-ESXi5-5.1.0.6695.ovf
 This will convert cloudboost ESX Template
