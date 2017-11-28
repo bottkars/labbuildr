@@ -20,3 +20,7 @@ Set-LABAPT_Cache_IP 10.10.3.200 # for Ubuntu
 install and configure cloudboost 
 [cloudboost setup](http://labbuildr.readthedocs.io/en/master/Solutionpacks/install-cloudboost.ps1/)
 
+enable the remote mount password
+
+![grafik](https://user-images.githubusercontent.com/8255007/33317182-bf5f9944-d436-11e7-8deb-3ee55c97fec3.png)
+
