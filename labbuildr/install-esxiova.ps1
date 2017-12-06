@@ -39,7 +39,7 @@ Param(
 [switch]$import,
 # ''Nested_ESXi6.0','Nested_ESXi6.5'
 [ValidateSet(
-'Nested_ESXi6.0','Nested_ESXi6.5'
+'Nested_ESXi6.0','Nested_ESXi6.5d','Nested_ESXi6.5U1'
 )]
 [string]$nestedesx_ver = "Nested_ESXi6.5",
 [String]$Mastername,
