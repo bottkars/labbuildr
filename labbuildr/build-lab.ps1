@@ -2148,7 +2148,7 @@ if ($Exchange2016.IsPresent)
         {
         $e16_cu = $Latest_e16_cu
         }
-    switch ($ex_cu) {
+    switch ($e16_cu) {
         {$_ -le 'cu3'}
             {
             $NET_VER = "452"
