@@ -189,7 +189,7 @@ Specify if Networker Scenario sould be installed
     CU Location is [Driveletter]:\sources\e2016[cuver], e.g. c:\sources\e2016Preview1
     #>
 	[Parameter(ParameterSetName = "E16", Mandatory = $false)]
-    [ValidateSet('final','cu1','cu2','cu3','cu4','cu5','cu6','cu7')]
+    [ValidateSet('final','cu1','cu2','cu3','cu4','cu5','cu6','cu7','cu8')]
     $e16_cu = $labdefaults.e16_cu,
 <#
     Determines Exchange CU Version to be Installed
@@ -199,7 +199,7 @@ Specify if Networker Scenario sould be installed
     CU Location is [Driveletter]:\sources\e2013[cuver], e.g. c:\sources\e2013cu7
     #>
 	[Parameter(ParameterSetName = "E15", Mandatory = $false)]
-    [ValidateSet('cu1','cu2','cu3','sp1','cu5','cu6','cu7','cu8','cu9','cu10','cu11','cu12','cu13','cu14','cu15','cu16','cu17','cu18')]
+    [ValidateSet('cu1','cu2','cu3','sp1','cu5','cu6','cu7','cu8','cu9','cu10','cu11','cu12','cu13','cu14','cu15','cu16','cu17','cu18','cu19')]
     [alias('ex_cu')]$e15_cu = $labdefaults.e15_cu,
 <#
     Determines Exchange UR Version to be Installed
@@ -209,7 +209,7 @@ Specify if Networker Scenario sould be installed
     CU Location is [Driveletter]:\sources\e2013[cuver], e.g. c:\sources\e2013cu7
     #>
 	[Parameter(ParameterSetName = "E14", Mandatory = $false)]
-    [ValidateSet('ur1','ur2','ur3','ur4','ur5','ur6','ur7','ur8v2','ur9','ur10','ur11','ur12','ur13','ur14','ur15','ur16','ur17','ur18')]
+    [ValidateSet('ur1','ur2','ur3','ur4','ur5','ur6','ur7','ur8v2','ur9','ur10','ur11','ur12','ur13','ur14','ur15','ur16','ur17','ur18','ur19')]
     [alias('e2010_ur')]$e14_ur = $labdefaults.e14_ur,
 <#
     Determines Exchange CU Version to be Installed
@@ -942,12 +942,12 @@ $Default_IPv6PrefixLength = '8'
 $latest_ScaleIOVer = '2.0-13000.211'
 #$ScaleIO_OS = "Windows"
 #$ScaleIO_Path = "ScaleIO_$($ScaleIO_OS)_SW_Download"
-$latest_nmm = 'nmm9113'
-$latest_nw = 'nw9113'
-$latest_e16_cu = 'cu7'
-$latest_e15_cu = 'cu18'
+$latest_nmm = 'nmm9115'
+$latest_nw = 'nw9205'
+$latest_e16_cu = 'cu8'
+$latest_e15_cu = 'cu19'
 $latest_e14_sp = 'sp3'
-$latest_e14_ur = 'ur18'
+$latest_e14_ur = 'ur19'
 $latest_sqlver  = 'SQL2016_ISO'
 $latest_master = '2012R2FallUpdate'
 $Latest_2016 = '2016_1711'
@@ -2084,14 +2084,20 @@ if ($Exchange2013.IsPresent)
         {
         $e15_cu = $Latest_e15_cu
         }
-	If ($e15_cu -lt "cu16")
-		{
-		$NET_VER = "452"
-		}
-	else
-		{
-		$NET_VER = "462"
-		}
+    switch ($ex_cu) {
+        {$_ -le 'cu3'}
+            {
+            $NET_VER = "452"
+            }
+        {($_ -gt 'cu3') -and ($_ -le 'cu7')}
+            { 
+            $NET_VER  = "462"
+            }
+        {$_ -ge 'cu8'}
+            {
+            $NET_VER  = "471"
+            }    
+        }   
     If ($Master -gt '2012Z')
         {
 		$E2013_master = '2012R2FallUpdate'
@@ -2142,22 +2148,20 @@ if ($Exchange2016.IsPresent)
         {
         $e16_cu = $Latest_e16_cu
         }
-	If ($e16_cu -lt "cu3")
-		{
-		$NET_VER = "452"
-		}
-	else
-		{
-		switch ($e16_cu)
-			{
-			default
-				{
-				$NET_VER = "462"
-				$E16_REQUIRED_KB = $LabDefaults.Server2016KB
-				}
-			}
-		
-		}
+    switch ($ex_cu) {
+        {$_ -le 'cu3'}
+            {
+            $NET_VER = "452"
+            }
+        {($_ -gt 'cu3') -and ($_ -le 'cu7')}
+            { 
+            $NET_VER  = "462"
+            }
+        {$_ -ge 'cu8'}
+            {
+            $NET_VER  = "471"
+            }    
+        } 
     If ($Master -gt '2012Z' -and $e16_cu -lt "cu3")
         {
 		$E2016_Master = '2012R2FallUpdate'
