@@ -930,8 +930,8 @@ catch
 ################## Statics
 $custom_domainsuffix = "local"
 $AAGDB = "AWORKS"
-$major = "2017"
-$Edition = "Autunum VMworld2017 Edition"
+$major = "2018"
+$Edition = "New Years Edition"
 $Default_attachement = "https://www.emc.com/collateral/solution-overview/h12476-so-hybrid-cloud.pdf"
 $Default_vmnet = "vmnet2"
 $Default_BuildDomain = "labbuildr"
