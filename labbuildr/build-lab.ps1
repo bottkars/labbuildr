@@ -2651,13 +2651,16 @@ if ($DCMaster -ne $Master)
 else
 	{$DC_MasterVMX = $MyMaster.config}
 		####
-		If ($DefaultGateway.IsPresent)
+		If ($MyGateway)
 			{
-			Write-Verbose "Gateway : $DefaultGateway"
+            Write-Verbose "Gateway : $MyGateway"
+            $Work_Items +=  " ==>we will configure Default Gateway at $MyGateway"
+            $AddGateway  = "-DefaultGateway $MyGateway"
+            Write-Verbose -Message " ==>we will add a Gateway with $AddGateway"
 			}
 		Write-Host -ForegroundColor Magenta " ==>we will Build Domain $BuildDomain and Subnet $IPv4subnet.0  on $VMnet for the Running Workorder"
 		Write-Host -ForegroundColor Magenta " ==>setting Language to $LanguageTag"
-		if ($DefaultGateway){ Write-Host -ForegroundColor Magenta " ==>The Gateway will be $DefaultGateway"}
+		if ($MyGateway){ Write-Host -ForegroundColor Magenta " ==>The Gateway will be $MyGateway"}
 		if ($PSCmdlet.MyInvocation.BoundParameters["verbose"].IsPresent)
 			{
 			Write-Verbose "Press any key to Continue Cloning"
