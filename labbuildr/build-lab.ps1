@@ -1023,8 +1023,7 @@ function update-fromGit
 			$Zip = ("https://github.com/$RepoLocation/$repo/archive/$branch.zip").ToLower()
 			$local_culture = Get-Culture
 			$git_Culture = New-Object System.Globalization.CultureInfo 'en-US'
-			#if ($Global:vmxtoolkit_type -in ("win_x86_64","LINUX") )
-			#	{
+            Write-Host "[==>] Checking for Update on $repo" -ForegroundColor White        
 				try
 					{
                     $request = Invoke-RestMethod -UseBasicParsing -Uri $Uri -Method Get -Headers $AuthHeaders -ContentType "application/json" -ErrorAction Stop  
@@ -1042,16 +1041,7 @@ function update-fromGit
 				
 				$latest_OnGit =  $request.commit.author.date
 				Write-host "Got date $($request.commit.author.date)"
-                #Write-Host $latest_OnGit
-			#	}
-			##else
-		#		{
-		#		$request = curl -D - $Uri | grep Last-Modified
-	#			$request
-	#			[datetime]$latest_OnGit = $request -replace 'Last-Modified: '
-	#			}
 			Write-Host " ==>we have $repo version "(get-date $latest_local_Git)", "(get-date $latest_OnGit)" is online !"
-	#		$latest_local_Git -lt $latest_OnGit
 			if ($latest_local_Git -lt $latest_OnGit -or $force.IsPresent )
 				{
 				$Updatepath = "$Builddir/Update"
@@ -1088,7 +1078,8 @@ function update-fromGit
 			else
 				{
 				Write-Host -ForegroundColor Gray " ==>no update required for $repo on $branch, already newest version "
-				}
+                }
+            Write-Host -ForegroundColor Green "[Done]"
 			if ($Isnew) 
 			{
 			return $true
@@ -1493,6 +1484,20 @@ switch ($PsCmdlet.ParameterSetName)
         }
         ####
         $Branch | Set-Content -Path "$Builddir/labbuildr.branch" -Force # -Verbose
+        Write-Host "[==>]Updating Dynmic Parameters " -NoNewline -ForegroundColor White
+        Write-Host "'Windows Update Table'" -NoNewline -ForegroundColor Magenta
+
+        $updatetable = Join-Path "$($Global:labdefaults.Sourcedir)" "windowsupdate.json"
+        Write-Verbose $updatetable
+
+        try {
+            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/bottkars/Azurestack-Kickstart/master/admin/windowsupdate.json" `
+            -OutFile $updatetable
+        }
+        catch  {
+            Write-Warning "Error Downloading Windowsupdate Table"
+        }
+        Write-Host -ForegroundColor Green "[Done]"
         if ($ReloadProfile)
             {
             Remove-Item ./Update -Recurse -Confirm:$false
