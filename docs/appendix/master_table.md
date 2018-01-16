@@ -1,6 +1,6 @@
 Available Windows Master:
     'WS_1709','WS_Preview_RS4',
-    '2016_1711','2016core_1711','2016','2016core',#
+    '2016_1801','2016_1711','2016core_1711','2016','2016core',#
     '2012R2_Ger','2012_R2','2012R2FallUpdate','2012R2Fall_Ger',
     '2012_Ger','2012'
 
