@@ -1484,7 +1484,7 @@ switch ($PsCmdlet.ParameterSetName)
         }
         ####
         $Branch | Set-Content -Path "$Builddir/labbuildr.branch" -Force # -Verbose
-        Write-Host "[==>]Updating Dynmic Parameters " -NoNewline -ForegroundColor White
+        Write-Host "[==>]Updating Dynamic Parameters " -NoNewline -ForegroundColor White
         Write-Host "'Windows Update Table'" -NoNewline -ForegroundColor Magenta
 
         $updatetable = Join-Path "$($Global:labdefaults.Sourcedir)" "windowsupdate.json"
