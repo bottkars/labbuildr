@@ -71,7 +71,7 @@ Param (
     [Parameter(ParameterSetName = "install", Mandatory = $false)][switch]$FullClone,
     [Parameter(ParameterSetName = "install", Mandatory = $false)][ValidateSet('8192', '12288', '16384', '20480', '30720', '51200', '65536')]$Memory = "16384",
     [Parameter(ParameterSetName = "install", Mandatory = $false)]
-    [ValidateSet('3.1.0.1','3.0.0.1','3.0.0.2','latest')]$Branch = '3.1.0.1',
+    [ValidateSet('3.1.0.2','3.1.0.1','3.0.0.1','3.0.0.2','latest')]$Branch = '3.1.0.2',
     [Parameter(ParameterSetName = "install", Mandatory = $false)][switch]$EMC_ca,
     [Parameter(ParameterSetName = "install", Mandatory = $false)][switch]$ui_config,
     [Parameter(ParameterSetName = "install", Mandatory = $false)][ValidateSet(150GB, 500GB, 520GB)][uint64]$Disksize = 150GB,
@@ -83,7 +83,7 @@ Param (
 ) 
 #requires -version 3.0
 #requires -module vmxtoolkit
-$latest_ecs = "3.0.0.2"
+$latest_ecs = "3.1.0.2"
 $Logfile = "/tmp/labbuildr.log"
 $Szenarioname = "ECS"
 $Builddir = $PSScriptRoot
@@ -141,11 +141,17 @@ $Node_requires = ('git', 'numactl', 'libaio', 'vim', 'docker')
 
 $repo = "https://github.com/EMCECS/ECS-CommunityEdition.git"
 switch ($Branch) {
+    "3.1.0.2" {
+        $Docker_image = "ecs-software-3.1.0"
+        $Docker_imagename = "emccorp/ecs-software-3.1.0"
+        $Docker_imagetag = "3.1.0.2"
+        $Git_Branch = "master"
+    }    
     "3.1.0.1" {
         $Docker_image = "ecs-software-3.1.0"
         $Docker_imagename = "emccorp/ecs-software-3.1.0"
-        $Docker_imagetag = "latest"
-        $Git_Branch = "develop"
+        $Docker_imagetag = "3.1.0.1"
+        $Git_Branch = "master"
     }
     "3.0.0.2" {
         $Docker_image = "ecs-software-3.0.0"
@@ -160,8 +166,8 @@ switch ($Branch) {
         $Git_Branch = "master"
     }
     default {
-        $Docker_image = "ecs-software-3.0.0"
-        $Docker_imagename = "emccorp/ecs-software-3.0.0"
+        $Docker_image = "ecs-software-3.1.0"
+        $Docker_imagename = "emccorp/ecs-software-3.1.0"
         $Docker_imagetag = "latest"
         $Git_Branch = "master"
     }
