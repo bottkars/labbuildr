@@ -29,6 +29,7 @@ Param(
 [Parameter(ParameterSetName = "defaults",Mandatory = $true)]
 [Parameter(ParameterSetName = "import",Mandatory = $false)]
 [ValidateSet(
+	'9.2.1.1', #-#
 	'9.2.0.3','9.2.0.4',#-#
 	'9.1.1.1','9.1.1.2','9.1.1.3', #-#
     '9.0.1-72',
@@ -36,7 +37,7 @@ Param(
 	'9.0.1.1','9.0.1.2','9.0.1.3','9.0.1.4','9.0.1.5','9.0.1.6' #-#
 )]
 
-$nve_ver = '9.1.1.3',
+$nve_ver = '9.2.1.1',
 [Parameter(ParameterSetName = "defaults", Mandatory = $false)][ValidateScript({ Test-Path -Path $_ })]$Defaultsfile=".\defaults.json",
 [Parameter(ParameterSetName = "defaults",Mandatory = $false)]
 [ValidateRange(1,2)]
@@ -124,7 +125,11 @@ switch ($nve_ver)
 		'9.2.0.5'
 		{
 		$Product_tag = '9.2.0.182'
-		}									
+		}
+		'9.2.1.1'
+		{
+		$Product_tag = '9.2.1.168'
+											
 	}
 
 switch ($PsCmdlet.ParameterSetName)
