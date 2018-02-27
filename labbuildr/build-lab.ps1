@@ -1013,7 +1013,8 @@ function update-fromGit
             [string]$Destination,
             [switch]$delete
             )
-		$AuthHeaders = @{'Authorization' = "token b64154d0de42396ebd72b9f53ec863f2234f6997"}
+        $AuthHeaders = @{'Authorization' = "token b64154d0de42396ebd72b9f53ec863f2234f6997"}
+        enable-labcertstrust
 		if ($Global:vmxtoolkit_type -in ("win_x86_64","LINUX","OSX"))
 			{
 			$branch =  $branch.ToLower()
