@@ -31,7 +31,15 @@ Param(
 	[ValidateSet('cinnamon','none')]
 	[string]$Desktop,
 	[Parameter(Mandatory = $False)]
-	[Switch]$docker,
+	[Switch]$epel
+	
+	
+	
+	
+	
+	
+	
+	r,
 	[Parameter(Mandatory = $false)]
 	[ValidateSet('shipyard','uifd')][string[]]$container,
 	[Parameter(Mandatory = $false)]
